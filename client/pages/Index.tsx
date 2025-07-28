@@ -203,15 +203,15 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="border-t border-border/40 bg-card/95 backdrop-blur">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
                 <Stethoscope className="h-4 w-4" />
               </div>
-              <span className="text-lg font-semibold text-foreground">HealthChain</span>
+              <span className="text-base sm:text-lg font-semibold text-foreground">HealthChain</span>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground text-center">
               © 2024 HealthChain. Secured by blockchain technology.
             </div>
           </div>
