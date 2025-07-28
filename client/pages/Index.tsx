@@ -66,19 +66,19 @@ export default function Index() {
       <header className="border-b border-border/40 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
-                <Stethoscope className="h-6 w-6" />
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary text-primary-foreground">
+                <Stethoscope className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">HealthChain</h1>
-                <p className="text-sm text-muted-foreground">Blockchain-Powered Healthcare</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground">HealthChain</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Blockchain-Powered Healthcare</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="text-xs">
+            <div className="flex items-center">
+              <Badge variant="secondary" className="text-xs px-2 py-1">
                 <Shield className="h-3 w-3 mr-1" />
-                Blockchain Secured
+                <span className="hidden sm:inline">Blockchain </span>Secured
               </Badge>
             </div>
           </div>
