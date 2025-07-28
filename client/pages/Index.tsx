@@ -1,62 +1,222 @@
-import { DemoResponse } from "@shared/api";
-import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Brain, 
+  History, 
+  Heart, 
+  Activity, 
+  Shield, 
+  Stethoscope,
+  Plus,
+  ChevronRight,
+  Sparkles,
+  Clock,
+  Users
+} from "lucide-react";
 
 export default function Index() {
-  const [exampleFromServer, setExampleFromServer] = useState("");
-  // Fetch users on component mount
-  useEffect(() => {
-    fetchDemo();
-  }, []);
-
-  // Example of how to fetch data from the server (if needed)
-  const fetchDemo = async () => {
-    try {
-      const response = await fetch("/api/demo");
-      const data = (await response.json()) as DemoResponse;
-      setExampleFromServer(data.message);
-    } catch (error) {
-      console.error("Error fetching hello:", error);
+  const features = [
+    {
+      id: 'bmax',
+      title: 'B-max AI Assistant',
+      description: 'Your personal AI health companion for intelligent medical insights and personalized recommendations.',
+      icon: Brain,
+      color: 'bg-primary',
+      route: '/bmax',
+      stats: '24/7 Available',
+      gradient: 'from-primary/20 to-accent/20'
+    },
+    {
+      id: 'history',
+      title: 'Health History',
+      description: 'Comprehensive health records and AI search history securely stored on blockchain.',
+      icon: History,
+      color: 'bg-accent',
+      route: '/history',
+      stats: 'Blockchain Secured',
+      gradient: 'from-accent/20 to-primary/20'
+    },
+    {
+      id: 'firstaid',
+      title: 'Emergency First Aid',
+      description: 'Instant access to first aid guidance for common health emergencies and conditions.',
+      icon: Heart,
+      color: 'bg-destructive',
+      route: '/first-aid',
+      stats: 'Emergency Ready',
+      gradient: 'from-destructive/20 to-warning/20'
+    },
+    {
+      id: 'analytics',
+      title: 'Health Analytics',
+      description: 'Advanced insights and trends from your health data with predictive analytics.',
+      icon: Activity,
+      color: 'bg-info',
+      route: '/analytics',
+      stats: 'AI Powered',
+      gradient: 'from-info/20 to-success/20'
     }
-  };
+  ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-      <div className="text-center">
-        {/* TODO: FUSION_GENERATION_APP_PLACEHOLDER replace everything here with the actual app! */}
-        <h1 className="text-2xl font-semibold text-slate-800 flex items-center justify-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-slate-400"
-            viewBox="0 0 50 50"
-          >
-            <circle
-              className="opacity-30"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-            />
-            <circle
-              className="text-slate-600"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-              strokeDasharray="100"
-              strokeDashoffset="75"
-            />
-          </svg>
-          Generating your app...
-        </h1>
-        <p className="mt-4 text-slate-600 max-w-md">
-          Watch the chat on the left for updates that might need your attention
-          to finish generating
-        </p>
-        <p className="mt-4 hidden max-w-md">{exampleFromServer}</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/30">
+      {/* Header */}
+      <header className="border-b border-border/40 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
+                <Stethoscope className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">HealthChain</h1>
+                <p className="text-sm text-muted-foreground">Blockchain-Powered Healthcare</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-xs">
+                <Shield className="h-3 w-3 mr-1" />
+                Blockchain Secured
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="text-center max-w-4xl mx-auto">
+          <div className="inline-flex items-center rounded-full px-4 py-2 bg-primary/10 text-primary text-sm font-medium mb-8">
+            <Sparkles className="h-4 w-4 mr-2" />
+            Next-Generation Healthcare Platform
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+            Your Health,
+            <span className="text-primary"> Secured</span> by
+            <span className="text-accent"> Blockchain</span>
+          </h1>
+          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+            Experience the future of healthcare with AI-powered insights, secure blockchain storage, 
+            and comprehensive health management tools designed for your wellbeing.
+          </p>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary mb-2">100%</div>
+              <div className="text-sm text-muted-foreground">Data Security</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-accent mb-2">24/7</div>
+              <div className="text-sm text-muted-foreground">AI Assistant</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-info mb-2">∞</div>
+              <div className="text-sm text-muted-foreground">Blockchain Storage</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="container mx-auto px-4 pb-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Comprehensive Health Solutions
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Four powerful tools to transform your healthcare experience and keep you in control
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {features.map((feature) => {
+            const IconComponent = feature.icon;
+            return (
+              <Card 
+                key={feature.id} 
+                className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                <CardHeader className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`flex items-center justify-center w-14 h-14 rounded-2xl ${feature.color} text-white group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComponent className="h-7 w-7" />
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {feature.stats}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-2xl mb-2 group-hover:text-primary transition-colors duration-300">
+                    {feature.title}
+                  </CardTitle>
+                  <CardDescription className="text-base leading-relaxed">
+                    {feature.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <Link to={feature.route}>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-between group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300"
+                    >
+                      Get Started
+                      <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Bottom CTA Section */}
+      <section className="bg-gradient-to-r from-primary via-accent to-primary py-20">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Ready to Transform Your Healthcare?
+            </h2>
+            <p className="text-xl text-white/90 mb-8">
+              Join thousands who trust HealthChain for secure, intelligent healthcare management
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/bmax">
+                <Button size="lg" variant="secondary" className="text-lg px-8">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Start with B-max AI
+                </Button>
+              </Link>
+              <Link to="/history">
+                <Button size="lg" variant="outline" className="text-lg px-8 bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary">
+                  <Clock className="h-5 w-5 mr-2" />
+                  View Health History
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border/40 bg-card/95 backdrop-blur">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+                <Stethoscope className="h-4 w-4" />
+              </div>
+              <span className="text-lg font-semibold text-foreground">HealthChain</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              © 2024 HealthChain. Secured by blockchain technology.
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
