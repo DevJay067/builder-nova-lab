@@ -95,3 +95,31 @@ export interface PatientProfile {
   lastAccess: string;
   recordCount: number;
 }
+
+export interface MedicalContextSummary {
+  totalRecords: number;
+  lastUpdate: string | null;
+  keyConditions: string[];
+  medications: string[];
+  allergies: string[];
+  vitals: {
+    weight?: number;
+    height?: number;
+    bloodPressure?: string;
+    heartRate?: string;
+    bloodType?: string;
+    age?: number;
+    gender?: string;
+    lastUpdated: string;
+  } | null;
+}
+
+export interface MedicalContextResponse {
+  success: boolean;
+  hasData: boolean;
+  context: string;
+  summary: MedicalContextSummary;
+  patientId?: string;
+  dataSource?: string;
+  error?: string;
+}
