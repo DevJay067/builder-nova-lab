@@ -10,9 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { 
-  History, 
-  ArrowLeft, 
+import {
+  History,
+  ArrowLeft,
   Plus,
   Search,
   Calendar,
@@ -24,7 +24,14 @@ import {
   Pill,
   Stethoscope,
   Clock,
-  Lock
+  Lock,
+  User,
+  Weight,
+  Ruler,
+  Heart,
+  Thermometer,
+  Save,
+  UserPlus
 } from "lucide-react";
 
 export default function HealthHistory() {
