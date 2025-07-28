@@ -96,6 +96,37 @@ export default function HealthHistory() {
     }));
   };
 
+  const addTestData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/add-test-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'patient-id': 'default-patient'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          await loadHealthRecords();
+          setIsNewUser(false);
+          alert(`Test data added successfully! Created ${result.recordsCreated} blockchain-secured health records.`);
+        } else {
+          alert('Failed to add test data: ' + result.error);
+        }
+      } else {
+        alert('Failed to add test data. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error adding test data:', error);
+      alert('Failed to add test data. Please check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmitRecord = async () => {
     if (!formData.weight || !formData.height || !formData.systolicBP || !formData.diastolicBP) {
       alert("Please fill in all required vital signs (weight, height, blood pressure)");
@@ -556,9 +587,13 @@ export default function HealthHistory() {
                 <Button variant="outline" onClick={() => setShowAddRecordDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleSubmitRecord} className="px-8">
+                <Button
+                  onClick={handleSubmitRecord}
+                  className="px-8"
+                  disabled={isLoading}
+                >
                   <Save className="h-4 w-4 mr-2" />
-                  Save to Blockchain
+                  {isLoading ? 'Saving to Blockchain...' : 'Save to Blockchain'}
                 </Button>
               </div>
             </div>
