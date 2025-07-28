@@ -306,7 +306,7 @@ export default function FirstAid() {
                   {[
                     { step: 1, title: "Assess the Situation", description: "Ensure the scene is safe for you and the victim" },
                     { step: 2, title: "Check Responsiveness", description: "Tap shoulders and shout 'Are you okay?'" },
-                    { step: 3, title: "Call for Help", description: "Call 911 or ask someone else to do it" },
+                    { step: 3, title: "Call for Help", description: "Call 112 or ask someone else to do it" },
                     { step: 4, title: "Check ABCs", description: "Airway, Breathing, Circulation" },
                     { step: 5, title: "Provide Care", description: "Give appropriate first aid based on condition" },
                     { step: 6, title: "Monitor", description: "Stay with victim until professional help arrives" }
