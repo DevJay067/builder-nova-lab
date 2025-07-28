@@ -1,16 +1,56 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Brain,
   ArrowLeft,
   Settings,
   Sparkles,
-  Clock
+  Clock,
+  FileText,
+  Shield,
+  Activity,
+  Pill,
+  AlertTriangle,
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 
 export default function BmaxAI() {
+  const [medicalContext, setMedicalContext] = useState(null);
+  const [isLoadingContext, setIsLoadingContext] = useState(true);
+  const [contextError, setContextError] = useState(null);
+
+  useEffect(() => {
+    loadMedicalContext();
+  }, []);
+
+  const loadMedicalContext = async () => {
+    try {
+      setIsLoadingContext(true);
+      const response = await fetch('/api/medical-context', {
+        headers: {
+          'patient-id': 'default-patient'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMedicalContext(data);
+      } else {
+        setContextError('Failed to load medical context');
+      }
+    } catch (error) {
+      console.error('Error loading medical context:', error);
+      setContextError('Failed to connect to medical records');
+    } finally {
+      setIsLoadingContext(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
