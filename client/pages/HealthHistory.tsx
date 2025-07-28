@@ -308,10 +308,16 @@ export default function HealthHistory() {
                     and only accessible by you. This helps us provide better AI recommendations and track your health journey.
                   </p>
                 </div>
-                <Button size="lg" onClick={() => setShowAddRecordDialog(true)} className="px-8">
-                  <Plus className="h-5 w-5 mr-2" />
-                  Add Your Health Data
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button size="lg" onClick={() => setShowAddRecordDialog(true)} className="px-8">
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add Your Health Data
+                  </Button>
+                  <Button size="lg" variant="outline" onClick={addTestData} className="px-8" disabled={isLoading}>
+                    <Activity className="h-5 w-5 mr-2" />
+                    {isLoading ? 'Adding Test Data...' : 'Add Test Data (Demo)'}
+                  </Button>
+                </div>
                 <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground mt-4">
                   <div className="flex items-center">
                     <Shield className="h-4 w-4 mr-1 text-primary" />
