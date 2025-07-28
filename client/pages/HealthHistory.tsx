@@ -36,6 +36,29 @@ import {
 
 export default function HealthHistory() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isNewUser, setIsNewUser] = useState(true); // Set to true for new users
+  const [showAddRecordDialog, setShowAddRecordDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    // Personal Information
+    age: "",
+    gender: "",
+    bloodType: "",
+    // Vitals
+    weight: "",
+    height: "",
+    systolicBP: "",
+    diastolicBP: "",
+    heartRate: "",
+    temperature: "",
+    // Medical History
+    medications: "",
+    allergies: "",
+    chronicConditions: "",
+    lastCheckupDate: "",
+    doctor: "",
+    // Additional Notes
+    notes: ""
+  });
 
   const healthRecords = [
     {
