@@ -41,14 +41,14 @@ export default function FirstAid() {
       icon: Heart,
       symptoms: ["Chest pain", "Shortness of breath", "Nausea", "Sweating"],
       steps: [
-        "Call 911 immediately",
+        "Call 112 immediately",
         "Help the person sit or lie down comfortably",
         "Loosen tight clothing around neck and chest",
         "If prescribed, help them take nitroglycerin",
         "If unconscious and not breathing, begin CPR",
         "Stay with the person until help arrives"
       ],
-      timeframe: "Call 911 immediately",
+      timeframe: "Call 112 immediately",
       category: "cardiovascular"
     },
     {
