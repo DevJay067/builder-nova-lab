@@ -75,7 +75,7 @@ export default function FirstAid() {
       icon: Bandage,
       symptoms: ["Heavy bleeding", "Blood soaking through bandages", "Signs of shock"],
       steps: [
-        "Call 911 if bleeding is severe",
+        "Call 112 if bleeding is severe",
         "Put on gloves or use barrier",
         "Apply direct pressure to wound",
         "Raise injured area above heart if possible",
