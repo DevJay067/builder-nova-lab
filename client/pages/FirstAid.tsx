@@ -192,8 +192,8 @@ export default function FirstAid() {
         <Alert className="mb-8 border-destructive bg-destructive/10">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            <strong>Emergency Disclaimer:</strong> This guide provides basic first aid information. 
-            In any serious emergency, call 911 immediately. This information does not replace professional medical training.
+            <strong>Emergency Disclaimer:</strong> This guide provides basic first aid information.
+            In any serious emergency, call 112 immediately. This information does not replace professional medical training.
           </AlertDescription>
         </Alert>
 
