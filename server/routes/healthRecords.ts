@@ -14,6 +14,140 @@ const healthRecords: Map<string, HealthRecord[]> = new Map();
 const patientProfiles: Map<string, PatientProfile> = new Map();
 
 /**
+ * Add comprehensive test data for demonstration
+ */
+export const addTestData: RequestHandler = async (req, res) => {
+  try {
+    const patientId = 'default-patient';
+    
+    // Create patient profile
+    const patientProfile: PatientProfile = {
+      id: patientId,
+      walletAddress: BlockchainService.generateWalletAddress(),
+      encryptionKey: BlockchainService.generateEncryptionKey(),
+      createdAt: new Date().toISOString(),
+      lastAccess: new Date().toISOString(),
+      recordCount: 0
+    };
+    patientProfiles.set(patientId, patientProfile);
+
+    // Test health records to add
+    const testRecords = [
+      {
+        type: "checkup" as const,
+        title: "Annual Physical Examination",
+        description: "Routine annual checkup with blood work and vitals assessment",
+        doctor: "Dr. Sarah Johnson",
+        metadata: {
+          age: 28,
+          gender: "male",
+          bloodType: "A+",
+          weight: 78,
+          height: 175,
+          systolicBP: 130,
+          diastolicBP: 85,
+          heartRate: 72,
+          temperature: 36.7,
+          medications: ["Lisinopril 10mg daily"],
+          allergies: ["Penicillin", "Shellfish"],
+          chronicConditions: ["Mild Hypertension"],
+          notes: "Patient reports occasional headaches, blood pressure slightly elevated but stable with medication"
+        }
+      },
+      {
+        type: "medication" as const,
+        title: "Blood Pressure Medication Started",
+        description: "Prescribed Lisinopril 10mg daily for mild hypertension management",
+        doctor: "Dr. Sarah Johnson",
+        metadata: {
+          medications: ["Lisinopril 10mg daily"],
+          notes: "Started medication due to consistently elevated BP readings. Patient advised to monitor sodium intake and exercise regularly."
+        }
+      },
+      {
+        type: "vitals" as const,
+        title: "Blood Pressure Monitoring",
+        description: "Follow-up BP check after starting medication",
+        doctor: "Nurse Patricia",
+        metadata: {
+          systolicBP: 125,
+          diastolicBP: 82,
+          heartRate: 68,
+          weight: 78,
+          notes: "Blood pressure improving with medication. Continue current dosage."
+        }
+      }
+    ];
+
+    const createdRecords = [];
+
+    // Create each test record
+    for (const testRecord of testRecords) {
+      const recordId = crypto.randomBytes(16).toString('hex');
+      const recordDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000); // Random date within last 30 days
+      
+      const healthRecord: HealthRecord = {
+        id: recordId,
+        patientId,
+        date: recordDate.toISOString().split('T')[0],
+        type: testRecord.type,
+        title: testRecord.title,
+        description: testRecord.description,
+        doctor: testRecord.doctor,
+        status: 'completed',
+        blockchainHash: '',
+        metadata: testRecord.metadata,
+        createdAt: recordDate.toISOString(),
+        updatedAt: recordDate.toISOString()
+      };
+
+      // Generate blockchain hash
+      healthRecord.blockchainHash = BlockchainService.generateBlockchainHash(healthRecord);
+
+      // Encrypt sensitive data
+      const encryptedData = BlockchainService.encryptHealthData(
+        { ...healthRecord, metadata: testRecord.metadata }, 
+        patientProfile.encryptionKey
+      );
+      healthRecord.encryptedData = encryptedData;
+
+      // Store on blockchain
+      await BlockchainService.storeHealthRecord(healthRecord);
+
+      createdRecords.push(healthRecord);
+    }
+
+    // Store all records
+    healthRecords.set(patientId, createdRecords.sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    ));
+
+    // Update patient profile
+    patientProfile.recordCount = createdRecords.length;
+    patientProfiles.set(patientId, patientProfile);
+
+    res.json({
+      success: true,
+      message: 'Test data added successfully',
+      recordsCreated: createdRecords.length,
+      records: createdRecords.map(r => ({
+        id: r.id,
+        title: r.title,
+        date: r.date,
+        blockchainHash: r.blockchainHash
+      }))
+    });
+
+  } catch (error) {
+    console.error('Error adding test data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add test data'
+    });
+  }
+};
+
+/**
  * Create a new health record for a patient
  */
 export const createHealthRecord: RequestHandler = async (req, res) => {
