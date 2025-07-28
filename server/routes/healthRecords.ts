@@ -129,6 +129,149 @@ export const getHealthRecords: RequestHandler = (req, res) => {
 };
 
 /**
+ * Get medical context summary for AI integration
+ */
+export const getMedicalContext: RequestHandler = (req, res) => {
+  try {
+    const patientId = req.headers['patient-id'] as string || 'default-patient';
+    const records = healthRecords.get(patientId) || [];
+    const patientProfile = patientProfiles.get(patientId);
+    
+    if (records.length === 0) {
+      return res.json({
+        success: true,
+        hasData: false,
+        context: "No medical history available. This is a new patient.",
+        summary: {
+          totalRecords: 0,
+          lastUpdate: null,
+          keyConditions: [],
+          medications: [],
+          allergies: [],
+          vitals: null
+        }
+      });
+    }
+
+    // Aggregate medical data for AI context
+    const latestRecord = records[0];
+    const allMedications = new Set<string>();
+    const allAllergies = new Set<string>();
+    const allConditions = new Set<string>();
+    let latestVitals = null;
+
+    records.forEach(record => {
+      if (record.metadata) {
+        // Collect medications
+        if (record.metadata.medications) {
+          record.metadata.medications.forEach(med => allMedications.add(med));
+        }
+        
+        // Collect allergies
+        if (record.metadata.allergies) {
+          record.metadata.allergies.forEach(allergy => allAllergies.add(allergy));
+        }
+        
+        // Collect chronic conditions
+        if (record.metadata.chronicConditions) {
+          record.metadata.chronicConditions.forEach(condition => allConditions.add(condition));
+        }
+        
+        // Get latest vitals
+        if (record.metadata.weight || record.metadata.height || record.metadata.systolicBP) {
+          latestVitals = {
+            weight: record.metadata.weight,
+            height: record.metadata.height,
+            bloodPressure: record.metadata.systolicBP && record.metadata.diastolicBP 
+              ? `${record.metadata.systolicBP}/${record.metadata.diastolicBP} mmHg`
+              : null,
+            heartRate: record.metadata.heartRate ? `${record.metadata.heartRate} bpm` : null,
+            bloodType: record.metadata.bloodType,
+            age: record.metadata.age,
+            gender: record.metadata.gender,
+            lastUpdated: record.date
+          };
+        }
+      }
+    });
+
+    // Create comprehensive medical context for AI
+    const medicalContext = `
+PATIENT MEDICAL CONTEXT (Blockchain-Verified):
+==============================================
+
+BASIC INFORMATION:
+${latestVitals ? `
+- Age: ${latestVitals.age || 'Not specified'}
+- Gender: ${latestVitals.gender || 'Not specified'}  
+- Blood Type: ${latestVitals.bloodType || 'Not specified'}
+` : '- Basic information not available'}
+
+CURRENT MEDICATIONS:
+${Array.from(allMedications).length > 0 
+  ? Array.from(allMedications).map(med => `- ${med}`).join('\n')
+  : '- No current medications reported'
+}
+
+KNOWN ALLERGIES:
+${Array.from(allAllergies).length > 0 
+  ? Array.from(allAllergies).map(allergy => `- ${allergy}`).join('\n')
+  : '- No known allergies reported'
+}
+
+CHRONIC CONDITIONS:
+${Array.from(allConditions).length > 0 
+  ? Array.from(allConditions).map(condition => `- ${condition}`).join('\n')
+  : '- No chronic conditions reported'
+}
+
+LATEST VITAL SIGNS (${latestVitals?.lastUpdated || 'Not available'}):
+${latestVitals ? `
+- Weight: ${latestVitals.weight ? `${latestVitals.weight} kg` : 'Not recorded'}
+- Height: ${latestVitals.height ? `${latestVitals.height} cm` : 'Not recorded'}
+- Blood Pressure: ${latestVitals.bloodPressure || 'Not recorded'}
+- Heart Rate: ${latestVitals.heartRate || 'Not recorded'}
+` : '- No vital signs recorded'}
+
+RECENT MEDICAL HISTORY:
+${records.slice(0, 3).map(record => 
+  `- ${record.date}: ${record.title} - ${record.description}`
+).join('\n')}
+
+TOTAL HEALTH RECORDS: ${records.length}
+LAST HEALTH UPDATE: ${latestRecord.date}
+
+IMPORTANT: Please use this medical context to provide personalized health recommendations. Always remind the patient to consult with their healthcare provider for serious medical concerns.
+`.trim();
+
+    const summary = {
+      totalRecords: records.length,
+      lastUpdate: latestRecord.date,
+      keyConditions: Array.from(allConditions),
+      medications: Array.from(allMedications),
+      allergies: Array.from(allAllergies),
+      vitals: latestVitals
+    };
+
+    res.json({
+      success: true,
+      hasData: true,
+      context: medicalContext,
+      summary,
+      patientId,
+      dataSource: 'blockchain-verified'
+    });
+
+  } catch (error) {
+    console.error('Error generating medical context:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate medical context'
+    });
+  }
+};
+
+/**
  * Get a specific health record by ID
  */
 export const getHealthRecord: RequestHandler = (req, res) => {
