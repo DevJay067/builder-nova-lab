@@ -60,7 +60,7 @@ export default function HealthHistory() {
     notes: ""
   });
 
-  const healthRecords = [
+  const [healthRecords, setHealthRecords] = useState(isNewUser ? [] : [
     {
       id: 1,
       date: "2024-01-15",
@@ -91,7 +91,48 @@ export default function HealthHistory() {
       status: "monitoring",
       blockchainHash: "0x3c4d5e6f7a8b..."
     }
-  ];
+  ]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const generateBlockchainHash = () => {
+    return "0x" + Math.random().toString(16).substring(2, 15) + "...";
+  };
+
+  const handleSubmitRecord = () => {
+    if (!formData.weight || !formData.height || !formData.systolicBP || !formData.diastolicBP) {
+      alert("Please fill in all required vital signs (weight, height, blood pressure)");
+      return;
+    }
+
+    const newRecord = {
+      id: healthRecords.length + 1,
+      date: new Date().toISOString().split('T')[0],
+      type: "checkup",
+      title: "Initial Health Assessment",
+      description: `Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
+      doctor: formData.doctor || "Self-reported",
+      status: "completed",
+      blockchainHash: generateBlockchainHash()
+    };
+
+    setHealthRecords(prev => [newRecord, ...prev]);
+    setIsNewUser(false);
+    setShowAddRecordDialog(false);
+
+    // Reset form
+    setFormData({
+      age: "", gender: "", bloodType: "", weight: "", height: "",
+      systolicBP: "", diastolicBP: "", heartRate: "", temperature: "",
+      medications: "", allergies: "", chronicConditions: "",
+      lastCheckupDate: "", doctor: "", notes: ""
+    });
+  };
 
   const aiSearchHistory = [
     {
