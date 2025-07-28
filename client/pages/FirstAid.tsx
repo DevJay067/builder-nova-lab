@@ -28,9 +28,9 @@ export default function FirstAid() {
   const [selectedCondition, setSelectedCondition] = useState(null);
 
   const emergencyContacts = [
-    { name: "Emergency Services", number: "911", type: "emergency" },
-    { name: "Poison Control", number: "1-800-222-1222", type: "poison" },
-    { name: "Mental Health Crisis", number: "988", type: "mental" }
+    { name: "Emergency Services", number: "112", type: "emergency" },
+    { name: "Medical Emergency", number: "108", type: "medical" },
+    { name: "Mental Health Crisis", number: "9152987821", type: "mental" }
   ];
 
   const firstAidConditions = [
