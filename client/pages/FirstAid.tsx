@@ -109,7 +109,7 @@ export default function FirstAid() {
       icon: Zap,
       symptoms: ["Difficulty breathing", "Swelling", "Hives", "Rapid pulse"],
       steps: [
-        "Call 911 for severe reactions",
+        "Call 112 for severe reactions",
         "Help person use epinephrine auto-injector if available",
         "Have person lie flat if conscious",
         "Remove or avoid allergen if known",
