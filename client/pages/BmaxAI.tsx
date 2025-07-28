@@ -19,45 +19,6 @@ import {
 } from "lucide-react";
 
 export default function BmaxAI() {
-  const [message, setMessage] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [chatHistory, setChatHistory] = useState([
-    {
-      id: 1,
-      type: 'ai',
-      message: 'Hello! I\'m B-max, your AI health assistant. How can I help you today?',
-      timestamp: new Date().toLocaleTimeString()
-    }
-  ]);
-
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    
-    const newMessage = {
-      id: chatHistory.length + 1,
-      type: 'user',
-      message: message,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    
-    setChatHistory([...chatHistory, newMessage]);
-    setMessage("");
-    
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        id: chatHistory.length + 2,
-        type: 'ai',
-        message: 'I understand your concern. Let me analyze your health data and provide personalized recommendations. Please note that this is AI-generated advice and should not replace professional medical consultation.',
-        timestamp: new Date().toLocaleTimeString()
-      };
-      setChatHistory(prev => [...prev, aiResponse]);
-    }, 1000);
-  };
-
-  const toggleListening = () => {
-    setIsListening(!isListening);
-  };
 
   const quickActions = [
     "Check my symptoms",
