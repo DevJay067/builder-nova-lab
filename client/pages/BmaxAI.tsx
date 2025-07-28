@@ -164,76 +164,32 @@ export default function BmaxAI() {
             </Card>
           </div>
 
-          {/* Main Chat Area */}
+          {/* Main AI Agent Area */}
           <div className="lg:col-span-3">
             <Card className="h-[600px] flex flex-col">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">AI Health Consultation</CardTitle>
+                  <CardTitle className="text-lg">B-max AI Health Assistant</CardTitle>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    Real-time
+                    Live AI Agent
                   </div>
                 </div>
                 <CardDescription>
-                  Discuss your health concerns with B-max AI. Remember, this is for informational purposes only.
+                  Interact with your personal B-max AI health assistant. This AI is trained specifically for healthcare guidance and support.
                 </CardDescription>
               </CardHeader>
-              
-              {/* Chat Messages */}
-              <CardContent className="flex-1 overflow-y-auto space-y-4">
-                {chatHistory.map((chat) => (
-                  <div key={chat.id} className={`flex ${chat.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-lg p-4 ${
-                      chat.type === 'user' 
-                        ? 'bg-primary text-primary-foreground ml-4' 
-                        : 'bg-muted mr-4'
-                    }`}>
-                      <p className="text-sm">{chat.message}</p>
-                      <p className="text-xs opacity-70 mt-2">{chat.timestamp}</p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
 
-              {/* Input Area */}
-              <div className="border-t p-4">
-                <div className="flex space-x-2">
-                  <div className="flex-1 relative">
-                    <Textarea
-                      placeholder="Describe your health concern or ask a question..."
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="min-h-[80px] pr-12"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      variant={isListening ? "default" : "ghost"}
-                      className="absolute bottom-2 right-2"
-                      onClick={toggleListening}
-                    >
-                      <Mic className={`h-4 w-4 ${isListening ? 'text-destructive' : ''}`} />
-                    </Button>
-                  </div>
-                  <Button 
-                    onClick={handleSendMessage}
-                    disabled={!message.trim()}
-                    className="self-end"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 flex items-center">
-                  <Zap className="h-3 w-3 mr-1" />
-                  Press Enter to send, Shift+Enter for new line
-                </p>
-              </div>
+              {/* JotForm AI Agent Iframe */}
+              <CardContent className="flex-1 overflow-hidden p-0">
+                <iframe
+                  src="https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1"
+                  className="w-full h-full border-0 rounded-b-lg"
+                  title="B-max AI Health Assistant"
+                  allow="microphone; camera"
+                  style={{ minHeight: '500px' }}
+                />
+              </CardContent>
             </Card>
           </div>
         </div>
