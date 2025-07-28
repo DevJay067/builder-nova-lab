@@ -18,11 +18,11 @@ export interface HealthRecord {
   id: string;
   patientId: string;
   date: string;
-  type: 'checkup' | 'medication' | 'vitals' | 'symptom' | 'emergency';
+  type: "checkup" | "medication" | "vitals" | "symptom" | "emergency";
   title: string;
   description: string;
   doctor: string;
-  status: 'completed' | 'active' | 'monitoring' | 'pending';
+  status: "completed" | "active" | "monitoring" | "pending";
   blockchainHash: string;
   encryptedData?: string;
   metadata: HealthRecordMetadata;
@@ -35,7 +35,7 @@ export interface HealthRecordMetadata {
   age?: number;
   gender?: string;
   bloodType?: string;
-  
+
   // Vital Signs
   weight?: number; // kg
   height?: number; // cm
@@ -43,19 +43,19 @@ export interface HealthRecordMetadata {
   diastolicBP?: number; // mmHg
   heartRate?: number; // bpm
   temperature?: number; // celsius
-  
+
   // Medical History
   medications?: string[];
   allergies?: string[];
   chronicConditions?: string[];
-  
+
   // Additional
   notes?: string;
   attachments?: string[];
 }
 
 export interface CreateHealthRecordRequest {
-  type: HealthRecord['type'];
+  type: HealthRecord["type"];
   title: string;
   description: string;
   doctor?: string;

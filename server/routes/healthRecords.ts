@@ -1,13 +1,13 @@
 import { RequestHandler } from "express";
-import { 
-  HealthRecord, 
-  CreateHealthRecordRequest, 
+import {
+  HealthRecord,
+  CreateHealthRecordRequest,
   CreateHealthRecordResponse,
   GetHealthRecordsResponse,
-  PatientProfile
+  PatientProfile,
 } from "@shared/api";
 import { BlockchainService } from "../services/blockchain";
-import crypto from 'crypto';
+import crypto from "crypto";
 
 // In-memory storage (in production, use a real database)
 const healthRecords: Map<string, HealthRecord[]> = new Map();
@@ -18,8 +18,8 @@ const patientProfiles: Map<string, PatientProfile> = new Map();
  */
 export const addTestData: RequestHandler = async (req, res) => {
   try {
-    const patientId = 'default-patient';
-    
+    const patientId = "default-patient";
+
     // Create patient profile
     const patientProfile: PatientProfile = {
       id: patientId,
@@ -27,7 +27,7 @@ export const addTestData: RequestHandler = async (req, res) => {
       encryptionKey: BlockchainService.generateEncryptionKey(),
       createdAt: new Date().toISOString(),
       lastAccess: new Date().toISOString(),
-      recordCount: 0
+      recordCount: 0,
     };
     patientProfiles.set(patientId, patientProfile);
 
@@ -36,7 +36,8 @@ export const addTestData: RequestHandler = async (req, res) => {
       {
         type: "checkup" as const,
         title: "Annual Physical Examination",
-        description: "Routine annual checkup with blood work and vitals assessment",
+        description:
+          "Routine annual checkup with blood work and vitals assessment",
         doctor: "Dr. Sarah Johnson",
         metadata: {
           age: 28,
@@ -51,18 +52,21 @@ export const addTestData: RequestHandler = async (req, res) => {
           medications: ["Lisinopril 10mg daily"],
           allergies: ["Penicillin", "Shellfish"],
           chronicConditions: ["Mild Hypertension"],
-          notes: "Patient reports occasional headaches, blood pressure slightly elevated but stable with medication"
-        }
+          notes:
+            "Patient reports occasional headaches, blood pressure slightly elevated but stable with medication",
+        },
       },
       {
         type: "medication" as const,
         title: "Blood Pressure Medication Started",
-        description: "Prescribed Lisinopril 10mg daily for mild hypertension management",
+        description:
+          "Prescribed Lisinopril 10mg daily for mild hypertension management",
         doctor: "Dr. Sarah Johnson",
         metadata: {
           medications: ["Lisinopril 10mg daily"],
-          notes: "Started medication due to consistently elevated BP readings. Patient advised to monitor sodium intake and exercise regularly."
-        }
+          notes:
+            "Started medication due to consistently elevated BP readings. Patient advised to monitor sodium intake and exercise regularly.",
+        },
       },
       {
         type: "vitals" as const,
@@ -74,40 +78,44 @@ export const addTestData: RequestHandler = async (req, res) => {
           diastolicBP: 82,
           heartRate: 68,
           weight: 78,
-          notes: "Blood pressure improving with medication. Continue current dosage."
-        }
-      }
+          notes:
+            "Blood pressure improving with medication. Continue current dosage.",
+        },
+      },
     ];
 
     const createdRecords = [];
 
     // Create each test record
     for (const testRecord of testRecords) {
-      const recordId = crypto.randomBytes(16).toString('hex');
-      const recordDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000); // Random date within last 30 days
-      
+      const recordId = crypto.randomBytes(16).toString("hex");
+      const recordDate = new Date(
+        Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
+      ); // Random date within last 30 days
+
       const healthRecord: HealthRecord = {
         id: recordId,
         patientId,
-        date: recordDate.toISOString().split('T')[0],
+        date: recordDate.toISOString().split("T")[0],
         type: testRecord.type,
         title: testRecord.title,
         description: testRecord.description,
         doctor: testRecord.doctor,
-        status: 'completed',
-        blockchainHash: '',
+        status: "completed",
+        blockchainHash: "",
         metadata: testRecord.metadata,
         createdAt: recordDate.toISOString(),
-        updatedAt: recordDate.toISOString()
+        updatedAt: recordDate.toISOString(),
       };
 
       // Generate blockchain hash
-      healthRecord.blockchainHash = BlockchainService.generateBlockchainHash(healthRecord);
+      healthRecord.blockchainHash =
+        BlockchainService.generateBlockchainHash(healthRecord);
 
       // Encrypt sensitive data
       const encryptedData = BlockchainService.encryptHealthData(
-        { ...healthRecord, metadata: testRecord.metadata }, 
-        patientProfile.encryptionKey
+        { ...healthRecord, metadata: testRecord.metadata },
+        patientProfile.encryptionKey,
       );
       healthRecord.encryptedData = encryptedData;
 
@@ -118,9 +126,12 @@ export const addTestData: RequestHandler = async (req, res) => {
     }
 
     // Store all records
-    healthRecords.set(patientId, createdRecords.sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    ));
+    healthRecords.set(
+      patientId,
+      createdRecords.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
+    );
 
     // Update patient profile
     patientProfile.recordCount = createdRecords.length;
@@ -128,21 +139,20 @@ export const addTestData: RequestHandler = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Test data added successfully',
+      message: "Test data added successfully",
       recordsCreated: createdRecords.length,
-      records: createdRecords.map(r => ({
+      records: createdRecords.map((r) => ({
         id: r.id,
         title: r.title,
         date: r.date,
-        blockchainHash: r.blockchainHash
-      }))
+        blockchainHash: r.blockchainHash,
+      })),
     });
-
   } catch (error) {
-    console.error('Error adding test data:', error);
+    console.error("Error adding test data:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to add test data'
+      error: "Failed to add test data",
     });
   }
 };
@@ -152,12 +162,19 @@ export const addTestData: RequestHandler = async (req, res) => {
  */
 export const createHealthRecord: RequestHandler = async (req, res) => {
   try {
-    const { type, title, description, doctor, metadata }: CreateHealthRecordRequest = req.body;
-    
+    const {
+      type,
+      title,
+      description,
+      doctor,
+      metadata,
+    }: CreateHealthRecordRequest = req.body;
+
     // Get or create patient profile (simulate user authentication)
-    const patientId = req.headers['patient-id'] as string || 'default-patient';
+    const patientId =
+      (req.headers["patient-id"] as string) || "default-patient";
     let patientProfile = patientProfiles.get(patientId);
-    
+
     if (!patientProfile) {
       patientProfile = {
         id: patientId,
@@ -165,37 +182,38 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
         encryptionKey: BlockchainService.generateEncryptionKey(),
         createdAt: new Date().toISOString(),
         lastAccess: new Date().toISOString(),
-        recordCount: 0
+        recordCount: 0,
       };
       patientProfiles.set(patientId, patientProfile);
     }
 
     // Create health record
-    const recordId = crypto.randomBytes(16).toString('hex');
+    const recordId = crypto.randomBytes(16).toString("hex");
     const currentDate = new Date().toISOString();
-    
+
     const healthRecord: HealthRecord = {
       id: recordId,
       patientId,
-      date: currentDate.split('T')[0], // YYYY-MM-DD format
+      date: currentDate.split("T")[0], // YYYY-MM-DD format
       type,
       title,
       description,
-      doctor: doctor || 'Self-reported',
-      status: 'completed',
-      blockchainHash: '', // Will be generated
+      doctor: doctor || "Self-reported",
+      status: "completed",
+      blockchainHash: "", // Will be generated
       metadata,
       createdAt: currentDate,
-      updatedAt: currentDate
+      updatedAt: currentDate,
     };
 
     // Generate blockchain hash
-    healthRecord.blockchainHash = BlockchainService.generateBlockchainHash(healthRecord);
+    healthRecord.blockchainHash =
+      BlockchainService.generateBlockchainHash(healthRecord);
 
     // Encrypt sensitive data
     const encryptedData = BlockchainService.encryptHealthData(
-      { ...healthRecord, metadata }, 
-      patientProfile.encryptionKey
+      { ...healthRecord, metadata },
+      patientProfile.encryptionKey,
     );
     healthRecord.encryptedData = encryptedData;
 
@@ -216,15 +234,15 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
       success: true,
       record: healthRecord,
       blockchainHash: healthRecord.blockchainHash,
-      transactionId: transaction.transactionId
+      transactionId: transaction.transactionId,
     };
 
     res.status(201).json(response);
   } catch (error) {
-    console.error('Error creating health record:', error);
+    console.error("Error creating health record:", error);
     const response: CreateHealthRecordResponse = {
       success: false,
-      error: 'Failed to create health record'
+      error: "Failed to create health record",
     };
     res.status(500).json(response);
   }
@@ -235,9 +253,10 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
  */
 export const getHealthRecords: RequestHandler = (req, res) => {
   try {
-    const patientId = req.headers['patient-id'] as string || 'default-patient';
+    const patientId =
+      (req.headers["patient-id"] as string) || "default-patient";
     const records = healthRecords.get(patientId) || [];
-    
+
     // Update patient last access
     const patientProfile = patientProfiles.get(patientId);
     if (patientProfile) {
@@ -248,16 +267,16 @@ export const getHealthRecords: RequestHandler = (req, res) => {
     const response: GetHealthRecordsResponse = {
       success: true,
       records,
-      total: records.length
+      total: records.length,
     };
 
     res.json(response);
   } catch (error) {
-    console.error('Error fetching health records:', error);
+    console.error("Error fetching health records:", error);
     res.status(500).json({
       success: false,
       records: [],
-      total: 0
+      total: 0,
     });
   }
 };
@@ -267,10 +286,11 @@ export const getHealthRecords: RequestHandler = (req, res) => {
  */
 export const getMedicalContext: RequestHandler = (req, res) => {
   try {
-    const patientId = req.headers['patient-id'] as string || 'default-patient';
+    const patientId =
+      (req.headers["patient-id"] as string) || "default-patient";
     const records = healthRecords.get(patientId) || [];
     const patientProfile = patientProfiles.get(patientId);
-    
+
     if (records.length === 0) {
       return res.json({
         success: true,
@@ -282,8 +302,8 @@ export const getMedicalContext: RequestHandler = (req, res) => {
           keyConditions: [],
           medications: [],
           allergies: [],
-          vitals: null
-        }
+          vitals: null,
+        },
       });
     }
 
@@ -294,36 +314,47 @@ export const getMedicalContext: RequestHandler = (req, res) => {
     const allConditions = new Set<string>();
     let latestVitals = null;
 
-    records.forEach(record => {
+    records.forEach((record) => {
       if (record.metadata) {
         // Collect medications
         if (record.metadata.medications) {
-          record.metadata.medications.forEach(med => allMedications.add(med));
+          record.metadata.medications.forEach((med) => allMedications.add(med));
         }
-        
+
         // Collect allergies
         if (record.metadata.allergies) {
-          record.metadata.allergies.forEach(allergy => allAllergies.add(allergy));
+          record.metadata.allergies.forEach((allergy) =>
+            allAllergies.add(allergy),
+          );
         }
-        
+
         // Collect chronic conditions
         if (record.metadata.chronicConditions) {
-          record.metadata.chronicConditions.forEach(condition => allConditions.add(condition));
+          record.metadata.chronicConditions.forEach((condition) =>
+            allConditions.add(condition),
+          );
         }
-        
+
         // Get latest vitals
-        if (record.metadata.weight || record.metadata.height || record.metadata.systolicBP) {
+        if (
+          record.metadata.weight ||
+          record.metadata.height ||
+          record.metadata.systolicBP
+        ) {
           latestVitals = {
             weight: record.metadata.weight,
             height: record.metadata.height,
-            bloodPressure: record.metadata.systolicBP && record.metadata.diastolicBP 
-              ? `${record.metadata.systolicBP}/${record.metadata.diastolicBP} mmHg`
+            bloodPressure:
+              record.metadata.systolicBP && record.metadata.diastolicBP
+                ? `${record.metadata.systolicBP}/${record.metadata.diastolicBP} mmHg`
+                : null,
+            heartRate: record.metadata.heartRate
+              ? `${record.metadata.heartRate} bpm`
               : null,
-            heartRate: record.metadata.heartRate ? `${record.metadata.heartRate} bpm` : null,
             bloodType: record.metadata.bloodType,
             age: record.metadata.age,
             gender: record.metadata.gender,
-            lastUpdated: record.date
+            lastUpdated: record.date,
           };
         }
       }
@@ -335,42 +366,60 @@ PATIENT MEDICAL CONTEXT (Blockchain-Verified):
 ==============================================
 
 BASIC INFORMATION:
-${latestVitals ? `
-- Age: ${latestVitals.age || 'Not specified'}
-- Gender: ${latestVitals.gender || 'Not specified'}  
-- Blood Type: ${latestVitals.bloodType || 'Not specified'}
-` : '- Basic information not available'}
+${
+  latestVitals
+    ? `
+- Age: ${latestVitals.age || "Not specified"}
+- Gender: ${latestVitals.gender || "Not specified"}  
+- Blood Type: ${latestVitals.bloodType || "Not specified"}
+`
+    : "- Basic information not available"
+}
 
 CURRENT MEDICATIONS:
-${Array.from(allMedications).length > 0 
-  ? Array.from(allMedications).map(med => `- ${med}`).join('\n')
-  : '- No current medications reported'
+${
+  Array.from(allMedications).length > 0
+    ? Array.from(allMedications)
+        .map((med) => `- ${med}`)
+        .join("\n")
+    : "- No current medications reported"
 }
 
 KNOWN ALLERGIES:
-${Array.from(allAllergies).length > 0 
-  ? Array.from(allAllergies).map(allergy => `- ${allergy}`).join('\n')
-  : '- No known allergies reported'
+${
+  Array.from(allAllergies).length > 0
+    ? Array.from(allAllergies)
+        .map((allergy) => `- ${allergy}`)
+        .join("\n")
+    : "- No known allergies reported"
 }
 
 CHRONIC CONDITIONS:
-${Array.from(allConditions).length > 0 
-  ? Array.from(allConditions).map(condition => `- ${condition}`).join('\n')
-  : '- No chronic conditions reported'
+${
+  Array.from(allConditions).length > 0
+    ? Array.from(allConditions)
+        .map((condition) => `- ${condition}`)
+        .join("\n")
+    : "- No chronic conditions reported"
 }
 
-LATEST VITAL SIGNS (${latestVitals?.lastUpdated || 'Not available'}):
-${latestVitals ? `
-- Weight: ${latestVitals.weight ? `${latestVitals.weight} kg` : 'Not recorded'}
-- Height: ${latestVitals.height ? `${latestVitals.height} cm` : 'Not recorded'}
-- Blood Pressure: ${latestVitals.bloodPressure || 'Not recorded'}
-- Heart Rate: ${latestVitals.heartRate || 'Not recorded'}
-` : '- No vital signs recorded'}
+LATEST VITAL SIGNS (${latestVitals?.lastUpdated || "Not available"}):
+${
+  latestVitals
+    ? `
+- Weight: ${latestVitals.weight ? `${latestVitals.weight} kg` : "Not recorded"}
+- Height: ${latestVitals.height ? `${latestVitals.height} cm` : "Not recorded"}
+- Blood Pressure: ${latestVitals.bloodPressure || "Not recorded"}
+- Heart Rate: ${latestVitals.heartRate || "Not recorded"}
+`
+    : "- No vital signs recorded"
+}
 
 RECENT MEDICAL HISTORY:
-${records.slice(0, 3).map(record => 
-  `- ${record.date}: ${record.title} - ${record.description}`
-).join('\n')}
+${records
+  .slice(0, 3)
+  .map((record) => `- ${record.date}: ${record.title} - ${record.description}`)
+  .join("\n")}
 
 TOTAL HEALTH RECORDS: ${records.length}
 LAST HEALTH UPDATE: ${latestRecord.date}
@@ -384,7 +433,7 @@ IMPORTANT: Please use this medical context to provide personalized health recomm
       keyConditions: Array.from(allConditions),
       medications: Array.from(allMedications),
       allergies: Array.from(allAllergies),
-      vitals: latestVitals
+      vitals: latestVitals,
     };
 
     res.json({
@@ -393,14 +442,13 @@ IMPORTANT: Please use this medical context to provide personalized health recomm
       context: medicalContext,
       summary,
       patientId,
-      dataSource: 'blockchain-verified'
+      dataSource: "blockchain-verified",
     });
-
   } catch (error) {
-    console.error('Error generating medical context:', error);
+    console.error("Error generating medical context:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to generate medical context'
+      error: "Failed to generate medical context",
     });
   }
 };
@@ -411,31 +459,34 @@ IMPORTANT: Please use this medical context to provide personalized health recomm
 export const getHealthRecord: RequestHandler = (req, res) => {
   try {
     const { recordId } = req.params;
-    const patientId = req.headers['patient-id'] as string || 'default-patient';
-    
+    const patientId =
+      (req.headers["patient-id"] as string) || "default-patient";
+
     const records = healthRecords.get(patientId) || [];
-    const record = records.find(r => r.id === recordId);
-    
+    const record = records.find((r) => r.id === recordId);
+
     if (!record) {
       return res.status(404).json({
         success: false,
-        error: 'Health record not found'
+        error: "Health record not found",
       });
     }
 
     // Verify blockchain integrity
-    const isValid = BlockchainService.verifyBlockchainIntegrity(record.blockchainHash);
-    
+    const isValid = BlockchainService.verifyBlockchainIntegrity(
+      record.blockchainHash,
+    );
+
     res.json({
       success: true,
       record,
-      blockchainVerified: isValid
+      blockchainVerified: isValid,
     });
   } catch (error) {
-    console.error('Error fetching health record:', error);
+    console.error("Error fetching health record:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch health record'
+      error: "Failed to fetch health record",
     });
   }
 };
@@ -445,33 +496,35 @@ export const getHealthRecord: RequestHandler = (req, res) => {
  */
 export const getPatientProfile: RequestHandler = (req, res) => {
   try {
-    const patientId = req.headers['patient-id'] as string || 'default-patient';
+    const patientId =
+      (req.headers["patient-id"] as string) || "default-patient";
     const profile = patientProfiles.get(patientId);
-    
+
     if (!profile) {
       return res.status(404).json({
         success: false,
-        error: 'Patient profile not found'
+        error: "Patient profile not found",
       });
     }
 
-    const transactionHistory = BlockchainService.getPatientTransactionHistory(patientId);
+    const transactionHistory =
+      BlockchainService.getPatientTransactionHistory(patientId);
     const blockchainStats = BlockchainService.getBlockchainStats();
-    
+
     res.json({
       success: true,
       profile: {
         ...profile,
-        encryptionKey: undefined // Don't send encryption key to frontend
+        encryptionKey: undefined, // Don't send encryption key to frontend
       },
       transactionHistory,
-      blockchainStats
+      blockchainStats,
     });
   } catch (error) {
-    console.error('Error fetching patient profile:', error);
+    console.error("Error fetching patient profile:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch patient profile'
+      error: "Failed to fetch patient profile",
     });
   }
 };
@@ -481,35 +534,39 @@ export const getPatientProfile: RequestHandler = (req, res) => {
  */
 export const verifyPatientBlockchain: RequestHandler = (req, res) => {
   try {
-    const patientId = req.headers['patient-id'] as string || 'default-patient';
+    const patientId =
+      (req.headers["patient-id"] as string) || "default-patient";
     const records = healthRecords.get(patientId) || [];
-    
-    const verificationResults = records.map(record => ({
+
+    const verificationResults = records.map((record) => ({
       recordId: record.id,
       blockchainHash: record.blockchainHash,
-      isValid: BlockchainService.verifyBlockchainIntegrity(record.blockchainHash),
-      lastVerified: new Date().toISOString()
+      isValid: BlockchainService.verifyBlockchainIntegrity(
+        record.blockchainHash,
+      ),
+      lastVerified: new Date().toISOString(),
     }));
-    
+
     const totalRecords = verificationResults.length;
-    const validRecords = verificationResults.filter(r => r.isValid).length;
-    
+    const validRecords = verificationResults.filter((r) => r.isValid).length;
+
     res.json({
       success: true,
       verification: {
         totalRecords,
         validRecords,
         invalidRecords: totalRecords - validRecords,
-        integrityPercentage: totalRecords > 0 ? (validRecords / totalRecords) * 100 : 100,
-        verifiedAt: new Date().toISOString()
+        integrityPercentage:
+          totalRecords > 0 ? (validRecords / totalRecords) * 100 : 100,
+        verifiedAt: new Date().toISOString(),
       },
-      results: verificationResults
+      results: verificationResults,
     });
   } catch (error) {
-    console.error('Error verifying blockchain:', error);
+    console.error("Error verifying blockchain:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to verify blockchain integrity'
+      error: "Failed to verify blockchain integrity",
     });
   }
 };
@@ -522,13 +579,13 @@ export const getBlockchainStats: RequestHandler = (req, res) => {
     const stats = BlockchainService.getBlockchainStats();
     res.json({
       success: true,
-      stats
+      stats,
     });
   } catch (error) {
-    console.error('Error fetching blockchain stats:', error);
+    console.error("Error fetching blockchain stats:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch blockchain statistics'
+      error: "Failed to fetch blockchain statistics",
     });
   }
 };

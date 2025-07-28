@@ -1,18 +1,37 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { 
-  History, 
-  ArrowLeft, 
+import {
+  History,
+  ArrowLeft,
   Plus,
   Search,
   Calendar,
@@ -31,7 +50,7 @@ import {
   Heart,
   Thermometer,
   Save,
-  UserPlus
+  UserPlus,
 } from "lucide-react";
 
 export default function HealthHistory() {
@@ -58,7 +77,7 @@ export default function HealthHistory() {
     lastCheckupDate: "",
     doctor: "",
     // Additional Notes
-    notes: ""
+    notes: "",
   });
 
   const [healthRecords, setHealthRecords] = useState([]);
@@ -71,10 +90,10 @@ export default function HealthHistory() {
   const loadHealthRecords = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/health-records', {
+      const response = await fetch("/api/health-records", {
         headers: {
-          'patient-id': 'default-patient' // In real app, this would come from authentication
-        }
+          "patient-id": "default-patient", // In real app, this would come from authentication
+        },
       });
 
       if (response.ok) {
@@ -83,28 +102,28 @@ export default function HealthHistory() {
         setIsNewUser(data.records.length === 0);
       }
     } catch (error) {
-      console.error('Failed to load health records:', error);
+      console.error("Failed to load health records:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const addTestData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/add-test-data', {
-        method: 'POST',
+      const response = await fetch("/api/add-test-data", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'patient-id': 'default-patient'
-        }
+          "Content-Type": "application/json",
+          "patient-id": "default-patient",
+        },
       });
 
       if (response.ok) {
@@ -112,24 +131,33 @@ export default function HealthHistory() {
         if (result.success) {
           await loadHealthRecords();
           setIsNewUser(false);
-          alert(`Test data added successfully! Created ${result.recordsCreated} blockchain-secured health records.`);
+          alert(
+            `Test data added successfully! Created ${result.recordsCreated} blockchain-secured health records.`,
+          );
         } else {
-          alert('Failed to add test data: ' + result.error);
+          alert("Failed to add test data: " + result.error);
         }
       } else {
-        alert('Failed to add test data. Please try again.');
+        alert("Failed to add test data. Please try again.");
       }
     } catch (error) {
-      console.error('Error adding test data:', error);
-      alert('Failed to add test data. Please check your connection.');
+      console.error("Error adding test data:", error);
+      alert("Failed to add test data. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSubmitRecord = async () => {
-    if (!formData.weight || !formData.height || !formData.systolicBP || !formData.diastolicBP) {
-      alert("Please fill in all required vital signs (weight, height, blood pressure)");
+    if (
+      !formData.weight ||
+      !formData.height ||
+      !formData.systolicBP ||
+      !formData.diastolicBP
+    ) {
+      alert(
+        "Please fill in all required vital signs (weight, height, blood pressure)",
+      );
       return;
     }
 
@@ -152,26 +180,36 @@ export default function HealthHistory() {
           height: parseFloat(formData.height),
           systolicBP: parseInt(formData.systolicBP),
           diastolicBP: parseInt(formData.diastolicBP),
-          heartRate: formData.heartRate ? parseInt(formData.heartRate) : undefined,
-          temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+          heartRate: formData.heartRate
+            ? parseInt(formData.heartRate)
+            : undefined,
+          temperature: formData.temperature
+            ? parseFloat(formData.temperature)
+            : undefined,
 
           // Medical History
-          medications: formData.medications ? formData.medications.split(',').map(m => m.trim()) : [],
-          allergies: formData.allergies ? formData.allergies.split(',').map(a => a.trim()) : [],
-          chronicConditions: formData.chronicConditions ? formData.chronicConditions.split(',').map(c => c.trim()) : [],
+          medications: formData.medications
+            ? formData.medications.split(",").map((m) => m.trim())
+            : [],
+          allergies: formData.allergies
+            ? formData.allergies.split(",").map((a) => a.trim())
+            : [],
+          chronicConditions: formData.chronicConditions
+            ? formData.chronicConditions.split(",").map((c) => c.trim())
+            : [],
 
           // Additional
-          notes: formData.notes
-        }
+          notes: formData.notes,
+        },
       };
 
-      const response = await fetch('/api/health-records', {
-        method: 'POST',
+      const response = await fetch("/api/health-records", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'patient-id': 'default-patient' // In real app, this would come from authentication
+          "Content-Type": "application/json",
+          "patient-id": "default-patient", // In real app, this would come from authentication
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -184,22 +222,35 @@ export default function HealthHistory() {
 
           // Reset form
           setFormData({
-            age: "", gender: "", bloodType: "", weight: "", height: "",
-            systolicBP: "", diastolicBP: "", heartRate: "", temperature: "",
-            medications: "", allergies: "", chronicConditions: "",
-            lastCheckupDate: "", doctor: "", notes: ""
+            age: "",
+            gender: "",
+            bloodType: "",
+            weight: "",
+            height: "",
+            systolicBP: "",
+            diastolicBP: "",
+            heartRate: "",
+            temperature: "",
+            medications: "",
+            allergies: "",
+            chronicConditions: "",
+            lastCheckupDate: "",
+            doctor: "",
+            notes: "",
           });
 
-          alert(`Health record saved successfully! Blockchain Hash: ${result.blockchainHash}`);
+          alert(
+            `Health record saved successfully! Blockchain Hash: ${result.blockchainHash}`,
+          );
         } else {
-          alert('Failed to save health record: ' + result.error);
+          alert("Failed to save health record: " + result.error);
         }
       } else {
-        alert('Failed to save health record. Please try again.');
+        alert("Failed to save health record. Please try again.");
       }
     } catch (error) {
-      console.error('Error saving health record:', error);
-      alert('Failed to save health record. Please check your connection.');
+      console.error("Error saving health record:", error);
+      alert("Failed to save health record. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
@@ -211,39 +262,47 @@ export default function HealthHistory() {
       query: "What are the side effects of blood pressure medication?",
       timestamp: "2024-01-15 14:30",
       response: "Common side effects include dizziness, fatigue, and nausea...",
-      relevance: "high"
+      relevance: "high",
     },
     {
       id: 2,
       query: "How to manage stress-related headaches?",
       timestamp: "2024-01-14 09:15",
       response: "Stress management techniques include deep breathing...",
-      relevance: "medium"
+      relevance: "medium",
     },
     {
       id: 3,
       query: "Healthy diet for hypertension",
       timestamp: "2024-01-12 16:45",
       response: "DASH diet is recommended for managing blood pressure...",
-      relevance: "high"
-    }
+      relevance: "high",
+    },
   ];
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'checkup': return <Stethoscope className="h-4 w-4" />;
-      case 'medication': return <Pill className="h-4 w-4" />;
-      case 'symptom': return <Activity className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+      case "checkup":
+        return <Stethoscope className="h-4 w-4" />;
+      case "medication":
+        return <Pill className="h-4 w-4" />;
+      case "symptom":
+        return <Activity className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-success text-success-foreground';
-      case 'active': return 'bg-primary text-primary-foreground';
-      case 'monitoring': return 'bg-warning text-warning-foreground';
-      default: return 'bg-secondary text-secondary-foreground';
+      case "completed":
+        return "bg-success text-success-foreground";
+      case "active":
+        return "bg-primary text-primary-foreground";
+      case "monitoring":
+        return "bg-warning text-warning-foreground";
+      default:
+        return "bg-secondary text-secondary-foreground";
     }
   };
 
@@ -265,8 +324,12 @@ export default function HealthHistory() {
                   <History className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Health History</h1>
-                  <p className="text-sm text-muted-foreground">Blockchain-Secured Records</p>
+                  <h1 className="text-xl font-bold text-foreground">
+                    Health History
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Blockchain-Secured Records
+                  </p>
                 </div>
               </div>
             </div>
@@ -279,7 +342,10 @@ export default function HealthHistory() {
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <Dialog open={showAddRecordDialog} onOpenChange={setShowAddRecordDialog}>
+              <Dialog
+                open={showAddRecordDialog}
+                onOpenChange={setShowAddRecordDialog}
+              >
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -302,20 +368,34 @@ export default function HealthHistory() {
                   <UserPlus className="h-8 w-8" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">Welcome to HealthChain!</h2>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                    Welcome to HealthChain!
+                  </h2>
                   <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                    Let's get started by adding your basic health information. This data will be securely stored on the blockchain 
-                    and only accessible by you. This helps us provide better AI recommendations and track your health journey.
+                    Let's get started by adding your basic health information.
+                    This data will be securely stored on the blockchain and only
+                    accessible by you. This helps us provide better AI
+                    recommendations and track your health journey.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button size="lg" onClick={() => setShowAddRecordDialog(true)} className="px-8">
+                  <Button
+                    size="lg"
+                    onClick={() => setShowAddRecordDialog(true)}
+                    className="px-8"
+                  >
                     <Plus className="h-5 w-5 mr-2" />
                     Add Your Health Data
                   </Button>
-                  <Button size="lg" variant="outline" onClick={addTestData} className="px-8" disabled={isLoading}>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={addTestData}
+                    className="px-8"
+                    disabled={isLoading}
+                  >
                     <Activity className="h-5 w-5 mr-2" />
-                    {isLoading ? 'Adding Test Data...' : 'Add Test Data (Demo)'}
+                    {isLoading ? "Adding Test Data..." : "Add Test Data (Demo)"}
                   </Button>
                 </div>
                 <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground mt-4">
@@ -349,7 +429,10 @@ export default function HealthHistory() {
         )}
 
         {/* Medical Data Entry Dialog */}
-        <Dialog open={showAddRecordDialog} onOpenChange={setShowAddRecordDialog}>
+        <Dialog
+          open={showAddRecordDialog}
+          onOpenChange={setShowAddRecordDialog}
+        >
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-2xl flex items-center">
@@ -357,10 +440,11 @@ export default function HealthHistory() {
                 Add Your Health Information
               </DialogTitle>
               <DialogDescription>
-                Please fill in your health information. All data is encrypted and stored securely on the blockchain.
+                Please fill in your health information. All data is encrypted
+                and stored securely on the blockchain.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-8 py-4">
               {/* Personal Information */}
               <div className="space-y-4">
@@ -381,7 +465,12 @@ export default function HealthHistory() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender *</Label>
-                    <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                    <Select
+                      value={formData.gender}
+                      onValueChange={(value) =>
+                        handleInputChange("gender", value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
@@ -389,13 +478,20 @@ export default function HealthHistory() {
                         <SelectItem value="male">Male</SelectItem>
                         <SelectItem value="female">Female</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                        <SelectItem value="prefer-not-to-say">
+                          Prefer not to say
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bloodType">Blood Type</Label>
-                    <Select value={formData.bloodType} onValueChange={(value) => handleInputChange("bloodType", value)}>
+                    <Select
+                      value={formData.bloodType}
+                      onValueChange={(value) =>
+                        handleInputChange("bloodType", value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select blood type" />
                       </SelectTrigger>
@@ -433,7 +529,9 @@ export default function HealthHistory() {
                       type="number"
                       placeholder="70"
                       value={formData.weight}
-                      onChange={(e) => handleInputChange("weight", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("weight", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -446,7 +544,9 @@ export default function HealthHistory() {
                       type="number"
                       placeholder="175"
                       value={formData.height}
-                      onChange={(e) => handleInputChange("height", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("height", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -459,7 +559,9 @@ export default function HealthHistory() {
                       type="number"
                       placeholder="72"
                       value={formData.heartRate}
-                      onChange={(e) => handleInputChange("heartRate", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("heartRate", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -469,7 +571,9 @@ export default function HealthHistory() {
                       type="number"
                       placeholder="120"
                       value={formData.systolicBP}
-                      onChange={(e) => handleInputChange("systolicBP", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("systolicBP", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -479,7 +583,9 @@ export default function HealthHistory() {
                       type="number"
                       placeholder="80"
                       value={formData.diastolicBP}
-                      onChange={(e) => handleInputChange("diastolicBP", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("diastolicBP", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -493,7 +599,9 @@ export default function HealthHistory() {
                       step="0.1"
                       placeholder="36.5"
                       value={formData.temperature}
-                      onChange={(e) => handleInputChange("temperature", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("temperature", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -517,7 +625,9 @@ export default function HealthHistory() {
                       id="medications"
                       placeholder="List any medications you are currently taking..."
                       value={formData.medications}
-                      onChange={(e) => handleInputChange("medications", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("medications", e.target.value)
+                      }
                       rows={3}
                     />
                   </div>
@@ -527,17 +637,23 @@ export default function HealthHistory() {
                       id="allergies"
                       placeholder="List any known allergies..."
                       value={formData.allergies}
-                      onChange={(e) => handleInputChange("allergies", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("allergies", e.target.value)
+                      }
                       rows={3}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="chronicConditions">Chronic Conditions</Label>
+                    <Label htmlFor="chronicConditions">
+                      Chronic Conditions
+                    </Label>
                     <Textarea
                       id="chronicConditions"
                       placeholder="List any chronic health conditions..."
                       value={formData.chronicConditions}
-                      onChange={(e) => handleInputChange("chronicConditions", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("chronicConditions", e.target.value)
+                      }
                       rows={3}
                     />
                   </div>
@@ -547,7 +663,9 @@ export default function HealthHistory() {
                       id="notes"
                       placeholder="Any additional health information..."
                       value={formData.notes}
-                      onChange={(e) => handleInputChange("notes", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("notes", e.target.value)
+                      }
                       rows={3}
                     />
                   </div>
@@ -559,7 +677,9 @@ export default function HealthHistory() {
                       id="lastCheckupDate"
                       type="date"
                       value={formData.lastCheckupDate}
-                      onChange={(e) => handleInputChange("lastCheckupDate", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("lastCheckupDate", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -568,7 +688,9 @@ export default function HealthHistory() {
                       id="doctor"
                       placeholder="Dr. Smith"
                       value={formData.doctor}
-                      onChange={(e) => handleInputChange("doctor", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("doctor", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -579,10 +701,13 @@ export default function HealthHistory() {
                 <div className="flex items-center space-x-3">
                   <Shield className="h-6 w-6 text-primary" />
                   <div>
-                    <h4 className="font-semibold text-foreground">Blockchain Security</h4>
+                    <h4 className="font-semibold text-foreground">
+                      Blockchain Security
+                    </h4>
                     <p className="text-sm text-muted-foreground">
-                      Your health data will be encrypted and stored on an immutable blockchain. 
-                      Only you have the private key to access this information.
+                      Your health data will be encrypted and stored on an
+                      immutable blockchain. Only you have the private key to
+                      access this information.
                     </p>
                   </div>
                 </div>
@@ -590,7 +715,10 @@ export default function HealthHistory() {
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 pt-4">
-                <Button variant="outline" onClick={() => setShowAddRecordDialog(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddRecordDialog(false)}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -599,7 +727,7 @@ export default function HealthHistory() {
                   disabled={isLoading}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {isLoading ? 'Saving to Blockchain...' : 'Save to Blockchain'}
+                  {isLoading ? "Saving to Blockchain..." : "Save to Blockchain"}
                 </Button>
               </div>
             </div>
@@ -609,11 +737,17 @@ export default function HealthHistory() {
         {healthRecords.length > 0 && (
           <Tabs defaultValue="records" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 max-w-md">
-              <TabsTrigger value="records" className="flex items-center space-x-2">
+              <TabsTrigger
+                value="records"
+                className="flex items-center space-x-2"
+              >
                 <FileText className="h-4 w-4" />
                 <span>Health Records</span>
               </TabsTrigger>
-              <TabsTrigger value="ai-history" className="flex items-center space-x-2">
+              <TabsTrigger
+                value="ai-history"
+                className="flex items-center space-x-2"
+              >
                 <Brain className="h-4 w-4" />
                 <span>AI Search History</span>
               </TabsTrigger>
@@ -630,12 +764,16 @@ export default function HealthHistory() {
                     </Badge>
                   </CardTitle>
                   <CardDescription>
-                    All your health records are encrypted and stored on the blockchain for maximum security.
+                    All your health records are encrypted and stored on the
+                    blockchain for maximum security.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {healthRecords.map((record) => (
-                    <Card key={record.id} className="border-l-4 border-l-primary">
+                    <Card
+                      key={record.id}
+                      className="border-l-4 border-l-primary"
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
@@ -656,7 +794,9 @@ export default function HealthHistory() {
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <p className="text-sm text-muted-foreground mb-3">{record.description}</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {record.description}
+                        </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                             <Lock className="h-3 w-3" />
@@ -684,12 +824,16 @@ export default function HealthHistory() {
                     </Badge>
                   </CardTitle>
                   <CardDescription>
-                    Your B-max AI search history, helping track your health journey and concerns.
+                    Your B-max AI search history, helping track your health
+                    journey and concerns.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {aiSearchHistory.map((search) => (
-                    <Card key={search.id} className="border-l-4 border-l-accent">
+                    <Card
+                      key={search.id}
+                      className="border-l-4 border-l-accent"
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
@@ -697,24 +841,31 @@ export default function HealthHistory() {
                               <Brain className="h-4 w-4" />
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-semibold text-sm">{search.query}</h3>
+                              <h3 className="font-semibold text-sm">
+                                {search.query}
+                              </h3>
                               <p className="text-xs text-muted-foreground flex items-center">
                                 <Clock className="h-3 w-3 mr-1" />
                                 {search.timestamp}
                               </p>
                             </div>
                           </div>
-                          <Badge variant={search.relevance === 'high' ? 'default' : 'secondary'}>
+                          <Badge
+                            variant={
+                              search.relevance === "high"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
                             {search.relevance}
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
                         <p className="text-sm text-muted-foreground mb-3">
-                          {search.response.length > 100 
-                            ? `${search.response.substring(0, 100)}...` 
-                            : search.response
-                          }
+                          {search.response.length > 100
+                            ? `${search.response.substring(0, 100)}...`
+                            : search.response}
                         </p>
                         <Button variant="ghost" size="sm">
                           View Full Response
@@ -736,15 +887,16 @@ export default function HealthHistory() {
                 <Shield className="h-6 w-6" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold mb-1">End-to-End Blockchain Security</h3>
+                <h3 className="font-semibold mb-1">
+                  End-to-End Blockchain Security
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Your health data is encrypted and stored on an immutable blockchain, ensuring 
-                  complete privacy and security. Only you control access to your information.
+                  Your health data is encrypted and stored on an immutable
+                  blockchain, ensuring complete privacy and security. Only you
+                  control access to your information.
                 </p>
               </div>
-              <Button variant="outline">
-                Learn More
-              </Button>
+              <Button variant="outline">Learn More</Button>
             </div>
           </CardContent>
         </Card>

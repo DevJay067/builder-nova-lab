@@ -10,7 +10,7 @@ import {
   getPatientProfile,
   verifyPatientBlockchain,
   getBlockchainStats,
-  addTestData
+  addTestData,
 } from "./routes/healthRecords";
 
 export function createServer() {
