@@ -10,9 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import {
-  History,
-  ArrowLeft,
+import { 
+  History, 
+  ArrowLeft, 
   Plus,
   Search,
   Calendar,
@@ -124,12 +124,12 @@ export default function HealthHistory() {
     setHealthRecords(prev => [newRecord, ...prev]);
     setIsNewUser(false);
     setShowAddRecordDialog(false);
-
+    
     // Reset form
     setFormData({
-      age: "", gender: "", bloodType: "", weight: "", height: "",
+      age: "", gender: "", bloodType: "", weight: "", height: "", 
       systolicBP: "", diastolicBP: "", heartRate: "", temperature: "",
-      medications: "", allergies: "", chronicConditions: "",
+      medications: "", allergies: "", chronicConditions: "", 
       lastCheckupDate: "", doctor: "", notes: ""
     });
   };
@@ -233,7 +233,7 @@ export default function HealthHistory() {
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2">Welcome to HealthChain!</h2>
                   <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                    Let's get started by adding your basic health information. This data will be securely stored on the blockchain
+                    Let's get started by adding your basic health information. This data will be securely stored on the blockchain 
                     and only accessible by you. This helps us provide better AI recommendations and track your health journey.
                   </p>
                 </div>
@@ -283,7 +283,7 @@ export default function HealthHistory() {
                 Please fill in your health information. All data is encrypted and stored securely on the blockchain.
               </DialogDescription>
             </DialogHeader>
-
+            
             <div className="space-y-8 py-4">
               {/* Personal Information */}
               <div className="space-y-4">
@@ -504,7 +504,7 @@ export default function HealthHistory() {
                   <div>
                     <h4 className="font-semibold text-foreground">Blockchain Security</h4>
                     <p className="text-sm text-muted-foreground">
-                      Your health data will be encrypted and stored on an immutable blockchain.
+                      Your health data will be encrypted and stored on an immutable blockchain. 
                       Only you have the private key to access this information.
                     </p>
                   </div>
@@ -525,125 +525,127 @@ export default function HealthHistory() {
           </DialogContent>
         </Dialog>
 
-        <Tabs defaultValue="records" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="records" className="flex items-center space-x-2">
-              <FileText className="h-4 w-4" />
-              <span>Health Records</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-history" className="flex items-center space-x-2">
-              <Brain className="h-4 w-4" />
-              <span>AI Search History</span>
-            </TabsTrigger>
-          </TabsList>
+        {healthRecords.length > 0 && (
+          <Tabs defaultValue="records" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2 max-w-md">
+              <TabsTrigger value="records" className="flex items-center space-x-2">
+                <FileText className="h-4 w-4" />
+                <span>Health Records</span>
+              </TabsTrigger>
+              <TabsTrigger value="ai-history" className="flex items-center space-x-2">
+                <Brain className="h-4 w-4" />
+                <span>AI Search History</span>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Health Records Tab */}
-          <TabsContent value="records" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Medical Records</span>
-                  <Badge variant="outline" className="text-xs">
-                    {healthRecords.length} records
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  All your health records are encrypted and stored on the blockchain for maximum security.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {healthRecords.map((record) => (
-                  <Card key={record.id} className="border-l-4 border-l-primary">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
-                            {getTypeIcon(record.type)}
+            {/* Health Records Tab */}
+            <TabsContent value="records" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Medical Records</span>
+                    <Badge variant="outline" className="text-xs">
+                      {healthRecords.length} records
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    All your health records are encrypted and stored on the blockchain for maximum security.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {healthRecords.map((record) => (
+                    <Card key={record.id} className="border-l-4 border-l-primary">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
+                              {getTypeIcon(record.type)}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">{record.title}</h3>
+                              <p className="text-sm text-muted-foreground flex items-center">
+                                <Calendar className="h-3 w-3 mr-1" />
+                                {record.date} • {record.doctor}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold">{record.title}</h3>
-                            <p className="text-sm text-muted-foreground flex items-center">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {record.date} • {record.doctor}
-                            </p>
+                          <Badge className={getStatusColor(record.status)}>
+                            {record.status}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-sm text-muted-foreground mb-3">{record.description}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                            <Lock className="h-3 w-3" />
+                            <span>Blockchain: {record.blockchainHash}</span>
                           </div>
+                          <Button variant="ghost" size="sm">
+                            View Details
+                          </Button>
                         </div>
-                        <Badge className={getStatusColor(record.status)}>
-                          {record.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-sm text-muted-foreground mb-3">{record.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <Lock className="h-3 w-3" />
-                          <span>Blockchain: {record.blockchainHash}</span>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* AI Search History Tab */}
+            <TabsContent value="ai-history" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>AI Search History</span>
+                    <Badge variant="outline" className="text-xs">
+                      {aiSearchHistory.length} searches
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Your B-max AI search history, helping track your health journey and concerns.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {aiSearchHistory.map((search) => (
+                    <Card key={search.id} className="border-l-4 border-l-accent">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent/10 text-accent">
+                              <Brain className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-sm">{search.query}</h3>
+                              <p className="text-xs text-muted-foreground flex items-center">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {search.timestamp}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant={search.relevance === 'high' ? 'default' : 'secondary'}>
+                            {search.relevance}
+                          </Badge>
                         </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {search.response.length > 100 
+                            ? `${search.response.substring(0, 100)}...` 
+                            : search.response
+                          }
+                        </p>
                         <Button variant="ghost" size="sm">
-                          View Details
+                          View Full Response
                         </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* AI Search History Tab */}
-          <TabsContent value="ai-history" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>AI Search History</span>
-                  <Badge variant="outline" className="text-xs">
-                    {aiSearchHistory.length} searches
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  Your B-max AI search history, helping track your health journey and concerns.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {aiSearchHistory.map((search) => (
-                  <Card key={search.id} className="border-l-4 border-l-accent">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent/10 text-accent">
-                            <Brain className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-sm">{search.query}</h3>
-                            <p className="text-xs text-muted-foreground flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {search.timestamp}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge variant={search.relevance === 'high' ? 'default' : 'secondary'}>
-                          {search.relevance}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {search.response.length > 100 
-                          ? `${search.response.substring(0, 100)}...` 
-                          : search.response
-                        }
-                      </p>
-                      <Button variant="ghost" size="sm">
-                        View Full Response
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        )}
 
         {/* Security Info */}
         <Card className="mt-8 bg-gradient-to-r from-primary/5 to-accent/5">
