@@ -86,35 +86,35 @@ export default function Index() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 py-8 sm:py-16">
         <div className="text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center rounded-full px-4 py-2 bg-primary/10 text-primary text-sm font-medium mb-8">
-            <Sparkles className="h-4 w-4 mr-2" />
-            Next-Generation Healthcare Platform
+          <div className="inline-flex items-center rounded-full px-3 py-2 sm:px-4 bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-6 sm:mb-8">
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="whitespace-nowrap">Next-Gen Healthcare</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-foreground mb-4 sm:mb-6 leading-tight px-2">
             Your Health,
             <span className="text-primary"> Secured</span> by
             <span className="text-accent"> Blockchain</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-            Experience the future of healthcare with AI-powered insights, secure blockchain storage, 
+          <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-4">
+            Experience the future of healthcare with AI-powered insights, secure blockchain storage,
             and comprehensive health management tools designed for your wellbeing.
           </p>
-          
+
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-16 px-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">100%</div>
-              <div className="text-sm text-muted-foreground">Data Security</div>
+              <div className="text-2xl sm:text-3xl font-bold text-primary mb-1 sm:mb-2">100%</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Data Security</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-accent mb-2">24/7</div>
-              <div className="text-sm text-muted-foreground">AI Assistant</div>
+              <div className="text-2xl sm:text-3xl font-bold text-accent mb-1 sm:mb-2">24/7</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">AI Assistant</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-info mb-2">∞</div>
-              <div className="text-sm text-muted-foreground">Blockchain Storage</div>
+              <div className="text-2xl sm:text-3xl font-bold text-info mb-1 sm:mb-2">∞</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Storage</div>
             </div>
           </div>
         </div>
