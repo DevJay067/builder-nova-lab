@@ -36,8 +36,9 @@ import {
 
 export default function HealthHistory() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isNewUser, setIsNewUser] = useState(true); // Set to true for new users
+  const [isNewUser, setIsNewUser] = useState(true);
   const [showAddRecordDialog, setShowAddRecordDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     // Personal Information
     age: "",
@@ -60,38 +61,33 @@ export default function HealthHistory() {
     notes: ""
   });
 
-  const [healthRecords, setHealthRecords] = useState(isNewUser ? [] : [
-    {
-      id: 1,
-      date: "2024-01-15",
-      type: "checkup",
-      title: "Annual Health Checkup",
-      description: "Routine physical examination with blood work",
-      doctor: "Dr. Sarah Johnson",
-      status: "completed",
-      blockchainHash: "0x1a2b3c4d5e6f..."
-    },
-    {
-      id: 2,
-      date: "2024-01-10",
-      type: "medication",
-      title: "Medication Update",
-      description: "Added new blood pressure medication",
-      doctor: "Dr. Michael Chen",
-      status: "active",
-      blockchainHash: "0x2b3c4d5e6f7a..."
-    },
-    {
-      id: 3,
-      date: "2024-01-05",
-      type: "symptom",
-      title: "Reported Symptoms",
-      description: "Mild headaches and fatigue",
-      doctor: "Self-reported",
-      status: "monitoring",
-      blockchainHash: "0x3c4d5e6f7a8b..."
+  const [healthRecords, setHealthRecords] = useState([]);
+
+  // Load health records on component mount
+  useEffect(() => {
+    loadHealthRecords();
+  }, []);
+
+  const loadHealthRecords = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/health-records', {
+        headers: {
+          'patient-id': 'default-patient' // In real app, this would come from authentication
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHealthRecords(data.records || []);
+        setIsNewUser(data.records.length === 0);
+      }
+    } catch (error) {
+      console.error('Failed to load health records:', error);
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
