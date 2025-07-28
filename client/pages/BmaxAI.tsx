@@ -90,11 +90,14 @@ export default function BmaxAI() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {quickActions.map((action, index) => (
-                  <Button 
+                  <Button
                     key={index}
-                    variant="ghost" 
+                    variant="ghost"
                     className="w-full justify-start text-sm"
-                    onClick={() => setMessage(action)}
+                    onClick={() => {
+                      // These are quick action suggestions - users can type them in the AI agent
+                      console.log(`Quick action suggested: ${action}`);
+                    }}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     {action}
