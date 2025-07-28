@@ -32,6 +32,7 @@ export function createServer() {
   app.post("/api/health-records", createHealthRecord);
   app.get("/api/health-records", getHealthRecords);
   app.get("/api/health-records/:recordId", getHealthRecord);
+  app.get("/api/medical-context", getMedicalContext);
 
   // Patient & Blockchain Management
   app.get("/api/patient/profile", getPatientProfile);
