@@ -1,21 +1,15 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Brain, 
-  ArrowLeft, 
-  Send, 
-  Mic,
+import {
+  Brain,
+  ArrowLeft,
   Settings,
   Sparkles,
   MessageCircle,
   Clock,
-  Shield,
-  Zap
+  Shield
 } from "lucide-react";
 
 export default function BmaxAI() {
