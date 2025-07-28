@@ -102,10 +102,10 @@ export default function BmaxAI() {
         <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 sm:gap-8">
           {/* Medical Context Sidebar */}
           <div className="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-primary" />
+            <Card className="lg:sticky lg:top-4">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg flex items-center">
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
                   Medical Context
                 </CardTitle>
               </CardHeader>
