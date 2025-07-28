@@ -121,46 +121,46 @@ export default function Index() {
       </section>
 
       {/* Features Grid */}
-      <section className="container mx-auto px-4 pb-20">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+      <section className="container mx-auto px-4 pb-12 sm:pb-20">
+        <div className="text-center mb-8 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4 px-2">
             Comprehensive Health Solutions
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Four powerful tools to transform your healthcare experience and keep you in control
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 max-w-6xl mx-auto">
           {features.map((feature) => {
             const IconComponent = feature.icon;
             return (
-              <Card 
-                key={feature.id} 
-                className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10"
+              <Card
+                key={feature.id}
+                className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 active:scale-95 touch-manipulation"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                <CardHeader className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`flex items-center justify-center w-14 h-14 rounded-2xl ${feature.color} text-white group-hover:scale-110 transition-transform duration-300`}>
-                      <IconComponent className="h-7 w-7" />
+                <CardHeader className="relative z-10 pb-3 sm:pb-6">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${feature.color} text-white group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComponent className="h-6 w-6 sm:h-7 sm:w-7" />
                     </div>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs px-2 py-1">
                       {feature.stats}
                     </Badge>
                   </div>
-                  <CardTitle className="text-2xl mb-2 group-hover:text-primary transition-colors duration-300">
+                  <CardTitle className="text-lg sm:text-2xl mb-2 group-hover:text-primary transition-colors duration-300">
                     {feature.title}
                   </CardTitle>
-                  <CardDescription className="text-base leading-relaxed">
+                  <CardDescription className="text-sm sm:text-base leading-relaxed">
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="relative z-10">
+                <CardContent className="relative z-10 pt-0">
                   <Link to={feature.route}>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-between group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300"
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 min-h-[44px] text-sm sm:text-base"
                     >
                       Get Started
                       <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
