@@ -130,7 +130,7 @@ export default function FirstAid() {
         "Raise legs 8-12 inches if lying down",
         "Loosen tight clothing",
         "Check for breathing and pulse",
-        "If unconscious for more than 1 minute, call 911",
+        "If unconscious for more than 1 minute, call 112",
         "Stay with person until they recover"
       ],
       timeframe: "Position immediately",
