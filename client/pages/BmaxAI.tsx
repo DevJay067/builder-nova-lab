@@ -58,99 +58,32 @@ export default function BmaxAI() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar - AI Info */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <Brain className="h-5 w-5 mr-2 text-primary" />
-                  B-max Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge variant="default" className="bg-success">Online</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Response Time</span>
-                  <span className="text-sm font-medium">~2s</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Accuracy</span>
-                  <span className="text-sm font-medium">94.7%</span>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Full-width AI Agent */}
+        <Card className="h-[calc(100vh-200px)] flex flex-col">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">B-max AI Health Assistant</CardTitle>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                Live AI Agent
+              </div>
+            </div>
+            <CardDescription>
+              Your personal AI health companion trained specifically for healthcare guidance and support.
+            </CardDescription>
+          </CardHeader>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {quickActions.map((action, index) => (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    className="w-full justify-start text-sm"
-                    onClick={() => {
-                      // These are quick action suggestions - users can type them in the AI agent
-                      console.log(`Quick action suggested: ${action}`);
-                    }}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    {action}
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <Shield className="h-5 w-5 mr-2 text-accent" />
-                  Security
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  All conversations are encrypted and stored securely on the blockchain. 
-                  Your privacy is our priority.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main AI Agent Area */}
-          <div className="lg:col-span-3">
-            <Card className="h-[600px] flex flex-col">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">B-max AI Health Assistant</CardTitle>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    Live AI Agent
-                  </div>
-                </div>
-                <CardDescription>
-                  Interact with your personal B-max AI health assistant. This AI is trained specifically for healthcare guidance and support.
-                </CardDescription>
-              </CardHeader>
-
-              {/* JotForm AI Agent Iframe */}
-              <CardContent className="flex-1 overflow-hidden p-0">
-                <iframe
-                  src="https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1"
-                  className="w-full h-full border-0 rounded-b-lg"
-                  title="B-max AI Health Assistant"
-                  allow="microphone; camera"
-                  style={{ minHeight: '500px' }}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+          {/* JotForm AI Agent Iframe */}
+          <CardContent className="flex-1 overflow-hidden p-0">
+            <iframe
+              src="https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1"
+              className="w-full h-full border-0 rounded-b-lg"
+              title="B-max AI Health Assistant"
+              allow="microphone; camera"
+              style={{ minHeight: '600px' }}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
