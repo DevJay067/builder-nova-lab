@@ -7,19 +7,10 @@ import {
   ArrowLeft,
   Settings,
   Sparkles,
-  MessageCircle,
-  Clock,
-  Shield
+  Clock
 } from "lucide-react";
 
 export default function BmaxAI() {
-
-  const quickActions = [
-    "Check my symptoms",
-    "Review my medications",
-    "Health recommendations",
-    "Emergency guidance"
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
