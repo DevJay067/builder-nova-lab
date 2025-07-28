@@ -174,25 +174,25 @@ export default function Index() {
       </section>
 
       {/* Bottom CTA Section */}
-      <section className="bg-gradient-to-r from-primary via-accent to-primary py-20">
+      <section className="bg-gradient-to-r from-primary via-accent to-primary py-12 sm:py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6 px-2">
               Ready to Transform Your Healthcare?
             </h2>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="text-base sm:text-xl text-white/90 mb-6 sm:mb-8 px-4">
               Join thousands who trust HealthChain for secure, intelligent healthcare management
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/bmax">
-                <Button size="lg" variant="secondary" className="text-lg px-8">
-                  <Plus className="h-5 w-5 mr-2" />
+            <div className="flex flex-col gap-3 sm:gap-4 justify-center px-4">
+              <Link to="/bmax" className="w-full sm:w-auto">
+                <Button size="lg" variant="secondary" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 min-h-[48px] sm:min-h-[52px]">
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   Start with B-max AI
                 </Button>
               </Link>
-              <Link to="/history">
-                <Button size="lg" variant="outline" className="text-lg px-8 bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary">
-                  <Clock className="h-5 w-5 mr-2" />
+              <Link to="/history" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary min-h-[48px] sm:min-h-[52px]">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   View Health History
                 </Button>
               </Link>
