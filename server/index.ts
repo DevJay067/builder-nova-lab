@@ -6,6 +6,7 @@ import {
   createHealthRecord,
   getHealthRecords,
   getHealthRecord,
+  getMedicalContext,
   getPatientProfile,
   verifyPatientBlockchain,
   getBlockchainStats
