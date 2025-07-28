@@ -222,18 +222,308 @@ export default function HealthHistory() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* New User Welcome Section */}
+        {isNewUser && healthRecords.length === 0 && (
+          <Card className="mb-8 bg-gradient-to-r from-primary/5 to-accent/5 border-2 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mx-auto">
+                  <UserPlus className="h-8 w-8" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">Welcome to HealthChain!</h2>
+                  <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+                    Let's get started by adding your basic health information. This data will be securely stored on the blockchain
+                    and only accessible by you. This helps us provide better AI recommendations and track your health journey.
+                  </p>
+                </div>
+                <Button size="lg" onClick={() => setShowAddRecordDialog(true)} className="px-8">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add Your Health Data
+                </Button>
+                <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground mt-4">
+                  <div className="flex items-center">
+                    <Shield className="h-4 w-4 mr-1 text-primary" />
+                    Blockchain Secured
+                  </div>
+                  <div className="flex items-center">
+                    <Lock className="h-4 w-4 mr-1 text-primary" />
+                    Private & Encrypted
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search health records and AI history..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
+        {healthRecords.length > 0 && (
+          <div className="mb-8">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search health records and AI history..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Medical Data Entry Dialog */}
+        <Dialog open={showAddRecordDialog} onOpenChange={setShowAddRecordDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl flex items-center">
+                <Stethoscope className="h-6 w-6 mr-2 text-primary" />
+                Add Your Health Information
+              </DialogTitle>
+              <DialogDescription>
+                Please fill in your health information. All data is encrypted and stored securely on the blockchain.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-8 py-4">
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  Personal Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Age *</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      placeholder="25"
+                      value={formData.age}
+                      onChange={(e) => handleInputChange("age", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender *</Label>
+                    <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bloodType">Blood Type</Label>
+                    <Select value={formData.bloodType} onValueChange={(value) => handleInputChange("bloodType", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select blood type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="AB+">AB+</SelectItem>
+                        <SelectItem value="AB-">AB-</SelectItem>
+                        <SelectItem value="O+">O+</SelectItem>
+                        <SelectItem value="O-">O-</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Vital Signs */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <Activity className="h-5 w-5 mr-2" />
+                  Vital Signs
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="weight" className="flex items-center">
+                      <Weight className="h-4 w-4 mr-1" />
+                      Weight (kg) *
+                    </Label>
+                    <Input
+                      id="weight"
+                      type="number"
+                      placeholder="70"
+                      value={formData.weight}
+                      onChange={(e) => handleInputChange("weight", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="height" className="flex items-center">
+                      <Ruler className="h-4 w-4 mr-1" />
+                      Height (cm) *
+                    </Label>
+                    <Input
+                      id="height"
+                      type="number"
+                      placeholder="175"
+                      value={formData.height}
+                      onChange={(e) => handleInputChange("height", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="heartRate" className="flex items-center">
+                      <Heart className="h-4 w-4 mr-1" />
+                      Heart Rate (bpm)
+                    </Label>
+                    <Input
+                      id="heartRate"
+                      type="number"
+                      placeholder="72"
+                      value={formData.heartRate}
+                      onChange={(e) => handleInputChange("heartRate", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="systolicBP">Systolic BP (mmHg) *</Label>
+                    <Input
+                      id="systolicBP"
+                      type="number"
+                      placeholder="120"
+                      value={formData.systolicBP}
+                      onChange={(e) => handleInputChange("systolicBP", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="diastolicBP">Diastolic BP (mmHg) *</Label>
+                    <Input
+                      id="diastolicBP"
+                      type="number"
+                      placeholder="80"
+                      value={formData.diastolicBP}
+                      onChange={(e) => handleInputChange("diastolicBP", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="temperature" className="flex items-center">
+                      <Thermometer className="h-4 w-4 mr-1" />
+                      Temperature (°C)
+                    </Label>
+                    <Input
+                      id="temperature"
+                      type="number"
+                      step="0.1"
+                      placeholder="36.5"
+                      value={formData.temperature}
+                      onChange={(e) => handleInputChange("temperature", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Medical History */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Medical History
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="medications" className="flex items-center">
+                      <Pill className="h-4 w-4 mr-1" />
+                      Current Medications
+                    </Label>
+                    <Textarea
+                      id="medications"
+                      placeholder="List any medications you are currently taking..."
+                      value={formData.medications}
+                      onChange={(e) => handleInputChange("medications", e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="allergies">Known Allergies</Label>
+                    <Textarea
+                      id="allergies"
+                      placeholder="List any known allergies..."
+                      value={formData.allergies}
+                      onChange={(e) => handleInputChange("allergies", e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="chronicConditions">Chronic Conditions</Label>
+                    <Textarea
+                      id="chronicConditions"
+                      placeholder="List any chronic health conditions..."
+                      value={formData.chronicConditions}
+                      onChange={(e) => handleInputChange("chronicConditions", e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Additional Notes</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Any additional health information..."
+                      value={formData.notes}
+                      onChange={(e) => handleInputChange("notes", e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="lastCheckupDate">Last Checkup Date</Label>
+                    <Input
+                      id="lastCheckupDate"
+                      type="date"
+                      value={formData.lastCheckupDate}
+                      onChange={(e) => handleInputChange("lastCheckupDate", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="doctor">Primary Doctor</Label>
+                    <Input
+                      id="doctor"
+                      placeholder="Dr. Smith"
+                      value={formData.doctor}
+                      onChange={(e) => handleInputChange("doctor", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Blockchain Security Notice */}
+              <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-4 rounded-lg border border-primary/20">
+                <div className="flex items-center space-x-3">
+                  <Shield className="h-6 w-6 text-primary" />
+                  <div>
+                    <h4 className="font-semibold text-foreground">Blockchain Security</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Your health data will be encrypted and stored on an immutable blockchain.
+                      Only you have the private key to access this information.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button variant="outline" onClick={() => setShowAddRecordDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitRecord} className="px-8">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save to Blockchain
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Tabs defaultValue="records" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
