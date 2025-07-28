@@ -96,38 +96,82 @@ export default function HealthHistory() {
     }));
   };
 
-  const generateBlockchainHash = () => {
-    return "0x" + Math.random().toString(16).substring(2, 15) + "...";
-  };
-
-  const handleSubmitRecord = () => {
+  const handleSubmitRecord = async () => {
     if (!formData.weight || !formData.height || !formData.systolicBP || !formData.diastolicBP) {
       alert("Please fill in all required vital signs (weight, height, blood pressure)");
       return;
     }
 
-    const newRecord = {
-      id: healthRecords.length + 1,
-      date: new Date().toISOString().split('T')[0],
-      type: "checkup",
-      title: "Initial Health Assessment",
-      description: `Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
-      doctor: formData.doctor || "Self-reported",
-      status: "completed",
-      blockchainHash: generateBlockchainHash()
-    };
+    try {
+      setIsLoading(true);
 
-    setHealthRecords(prev => [newRecord, ...prev]);
-    setIsNewUser(false);
-    setShowAddRecordDialog(false);
-    
-    // Reset form
-    setFormData({
-      age: "", gender: "", bloodType: "", weight: "", height: "", 
-      systolicBP: "", diastolicBP: "", heartRate: "", temperature: "",
-      medications: "", allergies: "", chronicConditions: "", 
-      lastCheckupDate: "", doctor: "", notes: ""
-    });
+      const requestBody = {
+        type: "checkup",
+        title: "Health Assessment",
+        description: `Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
+        doctor: formData.doctor || "Self-reported",
+        metadata: {
+          // Personal Information
+          age: formData.age ? parseInt(formData.age) : undefined,
+          gender: formData.gender,
+          bloodType: formData.bloodType,
+
+          // Vital Signs
+          weight: parseFloat(formData.weight),
+          height: parseFloat(formData.height),
+          systolicBP: parseInt(formData.systolicBP),
+          diastolicBP: parseInt(formData.diastolicBP),
+          heartRate: formData.heartRate ? parseInt(formData.heartRate) : undefined,
+          temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+
+          // Medical History
+          medications: formData.medications ? formData.medications.split(',').map(m => m.trim()) : [],
+          allergies: formData.allergies ? formData.allergies.split(',').map(a => a.trim()) : [],
+          chronicConditions: formData.chronicConditions ? formData.chronicConditions.split(',').map(c => c.trim()) : [],
+
+          // Additional
+          notes: formData.notes
+        }
+      };
+
+      const response = await fetch('/api/health-records', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'patient-id': 'default-patient' // In real app, this would come from authentication
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Reload health records
+          await loadHealthRecords();
+          setIsNewUser(false);
+          setShowAddRecordDialog(false);
+
+          // Reset form
+          setFormData({
+            age: "", gender: "", bloodType: "", weight: "", height: "",
+            systolicBP: "", diastolicBP: "", heartRate: "", temperature: "",
+            medications: "", allergies: "", chronicConditions: "",
+            lastCheckupDate: "", doctor: "", notes: ""
+          });
+
+          alert(`Health record saved successfully! Blockchain Hash: ${result.blockchainHash}`);
+        } else {
+          alert('Failed to save health record: ' + result.error);
+        }
+      } else {
+        alert('Failed to save health record. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving health record:', error);
+      alert('Failed to save health record. Please check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const aiSearchHistory = [
