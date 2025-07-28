@@ -2,6 +2,14 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import {
+  createHealthRecord,
+  getHealthRecords,
+  getHealthRecord,
+  getPatientProfile,
+  verifyPatientBlockchain,
+  getBlockchainStats
+} from "./routes/healthRecords";
 
 export function createServer() {
   const app = express();
@@ -18,6 +26,16 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // Health Records & Blockchain API Routes
+  app.post("/api/health-records", createHealthRecord);
+  app.get("/api/health-records", getHealthRecords);
+  app.get("/api/health-records/:recordId", getHealthRecord);
+
+  // Patient & Blockchain Management
+  app.get("/api/patient/profile", getPatientProfile);
+  app.get("/api/patient/verify-blockchain", verifyPatientBlockchain);
+  app.get("/api/blockchain/stats", getBlockchainStats);
 
   return app;
 }
