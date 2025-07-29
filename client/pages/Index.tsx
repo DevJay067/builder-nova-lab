@@ -213,6 +213,8 @@ export default function Index() {
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground text-center">
               © 2024 HealthChain. Secured by blockchain technology.
+              <br />
+              <span className="text-xs">Developer: Jay Magar</span>
             </div>
           </div>
         </div>
