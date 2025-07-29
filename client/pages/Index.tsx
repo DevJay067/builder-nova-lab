@@ -216,6 +216,10 @@ export default function Index() {
               © 2024 HealthChain. Secured by blockchain technology.
               <br />
               <span className="text-xs">Developer: Jay Magar</span>
+              <br />
+              <Link to="/legal" className="text-xs text-primary hover:underline">
+                Privacy Policy & Copyright
+              </Link>
             </div>
           </div>
         </div>
