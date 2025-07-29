@@ -30,6 +30,10 @@ export default function FirstAid() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCondition, setSelectedCondition] = useState(null);
 
+  const openYouTubeTutorial = (youtubeUrl: string) => {
+    window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const emergencyContacts = [
     { name: "Emergency Services", number: "112", type: "emergency" },
     { name: "Medical Emergency", number: "108", type: "medical" },
