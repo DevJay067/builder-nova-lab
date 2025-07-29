@@ -172,29 +172,31 @@ export default function FirstAid() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-destructive/5">
       {/* Header */}
       <header className="border-b border-border/40 bg-card/95 backdrop-blur">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link to="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                  <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
+                  <span className="sm:hidden">Back</span>
                 </Button>
               </Link>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-destructive text-destructive-foreground">
-                  <Heart className="h-6 w-6" />
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-destructive text-destructive-foreground">
+                  <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Emergency First Aid</h1>
-                  <p className="text-sm text-muted-foreground">Quick Response Guide</p>
+                  <h1 className="text-lg sm:text-xl font-bold text-foreground">Emergency First Aid</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Quick Response Guide</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="destructive" className="text-xs animate-pulse">
+            <div className="flex items-center">
+              <Badge variant="destructive" className="text-xs animate-pulse px-2 py-1">
                 <AlertTriangle className="h-3 w-3 mr-1" />
-                Emergency Ready
+                <span className="hidden sm:inline">Emergency Ready</span>
+                <span className="sm:hidden">Ready</span>
               </Badge>
             </div>
           </div>
