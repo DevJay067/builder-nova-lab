@@ -73,6 +73,7 @@ export default function Index() {
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold text-foreground">HealthChain</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Blockchain-Powered Healthcare</p>
+                <p className="text-xs text-primary font-medium">Developer: Jay Magar</p>
               </div>
             </div>
             <div className="flex items-center">
