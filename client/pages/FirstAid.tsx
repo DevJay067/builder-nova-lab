@@ -58,7 +58,7 @@ export default function FirstAid() {
       ],
       timeframe: "Call 112 immediately",
       category: "cardiovascular",
-      youtubeUrl: "https://www.youtube.com/watch?v=ILxjxfB4zNk"
+      youtubeUrl: "https://www.youtube.com/watch?v=I_WXbWQNivc"
     },
     {
       id: 2,
