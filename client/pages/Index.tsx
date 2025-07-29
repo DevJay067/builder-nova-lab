@@ -122,12 +122,12 @@ export default function Index() {
       </section>
 
       {/* Features Grid */}
-      <section className="container mx-auto px-4 pb-12 sm:pb-20">
-        <div className="text-center mb-8 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4 px-2">
+      <section className="container mx-auto px-3 sm:px-4 pb-8 sm:pb-12 md:pb-20">
+        <div className="text-center mb-6 sm:mb-8 md:mb-16">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3 md:mb-4 px-2">
             Comprehensive Health Solutions
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Four powerful tools to transform your healthcare experience and keep you in control
           </p>
         </div>
