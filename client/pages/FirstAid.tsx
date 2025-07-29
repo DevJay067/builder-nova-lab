@@ -23,7 +23,8 @@ import {
   Timer,
   Youtube,
   ExternalLink,
-  Play
+  Play,
+  FileText
 } from "lucide-react";
 
 export default function FirstAid() {
