@@ -154,7 +154,7 @@ export default function FirstAid() {
       ],
       timeframe: "Use epinephrine immediately if available",
       category: "allergic",
-      youtubeUrl: "https://www.youtube.com/watch?v=hy8743HRQQU"
+      youtubeUrl: "https://www.youtube.com/watch?v=mU7h-N3H_7Y"
     },
     {
       id: 6,
