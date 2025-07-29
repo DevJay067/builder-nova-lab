@@ -244,7 +244,7 @@ export default function FirstAid() {
             <TabsTrigger value="quick-guide" className="text-sm">Quick Guide</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="conditions" className="space-y-6">
+          <TabsContent value="conditions" className="space-y-4 sm:space-y-6">
             {/* Search */}
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -252,7 +252,7 @@ export default function FirstAid() {
                 placeholder="Search conditions or symptoms..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-12 text-base"
               />
             </div>
 
