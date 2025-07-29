@@ -370,21 +370,21 @@ export default function FirstAid() {
 
         {/* Selected Condition Modal-like Detail */}
         {selectedCondition && (
-          <Card className="mt-8 border-2 border-primary">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl flex items-center">
-                  <selectedCondition.icon className="h-6 w-6 mr-2" />
-                  {selectedCondition.title} - Detailed Steps
+          <Card className="mt-4 sm:mt-8 border-2 border-primary">
+            <CardHeader className="pb-3 sm:pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <CardTitle className="text-lg sm:text-xl flex items-center">
+                  <selectedCondition.icon className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                  <span className="break-words">{selectedCondition.title} - Detailed Steps</span>
                 </CardTitle>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs self-start sm:self-center">
                   <Play className="h-3 w-3 mr-1" />
                   Tutorial Available
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <h3 className="font-semibold mb-3">Symptoms to Look For:</h3>
                   <ul className="space-y-2">
