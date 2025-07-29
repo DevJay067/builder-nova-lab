@@ -279,10 +279,10 @@ export default function FirstAid() {
                         {condition.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-0">
                       <div className="space-y-3">
                         <div>
-                          <p className="text-sm font-medium mb-1">Key Symptoms:</p>
+                          <p className="text-xs sm:text-sm font-medium mb-1">Key Symptoms:</p>
                           <div className="flex flex-wrap gap-1">
                             {condition.symptoms.slice(0, 2).map((symptom, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
@@ -296,15 +296,15 @@ export default function FirstAid() {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center text-sm text-muted-foreground">
+                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                           <Timer className="h-3 w-3 mr-1" />
                           {condition.timeframe}
                         </div>
-                        <div className="flex gap-2 pt-2">
+                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 text-xs"
+                            className="flex-1 text-xs h-9 sm:h-8"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedCondition(condition);
@@ -315,14 +315,15 @@ export default function FirstAid() {
                           </Button>
                           <Button
                             size="sm"
-                            className="flex-1 text-xs bg-red-600 hover:bg-red-700 text-white"
+                            className="flex-1 text-xs h-9 sm:h-8 bg-red-600 hover:bg-red-700 text-white"
                             onClick={(e) => {
                               e.stopPropagation();
                               openYouTubeTutorial(condition.youtubeUrl);
                             }}
                           >
                             <Youtube className="h-3 w-3 mr-1" />
-                            Watch Tutorial
+                            <span className="hidden sm:inline">Watch Tutorial</span>
+                            <span className="sm:hidden">Tutorial</span>
                           </Button>
                         </div>
                       </div>
