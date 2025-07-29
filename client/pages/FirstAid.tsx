@@ -412,6 +412,23 @@ export default function FirstAid() {
                   <strong>Time Critical:</strong> {selectedCondition.timeframe}
                 </AlertDescription>
               </Alert>
+
+              <div className="mt-6 flex gap-3">
+                <Button
+                  onClick={() => setSelectedCondition(null)}
+                  variant="outline"
+                >
+                  Close Details
+                </Button>
+                <Button
+                  onClick={() => openYouTubeTutorial(selectedCondition.youtubeUrl)}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Youtube className="h-4 w-4 mr-2" />
+                  Watch YouTube Tutorial
+                  <ExternalLink className="h-3 w-3 ml-2" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
