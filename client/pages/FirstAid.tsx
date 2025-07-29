@@ -49,7 +49,8 @@ export default function FirstAid() {
         "Stay with the person until help arrives"
       ],
       timeframe: "Call 112 immediately",
-      category: "cardiovascular"
+      category: "cardiovascular",
+      youtubeUrl: "https://www.youtube.com/watch?v=ILxjxfB4zNk"
     },
     {
       id: 2,
@@ -66,7 +67,8 @@ export default function FirstAid() {
         "Repeat until object is expelled or person becomes unconscious"
       ],
       timeframe: "Act immediately",
-      category: "respiratory"
+      category: "respiratory",
+      youtubeUrl: "https://www.youtube.com/watch?v=7CgtIgSyAiU"
     },
     {
       id: 3,
@@ -83,7 +85,8 @@ export default function FirstAid() {
         "Apply additional bandages if blood soaks through"
       ],
       timeframe: "Control bleeding within 5 minutes",
-      category: "trauma"
+      category: "trauma",
+      youtubeUrl: "https://www.youtube.com/watch?v=mAgx0uVYaLs"
     },
     {
       id: 4,
@@ -100,7 +103,8 @@ export default function FirstAid() {
         "Take over-the-counter pain medication if needed"
       ],
       timeframe: "Cool immediately for 10-20 minutes",
-      category: "thermal"
+      category: "thermal",
+      youtubeUrl: "https://www.youtube.com/watch?v=dHNfgwAQ5I4"
     },
     {
       id: 5,
@@ -117,7 +121,8 @@ export default function FirstAid() {
         "Monitor breathing and pulse"
       ],
       timeframe: "Use epinephrine immediately if available",
-      category: "allergic"
+      category: "allergic",
+      youtubeUrl: "https://www.youtube.com/watch?v=dBcOISmAxrE"
     },
     {
       id: 6,
@@ -134,7 +139,8 @@ export default function FirstAid() {
         "Stay with person until they recover"
       ],
       timeframe: "Position immediately",
-      category: "neurological"
+      category: "neurological",
+      youtubeUrl: "https://www.youtube.com/watch?v=FhZRgGOGCJo"
     }
   ];
 
