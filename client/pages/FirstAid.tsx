@@ -32,7 +32,20 @@ export default function FirstAid() {
   const [selectedCondition, setSelectedCondition] = useState(null);
 
   const openYouTubeTutorial = (youtubeUrl: string) => {
-    window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
+    try {
+      // Try to open in new tab
+      const newWindow = window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
+
+      // If popup was blocked, fallback to current window
+      if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+        // Fallback: navigate in current window
+        window.location.href = youtubeUrl;
+      }
+    } catch (error) {
+      console.error('Error opening YouTube tutorial:', error);
+      // Final fallback: navigate in current window
+      window.location.href = youtubeUrl;
+    }
   };
 
   const emergencyContacts = [
