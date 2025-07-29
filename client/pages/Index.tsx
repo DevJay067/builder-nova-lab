@@ -104,17 +104,17 @@ export default function Index() {
           </p>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-16 px-4">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-primary mb-1 sm:mb-2">100%</div>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8 md:mb-16 px-2 sm:px-4">
+            <div className="text-center p-2 sm:p-3">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1 sm:mb-2">100%</div>
               <div className="text-xs sm:text-sm text-muted-foreground">Data Security</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-accent mb-1 sm:mb-2">24/7</div>
+            <div className="text-center p-2 sm:p-3">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-accent mb-1 sm:mb-2">24/7</div>
               <div className="text-xs sm:text-sm text-muted-foreground">AI Assistant</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-info mb-1 sm:mb-2">∞</div>
+            <div className="text-center p-2 sm:p-3">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-info mb-1 sm:mb-2">∞</div>
               <div className="text-xs sm:text-sm text-muted-foreground">Storage</div>
             </div>
           </div>
