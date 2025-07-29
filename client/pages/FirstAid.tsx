@@ -112,7 +112,7 @@ export default function FirstAid() {
       ],
       timeframe: "Cool immediately for 10-20 minutes",
       category: "thermal",
-      youtubeUrl: "https://www.youtube.com/watch?v=dHNfgwAQ5I4"
+      youtubeUrl: "https://www.youtube.com/watch?v=aIdKnIAKx5s"
     },
     {
       id: 5,
