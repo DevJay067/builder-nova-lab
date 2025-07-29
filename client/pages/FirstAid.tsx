@@ -238,10 +238,10 @@ export default function FirstAid() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="conditions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="conditions">Conditions</TabsTrigger>
-            <TabsTrigger value="quick-guide">Quick Guide</TabsTrigger>
+        <Tabs defaultValue="conditions" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 max-w-md h-10 sm:h-11">
+            <TabsTrigger value="conditions" className="text-sm">Conditions</TabsTrigger>
+            <TabsTrigger value="quick-guide" className="text-sm">Quick Guide</TabsTrigger>
           </TabsList>
 
           <TabsContent value="conditions" className="space-y-6">
