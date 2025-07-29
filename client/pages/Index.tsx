@@ -64,19 +64,19 @@ export default function Index() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/30">
       {/* Header */}
       <header className="border-b border-border/40 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary text-primary-foreground">
                 <Stethoscope className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
-              <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground">HealthChain</h1>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg md:text-2xl font-bold text-foreground truncate">HealthChain</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Blockchain-Powered Healthcare</p>
                 <p className="text-xs text-primary font-medium">Developer: Jay Magar</p>
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
               <Badge variant="secondary" className="text-xs px-2 py-1">
                 <Shield className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Blockchain </span>Secured
