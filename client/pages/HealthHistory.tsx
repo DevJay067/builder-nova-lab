@@ -378,23 +378,23 @@ export default function HealthHistory() {
                     recommendations and track your health journey.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                   <Button
                     size="lg"
                     onClick={() => setShowAddRecordDialog(true)}
-                    className="px-8"
+                    className="px-6 sm:px-8 h-12 text-sm sm:text-base touch-manipulation"
                   >
-                    <Plus className="h-5 w-5 mr-2" />
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                     Add Your Health Data
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
                     onClick={addTestData}
-                    className="px-8"
+                    className="px-6 sm:px-8 h-12 text-sm sm:text-base touch-manipulation"
                     disabled={isLoading}
                   >
-                    <Activity className="h-5 w-5 mr-2" />
+                    <Activity className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                     {isLoading ? "Adding Test Data..." : "Add Test Data (Demo)"}
                   </Button>
                 </div>
