@@ -28,6 +28,7 @@ const App = () => (
           <Route path="/history" element={<HealthHistory />} />
           <Route path="/first-aid" element={<FirstAid />} />
           <Route path="/analytics" element={<HealthAnalytics />} />
+          <Route path="/legal" element={<Legal />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
