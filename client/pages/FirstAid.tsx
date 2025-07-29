@@ -203,11 +203,11 @@ export default function FirstAid() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Emergency Alert */}
-        <Alert className="mb-8 border-destructive bg-destructive/10">
+        <Alert className="mb-4 sm:mb-8 border-destructive bg-destructive/10">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">
+          <AlertDescription className="text-xs sm:text-sm leading-relaxed">
             <strong>Emergency Disclaimer:</strong> This guide provides basic first aid information.
             In any serious emergency, call 112 immediately. This information does not replace professional medical training.
           </AlertDescription>
