@@ -259,8 +259,7 @@ export default function FirstAid() {
               {filteredConditions.map((condition) => {
                 const IconComponent = condition.icon;
                 return (
-                  <Card key={condition.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer"
-                    onClick={() => setSelectedCondition(condition)}>
+                  <Card key={condition.id} className="group hover:shadow-lg transition-all duration-300">
                     <CardHeader>
                       <div className="flex items-center justify-between mb-2">
                         <div className={`flex items-center justify-center w-10 h-10 rounded-xl ${
