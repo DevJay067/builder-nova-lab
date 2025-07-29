@@ -374,9 +374,10 @@ export default function FirstAid() {
                   <selectedCondition.icon className="h-6 w-6 mr-2" />
                   {selectedCondition.title} - Detailed Steps
                 </CardTitle>
-                <Button variant="ghost" onClick={() => setSelectedCondition(null)}>
-                  Close
-                </Button>
+                <Badge variant="secondary" className="text-xs">
+                  <Play className="h-3 w-3 mr-1" />
+                  Tutorial Available
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
