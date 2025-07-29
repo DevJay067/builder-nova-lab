@@ -417,19 +417,21 @@ export default function FirstAid() {
                 </AlertDescription>
               </Alert>
 
-              <div className="mt-6 flex gap-3">
+              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={() => setSelectedCondition(null)}
                   variant="outline"
+                  className="h-12 sm:h-10"
                 >
                   Close Details
                 </Button>
                 <Button
                   onClick={() => openYouTubeTutorial(selectedCondition.youtubeUrl)}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-red-600 hover:bg-red-700 text-white h-12 sm:h-10"
                 >
                   <Youtube className="h-4 w-4 mr-2" />
-                  Watch YouTube Tutorial
+                  <span className="hidden sm:inline">Watch YouTube Tutorial</span>
+                  <span className="sm:hidden">Watch Tutorial</span>
                   <ExternalLink className="h-3 w-3 ml-2" />
                 </Button>
               </div>
