@@ -261,21 +261,21 @@ export default function FirstAid() {
               {filteredConditions.map((condition) => {
                 const IconComponent = condition.icon;
                 return (
-                  <Card key={condition.id} className="group hover:shadow-lg transition-all duration-300">
-                    <CardHeader>
+                  <Card key={condition.id} className="group hover:shadow-lg transition-all duration-300 touch-manipulation">
+                    <CardHeader className="pb-3 sm:pb-6">
                       <div className="flex items-center justify-between mb-2">
-                        <div className={`flex items-center justify-center w-10 h-10 rounded-xl ${
+                        <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${
                           condition.severity === 'critical' ? 'bg-destructive text-destructive-foreground' :
                           condition.severity === 'urgent' ? 'bg-warning text-warning-foreground' :
                           'bg-info text-info-foreground'
                         }`}>
-                          <IconComponent className="h-5 w-5" />
+                          <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
-                        <Badge className={getSeverityColor(condition.severity)}>
+                        <Badge className={`${getSeverityColor(condition.severity)} text-xs`}>
                           {condition.severity}
                         </Badge>
                       </div>
-                      <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                      <CardTitle className="text-base sm:text-lg group-hover:text-primary transition-colors">
                         {condition.title}
                       </CardTitle>
                     </CardHeader>
