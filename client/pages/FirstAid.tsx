@@ -298,6 +298,31 @@ export default function FirstAid() {
                           <Timer className="h-3 w-3 mr-1" />
                           {condition.timeframe}
                         </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedCondition(condition);
+                            }}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            Read Steps
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 text-xs bg-red-600 hover:bg-red-700 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openYouTubeTutorial(condition.youtubeUrl);
+                            }}
+                          >
+                            <Youtube className="h-3 w-3 mr-1" />
+                            Watch Tutorial
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
