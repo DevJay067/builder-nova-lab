@@ -76,7 +76,7 @@ export default function FirstAid() {
       ],
       timeframe: "Act immediately",
       category: "respiratory",
-      youtubeUrl: "https://www.youtube.com/watch?v=7CgtIgSyAiU"
+      youtubeUrl: "https://www.youtube.com/watch?v=dBcOISmAxrE"
     },
     {
       id: 3,
