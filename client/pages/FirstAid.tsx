@@ -32,19 +32,30 @@ export default function FirstAid() {
   const [selectedCondition, setSelectedCondition] = useState(null);
 
   const openYouTubeTutorial = (youtubeUrl: string) => {
+    console.log('Opening YouTube tutorial:', youtubeUrl);
+
     try {
       // Try to open in new tab
       const newWindow = window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
 
-      // If popup was blocked, fallback to current window
+      // Check if popup was blocked
       if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-        // Fallback: navigate in current window
-        window.location.href = youtubeUrl;
+        console.log('Popup blocked, trying alternative method');
+
+        // Create a temporary link element and click it
+        const link = document.createElement('a');
+        link.href = youtubeUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     } catch (error) {
       console.error('Error opening YouTube tutorial:', error);
-      // Final fallback: navigate in current window
-      window.location.href = youtubeUrl;
+
+      // Final fallback: show alert with URL
+      alert(`Please manually open this YouTube tutorial: ${youtubeUrl}`);
     }
   };
 
