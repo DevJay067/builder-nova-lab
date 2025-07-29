@@ -148,7 +148,7 @@ export default function FirstAid() {
       ],
       timeframe: "Position immediately",
       category: "neurological",
-      youtubeUrl: "https://www.youtube.com/watch?v=FhZRgGOGCJo"
+      youtubeUrl: "https://www.youtube.com/watch?v=2DR4ZmUUdYs"
     }
   ];
 
