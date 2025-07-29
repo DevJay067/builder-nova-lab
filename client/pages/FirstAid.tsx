@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Heart, 
-  ArrowLeft, 
+import {
+  Heart,
+  ArrowLeft,
   Search,
   Phone,
   Clock,
@@ -20,7 +20,10 @@ import {
   Bandage,
   Users,
   MapPin,
-  Timer
+  Timer,
+  Youtube,
+  ExternalLink,
+  Play
 } from "lucide-react";
 
 export default function FirstAid() {
