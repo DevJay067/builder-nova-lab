@@ -214,22 +214,22 @@ export default function FirstAid() {
         </Alert>
 
         {/* Emergency Contacts */}
-        <Card className="mb-8 bg-gradient-to-r from-destructive/5 to-warning/5">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Phone className="h-5 w-5 mr-2 text-destructive" />
+        <Card className="mb-4 sm:mb-8 bg-gradient-to-r from-destructive/5 to-warning/5">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="flex items-center text-base sm:text-lg">
+              <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-destructive" />
               Emergency Contacts
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {emergencyContacts.map((contact, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-card rounded-lg border">
-                  <div>
-                    <p className="font-semibold text-sm">{contact.name}</p>
-                    <p className="text-2xl font-bold text-destructive">{contact.number}</p>
+                <div key={index} className="flex items-center justify-between p-3 sm:p-4 bg-card rounded-lg border">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-xs sm:text-sm truncate">{contact.name}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-destructive">{contact.number}</p>
                   </div>
-                  <Button size="sm" variant="destructive">
+                  <Button size="sm" variant="destructive" className="ml-2 h-10 w-10 p-0">
                     <Phone className="h-4 w-4" />
                   </Button>
                 </div>
