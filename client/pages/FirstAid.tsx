@@ -94,7 +94,7 @@ export default function FirstAid() {
       ],
       timeframe: "Control bleeding within 5 minutes",
       category: "trauma",
-      youtubeUrl: "https://www.youtube.com/watch?v=mAgx0uVYaLs"
+      youtubeUrl: "https://www.youtube.com/watch?v=rSvBZmCCDlw"
     },
     {
       id: 4,
