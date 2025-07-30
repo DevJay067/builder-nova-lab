@@ -169,5 +169,7 @@ export const statements = {
   decrementDifficulty: db.prepare('UPDATE blockchain_state SET difficulty = CASE WHEN difficulty > 1 THEN difficulty - 1 ELSE 1 END WHERE id = 1')
 };
 
-// Initialize database on import
-initializeDatabase();
+// Initialize database on import only if not in Vite build context
+if (typeof process !== 'undefined' && !process.env.VITE_ENV) {
+  initializeDatabase();
+}
