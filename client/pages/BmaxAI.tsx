@@ -9,13 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Brain,
-  ArrowLeft,
-  Settings,
-  Sparkles,
-  Clock,
-} from "lucide-react";
+import { Brain, ArrowLeft, Settings, Sparkles, Clock } from "lucide-react";
 
 export default function BmaxAI() {
   const [medicalContext, setMedicalContext] = useState(null);
@@ -116,9 +110,10 @@ export default function BmaxAI() {
           {/* AI Agent Interface */}
           <CardContent className="flex-1 overflow-hidden p-0">
             <iframe
-              src={medicalContext?.hasData ? 
-                `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(medicalContext.context)}` :
-                "https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1"
+              src={
+                medicalContext?.hasData
+                  ? `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(medicalContext.context)}`
+                  : "https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1"
               }
               className="w-full h-full border-0 rounded-b-lg"
               title="B-max AI Health Assistant"
