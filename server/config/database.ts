@@ -31,8 +31,12 @@ export { db };
 
 // Create tables if they don't exist
 export function initializeDatabase() {
+  if (!db) {
+    initDb();
+  }
+
   // Blockchain blocks table
-  db.exec(`
+  db!.exec(`
     CREATE TABLE IF NOT EXISTS blocks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       block_number INTEGER UNIQUE NOT NULL,
