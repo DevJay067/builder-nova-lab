@@ -326,14 +326,16 @@ export class BlockchainMonitorService {
   }
 }
 
-// Auto-start monitoring when service is imported
-BlockchainMonitorService.startMonitoring();
+// Export for manual initialization
+export function initializeMonitoring() {
+  BlockchainMonitorService.startMonitoring();
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  BlockchainMonitorService.stopMonitoring();
-});
+  // Graceful shutdown
+  process.on('SIGINT', () => {
+    BlockchainMonitorService.stopMonitoring();
+  });
 
-process.on('SIGTERM', () => {
-  BlockchainMonitorService.stopMonitoring();
-});
+  process.on('SIGTERM', () => {
+    BlockchainMonitorService.stopMonitoring();
+  });
+}
