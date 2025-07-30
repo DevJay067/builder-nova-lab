@@ -42,5 +42,8 @@ export function createServer() {
   app.get("/api/patient/verify-blockchain", verifyPatientBlockchain);
   app.get("/api/blockchain/stats", getBlockchainStats);
 
+  // Blockchain Mining (Production)
+  app.post("/api/blockchain/mine", mineBlock);
+
   return app;
 }
