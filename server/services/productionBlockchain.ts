@@ -450,5 +450,4 @@ export class ProductionBlockchainService {
   }
 }
 
-// Initialize blockchain on service load
-ProductionBlockchainService.initializeBlockchain().catch(console.error);
+// Export for manual initialization
