@@ -17,6 +17,15 @@ import {
 } from "./routes/productionHealthRecords";
 
 export function createServer() {
+  // Initialize database and blockchain
+  const { initializeDatabase } = require('./config/database');
+  const { ProductionBlockchainService } = require('./services/productionBlockchain');
+  const { initializeMonitoring } = require('./services/blockchainMonitor');
+
+  initializeDatabase();
+  ProductionBlockchainService.initializeBlockchain().catch(console.error);
+  initializeMonitoring();
+
   const app = express();
 
   // Middleware
