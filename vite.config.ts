@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
   },
+  appType: 'spa',
   build: {
     outDir: "dist/spa",
   },
