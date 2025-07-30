@@ -1,5 +1,4 @@
 import { ProductionBlockchainService } from './productionBlockchain';
-import { statements } from '../config/database';
 
 /**
  * Blockchain monitoring and health check service
