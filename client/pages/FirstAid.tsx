@@ -118,7 +118,7 @@ export default function FirstAid() {
       ],
       timeframe: "Control bleeding within 5 minutes",
       category: "trauma",
-      youtubeUrl: "https://www.youtube.com/watch?v=mAgx0uVYaLs"
+      youtubeUrl: "https://youtu.be/NxO5LvgqZe0?si=qcvrXv9yMUGBQT8V"
     },
     {
       id: 4,
@@ -136,7 +136,7 @@ export default function FirstAid() {
       ],
       timeframe: "Cool immediately for 10-20 minutes",
       category: "thermal",
-      youtubeUrl: "https://www.youtube.com/watch?v=dHNfgwAQ5I4"
+      youtubeUrl: "https://youtu.be/JwlSXhSg69A?si=QjY53nokXvwoM0eE"
     },
     {
       id: 5,
@@ -154,7 +154,7 @@ export default function FirstAid() {
       ],
       timeframe: "Use epinephrine immediately if available",
       category: "allergic",
-      youtubeUrl: "https://www.youtube.com/watch?v=mU7h-N3H_7Y"
+      youtubeUrl: "https://youtu.be/llZFx8n-WCQ?si=h17--7e-h_GD25ys"
     },
     {
       id: 6,
@@ -172,7 +172,7 @@ export default function FirstAid() {
       ],
       timeframe: "Position immediately",
       category: "neurological",
-      youtubeUrl: "https://www.youtube.com/watch?v=FhZRgGOGCJo"
+      youtubeUrl: "https://youtu.be/ddHKwkMwNyI?si=FYstj-qR4tcKUVsF"
     }
   ];
 
