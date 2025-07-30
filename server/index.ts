@@ -11,7 +11,8 @@ import {
   verifyPatientBlockchain,
   getBlockchainStats,
   addTestData,
-} from "./routes/healthRecords";
+  mineBlock,
+} from "./routes/productionHealthRecords";
 
 export function createServer() {
   const app = express();
