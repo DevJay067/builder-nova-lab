@@ -12,6 +12,8 @@ import {
   getBlockchainStats,
   addTestData,
   mineBlock,
+  getBlockchainHealth,
+  getSystemDiagnostics,
 } from "./routes/productionHealthRecords";
 
 export function createServer() {
