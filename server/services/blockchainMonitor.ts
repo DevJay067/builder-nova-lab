@@ -134,10 +134,10 @@ export class BlockchainMonitorService {
   private static calculatePerformanceMetrics(stats: any) {
     const currentTime = Date.now();
     const oneHourAgo = currentTime - (60 * 60 * 1000);
-    
+
     // Get recent transactions for throughput calculation
-    const recentTransactions = statements.db.prepare(`
-      SELECT COUNT(*) as count FROM transactions 
+    const recentTransactions = require('../config/database').db.prepare(`
+      SELECT COUNT(*) as count FROM transactions
       WHERE timestamp > ?
     `).get(oneHourAgo) as { count: number };
     
