@@ -466,6 +466,55 @@ export const mineBlock: RequestHandler = async (req, res) => {
 };
 
 /**
+ * Get blockchain health status
+ */
+export const getBlockchainHealth: RequestHandler = (req, res) => {
+  try {
+    const health = BlockchainMonitorService.getCurrentHealth();
+
+    if (!health) {
+      return res.status(503).json({
+        success: false,
+        error: "Blockchain monitoring not yet initialized",
+      });
+    }
+
+    res.json({
+      success: true,
+      health,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("❌ Error fetching blockchain health:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch blockchain health",
+    });
+  }
+};
+
+/**
+ * Get system diagnostics
+ */
+export const getSystemDiagnostics: RequestHandler = (req, res) => {
+  try {
+    const diagnostics = BlockchainMonitorService.getSystemDiagnostics();
+
+    res.json({
+      success: true,
+      diagnostics,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("❌ Error fetching system diagnostics:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch system diagnostics",
+    });
+  }
+};
+
+/**
  * Add comprehensive test data with real blockchain storage
  */
 export const addTestData: RequestHandler = async (req, res) => {
