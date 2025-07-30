@@ -47,5 +47,9 @@ export function createServer() {
   // Blockchain Mining (Production)
   app.post("/api/blockchain/mine", mineBlock);
 
+  // Blockchain Monitoring
+  app.get("/api/blockchain/health", getBlockchainHealth);
+  app.get("/api/system/diagnostics", getSystemDiagnostics);
+
   return app;
 }
