@@ -3,22 +3,31 @@ import path from 'path';
 import fs from 'fs';
 
 // Database configuration
-const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'data', 'healthchain.db');
-const DATA_DIR = path.dirname(DB_PATH);
+let db: Database.Database | null = null;
+let statements: any = {};
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+function initDb() {
+  const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'data', 'healthchain.db');
+  const DATA_DIR = path.dirname(DB_PATH);
+
+  // Ensure data directory exists
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  // Initialize SQLite database
+  db = new Database(DB_PATH);
+
+  // Enable WAL mode for better performance
+  db.pragma('journal_mode = WAL');
+  db.pragma('synchronous = NORMAL');
+  db.pragma('cache_size = 1000000');
+  db.pragma('temp_store = memory');
+
+  return db;
 }
 
-// Initialize SQLite database
-export const db = new Database(DB_PATH);
-
-// Enable WAL mode for better performance
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
-db.pragma('cache_size = 1000000');
-db.pragma('temp_store = memory');
+export { db };
 
 // Create tables if they don't exist
 export function initializeDatabase() {
