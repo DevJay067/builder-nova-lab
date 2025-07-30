@@ -154,8 +154,9 @@ export class BlockchainMonitorService {
    * Calculate storage metrics
    */
   private static calculateStorageMetrics() {
-    const totalRecords = statements.db.prepare('SELECT COUNT(*) as count FROM health_records').get() as { count: number };
-    const verifiedRecords = statements.db.prepare(`
+    const { db } = require('../config/database');
+    const totalRecords = db.prepare('SELECT COUNT(*) as count FROM health_records').get() as { count: number };
+    const verifiedRecords = db.prepare(`
       SELECT COUNT(*) as count FROM health_records hr
       INNER JOIN transactions t ON hr.transaction_id = t.transaction_id
       WHERE t.status = 'confirmed'
