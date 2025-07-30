@@ -8,6 +8,7 @@ import {
 } from "@shared/api";
 import { ProductionBlockchainService } from "../services/productionBlockchain";
 import { CryptoService } from "../services/crypto";
+import { BlockchainMonitorService } from "../services/blockchainMonitor";
 import { statements } from "../config/database";
 import crypto from "crypto";
 
