@@ -11,21 +11,9 @@ import {
   verifyPatientBlockchain,
   getBlockchainStats,
   addTestData,
-  mineBlock,
-  getBlockchainHealth,
-  getSystemDiagnostics,
-} from "./routes/productionHealthRecords";
+} from "./routes/healthRecords";
 
 export function createServer() {
-  // Initialize database and blockchain
-  const { initializeDatabase } = require('./config/database');
-  const { ProductionBlockchainService } = require('./services/productionBlockchain');
-  const { initializeMonitoring } = require('./services/blockchainMonitor');
-
-  initializeDatabase();
-  ProductionBlockchainService.initializeBlockchain().catch(console.error);
-  initializeMonitoring();
-
   const app = express();
 
   // Middleware
@@ -52,13 +40,6 @@ export function createServer() {
   app.get("/api/patient/profile", getPatientProfile);
   app.get("/api/patient/verify-blockchain", verifyPatientBlockchain);
   app.get("/api/blockchain/stats", getBlockchainStats);
-
-  // Blockchain Mining (Production)
-  app.post("/api/blockchain/mine", mineBlock);
-
-  // Blockchain Monitoring
-  app.get("/api/blockchain/health", getBlockchainHealth);
-  app.get("/api/system/diagnostics", getSystemDiagnostics);
 
   return app;
 }
