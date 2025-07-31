@@ -288,27 +288,14 @@ export const getAuditLogs: RequestHandler = async (req, res) => {
       });
     }
 
-    // In a real implementation, fetch from audit log database
-    const mockAuditLogs = [
-      {
-        logId: "audit-1",
-        action: "create",
-        dataRecordId: recordId,
-        userId: "provider-123",
-        userRole: "provider",
-        timestamp: new Date().toISOString(),
-        success: true,
-        details: {
-          dataType: "medical_history",
-          accessLevel: "provider"
-        }
-      }
-    ];
+    // Fetch audit logs from Neon database
+    const { NeonDatabaseService } = await import('../services/neonDatabase');
+    const auditLogs = await NeonDatabaseService.getAuditLogs(recordId, Number(limit), Number(offset));
 
     res.json({
       success: true,
-      auditLogs: mockAuditLogs.slice(Number(offset), Number(offset) + Number(limit)),
-      total: mockAuditLogs.length,
+      auditLogs,
+      total: auditLogs.length,
       recordId
     });
 
