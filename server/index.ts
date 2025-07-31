@@ -52,5 +52,16 @@ export function createServer() {
   app.get("/api/patient/verify-blockchain", verifyPatientBlockchain);
   app.get("/api/blockchain/stats", getBlockchainStats);
 
+  // Secure Data Access API Routes
+  app.post("/api/secure/keys/generate", generateSplitKeys);
+  app.post("/api/secure/data/store", storeSecureData);
+  app.post("/api/secure/data/retrieve/:recordId", retrieveSecureData);
+  app.post("/api/secure/keys/rotate/:keyId", rotateKeys);
+  app.get("/api/secure/data/verify/:recordId", verifyDataIntegrity);
+  app.get("/api/secure/audit/:recordId", getAuditLogs);
+  app.post("/api/secure/emergency/key", generateEmergencyKey);
+  app.get("/api/secure/system/status", getSystemStatus);
+  app.post("/api/secure/keys/validate", validateKeyFragments);
+
   return app;
 }
