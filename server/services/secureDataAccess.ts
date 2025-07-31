@@ -419,19 +419,25 @@ export class SecureDataAccessService {
   }
 
   /**
-   * Placeholder for getting encrypted record from database
+   * Get encrypted record from Neon database
    */
   static async getEncryptedRecord(recordId: string): Promise<SecureDataRecord> {
-    // This would be implemented to fetch from your database
-    throw new Error('Database integration required');
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    const record = await NeonDatabaseService.getSecureRecord(recordId);
+
+    if (!record) {
+      throw new Error('Record not found');
+    }
+
+    return record;
   }
 
   /**
    * Update access metadata
    */
   static async updateAccessMetadata(recordId: string): Promise<void> {
-    // Update last accessed time and increment access count
-    console.log(`Updated access metadata for record: ${recordId}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.updateAccessMetadata(recordId);
   }
 
   /**
