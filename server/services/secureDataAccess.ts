@@ -228,8 +228,12 @@ export class SecureDataAccessService {
       createdAt: timestamp,
       updatedAt: timestamp
     });
-    
+
     record.blockchainHash = blockchainHash;
+
+    // Store in Neon database
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.storeSecureRecord(record);
     
     // Log the creation
     await this.createAuditLog({
