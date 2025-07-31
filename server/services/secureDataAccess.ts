@@ -415,10 +415,13 @@ export class SecureDataAccessService {
       createdAt: auditData.timestamp,
       updatedAt: auditData.timestamp
     });
-    
-    // Also store in database for quick queries
+
+    // Store in Neon database for quick queries
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.storeAuditLog(auditData);
+
     console.log(`Audit Log Created: ${auditData.action} by ${auditData.userId} at ${auditData.timestamp}`);
-    
+
     return auditData;
   }
 
