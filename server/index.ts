@@ -12,6 +12,17 @@ import {
   getBlockchainStats,
   addTestData,
 } from "./routes/healthRecords";
+import {
+  generateSplitKeys,
+  storeSecureData,
+  retrieveSecureData,
+  rotateKeys,
+  verifyDataIntegrity,
+  getAuditLogs,
+  generateEmergencyKey,
+  getSystemStatus,
+  validateKeyFragments,
+} from "./routes/secureDataAPI";
 
 export function createServer() {
   const app = express();
