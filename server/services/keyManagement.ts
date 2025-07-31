@@ -433,43 +433,50 @@ export class KeyManagementService {
     await this.storeRotationSchedule(schedule);
   }
 
-  // Placeholder methods for database operations
+  // Database operations using Neon
   private static async storeKeyRecord(keyStore: KeyStore): Promise<void> {
-    console.log(`Storing key record: ${keyStore.keyId}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.storeKeyRecord(keyStore);
   }
 
   private static async getKeyRecord(keyId: string): Promise<KeyStore | null> {
-    console.log(`Getting key record: ${keyId}`);
-    return null; // Implement database fetch
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    return await NeonDatabaseService.getKeyRecord(keyId);
   }
 
   private static async storeDistributionRecord(distribution: KeyDistribution): Promise<void> {
-    console.log(`Storing distribution record: ${distribution.distributionId}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.storeDistributionRecord(distribution);
   }
 
   private static async storeRotationSchedule(schedule: KeyRotationSchedule): Promise<void> {
-    console.log(`Scheduling key rotation: ${schedule.keyId} at ${schedule.scheduledRotationDate}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.storeRotationSchedule(schedule);
   }
 
   private static async getScheduledRotations(date: Date): Promise<KeyRotationSchedule[]> {
-    console.log(`Getting scheduled rotations for: ${date.toISOString()}`);
-    return []; // Implement database fetch
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    return await NeonDatabaseService.getScheduledRotations(date);
   }
 
   private static async markKeyExpired(keyId: string): Promise<void> {
-    console.log(`Marking key as expired: ${keyId}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.markKeyExpired(keyId);
   }
 
   private static async updateKeyUsage(keyId: string): Promise<void> {
-    console.log(`Updating key usage: ${keyId}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.updateKeyUsage(keyId);
   }
 
   private static async revokeKey(keyId: string, reason: string): Promise<void> {
-    console.log(`Revoking key: ${keyId}, reason: ${reason}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.revokeKey(keyId, reason);
   }
 
   private static async markRotationCompleted(scheduleId: string): Promise<void> {
-    console.log(`Marking rotation completed: ${scheduleId}`);
+    const { NeonDatabaseService } = await import('./neonDatabase');
+    await NeonDatabaseService.markRotationCompleted(scheduleId);
   }
 
   // Placeholder methods for communication
