@@ -29,11 +29,23 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/bmax" element={<BmaxAI />} />
-          <Route path="/history" element={<HealthHistory />} />
+          <Route path="/history" element={
+            <ProtectedRoute requireAuth={true}>
+              <HealthHistory />
+            </ProtectedRoute>
+          } />
           <Route path="/first-aid" element={<FirstAid />} />
-          <Route path="/analytics" element={<HealthAnalytics />} />
+          <Route path="/analytics" element={
+            <ProtectedRoute requireAuth={true}>
+              <HealthAnalytics />
+            </ProtectedRoute>
+          } />
           <Route path="/legal" element={<Legal />} />
-          <Route path="/secure" element={<SecureAccess />} />
+          <Route path="/secure" element={
+            <ProtectedRoute requireAuth={true}>
+              <SecureAccess />
+            </ProtectedRoute>
+          } />
           <Route path="/login" element={<Login />} />
           <Route path="/why-login" element={<WhyLogin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
