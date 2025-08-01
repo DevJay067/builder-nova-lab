@@ -147,14 +147,16 @@ export class UserAuthenticationService {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           last_accessed TIMESTAMP,
           access_count INTEGER DEFAULT 0,
-          INDEX idx_user_id (user_id),
-          INDEX idx_combined_hash (combined_hash),
-          INDEX idx_split_hash_1 (split_hash_1),
-          INDEX idx_split_hash_2 (split_hash_2),
-          UNIQUE KEY unique_user_data (user_id, data_record_id),
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE (user_id, data_record_id)
         )
       `;
+
+      // Create indexes separately
+      await sql`CREATE INDEX IF NOT EXISTS idx_data_access_user_id ON user_data_access(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_data_access_combined_hash ON user_data_access(combined_hash)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_data_access_split_hash_1 ON user_data_access(split_hash_1)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_data_access_split_hash_2 ON user_data_access(split_hash_2)`;
 
       console.log("✅ User authentication tables initialized successfully");
     } catch (error) {
