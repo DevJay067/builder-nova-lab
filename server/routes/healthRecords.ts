@@ -7,6 +7,7 @@ import {
   PatientProfile,
 } from "@shared/api";
 import { BlockchainService } from "../services/blockchain";
+import { UserAuthenticationService } from "../services/userAuthentication";
 import crypto from "crypto";
 
 // In-memory storage (in production, use a real database)
