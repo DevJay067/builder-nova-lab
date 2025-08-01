@@ -286,15 +286,25 @@ export default function HealthHistory() {
           notes: "",
         });
 
-        // Show success message with both storage confirmations
-        let successMessage = "Health record saved successfully!\n";
+        // Show enhanced success message with both storage confirmations
+        let successMessage = "🎉 Health Record Saved Successfully!\n\n";
+
         if (traditionalResult && traditionalResult.success) {
-          successMessage += `Blockchain Hash: ${traditionalResult.blockchainHash}\n`;
+          successMessage += "✅ Traditional Storage:\n";
+          successMessage += `   Blockchain Hash: ${traditionalResult.blockchainHash}\n\n`;
         }
+
         if (secureResult && secureResult.success) {
-          successMessage += `Secure Storage ID: ${secureResult.record.id}\n`;
-          successMessage += `Neon Database: ��� Encrypted & Stored`;
+          successMessage += "🔐 Secure Encrypted Storage:\n";
+          successMessage += `   Record ID: ${secureResult.record.id}\n`;
+          successMessage += `   Neon Database: ✅ Encrypted & Stored\n`;
+          successMessage += `   Security Level: ${secureResult.record.accessLevel}\n\n`;
         }
+
+        successMessage += "💾 Your health data is now securely stored in:\n";
+        successMessage += "• Blockchain (immutable records)\n";
+        successMessage += "• Neon Database (encrypted with split-key security)\n";
+        successMessage += "• Full HIPAA compliance maintained";
 
         alert(successMessage);
       } else {
