@@ -237,27 +237,34 @@ export default function HealthHistory() {
         traditionalResult = await traditionalResponse.json();
       }
 
-      // Now save to the secure Neon database with encryption
-      const secureResponse = await fetch("/api/secure/data/store", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-patient-key": "patient-demo-key-12345", // In production, this would come from secure key management
-          "x-provider-key": "provider-demo-key-67890", // In production, this would come from secure key management
-        },
-        body: JSON.stringify({
-          patientId: "default-patient",
-          dataType: "medical_history",
-          data: healthRecordData,
-          keyId: "demo-key-123", // In production, this would be dynamically generated
-          createdBy: formData.doctor || "default-patient",
-          accessLevel: "patient"
-        }),
-      });
-
+      // Also save directly to Neon database (simplified approach)
       let secureResult = null;
-      if (secureResponse.ok) {
-        secureResult = await secureResponse.json();
+      try {
+        const directNeonResponse = await fetch("/api/health-records/store-direct", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "patient-id": "default-patient",
+          },
+          body: JSON.stringify({
+            patientId: "default-patient",
+            recordType: "medical_history",
+            title: "Comprehensive Health Assessment",
+            description: `BMI: ${healthRecordData.vitals.bmi}, Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
+            doctor: formData.doctor || "Self-reported",
+            date: new Date().toISOString().split('T')[0],
+            metadata: healthRecordData
+          }),
+        });
+
+        if (directNeonResponse.ok) {
+          secureResult = await directNeonResponse.json();
+          secureResult.success = true;
+          secureResult.record = { id: secureResult.recordId || 'neon-' + Date.now() };
+        }
+      } catch (error) {
+        console.error("Error saving to Neon database:", error);
+        // Continue with traditional storage only
       }
 
       // Check if at least one storage method succeeded
