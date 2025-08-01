@@ -65,6 +65,11 @@ export class UserAuthenticationService {
    * Initialize user authentication tables
    */
   static async initializeUserTables(): Promise<void> {
+    if (!sql) {
+      console.log('📝 Using in-memory storage for user authentication');
+      return;
+    }
+
     try {
       // Create users table
       await sql`
@@ -315,7 +320,7 @@ export class UserAuthenticationService {
         )
       `;
 
-      console.log(`��� User authenticated successfully: ${user.username}`);
+      console.log(`✅ User authenticated successfully: ${user.username}`);
 
       // Return user without sensitive data
       const safeUser: User = {
