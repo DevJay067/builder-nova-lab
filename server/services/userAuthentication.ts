@@ -233,19 +233,24 @@ export class UserAuthenticationService {
         isActive: true
       };
 
-      // Store user in database
-      await sql`
-        INSERT INTO users (
-          id, username, email, password_hash, user_hash, first_name, last_name,
-          date_of_birth, phone, created_at, is_active
-        ) VALUES (
-          ${user.id}, ${user.username}, ${user.email}, ${user.passwordHash},
-          ${user.userHash}, ${user.firstName}, ${user.lastName}, 
-          ${user.dateOfBirth}, ${user.phone}, ${user.createdAt}, ${user.isActive}
-        )
-      `;
+      // Store user in database or memory
+      if (sql) {
+        await sql`
+          INSERT INTO users (
+            id, username, email, password_hash, user_hash, first_name, last_name,
+            date_of_birth, phone, created_at, is_active
+          ) VALUES (
+            ${user.id}, ${user.username}, ${user.email}, ${user.passwordHash},
+            ${user.userHash}, ${user.firstName}, ${user.lastName},
+            ${user.dateOfBirth}, ${user.phone}, ${user.createdAt}, ${user.isActive}
+          )
+        `;
+      } else {
+        // Store in memory
+        inMemoryUsers.set(user.id, user);
+      }
 
-      console.log(`✅ User registered successfully: ${user.username}`);
+      console.log(`✅ User registered successfully: ${user.username} (${sql ? 'database' : 'memory'})`);
       
       // Remove sensitive data before returning
       const safeUser = { ...user };
