@@ -257,9 +257,10 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Registration error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       setMessage({
         type: "error",
-        text: "Registration failed. Please check your connection.",
+        text: `Registration failed: ${errorMessage}`,
       });
       setIsLoading(false);
     }
