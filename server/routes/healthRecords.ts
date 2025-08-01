@@ -269,13 +269,50 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
 };
 
 /**
- * Get all health records for a patient
+ * Get all health records for a patient (enhanced with Neon database)
  */
-export const getHealthRecords: RequestHandler = (req, res) => {
+export const getHealthRecords: RequestHandler = async (req, res) => {
   try {
     const patientId =
       (req.headers["patient-id"] as string) || "default-patient";
-    const records = healthRecords.get(patientId) || [];
+
+    // Get records from in-memory storage (backward compatibility)
+    const memoryRecords = healthRecords.get(patientId) || [];
+
+    // Also get records from Neon database
+    let neonRecords = [];
+    try {
+      const { NeonDatabaseService } = await import('../services/neonDatabase');
+      const dbRecords = await NeonDatabaseService.getMedicalHistory(patientId);
+
+      // Convert database records to API format
+      neonRecords = dbRecords.map(record => ({
+        id: record.id,
+        patientId: record.patientId,
+        date: record.date,
+        type: record.recordType,
+        title: record.title,
+        description: record.description || "",
+        doctor: record.doctor || "Unknown",
+        status: "completed",
+        blockchainHash: `neon-${record.id.slice(-8)}`, // Generate a hash-like ID for display
+        metadata: record.metadata || {},
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      }));
+    } catch (error) {
+      console.error("Error fetching from Neon database:", error);
+      // Don't fail the request if Neon is unavailable
+    }
+
+    // Combine records from both sources and deduplicate
+    const allRecords = [...memoryRecords, ...neonRecords];
+    const uniqueRecords = allRecords.filter((record, index, self) =>
+      index === self.findIndex(r => r.id === record.id)
+    );
+
+    // Sort by date (newest first)
+    uniqueRecords.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
 
     // Update patient last access
     const patientProfile = patientProfiles.get(patientId);
@@ -286,8 +323,8 @@ export const getHealthRecords: RequestHandler = (req, res) => {
 
     const response: GetHealthRecordsResponse = {
       success: true,
-      records,
-      total: records.length,
+      records: uniqueRecords,
+      total: uniqueRecords.length,
     };
 
     res.json(response);
@@ -297,6 +334,7 @@ export const getHealthRecords: RequestHandler = (req, res) => {
       success: false,
       records: [],
       total: 0,
+      error: error.message
     });
   }
 };
