@@ -91,5 +91,10 @@ export function createServer() {
   app.post("/api/database/initialize", initializeDatabase);
   app.post("/api/database/test-connection", testDatabaseConnection);
 
+  // Demo Keys & Testing
+  app.post("/api/demo/keys/generate", generateDemoKeys);
+  app.get("/api/demo/keys/info", getDemoKeysInfo);
+  app.post("/api/demo/initialize", initializeDemoData);
+
   return app;
 }
