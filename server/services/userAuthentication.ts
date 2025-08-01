@@ -320,14 +320,28 @@ export class UserAuthenticationService {
     error?: string;
   }> {
     try {
+      // Test database availability
+      const dbAvailable = await testDatabaseConnection();
+
       // Get user by username
       let userResult = [];
 
-      if (sql) {
-        userResult = await sql`
-          SELECT * FROM users
-          WHERE (username = ${loginData.username} OR email = ${loginData.username}) AND is_active = true
-        `;
+      if (dbAvailable) {
+        try {
+          userResult = await sql`
+            SELECT * FROM users
+            WHERE (username = ${loginData.username} OR email = ${loginData.username}) AND is_active = true
+          `;
+        } catch (error) {
+          console.log("Database query failed, falling back to in-memory storage");
+          // Fall back to in-memory lookup
+          for (const [id, user] of inMemoryUsers) {
+            if ((user.username === loginData.username || user.email === loginData.username) && user.isActive) {
+              userResult = [user];
+              break;
+            }
+          }
+        }
       } else {
         // In-memory lookup
         for (const [id, user] of inMemoryUsers) {
