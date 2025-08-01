@@ -113,5 +113,15 @@ export function createServer() {
   app.get("/api/demo/keys/info", getDemoKeysInfo);
   app.post("/api/demo/initialize", initializeDemoData);
 
+  // Authentication API Routes
+  app.post("/api/auth/register", registerUser);
+  app.post("/api/auth/login", loginUser);
+  app.get("/api/auth/verify", verifySession);
+  app.post("/api/auth/logout", logoutUser);
+  app.get("/api/auth/profile", getUserProfile);
+  app.post("/api/auth/data-access", createDataAccess);
+  app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
+  app.get("/api/auth/stats", getAuthStats);
+
   return app;
 }
