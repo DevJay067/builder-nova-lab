@@ -102,6 +102,16 @@ export function createServer() {
     res.json({ message: ping });
   });
 
+  // Test endpoint for debugging
+  app.post("/api/test", (req, res) => {
+    console.log("🧪 Test endpoint hit", { body: req.body });
+    res.json({
+      success: true,
+      received: req.body,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   app.get("/api/demo", handleDemo);
 
   // Health Records & Blockchain API Routes
