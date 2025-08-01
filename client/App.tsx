@@ -16,6 +16,7 @@ import Legal from "./pages/Legal";
 import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
