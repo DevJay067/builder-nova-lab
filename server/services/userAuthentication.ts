@@ -125,13 +125,15 @@ export class UserAuthenticationService {
           ip_address VARCHAR(45),
           user_agent TEXT,
           is_active BOOLEAN DEFAULT true,
-          INDEX idx_user_id (user_id),
-          INDEX idx_session_token (session_token),
-          INDEX idx_data_access_hash (data_access_hash),
-          INDEX idx_expires_at (expires_at),
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `;
+
+      // Create indexes separately
+      await sql`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(session_token)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_sessions_data_hash ON user_sessions(data_access_hash)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at)`;
 
       // Create user_data_access table for hash-based data linking
       await sql`
