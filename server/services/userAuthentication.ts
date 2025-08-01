@@ -375,16 +375,26 @@ export class UserAuthenticationService {
 
       if (!isPasswordValid) {
         // Increment failed login attempts
-        if (sql) {
-          await sql`
-            UPDATE users
-            SET failed_login_attempts = failed_login_attempts + 1,
-                locked_until = CASE
-                  WHEN failed_login_attempts >= 4 THEN NOW() + INTERVAL '15 minutes'
-                  ELSE NULL
-                END
-            WHERE id = ${user.id}
-          `;
+        if (dbAvailable) {
+          try {
+            await sql`
+              UPDATE users
+              SET failed_login_attempts = failed_login_attempts + 1,
+                  locked_until = CASE
+                    WHEN failed_login_attempts >= 4 THEN NOW() + INTERVAL '15 minutes'
+                    ELSE NULL
+                  END
+              WHERE id = ${user.id}
+            `;
+          } catch (error) {
+            console.log("Database update failed, using in-memory storage");
+            // Update in memory
+            user.failed_login_attempts = (user.failed_login_attempts || 0) + 1;
+            if (user.failed_login_attempts >= 5) {
+              user.locked_until = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+            }
+            inMemoryUsers.set(user.id, user);
+          }
         } else {
           // Update in memory
           user.failed_login_attempts = (user.failed_login_attempts || 0) + 1;
@@ -398,12 +408,21 @@ export class UserAuthenticationService {
       }
 
       // Reset failed login attempts and update last login
-      if (sql) {
-        await sql`
-          UPDATE users
-          SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW()
-          WHERE id = ${user.id}
-        `;
+      if (dbAvailable) {
+        try {
+          await sql`
+            UPDATE users
+            SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW()
+            WHERE id = ${user.id}
+          `;
+        } catch (error) {
+          console.log("Database update failed, using in-memory storage");
+          // Update in memory
+          user.failed_login_attempts = 0;
+          user.locked_until = null;
+          user.last_login = new Date().toISOString();
+          inMemoryUsers.set(user.id, user);
+        }
       } else {
         // Update in memory
         user.failed_login_attempts = 0;
