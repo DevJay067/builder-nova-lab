@@ -25,6 +25,19 @@ import {
 } from "./routes/secureDataAPI";
 
 export function createServer() {
+  // Initialize secure database on server startup
+  const initializeSecureSystem = async () => {
+    try {
+      const { DatabaseInitService } = await import('./services/initDatabase');
+      await DatabaseInitService.initializeSecureHealthcareDatabase();
+    } catch (error) {
+      console.error('❌ Failed to initialize secure system:', error);
+    }
+  };
+
+  // Run initialization (don't await to avoid blocking server start)
+  initializeSecureSystem();
+
   const app = express();
 
   // Middleware
