@@ -43,6 +43,7 @@ export default function Login() {
 
   // Registration form state
   const [registerForm, setRegisterForm] = useState({
+    username: "",
     firstName: "",
     lastName: "",
     email: "",
