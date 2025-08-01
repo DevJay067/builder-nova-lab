@@ -216,6 +216,10 @@ export default function Login() {
             }),
           });
 
+          if (!loginResponse.ok) {
+            throw new Error(`Auto-login HTTP error! status: ${loginResponse.status}`);
+          }
+
           const loginResult = await loginResponse.json();
 
           if (loginResult.success) {
