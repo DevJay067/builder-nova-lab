@@ -21,6 +21,52 @@ import {
 } from "lucide-react";
 
 export default function Index() {
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = () => {
+    const storedUser = localStorage.getItem('healthchain_user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        if (userData.sessionToken) {
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const storedUser = localStorage.getItem('healthchain_user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        if (userData.sessionToken) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${userData.sessionToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('healthchain_user');
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
   const features = [
     {
       id: 'bmax',
