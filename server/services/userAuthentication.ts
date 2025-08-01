@@ -103,12 +103,14 @@ export class UserAuthenticationService {
           last_login TIMESTAMP,
           is_active BOOLEAN DEFAULT true,
           failed_login_attempts INTEGER DEFAULT 0,
-          locked_until TIMESTAMP,
-          INDEX idx_username (username),
-          INDEX idx_email (email),
-          INDEX idx_user_hash (user_hash)
+          locked_until TIMESTAMP
         )
       `;
+
+      // Create indexes separately
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_user_hash ON users(user_hash)`;
 
       // Create user_sessions table
       await sql`
