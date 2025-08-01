@@ -117,9 +117,10 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       setMessage({
         type: "error",
-        text: "Login failed. Please check your connection.",
+        text: `Login failed: ${errorMessage}`,
       });
     } finally {
       setIsLoading(false);
