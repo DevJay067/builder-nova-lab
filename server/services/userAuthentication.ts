@@ -272,17 +272,22 @@ export class UserAuthenticationService {
       };
 
       // Store user in database or memory
-      if (sql) {
-        await sql`
-          INSERT INTO users (
-            id, username, email, password_hash, user_hash, first_name, last_name,
-            date_of_birth, phone, created_at, is_active
-          ) VALUES (
-            ${user.id}, ${user.username}, ${user.email}, ${user.passwordHash},
-            ${user.userHash}, ${user.firstName}, ${user.lastName},
-            ${user.dateOfBirth}, ${user.phone}, ${user.createdAt}, ${user.isActive}
-          )
-        `;
+      if (dbAvailable) {
+        try {
+          await sql`
+            INSERT INTO users (
+              id, username, email, password_hash, user_hash, first_name, last_name,
+              date_of_birth, phone, created_at, is_active
+            ) VALUES (
+              ${user.id}, ${user.username}, ${user.email}, ${user.passwordHash},
+              ${user.userHash}, ${user.firstName}, ${user.lastName},
+              ${user.dateOfBirth}, ${user.phone}, ${user.createdAt}, ${user.isActive}
+            )
+          `;
+        } catch (error) {
+          console.log("Database insert failed, falling back to in-memory storage");
+          inMemoryUsers.set(user.id, user);
+        }
       } else {
         // Store in memory
         inMemoryUsers.set(user.id, user);
