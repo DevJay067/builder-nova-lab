@@ -17,6 +17,7 @@ import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
