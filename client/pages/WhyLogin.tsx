@@ -31,13 +31,14 @@ export default function WhyLogin() {
     {
       icon: Key,
       title: "Personal Key Management",
-      description: "Each user gets their own unique split-key set for maximum security",
+      description:
+        "Each user gets their own unique split-key set for maximum security",
       details: [
         "Automatically generated patient key fragment",
         "Secure key distribution and storage",
-        "Personal control over data access permissions"
+        "Personal control over data access permissions",
       ],
-      color: "bg-primary"
+      color: "bg-primary",
     },
     {
       icon: Lock,
@@ -46,9 +47,9 @@ export default function WhyLogin() {
       details: [
         "No accidental access to other patients' data",
         "Personalized encryption keys per user",
-        "Complete privacy protection"
+        "Complete privacy protection",
       ],
-      color: "bg-accent"
+      color: "bg-accent",
     },
     {
       icon: Brain,
@@ -57,9 +58,9 @@ export default function WhyLogin() {
       details: [
         "Customized health insights",
         "Personal risk assessments",
-        "Tailored treatment suggestions"
+        "Tailored treatment suggestions",
       ],
-      color: "bg-info"
+      color: "bg-info",
     },
     {
       icon: Shield,
@@ -68,60 +69,62 @@ export default function WhyLogin() {
       details: [
         "Complete audit trail per user",
         "Regulatory compliance tracking",
-        "Secure data sharing controls"
+        "Secure data sharing controls",
       ],
-      color: "bg-success"
-    }
+      color: "bg-success",
+    },
   ];
 
   const currentLimitations = [
     {
       icon: AlertTriangle,
       title: "Shared Demo Keys",
-      description: "All users currently use the same demo keys, reducing security",
-      impact: "High Risk"
+      description:
+        "All users currently use the same demo keys, reducing security",
+      impact: "High Risk",
     },
     {
       icon: Users,
       title: "No Data Isolation",
       description: "All users' data is mixed together in the same storage",
-      impact: "Privacy Risk"
+      impact: "Privacy Risk",
     },
     {
       icon: Eye,
       title: "No Access Control",
       description: "Anyone can access any patient's health records",
-      impact: "Security Risk"
+      impact: "Security Risk",
     },
     {
       icon: Database,
       title: "No Personal Context",
       description: "AI cannot provide personalized recommendations",
-      impact: "Functionality Loss"
-    }
+      impact: "Functionality Loss",
+    },
   ];
 
   const loginFeatures = [
     {
       icon: UserCheck,
       title: "Secure Authentication",
-      description: "Email/password with optional 2FA for enhanced security"
+      description: "Email/password with optional 2FA for enhanced security",
     },
     {
       icon: Key,
       title: "Automatic Key Generation",
-      description: "Split-keys automatically generated and securely distributed"
+      description:
+        "Split-keys automatically generated and securely distributed",
     },
     {
       icon: Smartphone,
       title: "Mobile-Friendly",
-      description: "Responsive design works perfectly on all devices"
+      description: "Responsive design works perfectly on all devices",
     },
     {
       icon: Globe,
       title: "Seamless Experience",
-      description: "Single sign-on across all health management features"
-    }
+      description: "Single sign-on across all health management features",
+    },
   ];
 
   return (
@@ -170,19 +173,23 @@ export default function WhyLogin() {
               Current Issue: Medical History Save Failures
             </CardTitle>
             <CardDescription>
-              The medical history form is failing to save because the secure data storage system 
-              requires proper user authentication and key management.
+              The medical history form is failing to save because the secure
+              data storage system requires proper user authentication and key
+              management.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                <strong>Quick Fix Applied:</strong> I've implemented a simplified storage system that bypasses 
-                the complex key requirements for now, so your medical history form should work immediately.
+                <strong>Quick Fix Applied:</strong> I've implemented a
+                simplified storage system that bypasses the complex key
+                requirements for now, so your medical history form should work
+                immediately.
               </p>
               <p className="text-sm text-muted-foreground">
-                <strong>Permanent Solution:</strong> A user login system would solve this properly and 
-                provide much better security and functionality.
+                <strong>Permanent Solution:</strong> A user login system would
+                solve this properly and provide much better security and
+                functionality.
               </p>
             </div>
           </CardContent>
@@ -197,14 +204,21 @@ export default function WhyLogin() {
             {benefits.map((benefit, index) => {
               const IconComponent = benefit.icon;
               return (
-                <Card key={index} className="border-2 hover:border-primary/50 transition-colors">
+                <Card
+                  key={index}
+                  className="border-2 hover:border-primary/50 transition-colors"
+                >
                   <CardHeader>
                     <div className="flex items-center space-x-3">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-xl ${benefit.color} text-white`}>
+                      <div
+                        className={`flex items-center justify-center w-10 h-10 rounded-xl ${benefit.color} text-white`}
+                      >
                         <IconComponent className="h-5 w-5" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{benefit.title}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {benefit.title}
+                        </CardTitle>
                         <CardDescription>{benefit.description}</CardDescription>
                       </div>
                     </div>
@@ -212,7 +226,10 @@ export default function WhyLogin() {
                   <CardContent>
                     <ul className="space-y-2">
                       {benefit.details.map((detail, detailIndex) => (
-                        <li key={detailIndex} className="flex items-center text-sm">
+                        <li
+                          key={detailIndex}
+                          className="flex items-center text-sm"
+                        >
                           <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
                           {detail}
                         </li>
@@ -294,8 +311,8 @@ export default function WhyLogin() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h4 className="font-semibold mb-2 flex items-center">
-                  <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                  ✅ Already Implemented
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500" />✅
+                  Already Implemented
                 </h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Complete login/register UI</li>
@@ -327,7 +344,8 @@ export default function WhyLogin() {
               Ready to Experience Secure Healthcare?
             </h3>
             <p className="text-muted-foreground mb-6">
-              Try the login system now to see how personal key management and data isolation work.
+              Try the login system now to see how personal key management and
+              data isolation work.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/login">

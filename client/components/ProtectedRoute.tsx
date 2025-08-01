@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Shield, Lock, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Shield,
+  Lock,
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,7 +26,10 @@ interface UserData {
   loginTime: string;
 }
 
-export default function ProtectedRoute({ children, requireAuth = true }: ProtectedRouteProps) {
+export default function ProtectedRoute({
+  children,
+  requireAuth = true,
+}: ProtectedRouteProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isValidating, setIsValidating] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -37,7 +46,7 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
       setError(null);
 
       // Check if user data exists in localStorage
-      const storedUser = localStorage.getItem('healthchain_user');
+      const storedUser = localStorage.getItem("healthchain_user");
       if (!storedUser) {
         setIsAuthenticated(false);
         setIsValidating(false);
@@ -45,22 +54,22 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
       }
 
       const user = JSON.parse(storedUser);
-      
+
       // If no session token, user is not properly authenticated
       if (!user.sessionToken) {
-        console.log('No session token found, user needs to login');
+        console.log("No session token found, user needs to login");
         setIsAuthenticated(false);
         setIsValidating(false);
         return;
       }
 
       // Validate session with backend
-      const response = await fetch('/api/auth/verify', {
-        method: 'GET',
+      const response = await fetch("/api/auth/verify", {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${user.sessionToken}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${user.sessionToken}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
@@ -68,20 +77,23 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
         if (result.success) {
           setUserData(user);
           setIsAuthenticated(true);
-          console.log('✅ User authenticated successfully:', result.user.username);
+          console.log(
+            "✅ User authenticated successfully:",
+            result.user.username,
+          );
         } else {
-          console.log('❌ Session validation failed:', result.error);
-          localStorage.removeItem('healthchain_user');
+          console.log("❌ Session validation failed:", result.error);
+          localStorage.removeItem("healthchain_user");
           setIsAuthenticated(false);
         }
       } else {
-        console.log('❌ Session validation request failed');
-        localStorage.removeItem('healthchain_user');
+        console.log("❌ Session validation request failed");
+        localStorage.removeItem("healthchain_user");
         setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('Error validating authentication:', error);
-      setError('Authentication check failed');
+      console.error("Error validating authentication:", error);
+      setError("Authentication check failed");
       setIsAuthenticated(false);
     } finally {
       setIsValidating(false);
@@ -90,13 +102,13 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
 
   const handleLogin = () => {
     // Store current location to redirect back after login
-    localStorage.setItem('healthchain_redirect', location.pathname);
-    window.location.href = '/login';
+    localStorage.setItem("healthchain_redirect", location.pathname);
+    window.location.href = "/login";
   };
 
   const handleContinueAsGuest = () => {
     // Set demo mode
-    localStorage.setItem('healthchain_demo_mode', 'true');
+    localStorage.setItem("healthchain_demo_mode", "true");
     setIsAuthenticated(false);
   };
 
@@ -144,15 +156,16 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
             <div className="flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 text-destructive mx-auto">
               <Lock className="h-8 w-8" />
             </div>
-            
+
             <div>
               <h2 className="text-xl font-bold text-foreground mb-2">
                 Authentication Required
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
-                You need to login to access your secure health records and use personalized features.
+                You need to login to access your secure health records and use
+                personalized features.
               </p>
-              
+
               {error && (
                 <div className="flex items-center justify-center text-destructive text-sm mb-4">
                   <AlertTriangle className="h-4 w-4 mr-2" />
@@ -188,16 +201,12 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
               </div>
 
               <div className="space-y-3">
-                <Button 
-                  onClick={handleLogin}
-                  className="w-full"
-                  size="lg"
-                >
+                <Button onClick={handleLogin} className="w-full" size="lg">
                   <Lock className="h-4 w-4 mr-2" />
                   Login to Access Your Data
                 </Button>
-                
-                <Button 
+
+                <Button
                   onClick={handleContinueAsGuest}
                   variant="outline"
                   className="w-full"

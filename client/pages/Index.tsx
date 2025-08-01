@@ -1,6 +1,12 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import {
@@ -17,7 +23,7 @@ import {
   Users,
   User,
   LogOut,
-  LogIn
+  LogIn,
 } from "lucide-react";
 
 export default function Index() {
@@ -29,7 +35,7 @@ export default function Index() {
   }, []);
 
   const checkAuthStatus = () => {
-    const storedUser = localStorage.getItem('healthchain_user');
+    const storedUser = localStorage.getItem("healthchain_user");
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
@@ -38,30 +44,30 @@ export default function Index() {
           setIsAuthenticated(true);
         }
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error("Error parsing user data:", error);
       }
     }
   };
 
   const handleLogout = async () => {
     try {
-      const storedUser = localStorage.getItem('healthchain_user');
+      const storedUser = localStorage.getItem("healthchain_user");
       if (storedUser) {
         const userData = JSON.parse(storedUser);
         if (userData.sessionToken) {
-          await fetch('/api/auth/logout', {
-            method: 'POST',
+          await fetch("/api/auth/logout", {
+            method: "POST",
             headers: {
-              'Authorization': `Bearer ${userData.sessionToken}`,
-              'Content-Type': 'application/json'
-            }
+              Authorization: `Bearer ${userData.sessionToken}`,
+              "Content-Type": "application/json",
+            },
           });
         }
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
-      localStorage.removeItem('healthchain_user');
+      localStorage.removeItem("healthchain_user");
       setUser(null);
       setIsAuthenticated(false);
     }
@@ -69,45 +75,49 @@ export default function Index() {
 
   const features = [
     {
-      id: 'bmax',
-      title: 'B-max AI Assistant',
-      description: 'Your personal AI health companion for intelligent medical insights and personalized recommendations.',
+      id: "bmax",
+      title: "B-max AI Assistant",
+      description:
+        "Your personal AI health companion for intelligent medical insights and personalized recommendations.",
       icon: Brain,
-      color: 'bg-primary',
-      route: '/bmax',
-      stats: '24/7 Available',
-      gradient: 'from-primary/20 to-accent/20'
+      color: "bg-primary",
+      route: "/bmax",
+      stats: "24/7 Available",
+      gradient: "from-primary/20 to-accent/20",
     },
     {
-      id: 'history',
-      title: 'Health History',
-      description: 'Comprehensive health records and AI search history securely stored on blockchain.',
+      id: "history",
+      title: "Health History",
+      description:
+        "Comprehensive health records and AI search history securely stored on blockchain.",
       icon: History,
-      color: 'bg-accent',
-      route: '/history',
-      stats: 'Blockchain Secured',
-      gradient: 'from-accent/20 to-primary/20'
+      color: "bg-accent",
+      route: "/history",
+      stats: "Blockchain Secured",
+      gradient: "from-accent/20 to-primary/20",
     },
     {
-      id: 'firstaid',
-      title: 'Emergency First Aid',
-      description: 'Instant access to first aid guidance for common health emergencies and conditions.',
+      id: "firstaid",
+      title: "Emergency First Aid",
+      description:
+        "Instant access to first aid guidance for common health emergencies and conditions.",
       icon: Heart,
-      color: 'bg-destructive',
-      route: '/first-aid',
-      stats: 'Emergency Ready',
-      gradient: 'from-destructive/20 to-warning/20'
+      color: "bg-destructive",
+      route: "/first-aid",
+      stats: "Emergency Ready",
+      gradient: "from-destructive/20 to-warning/20",
     },
     {
-      id: 'analytics',
-      title: 'Health Analytics',
-      description: 'Advanced insights and trends from your health data with predictive analytics.',
+      id: "analytics",
+      title: "Health Analytics",
+      description:
+        "Advanced insights and trends from your health data with predictive analytics.",
       icon: Activity,
-      color: 'bg-info',
-      route: '/analytics',
-      stats: 'AI Powered',
-      gradient: 'from-info/20 to-success/20'
-    }
+      color: "bg-info",
+      route: "/analytics",
+      stats: "AI Powered",
+      gradient: "from-info/20 to-success/20",
+    },
   ];
 
   return (
@@ -121,9 +131,15 @@ export default function Index() {
                 <Stethoscope className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg md:text-2xl font-bold text-foreground truncate">HealthChain</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Blockchain-Powered Healthcare</p>
-                <p className="text-xs text-primary font-medium">Developer: Jay Magar</p>
+                <h1 className="text-base sm:text-lg md:text-2xl font-bold text-foreground truncate">
+                  HealthChain
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+                  Blockchain-Powered Healthcare
+                </p>
+                <p className="text-xs text-primary font-medium">
+                  Developer: Jay Magar
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2 flex-shrink-0">
@@ -173,23 +189,36 @@ export default function Index() {
             <span className="text-accent"> Blockchain</span>
           </h1>
           <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 md:mb-12 max-w-2xl mx-auto leading-relaxed px-4">
-            Experience the future of healthcare with AI-powered insights, secure blockchain storage,
-            and comprehensive health management tools designed for your wellbeing.
+            Experience the future of healthcare with AI-powered insights, secure
+            blockchain storage, and comprehensive health management tools
+            designed for your wellbeing.
           </p>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8 md:mb-16 px-2 sm:px-4">
             <div className="text-center p-2 sm:p-3">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1 sm:mb-2">100%</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Data Security</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1 sm:mb-2">
+                100%
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                Data Security
+              </div>
             </div>
             <div className="text-center p-2 sm:p-3">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-accent mb-1 sm:mb-2">24/7</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">AI Assistant</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-accent mb-1 sm:mb-2">
+                24/7
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                AI Assistant
+              </div>
             </div>
             <div className="text-center p-2 sm:p-3">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-info mb-1 sm:mb-2">∞</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Storage</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-info mb-1 sm:mb-2">
+                ∞
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                Storage
+              </div>
             </div>
           </div>
         </div>
@@ -202,7 +231,8 @@ export default function Index() {
             Comprehensive Health Solutions
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            Four powerful tools to transform your healthcare experience and keep you in control
+            Four powerful tools to transform your healthcare experience and keep
+            you in control
           </p>
         </div>
 
@@ -215,7 +245,8 @@ export default function Index() {
                 Secure Data Access System
               </CardTitle>
               <CardDescription>
-                Advanced split-key cryptography with blockchain immutability for healthcare data protection
+                Advanced split-key cryptography with blockchain immutability for
+                healthcare data protection
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -237,10 +268,14 @@ export default function Index() {
                 key={feature.id}
                 className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 active:scale-95 touch-manipulation"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                />
                 <CardHeader className="relative z-10 pb-3 sm:pb-6">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <div className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${feature.color} text-white group-hover:scale-110 transition-transform duration-300`}>
+                    <div
+                      className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${feature.color} text-white group-hover:scale-110 transition-transform duration-300`}
+                    >
                       <IconComponent className="h-6 w-6 sm:h-7 sm:w-7" />
                     </div>
                     <Badge variant="outline" className="text-xs px-2 py-1">
@@ -279,17 +314,26 @@ export default function Index() {
               Ready to Transform Your Healthcare?
             </h2>
             <p className="text-base sm:text-xl text-white/90 mb-6 sm:mb-8 px-4">
-              Join thousands who trust HealthChain for secure, intelligent healthcare management
+              Join thousands who trust HealthChain for secure, intelligent
+              healthcare management
             </p>
             <div className="flex flex-col gap-3 sm:gap-4 justify-center px-4">
               <Link to="/bmax" className="w-full sm:w-auto">
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 min-h-[48px] sm:min-h-[52px]">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 min-h-[48px] sm:min-h-[52px]"
+                >
                   <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   Start with B-max AI
                 </Button>
               </Link>
               <Link to="/history" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary min-h-[48px] sm:min-h-[52px]">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary min-h-[48px] sm:min-h-[52px]"
+                >
                   <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   View Health History
                 </Button>
@@ -307,14 +351,19 @@ export default function Index() {
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
                 <Stethoscope className="h-4 w-4" />
               </div>
-              <span className="text-base sm:text-lg font-semibold text-foreground">HealthChain</span>
+              <span className="text-base sm:text-lg font-semibold text-foreground">
+                HealthChain
+              </span>
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground text-center">
               © 2024 HealthChain. Secured by blockchain technology.
               <br />
               <span className="text-xs">Developer: Jay Magar</span>
               <br />
-              <Link to="/legal" className="text-xs text-primary hover:underline">
+              <Link
+                to="/legal"
+                className="text-xs text-primary hover:underline"
+              >
                 Privacy Policy & Copyright
               </Link>
             </div>
