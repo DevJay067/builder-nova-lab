@@ -298,29 +298,47 @@ export class UserAuthenticationService {
       }
 
       // Verify password
-      const isPasswordValid = await bcrypt.compare(loginData.password, user.password_hash);
+      const passwordHash = user.password_hash || user.passwordHash;
+      const isPasswordValid = await bcrypt.compare(loginData.password, passwordHash);
 
       if (!isPasswordValid) {
         // Increment failed login attempts
-        await sql`
-          UPDATE users 
-          SET failed_login_attempts = failed_login_attempts + 1,
-              locked_until = CASE 
-                WHEN failed_login_attempts >= 4 THEN NOW() + INTERVAL '15 minutes'
-                ELSE NULL
-              END
-          WHERE id = ${user.id}
-        `;
+        if (sql) {
+          await sql`
+            UPDATE users
+            SET failed_login_attempts = failed_login_attempts + 1,
+                locked_until = CASE
+                  WHEN failed_login_attempts >= 4 THEN NOW() + INTERVAL '15 minutes'
+                  ELSE NULL
+                END
+            WHERE id = ${user.id}
+          `;
+        } else {
+          // Update in memory
+          user.failed_login_attempts = (user.failed_login_attempts || 0) + 1;
+          if (user.failed_login_attempts >= 5) {
+            user.locked_until = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+          }
+          inMemoryUsers.set(user.id, user);
+        }
 
         return { success: false, error: 'Invalid username or password' };
       }
 
       // Reset failed login attempts and update last login
-      await sql`
-        UPDATE users 
-        SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW()
-        WHERE id = ${user.id}
-      `;
+      if (sql) {
+        await sql`
+          UPDATE users
+          SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW()
+          WHERE id = ${user.id}
+        `;
+      } else {
+        // Update in memory
+        user.failed_login_attempts = 0;
+        user.locked_until = null;
+        user.last_login = new Date().toISOString();
+        inMemoryUsers.set(user.id, user);
+      }
 
       // Create session
       const sessionId = `session_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
