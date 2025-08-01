@@ -9,7 +9,7 @@ try {
     sql = neon(process.env.DATABASE_URL);
   }
 } catch (error) {
-  console.log('⚠��  Database connection not available, using in-memory storage for authentication');
+  console.log('⚠️  Database connection not available, using in-memory storage for authentication');
 }
 
 // In-memory fallback storage
@@ -447,11 +447,20 @@ export class UserAuthenticationService {
       const result = sessionResult[0];
 
       // Update last activity
-      await sql`
-        UPDATE user_sessions 
-        SET last_activity = NOW() 
-        WHERE id = ${result.id}
-      `;
+      if (sql) {
+        await sql`
+          UPDATE user_sessions
+          SET last_activity = NOW()
+          WHERE id = ${result.id}
+        `;
+      } else {
+        // Update in memory
+        const session = inMemorySessions.get(sessionToken);
+        if (session) {
+          session.lastActivity = new Date().toISOString();
+          inMemorySessions.set(sessionToken, session);
+        }
+      }
 
       const user: User = {
         id: result.user_id,
