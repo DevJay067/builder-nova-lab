@@ -80,6 +80,10 @@ export class NeonDatabaseService {
         )
       `;
 
+      // Create indexes for key_distributions
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_distributions_key_id ON key_distributions(key_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_distributions_recipient_id ON key_distributions(recipient_id)`;
+
       // Create audit_logs table
       await sql`
         CREATE TABLE IF NOT EXISTS audit_logs (
