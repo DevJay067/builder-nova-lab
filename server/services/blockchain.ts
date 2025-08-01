@@ -59,13 +59,16 @@ export class BlockchainService {
   static decryptHealthData(encryptedData: string, encryptionKey: string): any {
     try {
       const algorithm = 'aes-256-gcm';
-      const [ivHex, encrypted] = encryptedData.split(':');
+      const [ivHex, authTagHex, encrypted] = encryptedData.split(':');
       const iv = Buffer.from(ivHex, 'hex');
-      const decipher = crypto.createDecipher(algorithm, encryptionKey);
-      
+      const authTag = Buffer.from(authTagHex, 'hex');
+      const key = crypto.createHash('sha256').update(encryptionKey).digest();
+      const decipher = crypto.createDecipherGCM(algorithm, key, iv);
+      decipher.setAuthTag(authTag);
+
       let decrypted = decipher.update(encrypted, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
-      
+
       return JSON.parse(decrypted);
     } catch (error) {
       throw new Error('Failed to decrypt health data');
