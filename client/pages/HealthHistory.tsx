@@ -766,19 +766,31 @@ export default function HealthHistory() {
                 </div>
               </div>
 
-              {/* Blockchain Security Notice */}
+              {/* Enhanced Security Notice */}
               <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-4 rounded-lg border border-primary/20">
                 <div className="flex items-center space-x-3">
                   <Shield className="h-6 w-6 text-primary" />
                   <div>
                     <h4 className="font-semibold text-foreground">
-                      Blockchain Security
+                      Advanced Security Architecture
                     </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Your health data will be encrypted and stored on an
-                      immutable blockchain. Only you have the private key to
-                      access this information.
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Your health data is protected by our dual-layer security system:
                     </p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li className="flex items-center">
+                        <Lock className="h-3 w-3 mr-2 text-primary" />
+                        <strong>Split-Key Encryption:</strong> Data encrypted with patient + provider + system keys
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="h-3 w-3 mr-2 text-accent" />
+                        <strong>Blockchain Immutability:</strong> Records stored on tamper-proof blockchain
+                      </li>
+                      <li className="flex items-center">
+                        <FileText className="h-3 w-3 mr-2 text-info" />
+                        <strong>Neon Database:</strong> Encrypted storage in secure PostgreSQL database
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
