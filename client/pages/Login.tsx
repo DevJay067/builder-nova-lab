@@ -159,6 +159,17 @@ export default function Login() {
         return;
       }
 
+      // Validate username format
+      const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
+      if (!usernameRegex.test(registerForm.username)) {
+        setMessage({
+          type: "error",
+          text: "Username must be 3-30 characters and contain only letters, numbers, and underscores",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Register user with backend
       const response = await fetch("/api/auth/register", {
         method: "POST",
