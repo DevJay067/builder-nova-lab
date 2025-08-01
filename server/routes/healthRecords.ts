@@ -630,6 +630,62 @@ export const verifyPatientBlockchain: RequestHandler = (req, res) => {
 };
 
 /**
+ * Store health record directly in Neon database (simplified approach)
+ */
+export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
+  try {
+    const {
+      patientId,
+      recordType,
+      title,
+      description,
+      doctor,
+      date,
+      metadata
+    } = req.body;
+
+    if (!patientId || !recordType || !title) {
+      return res.status(400).json({
+        success: false,
+        error: "Patient ID, record type, and title are required"
+      });
+    }
+
+    // Generate a unique record ID
+    const recordId = `neon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Store directly in Neon database
+    const { NeonDatabaseService } = await import('../services/neonDatabase');
+    await NeonDatabaseService.storeMedicalHistory({
+      id: recordId,
+      patientId,
+      recordType,
+      title,
+      description,
+      doctor,
+      date,
+      metadata
+    });
+
+    console.log(`✅ Stored health record directly in Neon: ${recordId}`);
+
+    res.json({
+      success: true,
+      recordId,
+      message: "Health record stored successfully in Neon database",
+      storage: "neon-database"
+    });
+
+  } catch (error) {
+    console.error("❌ Error storing health record directly:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to store health record: " + error.message
+    });
+  }
+};
+
+/**
  * Get blockchain network statistics
  */
 export const getBlockchainStats: RequestHandler = (req, res) => {
