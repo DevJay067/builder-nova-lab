@@ -270,21 +270,41 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
 };
 
 /**
- * Get all health records for a patient (enhanced with Neon database)
+ * Get all health records for authenticated user (enhanced with user authentication)
  */
 export const getHealthRecords: RequestHandler = async (req, res) => {
   try {
-    const patientId =
-      (req.headers["patient-id"] as string) || "default-patient";
+    // Get session token for authentication
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') ||
+                        req.cookies?.healthchain_session ||
+                        req.headers['x-session-token'] as string ||
+                        req.headers["patient-id"] as string; // Fallback for demo mode
+
+    let authenticatedUser = null;
+    let userPatientId = "default-patient";
+
+    // Try to authenticate user
+    if (sessionToken && sessionToken !== "default-patient") {
+      try {
+        const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
+        if (sessionResult.valid) {
+          authenticatedUser = sessionResult.user!;
+          userPatientId = authenticatedUser.id;
+          console.log(`✅ Fetching records for authenticated user: ${authenticatedUser.username}`);
+        }
+      } catch (error) {
+        console.log('⚠️  Session validation failed, falling back to demo mode');
+      }
+    }
 
     // Get records from in-memory storage (backward compatibility)
-    const memoryRecords = healthRecords.get(patientId) || [];
+    const memoryRecords = healthRecords.get(userPatientId) || [];
 
     // Also get records from Neon database
     let neonRecords = [];
     try {
       const { NeonDatabaseService } = await import('../services/neonDatabase');
-      const dbRecords = await NeonDatabaseService.getMedicalHistory(patientId);
+      const dbRecords = await NeonDatabaseService.getMedicalHistory(userPatientId);
 
       // Convert database records to API format
       neonRecords = dbRecords.map(record => ({
@@ -296,11 +316,13 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
         description: record.description || "",
         doctor: record.doctor || "Unknown",
         status: "completed",
-        blockchainHash: `neon-${record.id.slice(-8)}`, // Generate a hash-like ID for display
+        blockchainHash: `secure-${record.id.slice(-8)}`, // Generate a hash-like ID for display
         metadata: record.metadata || {},
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       }));
+
+      console.log(`✅ Found ${neonRecords.length} records in Neon database for user: ${userPatientId}`);
     } catch (error) {
       console.error("Error fetching from Neon database:", error);
       // Don't fail the request if Neon is unavailable
@@ -316,10 +338,10 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
     uniqueRecords.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
 
     // Update patient last access
-    const patientProfile = patientProfiles.get(patientId);
+    const patientProfile = patientProfiles.get(userPatientId);
     if (patientProfile) {
       patientProfile.lastAccess = new Date().toISOString();
-      patientProfiles.set(patientId, patientProfile);
+      patientProfiles.set(userPatientId, patientProfile);
     }
 
     const response: GetHealthRecordsResponse = {
@@ -327,6 +349,21 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
       records: uniqueRecords,
       total: uniqueRecords.length,
     };
+
+    // Add user info if authenticated
+    if (authenticatedUser) {
+      (response as any).userInfo = {
+        userId: authenticatedUser.id,
+        username: authenticatedUser.username,
+        name: `${authenticatedUser.firstName} ${authenticatedUser.lastName}`,
+        isAuthenticated: true
+      };
+    } else {
+      (response as any).userInfo = {
+        isAuthenticated: false,
+        demoMode: true
+      };
+    }
 
     res.json(response);
   } catch (error) {
