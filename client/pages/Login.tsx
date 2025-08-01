@@ -130,6 +130,7 @@ export default function Login() {
     try {
       // Validate form
       if (
+        !registerForm.username ||
         !registerForm.firstName ||
         !registerForm.lastName ||
         !registerForm.email ||
