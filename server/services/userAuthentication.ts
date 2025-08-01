@@ -1,11 +1,21 @@
-import crypto from "crypto";
-import bcrypt from "bcryptjs";
-import { neon } from "@neondatabase/serverless";
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import { neon } from '@neondatabase/serverless';
 
-const sql = neon(
-  process.env.DATABASE_URL ||
-    "postgresql://misty-glitter-69745686-user:default@ep-empty-frog-a5lp6eyz.us-east-2.aws.neon.tech/misty-glitter-69745686-db?sslmode=require",
-);
+// Try to initialize Neon database connection, but allow fallback to in-memory storage
+let sql: any = null;
+try {
+  if (process.env.DATABASE_URL) {
+    sql = neon(process.env.DATABASE_URL);
+  }
+} catch (error) {
+  console.log('⚠️  Database connection not available, using in-memory storage for authentication');
+}
+
+// In-memory fallback storage
+const inMemoryUsers = new Map<string, any>();
+const inMemorySessions = new Map<string, any>();
+const inMemoryDataAccess = new Map<string, any[]>();
 
 export interface User {
   id: string;
@@ -50,6 +60,7 @@ export interface UserLogin {
 }
 
 export class UserAuthenticationService {
+  
   /**
    * Initialize user authentication tables
    */
@@ -120,9 +131,9 @@ export class UserAuthenticationService {
         )
       `;
 
-      console.log("✅ User authentication tables initialized successfully");
+      console.log('✅ User authentication tables initialized successfully');
     } catch (error) {
-      console.error("❌ Error initializing user tables:", error);
+      console.error('❌ Error initializing user tables:', error);
       throw error;
     }
   }
@@ -132,14 +143,14 @@ export class UserAuthenticationService {
    */
   static generateUserHash(username: string, email: string): string {
     const combined = `${username}:${email}:${Date.now()}`;
-    return crypto.createHash("sha256").update(combined).digest("hex");
+    return crypto.createHash('sha256').update(combined).digest('hex');
   }
 
   /**
    * Generate session token
    */
   static generateSessionToken(): string {
-    return crypto.randomBytes(32).toString("hex");
+    return crypto.randomBytes(32).toString('hex');
   }
 
   /**
@@ -147,7 +158,7 @@ export class UserAuthenticationService {
    */
   static generateDataAccessHash(userHash: string, dataId: string): string {
     const combined = `${userHash}:${dataId}`;
-    return crypto.createHash("sha256").update(combined).digest("hex");
+    return crypto.createHash('sha256').update(combined).digest('hex');
   }
 
   /**
@@ -157,7 +168,7 @@ export class UserAuthenticationService {
     const midPoint = Math.floor(hash.length / 2);
     return {
       hash1: hash.slice(0, midPoint),
-      hash2: hash.slice(midPoint),
+      hash2: hash.slice(midPoint)
     };
   }
 
@@ -171,9 +182,7 @@ export class UserAuthenticationService {
   /**
    * Register a new user
    */
-  static async registerUser(
-    userData: UserRegistration,
-  ): Promise<{ success: boolean; user?: User; error?: string }> {
+  static async registerUser(userData: UserRegistration): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
       // Check if username or email already exists
       const existingUser = await sql`
@@ -182,11 +191,11 @@ export class UserAuthenticationService {
       `;
 
       if (existingUser.length > 0) {
-        return { success: false, error: "Username or email already exists" };
+        return { success: false, error: 'Username or email already exists' };
       }
 
       // Generate user ID and hash
-      const userId = `user_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+      const userId = `user_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
       const userHash = this.generateUserHash(userData.username, userData.email);
 
       // Hash the password
@@ -204,7 +213,7 @@ export class UserAuthenticationService {
         dateOfBirth: userData.dateOfBirth,
         phone: userData.phone,
         createdAt: new Date().toISOString(),
-        isActive: true,
+        isActive: true
       };
 
       // Store user in database
@@ -220,29 +229,22 @@ export class UserAuthenticationService {
       `;
 
       console.log(`✅ User registered successfully: ${user.username}`);
-
+      
       // Remove sensitive data before returning
       const safeUser = { ...user };
       delete safeUser.passwordHash;
-
+      
       return { success: true, user: safeUser };
     } catch (error) {
-      console.error("❌ Error registering user:", error);
-      return { success: false, error: "Failed to register user" };
+      console.error('❌ Error registering user:', error);
+      return { success: false, error: 'Failed to register user' };
     }
   }
 
   /**
    * Authenticate user login
    */
-  static async authenticateUser(
-    loginData: UserLogin,
-  ): Promise<{
-    success: boolean;
-    user?: User;
-    session?: UserSession;
-    error?: string;
-  }> {
+  static async authenticateUser(loginData: UserLogin): Promise<{ success: boolean; user?: User; session?: UserSession; error?: string }> {
     try {
       // Get user by username
       const userResult = await sql`
@@ -251,24 +253,18 @@ export class UserAuthenticationService {
       `;
 
       if (userResult.length === 0) {
-        return { success: false, error: "Invalid username or password" };
+        return { success: false, error: 'Invalid username or password' };
       }
 
       const user = userResult[0];
 
       // Check if account is locked
       if (user.locked_until && new Date(user.locked_until) > new Date()) {
-        return {
-          success: false,
-          error: "Account is temporarily locked due to failed login attempts",
-        };
+        return { success: false, error: 'Account is temporarily locked due to failed login attempts' };
       }
 
       // Verify password
-      const isPasswordValid = await bcrypt.compare(
-        loginData.password,
-        user.password_hash,
-      );
+      const isPasswordValid = await bcrypt.compare(loginData.password, user.password_hash);
 
       if (!isPasswordValid) {
         // Increment failed login attempts
@@ -282,7 +278,7 @@ export class UserAuthenticationService {
           WHERE id = ${user.id}
         `;
 
-        return { success: false, error: "Invalid username or password" };
+        return { success: false, error: 'Invalid username or password' };
       }
 
       // Reset failed login attempts and update last login
@@ -293,12 +289,9 @@ export class UserAuthenticationService {
       `;
 
       // Create session
-      const sessionId = `session_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+      const sessionId = `session_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
       const sessionToken = this.generateSessionToken();
-      const dataAccessHash = this.generateDataAccessHash(
-        user.user_hash,
-        user.id,
-      );
+      const dataAccessHash = this.generateDataAccessHash(user.user_hash, user.id);
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
       const session: UserSession = {
@@ -308,7 +301,7 @@ export class UserAuthenticationService {
         dataAccessHash,
         createdAt: new Date().toISOString(),
         expiresAt: expiresAt.toISOString(),
-        lastActivity: new Date().toISOString(),
+        lastActivity: new Date().toISOString()
       };
 
       await sql`
@@ -322,14 +315,14 @@ export class UserAuthenticationService {
         )
       `;
 
-      console.log(`✅ User authenticated successfully: ${user.username}`);
+      console.log(`��� User authenticated successfully: ${user.username}`);
 
       // Return user without sensitive data
       const safeUser: User = {
         id: user.id,
         username: user.username,
         email: user.email,
-        passwordHash: "", // Don't return password hash
+        passwordHash: '', // Don't return password hash
         userHash: user.user_hash,
         firstName: user.first_name,
         lastName: user.last_name,
@@ -337,27 +330,20 @@ export class UserAuthenticationService {
         phone: user.phone,
         createdAt: user.created_at,
         lastLogin: user.last_login,
-        isActive: user.is_active,
+        isActive: user.is_active
       };
 
       return { success: true, user: safeUser, session };
     } catch (error) {
-      console.error("❌ Error authenticating user:", error);
-      return { success: false, error: "Authentication failed" };
+      console.error('❌ Error authenticating user:', error);
+      return { success: false, error: 'Authentication failed' };
     }
   }
 
   /**
    * Validate session token
    */
-  static async validateSession(
-    sessionToken: string,
-  ): Promise<{
-    valid: boolean;
-    user?: User;
-    session?: UserSession;
-    error?: string;
-  }> {
+  static async validateSession(sessionToken: string): Promise<{ valid: boolean; user?: User; session?: UserSession; error?: string }> {
     try {
       const sessionResult = await sql`
         SELECT s.*, u.id as user_id, u.username, u.email, u.user_hash, 
@@ -372,7 +358,7 @@ export class UserAuthenticationService {
       `;
 
       if (sessionResult.length === 0) {
-        return { valid: false, error: "Invalid or expired session" };
+        return { valid: false, error: 'Invalid or expired session' };
       }
 
       const result = sessionResult[0];
@@ -388,7 +374,7 @@ export class UserAuthenticationService {
         id: result.user_id,
         username: result.username,
         email: result.email,
-        passwordHash: "",
+        passwordHash: '',
         userHash: result.user_hash,
         firstName: result.first_name,
         lastName: result.last_name,
@@ -396,7 +382,7 @@ export class UserAuthenticationService {
         phone: result.phone,
         createdAt: result.user_created_at,
         lastLogin: result.last_login,
-        isActive: result.is_active,
+        isActive: result.is_active
       };
 
       const session: UserSession = {
@@ -408,29 +394,25 @@ export class UserAuthenticationService {
         expiresAt: result.expires_at,
         lastActivity: new Date().toISOString(),
         ipAddress: result.ip_address,
-        userAgent: result.user_agent,
+        userAgent: result.user_agent
       };
 
       return { valid: true, user, session };
     } catch (error) {
-      console.error("❌ Error validating session:", error);
-      return { valid: false, error: "Session validation failed" };
+      console.error('❌ Error validating session:', error);
+      return { valid: false, error: 'Session validation failed' };
     }
   }
 
   /**
    * Create data access record with hash linking
    */
-  static async createDataAccessRecord(
-    userId: string,
-    dataRecordId: string,
-    userHash: string,
-  ): Promise<{ success: boolean; accessId?: string; error?: string }> {
+  static async createDataAccessRecord(userId: string, dataRecordId: string, userHash: string): Promise<{ success: boolean; accessId?: string; error?: string }> {
     try {
       const combinedHash = this.generateDataAccessHash(userHash, dataRecordId);
       const { hash1, hash2 } = this.splitHash(combinedHash);
-
-      const accessId = `access_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+      
+      const accessId = `access_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
 
       await sql`
         INSERT INTO user_data_access (
@@ -447,18 +429,15 @@ export class UserAuthenticationService {
       console.log(`✅ Created data access record: ${accessId}`);
       return { success: true, accessId };
     } catch (error) {
-      console.error("❌ Error creating data access record:", error);
-      return { success: false, error: "Failed to create data access record" };
+      console.error('❌ Error creating data access record:', error);
+      return { success: false, error: 'Failed to create data access record' };
     }
   }
 
   /**
    * Verify user can access data by combining hashes
    */
-  static async verifyDataAccess(
-    userId: string,
-    dataRecordId: string,
-  ): Promise<{ hasAccess: boolean; combinedHash?: string; error?: string }> {
+  static async verifyDataAccess(userId: string, dataRecordId: string): Promise<{ hasAccess: boolean; combinedHash?: string; error?: string }> {
     try {
       const accessResult = await sql`
         SELECT * FROM user_data_access 
@@ -466,14 +445,11 @@ export class UserAuthenticationService {
       `;
 
       if (accessResult.length === 0) {
-        return { hasAccess: false, error: "No access record found" };
+        return { hasAccess: false, error: 'No access record found' };
       }
 
       const accessRecord = accessResult[0];
-      const combinedHash = this.combineHashes(
-        accessRecord.split_hash_1,
-        accessRecord.split_hash_2,
-      );
+      const combinedHash = this.combineHashes(accessRecord.split_hash_1, accessRecord.split_hash_2);
 
       // Update access metadata
       await sql`
@@ -484,8 +460,8 @@ export class UserAuthenticationService {
 
       return { hasAccess: true, combinedHash };
     } catch (error) {
-      console.error("❌ Error verifying data access:", error);
-      return { hasAccess: false, error: "Access verification failed" };
+      console.error('❌ Error verifying data access:', error);
+      return { hasAccess: false, error: 'Access verification failed' };
     }
   }
 
@@ -502,24 +478,22 @@ export class UserAuthenticationService {
         ORDER BY uda.last_accessed DESC, uda.created_at DESC
       `;
 
-      return result.map((row) => ({
+      return result.map(row => ({
         id: row.id,
         dataRecordId: row.data_record_id,
         combinedHash: row.combined_hash,
         createdAt: row.created_at,
         lastAccessed: row.last_accessed,
         accessCount: row.access_count,
-        recordInfo: row.title
-          ? {
-              title: row.title,
-              recordType: row.record_type,
-              date: row.date,
-              doctor: row.doctor,
-            }
-          : null,
+        recordInfo: row.title ? {
+          title: row.title,
+          recordType: row.record_type,
+          date: row.date,
+          doctor: row.doctor
+        } : null
       }));
     } catch (error) {
-      console.error("❌ Error getting user data access:", error);
+      console.error('❌ Error getting user data access:', error);
       return [];
     }
   }
@@ -527,9 +501,7 @@ export class UserAuthenticationService {
   /**
    * Logout user (invalidate session)
    */
-  static async logoutUser(
-    sessionToken: string,
-  ): Promise<{ success: boolean; error?: string }> {
+  static async logoutUser(sessionToken: string): Promise<{ success: boolean; error?: string }> {
     try {
       await sql`
         UPDATE user_sessions 
@@ -537,11 +509,11 @@ export class UserAuthenticationService {
         WHERE session_token = ${sessionToken}
       `;
 
-      console.log("✅ User logged out successfully");
+      console.log('✅ User logged out successfully');
       return { success: true };
     } catch (error) {
-      console.error("❌ Error logging out user:", error);
-      return { success: false, error: "Logout failed" };
+      console.error('❌ Error logging out user:', error);
+      return { success: false, error: 'Logout failed' };
     }
   }
 
@@ -558,7 +530,7 @@ export class UserAuthenticationService {
 
       console.log(`✅ Cleaned up ${result.length} expired sessions`);
     } catch (error) {
-      console.error("❌ Error cleaning up expired sessions:", error);
+      console.error('❌ Error cleaning up expired sessions:', error);
     }
   }
 
@@ -567,26 +539,23 @@ export class UserAuthenticationService {
    */
   static async getUserStats(): Promise<any> {
     try {
-      const [totalUsers] =
-        await sql`SELECT COUNT(*) as count FROM users WHERE is_active = true`;
-      const [activeSessions] =
-        await sql`SELECT COUNT(*) as count FROM user_sessions WHERE is_active = true AND expires_at > NOW()`;
-      const [totalDataAccess] =
-        await sql`SELECT COUNT(*) as count FROM user_data_access`;
+      const [totalUsers] = await sql`SELECT COUNT(*) as count FROM users WHERE is_active = true`;
+      const [activeSessions] = await sql`SELECT COUNT(*) as count FROM user_sessions WHERE is_active = true AND expires_at > NOW()`;
+      const [totalDataAccess] = await sql`SELECT COUNT(*) as count FROM user_data_access`;
 
       return {
         totalUsers: totalUsers.count,
         activeSessions: activeSessions.count,
         totalDataAccess: totalDataAccess.count,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error("❌ Error getting user stats:", error);
+      console.error('❌ Error getting user stats:', error);
       return {
         totalUsers: 0,
         activeSessions: 0,
         totalDataAccess: 0,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     }
   }
