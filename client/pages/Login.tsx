@@ -55,26 +55,52 @@ export default function Login() {
     setMessage(null);
 
     try {
-      // Simulate login for demo
-      if (loginForm.email && loginForm.password) {
-        // Store user session
+      if (!loginForm.email || !loginForm.password) {
+        setMessage({ type: 'error', text: 'Please fill in all fields' });
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: loginForm.email, // Using email as username
+          password: loginForm.password
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Store user session with secure data
         localStorage.setItem('healthchain_user', JSON.stringify({
-          id: 'user-123',
-          email: loginForm.email,
-          name: loginForm.email.split('@')[0],
+          id: result.user.id,
+          username: result.user.username,
+          email: result.user.email,
+          name: `${result.user.firstName} ${result.user.lastName}`,
+          userHash: result.user.userHash,
+          sessionToken: result.sessionToken,
+          dataAccessHash: result.dataAccessHash,
           loginTime: new Date().toISOString()
         }));
 
-        setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
-        
+        setMessage({ type: 'success', text: 'Login successful! Generating secure keys...' });
+
         setTimeout(() => {
-          navigate('/');
+          setMessage({ type: 'success', text: 'Secure access configured! Redirecting...' });
+          setTimeout(() => {
+            navigate('/');
+          }, 1000);
         }, 1500);
       } else {
-        setMessage({ type: 'error', text: 'Please fill in all fields' });
+        setMessage({ type: 'error', text: result.error || 'Login failed' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Login failed. Please try again.' });
+      console.error('Login error:', error);
+      setMessage({ type: 'error', text: 'Login failed. Please check your connection.' });
     } finally {
       setIsLoading(false);
     }
@@ -105,33 +131,70 @@ export default function Login() {
         return;
       }
 
-      // Simulate registration
-      const userData = {
-        id: 'user-' + Date.now(),
-        email: registerForm.email,
-        name: `${registerForm.firstName} ${registerForm.lastName}`,
-        firstName: registerForm.firstName,
-        lastName: registerForm.lastName,
-        dateOfBirth: registerForm.dateOfBirth,
-        phone: registerForm.phone,
-        registrationTime: new Date().toISOString()
-      };
+      // Register user with backend
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: registerForm.email, // Using email as username
+          email: registerForm.email,
+          password: registerForm.password,
+          firstName: registerForm.firstName,
+          lastName: registerForm.lastName,
+          dateOfBirth: registerForm.dateOfBirth,
+          phone: registerForm.phone
+        })
+      });
 
-      // Store user session
-      localStorage.setItem('healthchain_user', JSON.stringify(userData));
+      const result = await response.json();
 
-      setMessage({ type: 'success', text: 'Registration successful! Setting up your secure keys...' });
+      if (result.success) {
+        setMessage({ type: 'success', text: 'Registration successful! Setting up your secure keys...' });
 
-      // Simulate key generation
-      setTimeout(() => {
-        setMessage({ type: 'success', text: 'Secure keys generated! Redirecting to dashboard...' });
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
-      }, 2000);
+        // Auto-login after registration
+        setTimeout(async () => {
+          const loginResponse = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: registerForm.email,
+              password: registerForm.password
+            })
+          });
+
+          const loginResult = await loginResponse.json();
+
+          if (loginResult.success) {
+            // Store user session with secure data
+            localStorage.setItem('healthchain_user', JSON.stringify({
+              id: loginResult.user.id,
+              username: loginResult.user.username,
+              email: loginResult.user.email,
+              name: `${loginResult.user.firstName} ${loginResult.user.lastName}`,
+              userHash: loginResult.user.userHash,
+              sessionToken: loginResult.sessionToken,
+              dataAccessHash: loginResult.dataAccessHash,
+              registrationTime: new Date().toISOString()
+            }));
+
+            setMessage({ type: 'success', text: 'Secure keys generated! Redirecting to dashboard...' });
+            setTimeout(() => {
+              navigate('/');
+            }, 1500);
+          }
+        }, 2000);
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Registration failed' });
+        setIsLoading(false);
+      }
 
     } catch (error) {
-      setMessage({ type: 'error', text: 'Registration failed. Please try again.' });
+      console.error('Registration error:', error);
+      setMessage({ type: 'error', text: 'Registration failed. Please check your connection.' });
       setIsLoading(false);
     }
   };
@@ -179,7 +242,7 @@ export default function Login() {
               <form onSubmit={handleLogin}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">Username/Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
