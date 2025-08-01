@@ -396,6 +396,27 @@ export default function Login() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="username">Username *</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="username"
+                        type="text"
+                        placeholder="john_doe (3-30 chars, letters, numbers, underscores)"
+                        className="pl-9"
+                        value={registerForm.username}
+                        onChange={(e) =>
+                          setRegisterForm((prev) => ({
+                            ...prev,
+                            username: e.target.value,
+                          }))
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="register-email">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
