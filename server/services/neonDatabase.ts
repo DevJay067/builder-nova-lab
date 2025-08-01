@@ -54,12 +54,14 @@ export class NeonDatabaseService {
           expires_at TIMESTAMP,
           rotation_count INTEGER DEFAULT 0,
           status VARCHAR(20) DEFAULT 'active',
-          last_used TIMESTAMP,
-          INDEX idx_patient_id (patient_id),
-          INDEX idx_provider_id (provider_id),
-          INDEX idx_status (status)
+          last_used TIMESTAMP
         )
       `;
+
+      // Create indexes for key_store
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_store_patient_id ON key_store(patient_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_store_provider_id ON key_store(provider_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_store_status ON key_store(status)`;
 
       // Create key_distributions table
       await sql`
