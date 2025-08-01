@@ -190,10 +190,22 @@ export class UserAuthenticationService {
   static async registerUser(userData: UserRegistration): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
       // Check if username or email already exists
-      const existingUser = await sql`
-        SELECT id FROM users 
-        WHERE username = ${userData.username} OR email = ${userData.email}
-      `;
+      let existingUser = [];
+
+      if (sql) {
+        existingUser = await sql`
+          SELECT id FROM users
+          WHERE username = ${userData.username} OR email = ${userData.email}
+        `;
+      } else {
+        // In-memory check
+        for (const [id, user] of inMemoryUsers) {
+          if (user.username === userData.username || user.email === userData.email) {
+            existingUser = [user];
+            break;
+          }
+        }
+      }
 
       if (existingUser.length > 0) {
         return { success: false, error: 'Username or email already exists' };
