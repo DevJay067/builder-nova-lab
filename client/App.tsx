@@ -14,6 +14,8 @@ import FirstAid from "./pages/FirstAid";
 import HealthAnalytics from "./pages/HealthAnalytics";
 import Legal from "./pages/Legal";
 import SecureAccess from "./pages/SecureAccess";
+import Login from "./pages/Login";
+import WhyLogin from "./pages/WhyLogin";
 
 const queryClient = new QueryClient();
 
