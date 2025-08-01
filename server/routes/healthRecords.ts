@@ -225,6 +225,26 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
     patientRecords.unshift(healthRecord); // Add to beginning for chronological order
     healthRecords.set(patientId, patientRecords);
 
+    // Also store in secure Neon database
+    try {
+      const { NeonDatabaseService } = await import('../services/neonDatabase');
+      await NeonDatabaseService.storeMedicalHistory({
+        id: healthRecord.id,
+        patientId: healthRecord.patientId,
+        recordType: healthRecord.type,
+        title: healthRecord.title,
+        description: healthRecord.description || '',
+        doctor: healthRecord.doctor || 'Unknown',
+        date: healthRecord.date,
+        metadata: healthRecord.metadata,
+        secureRecordId: null // Not using secure encryption for regular records
+      });
+      console.log(`✅ Stored health record in secure database: ${healthRecord.id}`);
+    } catch (error) {
+      console.error('❌ Failed to store in secure database:', error);
+      // Don't fail the request if secure storage fails
+    }
+
     // Update patient profile
     patientProfile.recordCount++;
     patientProfile.lastAccess = new Date().toISOString();
