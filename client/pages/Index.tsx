@@ -2,18 +2,22 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Brain, 
-  History, 
-  Heart, 
-  Activity, 
-  Shield, 
+import { useState, useEffect } from "react";
+import {
+  Brain,
+  History,
+  Heart,
+  Activity,
+  Shield,
   Stethoscope,
   Plus,
   ChevronRight,
   Sparkles,
   Clock,
-  Users
+  Users,
+  User,
+  LogOut,
+  LogIn
 } from "lucide-react";
 
 export default function Index() {
