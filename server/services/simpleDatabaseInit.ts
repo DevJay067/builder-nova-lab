@@ -1,6 +1,6 @@
-import { neon } from '@neondatabase/serverless';
+import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL || '');
+const sql = neon(process.env.DATABASE_URL || "");
 
 export class SimpleDatabaseInit {
   /**
@@ -8,8 +8,8 @@ export class SimpleDatabaseInit {
    */
   static async initializeMedicalHistoryTable(): Promise<void> {
     try {
-      console.log('🏥 Creating medical_history table...');
-      
+      console.log("🏥 Creating medical_history table...");
+
       // Create medical_history table for health records
       await sql`
         CREATE TABLE IF NOT EXISTS medical_history (
@@ -32,9 +32,9 @@ export class SimpleDatabaseInit {
       await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
 
-      console.log('✅ Medical history table created successfully');
+      console.log("✅ Medical history table created successfully");
     } catch (error) {
-      console.error('❌ Error creating medical_history table:', error);
+      console.error("❌ Error creating medical_history table:", error);
       throw error;
     }
   }
@@ -47,7 +47,7 @@ export class SimpleDatabaseInit {
       await sql`SELECT 1 as test`;
       return true;
     } catch (error) {
-      console.error('Database connection test failed:', error);
+      console.error("Database connection test failed:", error);
       return false;
     }
   }

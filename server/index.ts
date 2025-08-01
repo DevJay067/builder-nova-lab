@@ -79,7 +79,9 @@ export function createServer() {
 
         // Try to create at least the essential medical_history table
         try {
-          const { SimpleDatabaseInit } = await import("./services/simpleDatabaseInit");
+          const { SimpleDatabaseInit } = await import(
+            "./services/simpleDatabaseInit"
+          );
           await SimpleDatabaseInit.initializeMedicalHistoryTable();
           console.log("✅ Essential medical history table created");
         } catch (simpleError) {
