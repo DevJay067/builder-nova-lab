@@ -34,12 +34,14 @@ export class NeonDatabaseService {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           access_count INTEGER DEFAULT 0,
           last_accessed TIMESTAMP,
-          checksum VARCHAR(255) NOT NULL,
-          INDEX idx_patient_id (patient_id),
-          INDEX idx_key_id (key_id),
-          INDEX idx_blockchain_hash (blockchain_hash)
+          checksum VARCHAR(255) NOT NULL
         )
       `;
+
+      // Create indexes separately for secure_data_records
+      await sql`CREATE INDEX IF NOT EXISTS idx_secure_data_patient_id ON secure_data_records(patient_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_secure_data_key_id ON secure_data_records(key_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_secure_data_blockchain_hash ON secure_data_records(blockchain_hash)`;
 
       // Create key_store table
       await sql`
