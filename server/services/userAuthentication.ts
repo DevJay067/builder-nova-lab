@@ -289,12 +289,12 @@ export class UserAuthenticationService {
       if (sql) {
         userResult = await sql`
           SELECT * FROM users
-          WHERE username = ${loginData.username} AND is_active = true
+          WHERE (username = ${loginData.username} OR email = ${loginData.username}) AND is_active = true
         `;
       } else {
         // In-memory lookup
         for (const [id, user] of inMemoryUsers) {
-          if (user.username === loginData.username && user.isActive) {
+          if ((user.username === loginData.username || user.email === loginData.username) && user.isActive) {
             userResult = [user];
             break;
           }
