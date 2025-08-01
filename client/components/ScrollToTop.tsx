@@ -11,6 +11,11 @@ export default function ScrollToTop() {
       left: 0,
       behavior: 'smooth'
     });
+
+    // Clear any stored redirect location when navigating to home
+    if (pathname === '/') {
+      localStorage.removeItem('healthchain_redirect');
+    }
   }, [pathname]);
 
   return null;
