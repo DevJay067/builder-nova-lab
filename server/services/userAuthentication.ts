@@ -4,6 +4,8 @@ import { neon } from "@neondatabase/serverless";
 
 // Try to initialize Neon database connection, but allow fallback to in-memory storage
 let sql: any = null;
+let databaseAvailable = false;
+
 try {
   if (process.env.DATABASE_URL) {
     sql = neon(process.env.DATABASE_URL);
@@ -13,6 +15,19 @@ try {
     "⚠️  Database connection not available, using in-memory storage for authentication",
   );
 }
+
+// Test database connectivity
+const testDatabaseConnection = async (): Promise<boolean> => {
+  if (!sql) return false;
+
+  try {
+    await sql`SELECT 1 as test`;
+    return true;
+  } catch (error) {
+    console.log("⚠️  Database connection test failed, using in-memory storage");
+    return false;
+  }
+};
 
 // In-memory fallback storage
 const inMemoryUsers = new Map<string, any>();
