@@ -132,6 +132,29 @@ export default function Index() {
           </p>
         </div>
 
+        {/* Add Secure Access Card */}
+        <div className="mb-8">
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+            <CardHeader>
+              <CardTitle className="flex items-center text-primary">
+                <Shield className="h-5 w-5 mr-2" />
+                Secure Data Access System
+              </CardTitle>
+              <CardDescription>
+                Advanced split-key cryptography with blockchain immutability for healthcare data protection
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/secure">
+                <Button className="w-full" variant="outline">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Access Secure Data Management
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 max-w-6xl mx-auto">
           {features.map((feature) => {
             const IconComponent = feature.icon;
