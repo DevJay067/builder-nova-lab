@@ -123,6 +123,11 @@ export class NeonDatabaseService {
         )
       `;
 
+      // Create indexes for key_rotation_schedule
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_rotation_key_id ON key_rotation_schedule(key_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_rotation_scheduled_date ON key_rotation_schedule(scheduled_rotation_date)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_key_rotation_completed ON key_rotation_schedule(completed)`;
+
       // Create medical_history table for traditional health records
       await sql`
         CREATE TABLE IF NOT EXISTS medical_history (
@@ -439,7 +444,7 @@ export class NeonDatabaseService {
         )
       `;
       
-      console.log(`��� Stored rotation schedule: ${schedule.scheduleId}`);
+      console.log(`✅ Stored rotation schedule: ${schedule.scheduleId}`);
     } catch (error) {
       console.error('❌ Error storing rotation schedule:', error);
       throw error;
