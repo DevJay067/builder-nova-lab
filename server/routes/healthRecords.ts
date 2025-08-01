@@ -158,7 +158,7 @@ export const addTestData: RequestHandler = async (req, res) => {
 };
 
 /**
- * Create a new health record for a patient
+ * Create a new health record for a patient (integrated with secure system)
  */
 export const createHealthRecord: RequestHandler = async (req, res) => {
   try {
