@@ -124,7 +124,8 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       setMessage({
         type: "error",
         text: `Login failed: ${errorMessage}`,
@@ -225,7 +226,9 @@ export default function Login() {
           });
 
           if (!loginResponse.ok) {
-            throw new Error(`Auto-login HTTP error! status: ${loginResponse.status}`);
+            throw new Error(
+              `Auto-login HTTP error! status: ${loginResponse.status}`,
+            );
           }
 
           const loginResult = await loginResponse.json();
@@ -266,7 +269,8 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Registration error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       setMessage({
         type: "error",
         text: `Registration failed: ${errorMessage}`,

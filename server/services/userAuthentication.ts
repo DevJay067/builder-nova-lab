@@ -226,7 +226,9 @@ export class UserAuthenticationService {
             WHERE username = ${userData.username} OR email = ${userData.email}
           `;
         } catch (error) {
-          console.log("Database query failed, falling back to in-memory storage");
+          console.log(
+            "Database query failed, falling back to in-memory storage",
+          );
           // Fall back to in-memory check
           for (const [id, user] of inMemoryUsers) {
             if (
@@ -291,7 +293,9 @@ export class UserAuthenticationService {
             )
           `;
         } catch (error) {
-          console.log("Database insert failed, falling back to in-memory storage");
+          console.log(
+            "Database insert failed, falling back to in-memory storage",
+          );
           inMemoryUsers.set(user.id, user);
         }
       } else {
@@ -317,9 +321,7 @@ export class UserAuthenticationService {
   /**
    * Authenticate user login
    */
-  static async authenticateUser(
-    loginData: UserLogin,
-  ): Promise<{
+  static async authenticateUser(loginData: UserLogin): Promise<{
     success: boolean;
     user?: User;
     session?: UserSession;
@@ -339,10 +341,16 @@ export class UserAuthenticationService {
             WHERE (username = ${loginData.username} OR email = ${loginData.username}) AND is_active = true
           `;
         } catch (error) {
-          console.log("Database query failed, falling back to in-memory storage");
+          console.log(
+            "Database query failed, falling back to in-memory storage",
+          );
           // Fall back to in-memory lookup
           for (const [id, user] of inMemoryUsers) {
-            if ((user.username === loginData.username || user.email === loginData.username) && user.isActive) {
+            if (
+              (user.username === loginData.username ||
+                user.email === loginData.username) &&
+              user.isActive
+            ) {
               userResult = [user];
               break;
             }
@@ -351,7 +359,11 @@ export class UserAuthenticationService {
       } else {
         // In-memory lookup
         for (const [id, user] of inMemoryUsers) {
-          if ((user.username === loginData.username || user.email === loginData.username) && user.isActive) {
+          if (
+            (user.username === loginData.username ||
+              user.email === loginData.username) &&
+            user.isActive
+          ) {
             userResult = [user];
             break;
           }
@@ -469,7 +481,9 @@ export class UserAuthenticationService {
             )
           `;
         } catch (error) {
-          console.log("Database session insert failed, using in-memory storage");
+          console.log(
+            "Database session insert failed, using in-memory storage",
+          );
           inMemorySessions.set(session.sessionToken, session);
         }
       } else {
@@ -507,9 +521,7 @@ export class UserAuthenticationService {
   /**
    * Validate session token
    */
-  static async validateSession(
-    sessionToken: string,
-  ): Promise<{
+  static async validateSession(sessionToken: string): Promise<{
     valid: boolean;
     user?: User;
     session?: UserSession;

@@ -108,7 +108,7 @@ export function createServer() {
     res.json({
       success: true,
       received: req.body,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   });
 

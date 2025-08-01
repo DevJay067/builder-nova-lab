@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export default function ScrollToTop() {
   const { pathname } = useLocation();
@@ -9,12 +9,12 @@ export default function ScrollToTop() {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
 
     // Clear any stored redirect location when navigating to home
-    if (pathname === '/') {
-      localStorage.removeItem('healthchain_redirect');
+    if (pathname === "/") {
+      localStorage.removeItem("healthchain_redirect");
     }
   }, [pathname]);
 

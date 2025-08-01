@@ -1,19 +1,25 @@
-import { neon } from '@neondatabase/serverless';
-import { SecureDataRecord, SplitKeyPair, AuditLog } from './secureDataAccess';
-import { KeyStore, KeyDistribution, KeyRotationSchedule } from './keyManagement';
+import { neon } from "@neondatabase/serverless";
+import { SecureDataRecord, SplitKeyPair, AuditLog } from "./secureDataAccess";
+import {
+  KeyStore,
+  KeyDistribution,
+  KeyRotationSchedule,
+} from "./keyManagement";
 
 /**
  * Neon Database Integration for Secure Healthcare Data Storage
- * 
+ *
  * This service integrates with Neon PostgreSQL database to store
  * encrypted healthcare data with blockchain immutability.
  */
 
 // Database connection
-const sql = neon(process.env.DATABASE_URL || 'postgresql://misty-glitter-69745686-user:default@ep-empty-frog-a5lp6eyz.us-east-2.aws.neon.tech/misty-glitter-69745686-db?sslmode=require');
+const sql = neon(
+  process.env.DATABASE_URL ||
+    "postgresql://misty-glitter-69745686-user:default@ep-empty-frog-a5lp6eyz.us-east-2.aws.neon.tech/misty-glitter-69745686-db?sslmode=require",
+);
 
 export class NeonDatabaseService {
-  
   /**
    * Initialize database tables for secure data storage
    */
@@ -152,9 +158,9 @@ export class NeonDatabaseService {
       await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
 
-      console.log('✅ Neon database tables initialized successfully');
+      console.log("✅ Neon database tables initialized successfully");
     } catch (error) {
-      console.error('❌ Error initializing database:', error);
+      console.error("❌ Error initializing database:", error);
       throw error;
     }
   }
@@ -177,10 +183,10 @@ export class NeonDatabaseService {
           ${record.metadata.checksum}
         )
       `;
-      
+
       console.log(`✅ Stored secure record: ${record.id}`);
     } catch (error) {
-      console.error('❌ Error storing secure record:', error);
+      console.error("❌ Error storing secure record:", error);
       throw error;
     }
   }
@@ -188,7 +194,9 @@ export class NeonDatabaseService {
   /**
    * Retrieve encrypted health record from database
    */
-  static async getSecureRecord(recordId: string): Promise<SecureDataRecord | null> {
+  static async getSecureRecord(
+    recordId: string,
+  ): Promise<SecureDataRecord | null> {
     try {
       const result = await sql`
         SELECT * FROM secure_data_records WHERE id = ${recordId}
@@ -202,21 +210,21 @@ export class NeonDatabaseService {
       return {
         id: row.id,
         patientId: row.patient_id,
-        dataType: row.data_type as SecureDataRecord['dataType'],
+        dataType: row.data_type as SecureDataRecord["dataType"],
         encryptedData: row.encrypted_data,
         keyId: row.key_id,
         blockchainHash: row.blockchain_hash,
-        accessLevel: row.access_level as SecureDataRecord['accessLevel'],
+        accessLevel: row.access_level as SecureDataRecord["accessLevel"],
         metadata: {
           createdBy: row.created_by,
           createdAt: row.created_at,
           lastAccessed: row.last_accessed,
           accessCount: row.access_count,
-          checksum: row.checksum
-        }
+          checksum: row.checksum,
+        },
       };
     } catch (error) {
-      console.error('❌ Error retrieving secure record:', error);
+      console.error("❌ Error retrieving secure record:", error);
       throw error;
     }
   }
@@ -237,10 +245,10 @@ export class NeonDatabaseService {
           ${keyStore.keyMetadata.status}
         )
       `;
-      
+
       console.log(`✅ Stored key record: ${keyStore.keyId}`);
     } catch (error) {
-      console.error('❌ Error storing key record:', error);
+      console.error("❌ Error storing key record:", error);
       throw error;
     }
   }
@@ -269,11 +277,11 @@ export class NeonDatabaseService {
           expiresAt: row.expires_at,
           rotationCount: row.rotation_count,
           status: row.status,
-          lastUsed: row.last_used
-        }
+          lastUsed: row.last_used,
+        },
       };
     } catch (error) {
-      console.error('❌ Error retrieving key record:', error);
+      console.error("❌ Error retrieving key record:", error);
       throw error;
     }
   }
@@ -281,7 +289,9 @@ export class NeonDatabaseService {
   /**
    * Store key distribution record
    */
-  static async storeDistributionRecord(distribution: KeyDistribution): Promise<void> {
+  static async storeDistributionRecord(
+    distribution: KeyDistribution,
+  ): Promise<void> {
     try {
       await sql`
         INSERT INTO key_distributions (
@@ -296,10 +306,12 @@ export class NeonDatabaseService {
           ${distribution.acknowledgedAt}
         )
       `;
-      
-      console.log(`✅ Stored distribution record: ${distribution.distributionId}`);
+
+      console.log(
+        `✅ Stored distribution record: ${distribution.distributionId}`,
+      );
     } catch (error) {
-      console.error('❌ Error storing distribution record:', error);
+      console.error("❌ Error storing distribution record:", error);
       throw error;
     }
   }
@@ -320,10 +332,10 @@ export class NeonDatabaseService {
           ${JSON.stringify(auditLog.details)}
         )
       `;
-      
+
       console.log(`✅ Stored audit log: ${auditLog.logId}`);
     } catch (error) {
-      console.error('❌ Error storing audit log:', error);
+      console.error("❌ Error storing audit log:", error);
       throw error;
     }
   }
@@ -331,7 +343,11 @@ export class NeonDatabaseService {
   /**
    * Get audit logs for a record
    */
-  static async getAuditLogs(recordId: string, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
+  static async getAuditLogs(
+    recordId: string,
+    limit: number = 50,
+    offset: number = 0,
+  ): Promise<AuditLog[]> {
     try {
       const result = await sql`
         SELECT * FROM audit_logs 
@@ -340,7 +356,7 @@ export class NeonDatabaseService {
         LIMIT ${limit} OFFSET ${offset}
       `;
 
-      return result.map(row => ({
+      return result.map((row) => ({
         logId: row.log_id,
         action: row.action,
         dataRecordId: row.data_record_id,
@@ -350,10 +366,10 @@ export class NeonDatabaseService {
         ipAddress: row.ip_address,
         userAgent: row.user_agent,
         success: row.success,
-        details: row.details
+        details: row.details,
       }));
     } catch (error) {
-      console.error('❌ Error retrieving audit logs:', error);
+      console.error("❌ Error retrieving audit logs:", error);
       throw error;
     }
   }
@@ -369,10 +385,10 @@ export class NeonDatabaseService {
             last_accessed = CURRENT_TIMESTAMP 
         WHERE id = ${recordId}
       `;
-      
+
       console.log(`✅ Updated access metadata for record: ${recordId}`);
     } catch (error) {
-      console.error('❌ Error updating access metadata:', error);
+      console.error("❌ Error updating access metadata:", error);
       throw error;
     }
   }
@@ -387,10 +403,10 @@ export class NeonDatabaseService {
         SET status = 'expired' 
         WHERE key_id = ${keyId}
       `;
-      
+
       console.log(`✅ Marked key as expired: ${keyId}`);
     } catch (error) {
-      console.error('❌ Error marking key as expired:', error);
+      console.error("❌ Error marking key as expired:", error);
       throw error;
     }
   }
@@ -405,10 +421,10 @@ export class NeonDatabaseService {
         SET last_used = CURRENT_TIMESTAMP 
         WHERE key_id = ${keyId}
       `;
-      
+
       console.log(`✅ Updated key usage: ${keyId}`);
     } catch (error) {
-      console.error('❌ Error updating key usage:', error);
+      console.error("❌ Error updating key usage:", error);
       throw error;
     }
   }
@@ -423,10 +439,10 @@ export class NeonDatabaseService {
         SET status = 'revoked' 
         WHERE key_id = ${keyId}
       `;
-      
+
       console.log(`✅ Revoked key: ${keyId}, reason: ${reason}`);
     } catch (error) {
-      console.error('❌ Error revoking key:', error);
+      console.error("❌ Error revoking key:", error);
       throw error;
     }
   }
@@ -434,7 +450,9 @@ export class NeonDatabaseService {
   /**
    * Store rotation schedule
    */
-  static async storeRotationSchedule(schedule: KeyRotationSchedule): Promise<void> {
+  static async storeRotationSchedule(
+    schedule: KeyRotationSchedule,
+  ): Promise<void> {
     try {
       await sql`
         INSERT INTO key_rotation_schedule (
@@ -446,10 +464,10 @@ export class NeonDatabaseService {
           ${schedule.autoRotate}, ${JSON.stringify(schedule.notificationsSent)}
         )
       `;
-      
+
       console.log(`✅ Stored rotation schedule: ${schedule.scheduleId}`);
     } catch (error) {
-      console.error('❌ Error storing rotation schedule:', error);
+      console.error("❌ Error storing rotation schedule:", error);
       throw error;
     }
   }
@@ -457,7 +475,9 @@ export class NeonDatabaseService {
   /**
    * Get scheduled rotations
    */
-  static async getScheduledRotations(date: Date): Promise<KeyRotationSchedule[]> {
+  static async getScheduledRotations(
+    date: Date,
+  ): Promise<KeyRotationSchedule[]> {
     try {
       const result = await sql`
         SELECT * FROM key_rotation_schedule 
@@ -466,16 +486,16 @@ export class NeonDatabaseService {
         ORDER BY scheduled_rotation_date ASC
       `;
 
-      return result.map(row => ({
+      return result.map((row) => ({
         scheduleId: row.schedule_id,
         keyId: row.key_id,
         scheduledRotationDate: row.scheduled_rotation_date,
         rotationReason: row.rotation_reason,
         autoRotate: row.auto_rotate,
-        notificationsSent: row.notifications_sent
+        notificationsSent: row.notifications_sent,
       }));
     } catch (error) {
-      console.error('❌ Error retrieving scheduled rotations:', error);
+      console.error("❌ Error retrieving scheduled rotations:", error);
       throw error;
     }
   }
@@ -490,10 +510,10 @@ export class NeonDatabaseService {
         SET completed = true, completed_at = CURRENT_TIMESTAMP 
         WHERE schedule_id = ${scheduleId}
       `;
-      
+
       console.log(`✅ Marked rotation completed: ${scheduleId}`);
     } catch (error) {
-      console.error('❌ Error marking rotation completed:', error);
+      console.error("❌ Error marking rotation completed:", error);
       throw error;
     }
   }
@@ -524,10 +544,10 @@ export class NeonDatabaseService {
           ${record.secureRecordId}
         )
       `;
-      
+
       console.log(`✅ Stored medical history record: ${record.id}`);
     } catch (error) {
-      console.error('❌ Error storing medical history:', error);
+      console.error("❌ Error storing medical history:", error);
       throw error;
     }
   }
@@ -543,7 +563,7 @@ export class NeonDatabaseService {
         ORDER BY date DESC, created_at DESC
       `;
 
-      return result.map(row => ({
+      return result.map((row) => ({
         id: row.id,
         patientId: row.patient_id,
         recordType: row.record_type,
@@ -554,10 +574,10 @@ export class NeonDatabaseService {
         metadata: row.metadata,
         secureRecordId: row.secure_record_id,
         createdAt: row.created_at,
-        updatedAt: row.updated_at
+        updatedAt: row.updated_at,
       }));
     } catch (error) {
-      console.error('❌ Error retrieving medical history:', error);
+      console.error("❌ Error retrieving medical history:", error);
       throw error;
     }
   }
@@ -567,26 +587,30 @@ export class NeonDatabaseService {
    */
   static async getDatabaseStats(): Promise<any> {
     try {
-      const [secureRecords] = await sql`SELECT COUNT(*) as count FROM secure_data_records`;
-      const [activeKeys] = await sql`SELECT COUNT(*) as count FROM key_store WHERE status = 'active'`;
-      const [totalAuditLogs] = await sql`SELECT COUNT(*) as count FROM audit_logs`;
-      const [scheduledRotations] = await sql`SELECT COUNT(*) as count FROM key_rotation_schedule WHERE completed = false`;
+      const [secureRecords] =
+        await sql`SELECT COUNT(*) as count FROM secure_data_records`;
+      const [activeKeys] =
+        await sql`SELECT COUNT(*) as count FROM key_store WHERE status = 'active'`;
+      const [totalAuditLogs] =
+        await sql`SELECT COUNT(*) as count FROM audit_logs`;
+      const [scheduledRotations] =
+        await sql`SELECT COUNT(*) as count FROM key_rotation_schedule WHERE completed = false`;
 
       return {
         secureRecords: secureRecords.count,
         activeKeys: activeKeys.count,
         auditLogs: totalAuditLogs.count,
         scheduledRotations: scheduledRotations.count,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      console.error('❌ Error getting database stats:', error);
+      console.error("❌ Error getting database stats:", error);
       return {
         secureRecords: 0,
         activeKeys: 0,
         auditLogs: 0,
         scheduledRotations: 0,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     }
   }

@@ -94,20 +94,20 @@ export default function HealthHistory() {
       setIsLoading(true);
 
       // Get user session token
-      const storedUser = localStorage.getItem('healthchain_user');
+      const storedUser = localStorage.getItem("healthchain_user");
       const headers: Record<string, string> = {};
 
       if (storedUser) {
         const user = JSON.parse(storedUser);
         if (user.sessionToken) {
-          headers['Authorization'] = `Bearer ${user.sessionToken}`;
-          headers['x-session-token'] = user.sessionToken;
+          headers["Authorization"] = `Bearer ${user.sessionToken}`;
+          headers["x-session-token"] = user.sessionToken;
         }
       }
 
       // Fallback for demo mode
       if (Object.keys(headers).length === 0) {
-        headers['patient-id'] = 'default-patient';
+        headers["patient-id"] = "default-patient";
       }
 
       const response = await fetch("/api/health-records", {
@@ -121,7 +121,9 @@ export default function HealthHistory() {
         setIsNewUser(data.records.length === 0);
 
         if (data.userInfo?.isAuthenticated) {
-          console.log(`✅ Loaded ${data.records.length} records for user: ${data.userInfo.username}`);
+          console.log(
+            `✅ Loaded ${data.records.length} records for user: ${data.userInfo.username}`,
+          );
         } else {
           console.log(`📋 Demo mode: ${data.records.length} records loaded`);
         }
@@ -204,9 +206,16 @@ export default function HealthHistory() {
           height: parseFloat(formData.height),
           systolicBP: parseInt(formData.systolicBP),
           diastolicBP: parseInt(formData.diastolicBP),
-          heartRate: formData.heartRate ? parseInt(formData.heartRate) : undefined,
-          temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
-          bmi: (parseFloat(formData.weight) / Math.pow(parseFloat(formData.height) / 100, 2)).toFixed(1),
+          heartRate: formData.heartRate
+            ? parseInt(formData.heartRate)
+            : undefined,
+          temperature: formData.temperature
+            ? parseFloat(formData.temperature)
+            : undefined,
+          bmi: (
+            parseFloat(formData.weight) /
+            Math.pow(parseFloat(formData.height) / 100, 2)
+          ).toFixed(1),
         },
 
         // Medical History
@@ -229,7 +238,7 @@ export default function HealthHistory() {
           notes: formData.notes,
           recordedAt: new Date().toISOString(),
           dataSource: "patient_input",
-        }
+        },
       };
 
       // First, save to the traditional health records API (for backward compatibility)
@@ -266,7 +275,7 @@ export default function HealthHistory() {
       let secureResult = null;
       try {
         // Get user session token
-        const storedUser = localStorage.getItem('healthchain_user');
+        const storedUser = localStorage.getItem("healthchain_user");
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
@@ -274,39 +283,49 @@ export default function HealthHistory() {
         if (storedUser) {
           const user = JSON.parse(storedUser);
           if (user.sessionToken) {
-            headers['Authorization'] = `Bearer ${user.sessionToken}`;
-            headers['x-session-token'] = user.sessionToken;
+            headers["Authorization"] = `Bearer ${user.sessionToken}`;
+            headers["x-session-token"] = user.sessionToken;
           }
         }
 
         // Fallback for demo mode
-        if (!headers['Authorization']) {
-          headers['patient-id'] = 'default-patient';
+        if (!headers["Authorization"]) {
+          headers["patient-id"] = "default-patient";
         }
 
-        const directNeonResponse = await fetch("/api/health-records/store-direct", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            recordType: "medical_history",
-            title: "Comprehensive Health Assessment",
-            description: `BMI: ${healthRecordData.vitals.bmi}, Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
-            doctor: formData.doctor || "Self-reported",
-            date: new Date().toISOString().split('T')[0],
-            metadata: healthRecordData
-          }),
-        });
+        const directNeonResponse = await fetch(
+          "/api/health-records/store-direct",
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              recordType: "medical_history",
+              title: "Comprehensive Health Assessment",
+              description: `BMI: ${healthRecordData.vitals.bmi}, Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
+              doctor: formData.doctor || "Self-reported",
+              date: new Date().toISOString().split("T")[0],
+              metadata: healthRecordData,
+            }),
+          },
+        );
 
         if (directNeonResponse.ok) {
           secureResult = await directNeonResponse.json();
           secureResult.success = true;
-          secureResult.record = { id: secureResult.recordId || 'neon-' + Date.now() };
+          secureResult.record = {
+            id: secureResult.recordId || "neon-" + Date.now(),
+          };
 
           if (secureResult.userInfo) {
-            console.log(`✅ Health record saved for user: ${secureResult.userInfo.username}`);
+            console.log(
+              `✅ Health record saved for user: ${secureResult.userInfo.username}`,
+            );
           }
         } else {
-          console.error('Failed to save to secure database:', await directNeonResponse.text());
+          console.error(
+            "Failed to save to secure database:",
+            await directNeonResponse.text(),
+          );
         }
       } catch (error) {
         console.error("Error saving to secure database:", error);
@@ -314,7 +333,10 @@ export default function HealthHistory() {
       }
 
       // Check if at least one storage method succeeded
-      if ((traditionalResult && traditionalResult.success) || (secureResult && secureResult.success)) {
+      if (
+        (traditionalResult && traditionalResult.success) ||
+        (secureResult && secureResult.success)
+      ) {
         // Reload health records
         await loadHealthRecords();
         setIsNewUser(false);
@@ -358,7 +380,7 @@ export default function HealthHistory() {
           }
         }
 
-        successMessage += `\n📊 Your health data is saved in ${storageCount} secure location${storageCount > 1 ? 's' : ''}`;
+        successMessage += `\n📊 Your health data is saved in ${storageCount} secure location${storageCount > 1 ? "s" : ""}`;
         successMessage += "\n🔒 Split-key encryption & hash linking active";
 
         alert(successMessage);
@@ -832,20 +854,24 @@ export default function HealthHistory() {
                       Advanced Security Architecture
                     </h4>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Your health data is protected by our dual-layer security system:
+                      Your health data is protected by our dual-layer security
+                      system:
                     </p>
                     <ul className="text-sm text-muted-foreground space-y-1">
                       <li className="flex items-center">
                         <Lock className="h-3 w-3 mr-2 text-primary" />
-                        <strong>Split-Key Encryption:</strong> Data encrypted with patient + provider + system keys
+                        <strong>Split-Key Encryption:</strong> Data encrypted
+                        with patient + provider + system keys
                       </li>
                       <li className="flex items-center">
                         <Shield className="h-3 w-3 mr-2 text-accent" />
-                        <strong>Blockchain Immutability:</strong> Records stored on tamper-proof blockchain
+                        <strong>Blockchain Immutability:</strong> Records stored
+                        on tamper-proof blockchain
                       </li>
                       <li className="flex items-center">
                         <FileText className="h-3 w-3 mr-2 text-info" />
-                        <strong>Neon Database:</strong> Encrypted storage in secure PostgreSQL database
+                        <strong>Neon Database:</strong> Encrypted storage in
+                        secure PostgreSQL database
                       </li>
                     </ul>
                   </div>
