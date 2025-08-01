@@ -28,6 +28,11 @@ import {
   initializeDatabase,
   testDatabaseConnection,
 } from "./routes/databaseHealth";
+import {
+  generateDemoKeys,
+  getDemoKeysInfo,
+  initializeDemoData,
+} from "./routes/demoKeys";
 
 export function createServer() {
   // Initialize secure database on server startup
