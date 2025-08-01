@@ -34,6 +34,17 @@ import {
   getDemoKeysInfo,
   initializeDemoData,
 } from "./routes/demoKeys";
+import {
+  registerUser,
+  loginUser,
+  verifySession,
+  logoutUser,
+  getUserProfile,
+  createDataAccess,
+  verifyDataAccess,
+  getAuthStats,
+  authenticateUser,
+} from "./routes/auth";
 
 export function createServer() {
   // Initialize secure database on server startup
