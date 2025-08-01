@@ -81,5 +81,10 @@ export function createServer() {
   app.get("/api/secure/system/status", getSystemStatus);
   app.post("/api/secure/keys/validate", validateKeyFragments);
 
+  // Database Health & Management
+  app.get("/api/database/health", checkDatabaseHealth);
+  app.post("/api/database/initialize", initializeDatabase);
+  app.post("/api/database/test-connection", testDatabaseConnection);
+
   return app;
 }
