@@ -356,18 +356,23 @@ export class UserAuthenticationService {
         lastActivity: new Date().toISOString()
       };
 
-      await sql`
-        INSERT INTO user_sessions (
-          id, user_id, session_token, data_access_hash, created_at, 
-          expires_at, last_activity, is_active
-        ) VALUES (
-          ${session.id}, ${session.userId}, ${session.sessionToken}, 
-          ${session.dataAccessHash}, ${session.createdAt}, ${session.expiresAt},
-          ${session.lastActivity}, true
-        )
-      `;
+      if (sql) {
+        await sql`
+          INSERT INTO user_sessions (
+            id, user_id, session_token, data_access_hash, created_at,
+            expires_at, last_activity, is_active
+          ) VALUES (
+            ${session.id}, ${session.userId}, ${session.sessionToken},
+            ${session.dataAccessHash}, ${session.createdAt}, ${session.expiresAt},
+            ${session.lastActivity}, true
+          )
+        `;
+      } else {
+        // Store session in memory
+        inMemorySessions.set(session.sessionToken, session);
+      }
 
-      console.log(`✅ User authenticated successfully: ${user.username}`);
+      console.log(`✅ User authenticated successfully: ${user.username || user.email} (${sql ? 'database' : 'memory'})`);
 
       // Return user without sensitive data
       const safeUser: User = {
