@@ -126,7 +126,31 @@ export default function Index() {
                 <p className="text-xs text-primary font-medium">Developer: Jay Magar</p>
               </div>
             </div>
-            <div className="flex items-center flex-shrink-0">
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="text-xs px-2 py-1">
+                    <User className="h-3 w-3 mr-1" />
+                    {user?.name || user?.username}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-xs h-8"
+                  >
+                    <LogOut className="h-3 w-3 mr-1" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/login">
+                  <Button variant="outline" size="sm" className="text-xs h-8">
+                    <LogIn className="h-3 w-3 mr-1" />
+                    Login
+                  </Button>
+                </Link>
+              )}
               <Badge variant="secondary" className="text-xs px-2 py-1">
                 <Shield className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Blockchain </span>Secured
