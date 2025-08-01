@@ -51,30 +51,37 @@ export function createServer() {
   // Initialize secure database on server startup
   const initializeSecureSystem = async () => {
     try {
-      console.log('🚀 Attempting to initialize secure healthcare system...');
+      console.log("🚀 Attempting to initialize secure healthcare system...");
 
       // Try to initialize user authentication system first
       try {
-        const { UserAuthenticationService } = await import('./services/userAuthentication');
+        const { UserAuthenticationService } = await import(
+          "./services/userAuthentication"
+        );
         await UserAuthenticationService.initializeUserTables();
-        console.log('✅ User authentication system initialized successfully');
+        console.log("✅ User authentication system initialized successfully");
       } catch (authError) {
-        console.log('⚠️  User authentication system not available, continuing without it');
-        console.log('   The system will work in demo mode');
+        console.log(
+          "⚠️  User authentication system not available, continuing without it",
+        );
+        console.log("   The system will work in demo mode");
       }
 
       // Try to initialize the main database system
       try {
-        const { DatabaseInitService } = await import('./services/initDatabase');
+        const { DatabaseInitService } = await import("./services/initDatabase");
         await DatabaseInitService.initializeSecureHealthcareDatabase();
-        console.log('✅ Secure healthcare database initialized successfully');
+        console.log("✅ Secure healthcare database initialized successfully");
       } catch (dbError) {
-        console.log('⚠️  Secure database not available, system will work with in-memory storage');
+        console.log(
+          "⚠️  Secure database not available, system will work with in-memory storage",
+        );
       }
-
     } catch (error) {
-      console.log('⚠️  Secure system initialization completed with some limitations');
-      console.log('   The application will continue to work in demo mode');
+      console.log(
+        "⚠️  Secure system initialization completed with some limitations",
+      );
+      console.log("   The application will continue to work in demo mode");
     }
   };
 
