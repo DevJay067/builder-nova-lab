@@ -380,14 +380,14 @@ export class UserAuthenticationService {
         username: user.username,
         email: user.email,
         passwordHash: '', // Don't return password hash
-        userHash: user.user_hash,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        dateOfBirth: user.date_of_birth,
+        userHash: user.user_hash || user.userHash,
+        firstName: user.first_name || user.firstName,
+        lastName: user.last_name || user.lastName,
+        dateOfBirth: user.date_of_birth || user.dateOfBirth,
         phone: user.phone,
-        createdAt: user.created_at,
-        lastLogin: user.last_login,
-        isActive: user.is_active
+        createdAt: user.created_at || user.createdAt,
+        lastLogin: user.last_login || user.lastLogin,
+        isActive: user.is_active !== undefined ? user.is_active : user.isActive
       };
 
       return { success: true, user: safeUser, session };
