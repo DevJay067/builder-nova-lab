@@ -164,30 +164,28 @@ export default function HealthHistory() {
     try {
       setIsLoading(true);
 
-      const requestBody = {
-        type: "checkup",
-        title: "Health Assessment",
-        description: `Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
-        doctor: formData.doctor || "Self-reported",
-        metadata: {
-          // Personal Information
+      // Prepare comprehensive health record data
+      const healthRecordData = {
+        // Personal Information
+        personalInfo: {
           age: formData.age ? parseInt(formData.age) : undefined,
           gender: formData.gender,
           bloodType: formData.bloodType,
+        },
 
-          // Vital Signs
+        // Vital Signs
+        vitals: {
           weight: parseFloat(formData.weight),
           height: parseFloat(formData.height),
           systolicBP: parseInt(formData.systolicBP),
           diastolicBP: parseInt(formData.diastolicBP),
-          heartRate: formData.heartRate
-            ? parseInt(formData.heartRate)
-            : undefined,
-          temperature: formData.temperature
-            ? parseFloat(formData.temperature)
-            : undefined,
+          heartRate: formData.heartRate ? parseInt(formData.heartRate) : undefined,
+          temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+          bmi: (parseFloat(formData.weight) / Math.pow(parseFloat(formData.height) / 100, 2)).toFixed(1),
+        },
 
-          // Medical History
+        // Medical History
+        medicalHistory: {
           medications: formData.medications
             ? formData.medications.split(",").map((m) => m.trim())
             : [],
@@ -197,56 +195,118 @@ export default function HealthHistory() {
           chronicConditions: formData.chronicConditions
             ? formData.chronicConditions.split(",").map((c) => c.trim())
             : [],
+          lastCheckupDate: formData.lastCheckupDate,
+          primaryDoctor: formData.doctor || "Self-reported",
+        },
 
-          // Additional
+        // Additional Information
+        additionalInfo: {
+          notes: formData.notes,
+          recordedAt: new Date().toISOString(),
+          dataSource: "patient_input",
+        }
+      };
+
+      // First, save to the traditional health records API (for backward compatibility)
+      const traditionalBody = {
+        type: "medical_history",
+        title: "Comprehensive Health Assessment",
+        description: `BMI: ${healthRecordData.vitals.bmi}, Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
+        doctor: formData.doctor || "Self-reported",
+        metadata: {
+          ...healthRecordData.personalInfo,
+          ...healthRecordData.vitals,
+          medications: healthRecordData.medicalHistory.medications,
+          allergies: healthRecordData.medicalHistory.allergies,
+          chronicConditions: healthRecordData.medicalHistory.chronicConditions,
           notes: formData.notes,
         },
       };
 
-      const response = await fetch("/api/health-records", {
+      const traditionalResponse = await fetch("/api/health-records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "patient-id": "default-patient", // In real app, this would come from authentication
+          "patient-id": "default-patient",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(traditionalBody),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          // Reload health records
-          await loadHealthRecords();
-          setIsNewUser(false);
-          setShowAddRecordDialog(false);
+      let traditionalResult = null;
+      if (traditionalResponse.ok) {
+        traditionalResult = await traditionalResponse.json();
+      }
 
-          // Reset form
-          setFormData({
-            age: "",
-            gender: "",
-            bloodType: "",
-            weight: "",
-            height: "",
-            systolicBP: "",
-            diastolicBP: "",
-            heartRate: "",
-            temperature: "",
-            medications: "",
-            allergies: "",
-            chronicConditions: "",
-            lastCheckupDate: "",
-            doctor: "",
-            notes: "",
-          });
+      // Now save to the secure Neon database with encryption
+      const secureResponse = await fetch("/api/secure/data/store", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-patient-key": "patient-demo-key-12345", // In production, this would come from secure key management
+          "x-provider-key": "provider-demo-key-67890", // In production, this would come from secure key management
+        },
+        body: JSON.stringify({
+          patientId: "default-patient",
+          dataType: "medical_history",
+          data: healthRecordData,
+          keyId: "demo-key-123", // In production, this would be dynamically generated
+          createdBy: formData.doctor || "default-patient",
+          accessLevel: "patient"
+        }),
+      });
 
-          alert(
-            `Health record saved successfully! Blockchain Hash: ${result.blockchainHash}`,
-          );
-        } else {
-          alert("Failed to save health record: " + result.error);
+      let secureResult = null;
+      if (secureResponse.ok) {
+        secureResult = await secureResponse.json();
+      }
+
+      // Check if at least one storage method succeeded
+      if ((traditionalResult && traditionalResult.success) || (secureResult && secureResult.success)) {
+        // Reload health records
+        await loadHealthRecords();
+        setIsNewUser(false);
+        setShowAddRecordDialog(false);
+
+        // Reset form
+        setFormData({
+          age: "",
+          gender: "",
+          bloodType: "",
+          weight: "",
+          height: "",
+          systolicBP: "",
+          diastolicBP: "",
+          heartRate: "",
+          temperature: "",
+          medications: "",
+          allergies: "",
+          chronicConditions: "",
+          lastCheckupDate: "",
+          doctor: "",
+          notes: "",
+        });
+
+        // Show success message with both storage confirmations
+        let successMessage = "Health record saved successfully!\n";
+        if (traditionalResult && traditionalResult.success) {
+          successMessage += `Blockchain Hash: ${traditionalResult.blockchainHash}\n`;
         }
+        if (secureResult && secureResult.success) {
+          successMessage += `Secure Storage ID: ${secureResult.record.id}\n`;
+          successMessage += `Neon Database: ��� Encrypted & Stored`;
+        }
+
+        alert(successMessage);
       } else {
-        alert("Failed to save health record. Please try again.");
+        // Show error details
+        let errorMessage = "Failed to save health record:\n";
+        if (traditionalResult && !traditionalResult.success) {
+          errorMessage += `Traditional Storage: ${traditionalResult.error}\n`;
+        }
+        if (secureResult && !secureResult.success) {
+          errorMessage += `Secure Storage: ${secureResult.error}`;
+        }
+        alert(errorMessage);
       }
     } catch (error) {
       console.error("Error saving health record:", error);
