@@ -31,6 +31,8 @@ export default function Index() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
     checkAuthStatus();
   }, []);
 
