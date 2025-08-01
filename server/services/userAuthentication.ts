@@ -207,14 +207,31 @@ export class UserAuthenticationService {
     userData: UserRegistration,
   ): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
+      // Test database availability
+      const dbAvailable = await testDatabaseConnection();
+
       // Check if username or email already exists
       let existingUser = [];
 
-      if (sql) {
-        existingUser = await sql`
-          SELECT id FROM users
-          WHERE username = ${userData.username} OR email = ${userData.email}
-        `;
+      if (dbAvailable) {
+        try {
+          existingUser = await sql`
+            SELECT id FROM users
+            WHERE username = ${userData.username} OR email = ${userData.email}
+          `;
+        } catch (error) {
+          console.log("Database query failed, falling back to in-memory storage");
+          // Fall back to in-memory check
+          for (const [id, user] of inMemoryUsers) {
+            if (
+              user.username === userData.username ||
+              user.email === userData.email
+            ) {
+              existingUser = [user];
+              break;
+            }
+          }
+        }
       } else {
         // In-memory check
         for (const [id, user] of inMemoryUsers) {
