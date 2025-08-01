@@ -52,6 +52,10 @@ export function createServer() {
     try {
       const { DatabaseInitService } = await import('./services/initDatabase');
       await DatabaseInitService.initializeSecureHealthcareDatabase();
+
+      // Also initialize user authentication system
+      const { UserAuthenticationService } = await import('./services/userAuthentication');
+      await UserAuthenticationService.initializeUserTables();
     } catch (error) {
       console.error('❌ Failed to initialize secure system:', error);
     }
