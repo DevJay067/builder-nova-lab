@@ -147,6 +147,11 @@ export class NeonDatabaseService {
         )
       `;
 
+      // Create indexes for medical_history
+      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_patient_id ON medical_history(patient_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
+
       console.log('✅ Neon database tables initialized successfully');
     } catch (error) {
       console.error('❌ Error initializing database:', error);
