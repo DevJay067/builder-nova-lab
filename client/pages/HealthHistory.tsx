@@ -81,6 +81,7 @@ export default function HealthHistory() {
   });
 
   const [healthRecords, setHealthRecords] = useState([]);
+  const [userInfo, setUserInfo] = useState(null);
 
   // Load health records on component mount
   useEffect(() => {
@@ -90,16 +91,39 @@ export default function HealthHistory() {
   const loadHealthRecords = async () => {
     try {
       setIsLoading(true);
+
+      // Get user session token
+      const storedUser = localStorage.getItem('healthchain_user');
+      const headers: Record<string, string> = {};
+
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        if (user.sessionToken) {
+          headers['Authorization'] = `Bearer ${user.sessionToken}`;
+          headers['x-session-token'] = user.sessionToken;
+        }
+      }
+
+      // Fallback for demo mode
+      if (Object.keys(headers).length === 0) {
+        headers['patient-id'] = 'default-patient';
+      }
+
       const response = await fetch("/api/health-records", {
-        headers: {
-          "patient-id": "default-patient", // In real app, this would come from authentication
-        },
+        headers,
       });
 
       if (response.ok) {
         const data = await response.json();
         setHealthRecords(data.records || []);
+        setUserInfo(data.userInfo || null);
         setIsNewUser(data.records.length === 0);
+
+        if (data.userInfo?.isAuthenticated) {
+          console.log(`✅ Loaded ${data.records.length} records for user: ${data.userInfo.username}`);
+        } else {
+          console.log(`📋 Demo mode: ${data.records.length} records loaded`);
+        }
       }
     } catch (error) {
       console.error("Failed to load health records:", error);
@@ -237,17 +261,32 @@ export default function HealthHistory() {
         traditionalResult = await traditionalResponse.json();
       }
 
-      // Also save directly to Neon database (simplified approach)
+      // Save to secure Neon database with user authentication
       let secureResult = null;
       try {
+        // Get user session token
+        const storedUser = localStorage.getItem('healthchain_user');
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          if (user.sessionToken) {
+            headers['Authorization'] = `Bearer ${user.sessionToken}`;
+            headers['x-session-token'] = user.sessionToken;
+          }
+        }
+
+        // Fallback for demo mode
+        if (!headers['Authorization']) {
+          headers['patient-id'] = 'default-patient';
+        }
+
         const directNeonResponse = await fetch("/api/health-records/store-direct", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "patient-id": "default-patient",
-          },
+          headers,
           body: JSON.stringify({
-            patientId: "default-patient",
             recordType: "medical_history",
             title: "Comprehensive Health Assessment",
             description: `BMI: ${healthRecordData.vitals.bmi}, Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
@@ -261,9 +300,15 @@ export default function HealthHistory() {
           secureResult = await directNeonResponse.json();
           secureResult.success = true;
           secureResult.record = { id: secureResult.recordId || 'neon-' + Date.now() };
+
+          if (secureResult.userInfo) {
+            console.log(`✅ Health record saved for user: ${secureResult.userInfo.username}`);
+          }
+        } else {
+          console.error('Failed to save to secure database:', await directNeonResponse.text());
         }
       } catch (error) {
-        console.error("Error saving to Neon database:", error);
+        console.error("Error saving to secure database:", error);
         // Continue with traditional storage only
       }
 
@@ -293,7 +338,7 @@ export default function HealthHistory() {
           notes: "",
         });
 
-        // Show success message
+        // Show success message with user info
         let successMessage = "🎉 Health Record Saved Successfully!\n\n";
         let storageCount = 0;
 
@@ -303,12 +348,17 @@ export default function HealthHistory() {
         }
 
         if (secureResult && secureResult.success) {
-          successMessage += "✅ Neon Database: Stored\n";
+          successMessage += "✅ Secure Database: Stored with Hash Linking\n";
           storageCount++;
+
+          if (secureResult.userInfo) {
+            successMessage += `👤 User: ${secureResult.userInfo.username}\n`;
+            successMessage += `🔐 Hash ID: ${secureResult.userInfo.userHash.slice(0, 12)}...\n`;
+          }
         }
 
         successMessage += `\n📊 Your health data is saved in ${storageCount} secure location${storageCount > 1 ? 's' : ''}`;
-        successMessage += "\n🔒 Full privacy protection maintained";
+        successMessage += "\n🔒 Split-key encryption & hash linking active";
 
         alert(successMessage);
       } else {
@@ -402,7 +452,9 @@ export default function HealthHistory() {
                     Health History
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Blockchain-Secured Records
+                    {userInfo?.isAuthenticated
+                      ? `Secure Records for ${userInfo.name}`
+                      : "Blockchain-Secured Records"}
                   </p>
                 </div>
               </div>
