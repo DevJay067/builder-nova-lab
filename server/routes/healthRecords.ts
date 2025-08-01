@@ -631,7 +631,7 @@ export const verifyPatientBlockchain: RequestHandler = (req, res) => {
 };
 
 /**
- * Store health record directly in Neon database (simplified approach)
+ * Store health record directly in Neon database with user authentication and hash linking
  */
 export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
   try {
@@ -645,21 +645,47 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
       metadata
     } = req.body;
 
-    if (!patientId || !recordType || !title) {
-      return res.status(400).json({
+    // Get session token for authentication
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') ||
+                        req.cookies?.healthchain_session ||
+                        req.headers['x-session-token'] as string;
+
+    if (!sessionToken) {
+      return res.status(401).json({
         success: false,
-        error: "Patient ID, record type, and title are required"
+        error: "Authentication required to store health records"
       });
     }
 
-    // Generate a unique record ID
-    const recordId = `neon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Validate session
+    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
+    if (!sessionResult.valid) {
+      return res.status(401).json({
+        success: false,
+        error: sessionResult.error
+      });
+    }
+
+    const authenticatedUser = sessionResult.user!;
+
+    if (!recordType || !title) {
+      return res.status(400).json({
+        success: false,
+        error: "Record type and title are required"
+      });
+    }
+
+    // Use authenticated user's ID as patient ID
+    const userPatientId = authenticatedUser.id;
+
+    // Generate a unique record ID with user hash
+    const recordId = `record_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
 
     // Store directly in Neon database
     const { NeonDatabaseService } = await import('../services/neonDatabase');
     await NeonDatabaseService.storeMedicalHistory({
       id: recordId,
-      patientId,
+      patientId: userPatientId,
       recordType,
       title,
       description,
@@ -668,13 +694,27 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
       metadata
     });
 
-    console.log(`✅ Stored health record directly in Neon: ${recordId}`);
+    // Create data access record with hash linking
+    const accessResult = await UserAuthenticationService.createDataAccessRecord(
+      authenticatedUser.id,
+      recordId,
+      authenticatedUser.userHash
+    );
+
+    console.log(`✅ Stored health record for user ${authenticatedUser.username}: ${recordId}`);
 
     res.json({
       success: true,
       recordId,
-      message: "Health record stored successfully in Neon database",
-      storage: "neon-database"
+      message: "Health record stored successfully with secure access",
+      storage: "neon-database",
+      userAccess: accessResult.success,
+      accessId: accessResult.accessId,
+      userInfo: {
+        userId: authenticatedUser.id,
+        username: authenticatedUser.username,
+        userHash: authenticatedUser.userHash
+      }
     });
 
   } catch (error) {
