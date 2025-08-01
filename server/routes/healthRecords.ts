@@ -228,21 +228,23 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
 
     // Also store in secure Neon database
     try {
-      const { NeonDatabaseService } = await import('../services/neonDatabase');
+      const { NeonDatabaseService } = await import("../services/neonDatabase");
       await NeonDatabaseService.storeMedicalHistory({
         id: healthRecord.id,
         patientId: healthRecord.patientId,
         recordType: healthRecord.type,
         title: healthRecord.title,
-        description: healthRecord.description || '',
-        doctor: healthRecord.doctor || 'Unknown',
+        description: healthRecord.description || "",
+        doctor: healthRecord.doctor || "Unknown",
         date: healthRecord.date,
         metadata: healthRecord.metadata,
-        secureRecordId: null // Not using secure encryption for regular records
+        secureRecordId: null, // Not using secure encryption for regular records
       });
-      console.log(`✅ Stored health record in secure database: ${healthRecord.id}`);
+      console.log(
+        `✅ Stored health record in secure database: ${healthRecord.id}`,
+      );
     } catch (error) {
-      console.error('❌ Failed to store in secure database:', error);
+      console.error("❌ Failed to store in secure database:", error);
       // Don't fail the request if secure storage fails
     }
 
@@ -275,10 +277,11 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
 export const getHealthRecords: RequestHandler = async (req, res) => {
   try {
     // Get session token for authentication
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '') ||
-                        req.cookies?.healthchain_session ||
-                        req.headers['x-session-token'] as string ||
-                        req.headers["patient-id"] as string; // Fallback for demo mode
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies?.healthchain_session ||
+      (req.headers["x-session-token"] as string) ||
+      (req.headers["patient-id"] as string); // Fallback for demo mode
 
     let authenticatedUser = null;
     let userPatientId = "default-patient";
@@ -286,14 +289,17 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
     // Try to authenticate user
     if (sessionToken && sessionToken !== "default-patient") {
       try {
-        const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
+        const sessionResult =
+          await UserAuthenticationService.validateSession(sessionToken);
         if (sessionResult.valid) {
           authenticatedUser = sessionResult.user!;
           userPatientId = authenticatedUser.id;
-          console.log(`✅ Fetching records for authenticated user: ${authenticatedUser.username}`);
+          console.log(
+            `✅ Fetching records for authenticated user: ${authenticatedUser.username}`,
+          );
         }
       } catch (error) {
-        console.log('⚠️  Session validation failed, falling back to demo mode');
+        console.log("⚠️  Session validation failed, falling back to demo mode");
       }
     }
 
@@ -303,11 +309,12 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
     // Also get records from Neon database
     let neonRecords = [];
     try {
-      const { NeonDatabaseService } = await import('../services/neonDatabase');
-      const dbRecords = await NeonDatabaseService.getMedicalHistory(userPatientId);
+      const { NeonDatabaseService } = await import("../services/neonDatabase");
+      const dbRecords =
+        await NeonDatabaseService.getMedicalHistory(userPatientId);
 
       // Convert database records to API format
-      neonRecords = dbRecords.map(record => ({
+      neonRecords = dbRecords.map((record) => ({
         id: record.id,
         patientId: record.patientId,
         date: record.date,
@@ -322,7 +329,9 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
         updatedAt: record.updatedAt,
       }));
 
-      console.log(`✅ Found ${neonRecords.length} records in Neon database for user: ${userPatientId}`);
+      console.log(
+        `✅ Found ${neonRecords.length} records in Neon database for user: ${userPatientId}`,
+      );
     } catch (error) {
       console.error("Error fetching from Neon database:", error);
       // Don't fail the request if Neon is unavailable
@@ -330,12 +339,17 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
 
     // Combine records from both sources and deduplicate
     const allRecords = [...memoryRecords, ...neonRecords];
-    const uniqueRecords = allRecords.filter((record, index, self) =>
-      index === self.findIndex(r => r.id === record.id)
+    const uniqueRecords = allRecords.filter(
+      (record, index, self) =>
+        index === self.findIndex((r) => r.id === record.id),
     );
 
     // Sort by date (newest first)
-    uniqueRecords.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
+    uniqueRecords.sort(
+      (a, b) =>
+        new Date(b.createdAt || b.date).getTime() -
+        new Date(a.createdAt || a.date).getTime(),
+    );
 
     // Update patient last access
     const patientProfile = patientProfiles.get(userPatientId);
@@ -356,12 +370,12 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
         userId: authenticatedUser.id,
         username: authenticatedUser.username,
         name: `${authenticatedUser.firstName} ${authenticatedUser.lastName}`,
-        isAuthenticated: true
+        isAuthenticated: true,
       };
     } else {
       (response as any).userInfo = {
         isAuthenticated: false,
-        demoMode: true
+        demoMode: true,
       };
     }
 
@@ -372,7 +386,7 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
       success: false,
       records: [],
       total: 0,
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -679,27 +693,29 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
       description,
       doctor,
       date,
-      metadata
+      metadata,
     } = req.body;
 
     // Get session token for authentication
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '') ||
-                        req.cookies?.healthchain_session ||
-                        req.headers['x-session-token'] as string;
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies?.healthchain_session ||
+      (req.headers["x-session-token"] as string);
 
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required to store health records"
+        error: "Authentication required to store health records",
       });
     }
 
     // Validate session
-    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
+    const sessionResult =
+      await UserAuthenticationService.validateSession(sessionToken);
     if (!sessionResult.valid) {
       return res.status(401).json({
         success: false,
-        error: sessionResult.error
+        error: sessionResult.error,
       });
     }
 
@@ -708,7 +724,7 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
     if (!recordType || !title) {
       return res.status(400).json({
         success: false,
-        error: "Record type and title are required"
+        error: "Record type and title are required",
       });
     }
 
@@ -716,10 +732,10 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
     const userPatientId = authenticatedUser.id;
 
     // Generate a unique record ID with user hash
-    const recordId = `record_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const recordId = `record_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
 
     // Store directly in Neon database
-    const { NeonDatabaseService } = await import('../services/neonDatabase');
+    const { NeonDatabaseService } = await import("../services/neonDatabase");
     await NeonDatabaseService.storeMedicalHistory({
       id: recordId,
       patientId: userPatientId,
@@ -728,17 +744,19 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
       description,
       doctor,
       date,
-      metadata
+      metadata,
     });
 
     // Create data access record with hash linking
     const accessResult = await UserAuthenticationService.createDataAccessRecord(
       authenticatedUser.id,
       recordId,
-      authenticatedUser.userHash
+      authenticatedUser.userHash,
     );
 
-    console.log(`✅ Stored health record for user ${authenticatedUser.username}: ${recordId}`);
+    console.log(
+      `✅ Stored health record for user ${authenticatedUser.username}: ${recordId}`,
+    );
 
     res.json({
       success: true,
@@ -750,15 +768,14 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
       userInfo: {
         userId: authenticatedUser.id,
         username: authenticatedUser.username,
-        userHash: authenticatedUser.userHash
-      }
+        userHash: authenticatedUser.userHash,
+      },
     });
-
   } catch (error) {
     console.error("❌ Error storing health record directly:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to store health record: " + error.message
+      error: "Failed to store health record: " + error.message,
     });
   }
 };
