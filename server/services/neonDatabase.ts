@@ -75,8 +75,7 @@ export class NeonDatabaseService {
           distributed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           acknowledged BOOLEAN DEFAULT false,
           acknowledged_at TIMESTAMP,
-          INDEX idx_key_id (key_id),
-          INDEX idx_recipient_id (recipient_id),
+
           FOREIGN KEY (key_id) REFERENCES key_store(key_id) ON DELETE CASCADE
         )
       `;
