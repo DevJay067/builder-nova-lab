@@ -142,9 +142,7 @@ export class NeonDatabaseService {
           secure_record_id VARCHAR(255),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          INDEX idx_patient_id (patient_id),
-          INDEX idx_date (date),
-          INDEX idx_record_type (record_type),
+
           FOREIGN KEY (secure_record_id) REFERENCES secure_data_records(id)
         )
       `;
