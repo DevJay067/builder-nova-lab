@@ -76,6 +76,12 @@ export const registerUser: RequestHandler = async (req, res) => {
  */
 export const loginUser: RequestHandler = async (req, res) => {
   try {
+    // Add debugging
+    console.log("🔍 Login request received", {
+      body: req.body ? "present" : "missing",
+      contentType: req.headers['content-type']
+    });
+
     const loginData: UserLogin = req.body;
 
     // Validate required fields
