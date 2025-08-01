@@ -118,9 +118,7 @@ export class NeonDatabaseService {
           notifications_sent JSONB DEFAULT '[]',
           completed BOOLEAN DEFAULT false,
           completed_at TIMESTAMP,
-          INDEX idx_key_id (key_id),
-          INDEX idx_scheduled_date (scheduled_rotation_date),
-          INDEX idx_completed (completed),
+
           FOREIGN KEY (key_id) REFERENCES key_store(key_id) ON DELETE CASCADE
         )
       `;
@@ -441,7 +439,7 @@ export class NeonDatabaseService {
         )
       `;
       
-      console.log(`✅ Stored rotation schedule: ${schedule.scheduleId}`);
+      console.log(`��� Stored rotation schedule: ${schedule.scheduleId}`);
     } catch (error) {
       console.error('❌ Error storing rotation schedule:', error);
       throw error;
