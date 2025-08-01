@@ -11,6 +11,7 @@ import {
   verifyPatientBlockchain,
   getBlockchainStats,
   addTestData,
+  storeHealthRecordDirect,
 } from "./routes/healthRecords";
 import {
   generateSplitKeys,
