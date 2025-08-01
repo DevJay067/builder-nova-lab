@@ -74,8 +74,17 @@ export function createServer() {
         console.log("✅ Secure healthcare database initialized successfully");
       } catch (dbError) {
         console.log(
-          "⚠️  Secure database not available, system will work with in-memory storage",
+          "⚠️  Secure database not available, trying simple initialization...",
         );
+
+        // Try to create at least the essential medical_history table
+        try {
+          const { SimpleDatabaseInit } = await import("./services/simpleDatabaseInit");
+          await SimpleDatabaseInit.initializeMedicalHistoryTable();
+          console.log("✅ Essential medical history table created");
+        } catch (simpleError) {
+          console.log("⚠️  System will work with in-memory storage only");
+        }
       }
     } catch (error) {
       console.log(
