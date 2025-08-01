@@ -68,6 +68,7 @@ export function createServer() {
   app.post("/api/health-records", createHealthRecord);
   app.get("/api/health-records", getHealthRecords);
   app.get("/api/health-records/:recordId", getHealthRecord);
+  app.post("/api/health-records/store-direct", storeHealthRecordDirect);
   app.get("/api/medical-context", getMedicalContext);
   app.post("/api/add-test-data", addTestData);
 
