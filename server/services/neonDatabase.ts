@@ -149,7 +149,7 @@ export class NeonDatabaseService {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-          FOREIGN KEY (secure_record_id) REFERENCES secure_data_records(id)
+
         )
       `;
 
