@@ -115,6 +115,8 @@ export default function Login() {
           });
           setTimeout(() => {
             navigate("/");
+            // Ensure scroll to top after navigation
+            setTimeout(() => window.scrollTo(0, 0), 100);
           }, 1000);
         }, 1500);
       } else {
