@@ -13,6 +13,7 @@ import HealthHistory from "./pages/HealthHistory";
 import FirstAid from "./pages/FirstAid";
 import HealthAnalytics from "./pages/HealthAnalytics";
 import Legal from "./pages/Legal";
+import SecureAccess from "./pages/SecureAccess";
 
 const queryClient = new QueryClient();
 
