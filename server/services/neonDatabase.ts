@@ -97,10 +97,7 @@ export class NeonDatabaseService {
           user_agent TEXT,
           success BOOLEAN NOT NULL,
           details JSONB,
-          INDEX idx_data_record_id (data_record_id),
-          INDEX idx_user_id (user_id),
-          INDEX idx_timestamp (timestamp),
-          INDEX idx_action (action)
+
         )
       `;
 
