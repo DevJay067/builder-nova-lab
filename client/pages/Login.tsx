@@ -166,7 +166,7 @@ export default function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: registerForm.email, // Using email as username
+          username: registerForm.username,
           email: registerForm.email,
           password: registerForm.password,
           firstName: registerForm.firstName,
