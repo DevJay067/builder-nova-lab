@@ -1,29 +1,24 @@
 import { RequestHandler } from "express";
-import {
-  UserAuthenticationService,
-  UserRegistration,
-  UserLogin,
-} from "../services/userAuthentication";
+import { UserAuthenticationService, UserRegistration, UserLogin } from "../services/userAuthentication";
 
 /**
  * Register a new user
  */
 export const registerUser: RequestHandler = async (req, res) => {
   try {
+    // Add debugging
+    console.log("🔍 Registration request received", {
+      body: req.body ? "present" : "missing",
+      contentType: req.headers['content-type']
+    });
+
     const userData: UserRegistration = req.body;
 
     // Validate required fields
-    if (
-      !userData.username ||
-      !userData.email ||
-      !userData.password ||
-      !userData.firstName ||
-      !userData.lastName
-    ) {
+    if (!userData.username || !userData.email || !userData.password || !userData.firstName || !userData.lastName) {
       return res.status(400).json({
         success: false,
-        error:
-          "Username, email, password, first name, and last name are required",
+        error: "Username, email, password, first name, and last name are required"
       });
     }
 
@@ -31,7 +26,7 @@ export const registerUser: RequestHandler = async (req, res) => {
     if (userData.password.length < 8) {
       return res.status(400).json({
         success: false,
-        error: "Password must be at least 8 characters long",
+        error: "Password must be at least 8 characters long"
       });
     }
 
@@ -40,7 +35,7 @@ export const registerUser: RequestHandler = async (req, res) => {
     if (!emailRegex.test(userData.email)) {
       return res.status(400).json({
         success: false,
-        error: "Invalid email format",
+        error: "Invalid email format"
       });
     }
 
@@ -49,8 +44,7 @@ export const registerUser: RequestHandler = async (req, res) => {
     if (!usernameRegex.test(userData.username)) {
       return res.status(400).json({
         success: false,
-        error:
-          "Username must be 3-30 characters and contain only letters, numbers, and underscores",
+        error: "Username must be 3-30 characters and contain only letters, numbers, and underscores"
       });
     }
 
@@ -60,19 +54,19 @@ export const registerUser: RequestHandler = async (req, res) => {
       res.status(201).json({
         success: true,
         message: "User registered successfully",
-        user: result.user,
+        user: result.user
       });
     } else {
       res.status(400).json({
         success: false,
-        error: result.error,
+        error: result.error
       });
     }
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during registration",
+      error: "Internal server error during registration"
     });
   }
 };
@@ -88,7 +82,7 @@ export const loginUser: RequestHandler = async (req, res) => {
     if (!loginData.username || !loginData.password) {
       return res.status(400).json({
         success: false,
-        error: "Username and password are required",
+        error: "Username and password are required"
       });
     }
 
@@ -96,11 +90,11 @@ export const loginUser: RequestHandler = async (req, res) => {
 
     if (result.success) {
       // Set session cookie
-      res.cookie("healthchain_session", result.session!.sessionToken, {
+      res.cookie('healthchain_session', result.session!.sessionToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
       });
 
       res.json({
@@ -108,19 +102,19 @@ export const loginUser: RequestHandler = async (req, res) => {
         message: "Login successful",
         user: result.user,
         sessionToken: result.session!.sessionToken,
-        dataAccessHash: result.session!.dataAccessHash,
+        dataAccessHash: result.session!.dataAccessHash
       });
     } else {
       res.status(401).json({
         success: false,
-        error: result.error,
+        error: result.error
       });
     }
   } catch (error) {
     console.error("Error logging in user:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during login",
+      error: "Internal server error during login"
     });
   }
 };
@@ -130,38 +124,36 @@ export const loginUser: RequestHandler = async (req, res) => {
  */
 export const verifySession: RequestHandler = async (req, res) => {
   try {
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies.healthchain_session ||
-      (req.headers["x-session-token"] as string);
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
+                        req.cookies.healthchain_session ||
+                        req.headers['x-session-token'] as string;
 
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "No session token provided",
+        error: "No session token provided"
       });
     }
 
-    const result =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const result = await UserAuthenticationService.validateSession(sessionToken);
 
     if (result.valid) {
       res.json({
         success: true,
         user: result.user,
-        session: result.session,
+        session: result.session
       });
     } else {
       res.status(401).json({
         success: false,
-        error: result.error,
+        error: result.error
       });
     }
   } catch (error) {
     console.error("Error verifying session:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during session verification",
+      error: "Internal server error during session verification"
     });
   }
 };
@@ -171,27 +163,26 @@ export const verifySession: RequestHandler = async (req, res) => {
  */
 export const logoutUser: RequestHandler = async (req, res) => {
   try {
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies.healthchain_session ||
-      (req.headers["x-session-token"] as string);
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
+                        req.cookies.healthchain_session ||
+                        req.headers['x-session-token'] as string;
 
     if (sessionToken) {
       await UserAuthenticationService.logoutUser(sessionToken);
     }
 
     // Clear session cookie
-    res.clearCookie("healthchain_session");
+    res.clearCookie('healthchain_session');
 
     res.json({
       success: true,
-      message: "Logged out successfully",
+      message: "Logged out successfully"
     });
   } catch (error) {
     console.error("Error logging out user:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during logout",
+      error: "Internal server error during logout"
     });
   }
 };
@@ -201,32 +192,28 @@ export const logoutUser: RequestHandler = async (req, res) => {
  */
 export const getUserProfile: RequestHandler = async (req, res) => {
   try {
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies.healthchain_session ||
-      (req.headers["x-session-token"] as string);
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
+                        req.cookies.healthchain_session ||
+                        req.headers['x-session-token'] as string;
 
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        error: "Authentication required"
       });
     }
 
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
 
     if (!sessionResult.valid) {
       return res.status(401).json({
         success: false,
-        error: sessionResult.error,
+        error: sessionResult.error
       });
     }
 
     // Get user data access records
-    const dataAccess = await UserAuthenticationService.getUserDataAccess(
-      sessionResult.user!.id,
-    );
+    const dataAccess = await UserAuthenticationService.getUserDataAccess(sessionResult.user!.id);
 
     res.json({
       success: true,
@@ -236,14 +223,14 @@ export const getUserProfile: RequestHandler = async (req, res) => {
         sessionId: sessionResult.session!.id,
         createdAt: sessionResult.session!.createdAt,
         expiresAt: sessionResult.session!.expiresAt,
-        lastActivity: sessionResult.session!.lastActivity,
-      },
+        lastActivity: sessionResult.session!.lastActivity
+      }
     });
   } catch (error) {
     console.error("Error getting user profile:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "Internal server error"
     });
   }
 };
@@ -254,58 +241,56 @@ export const getUserProfile: RequestHandler = async (req, res) => {
 export const createDataAccess: RequestHandler = async (req, res) => {
   try {
     const { dataRecordId } = req.body;
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies.healthchain_session ||
-      (req.headers["x-session-token"] as string);
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
+                        req.cookies.healthchain_session ||
+                        req.headers['x-session-token'] as string;
 
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        error: "Authentication required"
       });
     }
 
     if (!dataRecordId) {
       return res.status(400).json({
         success: false,
-        error: "Data record ID is required",
+        error: "Data record ID is required"
       });
     }
 
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
 
     if (!sessionResult.valid) {
       return res.status(401).json({
         success: false,
-        error: sessionResult.error,
+        error: sessionResult.error
       });
     }
 
     const result = await UserAuthenticationService.createDataAccessRecord(
       sessionResult.user!.id,
       dataRecordId,
-      sessionResult.user!.userHash,
+      sessionResult.user!.userHash
     );
 
     if (result.success) {
       res.json({
         success: true,
         message: "Data access record created",
-        accessId: result.accessId,
+        accessId: result.accessId
       });
     } else {
       res.status(500).json({
         success: false,
-        error: result.error,
+        error: result.error
       });
     }
   } catch (error) {
     console.error("Error creating data access record:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "Internal server error"
     });
   }
 };
@@ -316,44 +301,42 @@ export const createDataAccess: RequestHandler = async (req, res) => {
 export const verifyDataAccess: RequestHandler = async (req, res) => {
   try {
     const { dataRecordId } = req.params;
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies.healthchain_session ||
-      (req.headers["x-session-token"] as string);
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
+                        req.cookies.healthchain_session ||
+                        req.headers['x-session-token'] as string;
 
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        error: "Authentication required"
       });
     }
 
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
 
     if (!sessionResult.valid) {
       return res.status(401).json({
         success: false,
-        error: sessionResult.error,
+        error: sessionResult.error
       });
     }
 
     const accessResult = await UserAuthenticationService.verifyDataAccess(
       sessionResult.user!.id,
-      dataRecordId,
+      dataRecordId
     );
 
     res.json({
       success: true,
       hasAccess: accessResult.hasAccess,
       combinedHash: accessResult.combinedHash,
-      error: accessResult.error,
+      error: accessResult.error
     });
   } catch (error) {
     console.error("Error verifying data access:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "Internal server error"
     });
   }
 };
@@ -364,16 +347,16 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
 export const getAuthStats: RequestHandler = async (req, res) => {
   try {
     const stats = await UserAuthenticationService.getUserStats();
-
+    
     res.json({
       success: true,
-      stats,
+      stats
     });
   } catch (error) {
     console.error("Error getting auth stats:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "Internal server error"
     });
   }
 };
@@ -383,20 +366,18 @@ export const getAuthStats: RequestHandler = async (req, res) => {
  */
 export const authenticateUser: RequestHandler = async (req, res, next) => {
   try {
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies.healthchain_session ||
-      (req.headers["x-session-token"] as string);
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
+                        req.cookies.healthchain_session ||
+                        req.headers['x-session-token'] as string;
 
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        error: "Authentication required"
       });
     }
 
-    const result =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const result = await UserAuthenticationService.validateSession(sessionToken);
 
     if (result.valid) {
       // Add user and session to request object
@@ -406,14 +387,14 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
     } else {
       return res.status(401).json({
         success: false,
-        error: result.error,
+        error: result.error
       });
     }
   } catch (error) {
     console.error("Error in auth middleware:", error);
     return res.status(500).json({
       success: false,
-      error: "Authentication error",
+      error: "Authentication error"
     });
   }
 };
