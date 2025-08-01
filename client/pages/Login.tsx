@@ -71,7 +71,7 @@ export default function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: loginForm.email, // Using email as username
+          username: loginForm.email, // Can be username or email
           password: loginForm.password,
         }),
       });
