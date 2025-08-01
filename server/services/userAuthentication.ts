@@ -269,10 +269,22 @@ export class UserAuthenticationService {
   static async authenticateUser(loginData: UserLogin): Promise<{ success: boolean; user?: User; session?: UserSession; error?: string }> {
     try {
       // Get user by username
-      const userResult = await sql`
-        SELECT * FROM users 
-        WHERE username = ${loginData.username} AND is_active = true
-      `;
+      let userResult = [];
+
+      if (sql) {
+        userResult = await sql`
+          SELECT * FROM users
+          WHERE username = ${loginData.username} AND is_active = true
+        `;
+      } else {
+        // In-memory lookup
+        for (const [id, user] of inMemoryUsers) {
+          if (user.username === loginData.username && user.isActive) {
+            userResult = [user];
+            break;
+          }
+        }
+      }
 
       if (userResult.length === 0) {
         return { success: false, error: 'Invalid username or password' };
