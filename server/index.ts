@@ -23,6 +23,11 @@ import {
   getSystemStatus,
   validateKeyFragments,
 } from "./routes/secureDataAPI";
+import {
+  checkDatabaseHealth,
+  initializeDatabase,
+  testDatabaseConnection,
+} from "./routes/databaseHealth";
 
 export function createServer() {
   // Initialize secure database on server startup
