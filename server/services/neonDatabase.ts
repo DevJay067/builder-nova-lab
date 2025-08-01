@@ -101,6 +101,12 @@ export class NeonDatabaseService {
         )
       `;
 
+      // Create indexes for audit_logs
+      await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_data_record_id ON audit_logs(data_record_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action)`;
+
       // Create key_rotation_schedule table
       await sql`
         CREATE TABLE IF NOT EXISTS key_rotation_schedule (
