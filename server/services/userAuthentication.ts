@@ -9,7 +9,7 @@ try {
     sql = neon(process.env.DATABASE_URL);
   }
 } catch (error) {
-  console.log('⚠️  Database connection not available, using in-memory storage for authentication');
+  console.log('⚠��  Database connection not available, using in-memory storage for authentication');
 }
 
 // In-memory fallback storage
@@ -402,17 +402,43 @@ export class UserAuthenticationService {
    */
   static async validateSession(sessionToken: string): Promise<{ valid: boolean; user?: User; session?: UserSession; error?: string }> {
     try {
-      const sessionResult = await sql`
-        SELECT s.*, u.id as user_id, u.username, u.email, u.user_hash, 
-               u.first_name, u.last_name, u.date_of_birth, u.phone, 
-               u.created_at as user_created_at, u.last_login, u.is_active
-        FROM user_sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.session_token = ${sessionToken} 
-        AND s.is_active = true 
-        AND s.expires_at > NOW()
-        AND u.is_active = true
-      `;
+      let sessionResult = [];
+
+      if (sql) {
+        sessionResult = await sql`
+          SELECT s.*, u.id as user_id, u.username, u.email, u.user_hash,
+                 u.first_name, u.last_name, u.date_of_birth, u.phone,
+                 u.created_at as user_created_at, u.last_login, u.is_active
+          FROM user_sessions s
+          JOIN users u ON s.user_id = u.id
+          WHERE s.session_token = ${sessionToken}
+          AND s.is_active = true
+          AND s.expires_at > NOW()
+          AND u.is_active = true
+        `;
+      } else {
+        // In-memory session validation
+        const session = inMemorySessions.get(sessionToken);
+        if (session && new Date(session.expiresAt) > new Date()) {
+          const user = inMemoryUsers.get(session.userId);
+          if (user && user.isActive) {
+            sessionResult = [{
+              ...session,
+              user_id: user.id,
+              username: user.username,
+              email: user.email,
+              user_hash: user.userHash,
+              first_name: user.firstName,
+              last_name: user.lastName,
+              date_of_birth: user.dateOfBirth,
+              phone: user.phone,
+              user_created_at: user.createdAt,
+              last_login: user.lastLogin,
+              is_active: user.isActive
+            }];
+          }
+        }
+      }
 
       if (sessionResult.length === 0) {
         return { valid: false, error: 'Invalid or expired session' };
