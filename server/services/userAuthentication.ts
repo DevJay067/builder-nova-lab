@@ -89,6 +89,15 @@ class UserAuthenticationService {
         )
       `;
 
+      // Add missing columns if they don't exist (for existing tables)
+      try {
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS secure_system_activated BOOLEAN DEFAULT false`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS split_key_system_active BOOLEAN DEFAULT false`;
+      } catch (alterError) {
+        // Columns likely already exist, ignore
+        console.log("Column alter operation skipped (likely already exist)");
+      }
+
       // Create index on username for faster lookups
       await sql`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_users_user_hash ON users(user_hash)`;
