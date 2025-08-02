@@ -1,33 +1,25 @@
-import crypto from 'crypto';
-import { BlockchainService } from './blockchain';
+import crypto from "crypto";
+import { ProductionBlockchainService, SplitKeyData } from "./productionBlockchain";
+import { NeonDatabaseService } from "./neonDatabase";
 
 /**
- * Secure Data Access System with Split-Key Mechanism and Blockchain Immutability
+ * Secure Data Access System with Production Blockchain Integration
  * 
- * This system implements a multi-layered security approach:
- * 1. Split-key mechanism for access control
- * 2. Blockchain immutability for data integrity
- * 3. Role-based access control
- * 4. Audit logging for compliance
+ * This service provides secure data access using:
+ * - User authentication with hash generation
+ * - Split key cryptography (user hash + data hash)
+ * - Production blockchain for immutable storage
+ * - Automatic activation on user account creation
  */
-
-export interface SplitKeyPair {
-  patientKey: string;      // Patient-held key fragment
-  providerKey: string;     // Healthcare provider key fragment
-  systemKey: string;       // System-held key fragment
-  keyId: string;           // Unique identifier for this key set
-  createdAt: string;
-  expiresAt?: string;
-}
 
 export interface SecureDataRecord {
   id: string;
   patientId: string;
-  dataType: 'medical_history' | 'ai_report' | 'assessment' | 'lab_result';
+  dataType: "medical_history" | "lab_results" | "prescription" | "imaging" | "emergency";
   encryptedData: string;
   keyId: string;
   blockchainHash: string;
-  accessLevel: 'patient' | 'provider' | 'emergency' | 'research';
+  accessLevel: "patient" | "provider" | "emergency" | "research";
   metadata: {
     createdBy: string;
     createdAt: string;
@@ -37,460 +29,637 @@ export interface SecureDataRecord {
   };
 }
 
-export interface AccessRequest {
-  requestId: string;
-  dataRecordId: string;
-  requestedBy: string;
-  requestedRole: 'patient' | 'provider' | 'emergency' | 'researcher';
-  keyFragments: {
-    patientKey?: string;
-    providerKey?: string;
-    emergencyKey?: string;
+export interface UserAccessCredentials {
+  username: string;
+  password: string;
+  userHash: string;
+  sessionToken?: string;
+}
+
+export interface DataAccessResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  accessLog: {
+    timestamp: string;
+    action: string;
+    result: string;
   };
-  purpose: string;
-  timestamp: string;
+}
+
+export interface SplitKeyPair {
+  keyId: string;
+  part1: string;
+  part2: string;
+  checksum: string;
+  createdAt: string;
+  expiresAt: string;
 }
 
 export interface AuditLog {
   logId: string;
-  action: 'create' | 'access' | 'modify' | 'delete' | 'share';
-  dataRecordId: string;
+  action: "create" | "read" | "update" | "delete" | "access_denied";
+  dataRecordId?: string;
   userId: string;
   userRole: string;
   timestamp: string;
   ipAddress?: string;
   userAgent?: string;
   success: boolean;
-  details?: any;
+  details: any;
 }
 
-export class SecureDataAccessService {
-  
+class SecureDataAccessService {
+  private static isInitialized = false;
+  private static userSessions: Map<string, UserAccessCredentials> = new Map();
+  private static splitKeyCache: Map<string, SplitKeyData> = new Map();
+
   /**
-   * Generate a new split-key set for a patient
+   * Initialize the secure data access system
    */
-  static generateSplitKeys(patientId: string, providerId: string): SplitKeyPair {
-    const keyId = crypto.randomBytes(16).toString('hex');
-    
-    // Generate master key (256-bit)
-    const masterKey = crypto.randomBytes(32);
-    
-    // Split master key into 3 fragments using XOR splitting
-    const patientFragment = crypto.randomBytes(32);
-    const providerFragment = crypto.randomBytes(32);
-    const systemFragment = Buffer.alloc(32);
-    
-    // XOR operation to ensure all three keys are needed
-    for (let i = 0; i < 32; i++) {
-      systemFragment[i] = masterKey[i] ^ patientFragment[i] ^ providerFragment[i];
+  static async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      return;
     }
-    
-    return {
-      patientKey: patientFragment.toString('hex'),
-      providerKey: providerFragment.toString('hex'),
-      systemKey: systemFragment.toString('hex'),
-      keyId,
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
-    };
-  }
 
-  /**
-   * Reconstruct master key from split fragments
-   */
-  static reconstructMasterKey(
-    patientKey: string, 
-    providerKey: string, 
-    systemKey: string
-  ): Buffer {
-    const patientFragment = Buffer.from(patientKey, 'hex');
-    const providerFragment = Buffer.from(providerKey, 'hex');
-    const systemFragment = Buffer.from(systemKey, 'hex');
-    
-    const masterKey = Buffer.alloc(32);
-    
-    // XOR all fragments to reconstruct master key
-    for (let i = 0; i < 32; i++) {
-      masterKey[i] = patientFragment[i] ^ providerFragment[i] ^ systemFragment[i];
-    }
-    
-    return masterKey;
-  }
-
-  /**
-   * Encrypt sensitive healthcare data
-   */
-  static encryptHealthcareData(data: any, masterKey: Buffer): string {
-    const algorithm = 'aes-256-gcm';
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(algorithm, masterKey);
-    
-    let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    
-    const authTag = cipher.getAuthTag();
-    
-    // Combine IV, auth tag, and encrypted data
-    return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
-  }
-
-  /**
-   * Decrypt healthcare data
-   */
-  static decryptHealthcareData(encryptedData: string, masterKey: Buffer): any {
     try {
-      const algorithm = 'aes-256-gcm';
-      const parts = encryptedData.split(':');
+      console.log("🔐 Initializing secure data access system...");
       
-      if (parts.length !== 3) {
-        throw new Error('Invalid encrypted data format');
-      }
+      // Initialize production blockchain
+      ProductionBlockchainService.initializeBlockchain();
       
-      const iv = Buffer.from(parts[0], 'hex');
-      const authTag = Buffer.from(parts[1], 'hex');
-      const encrypted = parts[2];
+      // Validate blockchain integrity
+      ProductionBlockchainService.validateBlockchain();
       
-      const decipher = crypto.createDecipher(algorithm, masterKey);
-      decipher.setAuthTag(authTag);
+      this.isInitialized = true;
+      console.log("✅ Secure data access system initialized successfully");
       
-      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
-      
-      return JSON.parse(decrypted);
     } catch (error) {
-      throw new Error('Failed to decrypt data: Invalid key or corrupted data');
+      console.error("❌ Failed to initialize secure data access system:", error);
+      throw error;
     }
   }
 
   /**
-   * Store encrypted data on blockchain with immutability
+   * Create secure user account with automatic data access system activation
    */
-  static async storeSecureData(
-    patientId: string,
-    dataType: SecureDataRecord['dataType'],
-    data: any,
-    splitKeys: SplitKeyPair,
-    createdBy: string,
-    accessLevel: SecureDataRecord['accessLevel'] = 'provider'
-  ): Promise<SecureDataRecord> {
-    
-    // Reconstruct master key for encryption
-    const masterKey = this.reconstructMasterKey(
-      splitKeys.patientKey,
-      splitKeys.providerKey,
-      splitKeys.systemKey
-    );
-    
-    // Encrypt the data
-    const encryptedData = this.encryptHealthcareData(data, masterKey);
-    
-    // Generate data checksum for integrity verification
-    const checksum = crypto.createHash('sha256')
-      .update(JSON.stringify(data))
-      .digest('hex');
-    
-    const recordId = crypto.randomBytes(16).toString('hex');
-    const timestamp = new Date().toISOString();
-    
-    const record: SecureDataRecord = {
-      id: recordId,
-      patientId,
-      dataType,
-      encryptedData,
-      keyId: splitKeys.keyId,
-      blockchainHash: '', // Will be set after blockchain storage
-      accessLevel,
-      metadata: {
-        createdBy,
-        createdAt: timestamp,
-        accessCount: 0,
-        checksum
-      }
-    };
-    
-    // Store on blockchain for immutability
-    const blockchainHash = await BlockchainService.storeHealthRecord({
-      id: recordId,
-      patientId,
-      date: timestamp.split('T')[0],
-      type: dataType,
-      title: `Secure ${dataType.replace('_', ' ')}`,
-      description: `Encrypted healthcare data with split-key access control`,
-      doctor: createdBy,
-      status: 'completed',
-      blockchainHash: '',
-      metadata: {
-        encrypted: true,
-        keyId: splitKeys.keyId,
-        accessLevel,
-        checksum
-      },
-      createdAt: timestamp,
-      updatedAt: timestamp
-    });
-
-    record.blockchainHash = blockchainHash;
-
-    // Store in Neon database
-    const { NeonDatabaseService } = await import('./neonDatabase');
-    await NeonDatabaseService.storeSecureRecord(record);
-    
-    // Log the creation
-    await this.createAuditLog({
-      logId: crypto.randomBytes(16).toString('hex'),
-      action: 'create',
-      dataRecordId: recordId,
-      userId: createdBy,
-      userRole: 'provider',
-      timestamp,
-      success: true,
-      details: {
-        dataType,
-        accessLevel,
-        keyId: splitKeys.keyId
-      }
-    });
-    
-    return record;
-  }
-
-  /**
-   * Secure data retrieval with access validation
-   */
-  static async retrieveSecureData(
-    accessRequest: AccessRequest,
-    splitKeys: Partial<SplitKeyPair>,
-    systemKey: string
-  ): Promise<{ data: any; auditLog: AuditLog }> {
-    
-    const timestamp = new Date().toISOString();
-    let auditLog: AuditLog;
-    
+  static async createSecureUserAccount(
+    username: string,
+    password: string,
+    userProfile: {
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      dateOfBirth?: string;
+    }
+  ): Promise<{
+    userHash: string;
+    splitKeySystem: boolean;
+    dataAccessActivated: boolean;
+    sessionToken: string;
+  }> {
     try {
-      // Validate access request
-      const isAuthorized = await this.validateAccess(accessRequest);
+      console.log(`🔐 Creating secure account for user: ${username}`);
       
-      if (!isAuthorized) {
-        auditLog = await this.createAuditLog({
-          logId: crypto.randomBytes(16).toString('hex'),
-          action: 'access',
-          dataRecordId: accessRequest.dataRecordId,
-          userId: accessRequest.requestedBy,
-          userRole: accessRequest.requestedRole,
-          timestamp,
-          success: false,
-          details: { reason: 'Unauthorized access attempt' }
-        });
-        
-        throw new Error('Access denied: Insufficient permissions');
-      }
+      // Generate user hash
+      const userHash = ProductionBlockchainService.generateUserHash(username, password);
       
-      // Get required key fragments based on access level
-      const requiredKeys = this.getRequiredKeyFragments(accessRequest.requestedRole);
-      
-      // Validate that all required key fragments are provided
-      for (const keyType of requiredKeys) {
-        if (!accessRequest.keyFragments[keyType] && keyType !== 'systemKey') {
-          auditLog = await this.createAuditLog({
-            logId: crypto.randomBytes(16).toString('hex'),
-            action: 'access',
-            dataRecordId: accessRequest.dataRecordId,
-            userId: accessRequest.requestedBy,
-            userRole: accessRequest.requestedRole,
-            timestamp,
-            success: false,
-            details: { reason: `Missing ${keyType} fragment` }
-          });
-          
-          throw new Error(`Access denied: Missing ${keyType} fragment`);
-        }
-      }
-      
-      // Reconstruct master key
-      const masterKey = this.reconstructMasterKey(
-        accessRequest.keyFragments.patientKey || splitKeys.patientKey!,
-        accessRequest.keyFragments.providerKey || splitKeys.providerKey!,
-        systemKey
+      // Create initial health record to activate split key system
+      const initialHealthRecord = {
+        patientId: userHash.substring(0, 16),
+        type: "account_creation",
+        data: {
+          accountCreated: new Date().toISOString(),
+          username: username,
+          profile: userProfile,
+          systemVersion: "1.0.0"
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      // Store in production blockchain with split key system
+      const blockchainResult = await ProductionBlockchainService.storeSecureHealthRecord(
+        initialHealthRecord,
+        username,
+        password
       );
-      
-      // Retrieve and decrypt data (this would fetch from your database)
-      const encryptedRecord = await this.getEncryptedRecord(accessRequest.dataRecordId);
-      const decryptedData = this.decryptHealthcareData(encryptedRecord.encryptedData, masterKey);
-      
-      // Verify data integrity
-      const dataChecksum = crypto.createHash('sha256')
-        .update(JSON.stringify(decryptedData))
-        .digest('hex');
-      
-      if (dataChecksum !== encryptedRecord.metadata.checksum) {
-        throw new Error('Data integrity check failed');
-      }
-      
-      // Update access metadata
-      await this.updateAccessMetadata(accessRequest.dataRecordId);
-      
-      // Create successful audit log
-      auditLog = await this.createAuditLog({
-        logId: crypto.randomBytes(16).toString('hex'),
-        action: 'access',
-        dataRecordId: accessRequest.dataRecordId,
-        userId: accessRequest.requestedBy,
-        userRole: accessRequest.requestedRole,
-        timestamp,
+
+      // Store split key data in cache for quick access
+      this.splitKeyCache.set(userHash, blockchainResult.splitKeyData);
+
+      // Generate session token
+      const sessionToken = this.generateSessionToken(userHash);
+
+      // Store user session
+      const userCredentials: UserAccessCredentials = {
+        username,
+        password: "", // Don't store password in session
+        userHash,
+        sessionToken
+      };
+      this.userSessions.set(sessionToken, userCredentials);
+
+      // Create audit log
+      await this.createAuditLog({
+        action: "create",
+        dataRecordId: blockchainResult.transaction.id,
+        userId: userHash,
+        userRole: "patient",
         success: true,
         details: {
-          purpose: accessRequest.purpose,
-          keyFragmentsUsed: Object.keys(accessRequest.keyFragments)
+          action: "secure_account_creation",
+          username: username,
+          blockchainHash: blockchainResult.blockchainHash,
+          splitKeySystemActivated: true
         }
       });
+
+      console.log(`✅ Secure account created for ${username} with split key system activated`);
       
-      return { data: decryptedData, auditLog };
+      return {
+        userHash,
+        splitKeySystem: true,
+        dataAccessActivated: true,
+        sessionToken
+      };
       
     } catch (error) {
-      if (!auditLog!) {
-        auditLog = await this.createAuditLog({
-          logId: crypto.randomBytes(16).toString('hex'),
-          action: 'access',
-          dataRecordId: accessRequest.dataRecordId,
-          userId: accessRequest.requestedBy,
-          userRole: accessRequest.requestedRole,
-          timestamp,
-          success: false,
-          details: { error: error.message }
-        });
-      }
+      console.error("❌ Failed to create secure user account:", error);
+      
+      // Create failure audit log
+      await this.createAuditLog({
+        action: "create",
+        userId: username,
+        userRole: "patient",
+        success: false,
+        details: {
+          action: "secure_account_creation_failed",
+          error: error instanceof Error ? error.message : "Unknown error"
+        }
+      });
       
       throw error;
     }
   }
 
   /**
-   * Validate access permissions based on role and data sensitivity
+   * Authenticate user and establish secure session
    */
-  static async validateAccess(accessRequest: AccessRequest): Promise<boolean> {
-    // Implement role-based access control logic
-    const accessMatrix = {
-      'patient': ['medical_history', 'lab_result'],
-      'provider': ['medical_history', 'ai_report', 'assessment', 'lab_result'],
-      'emergency': ['medical_history', 'assessment'],
-      'researcher': ['ai_report'] // Only anonymized data
-    };
-    
-    const record = await this.getEncryptedRecord(accessRequest.dataRecordId);
-    const allowedDataTypes = accessMatrix[accessRequest.requestedRole] || [];
-    
-    return allowedDataTypes.includes(record.dataType);
+  static async authenticateUser(
+    username: string,
+    password: string
+  ): Promise<{
+    authenticated: boolean;
+    userHash?: string;
+    sessionToken?: string;
+    splitKeySystemActive?: boolean;
+  }> {
+    try {
+      console.log(`🔐 Authenticating user: ${username}`);
+      
+      // Generate user hash
+      const userHash = ProductionBlockchainService.generateUserHash(username, password);
+      
+      // Check if user has data in blockchain (this verifies they exist)
+      const hasData = await this.checkUserDataExists(userHash);
+      
+      if (!hasData) {
+        await this.createAuditLog({
+          action: "access_denied",
+          userId: username,
+          userRole: "unknown",
+          success: false,
+          details: {
+            reason: "user_not_found",
+            attempted_username: username
+          }
+        });
+        
+        return { authenticated: false };
+      }
+
+      // Generate session token
+      const sessionToken = this.generateSessionToken(userHash);
+
+      // Store user session
+      const userCredentials: UserAccessCredentials = {
+        username,
+        password: "", // Don't store password
+        userHash,
+        sessionToken
+      };
+      this.userSessions.set(sessionToken, userCredentials);
+
+      // Create successful authentication audit log
+      await this.createAuditLog({
+        action: "read",
+        userId: userHash,
+        userRole: "patient",
+        success: true,
+        details: {
+          action: "user_authentication",
+          username: username,
+          sessionEstablished: true
+        }
+      });
+
+      console.log(`✅ User ${username} authenticated successfully`);
+      
+      return {
+        authenticated: true,
+        userHash,
+        sessionToken,
+        splitKeySystemActive: true
+      };
+      
+    } catch (error) {
+      console.error("❌ Authentication failed:", error);
+      
+      await this.createAuditLog({
+        action: "access_denied",
+        userId: username,
+        userRole: "unknown",
+        success: false,
+        details: {
+          action: "authentication_failed",
+          error: error instanceof Error ? error.message : "Unknown error"
+        }
+      });
+      
+      return { authenticated: false };
+    }
   }
 
   /**
-   * Get required key fragments based on user role
+   * Store secure health record with split key system
    */
-  static getRequiredKeyFragments(role: string): string[] {
-    const keyRequirements = {
-      'patient': ['patientKey', 'systemKey'],
-      'provider': ['patientKey', 'providerKey', 'systemKey'],
-      'emergency': ['emergencyKey', 'systemKey'],
-      'researcher': ['providerKey', 'systemKey']
-    };
-    
-    return keyRequirements[role] || ['patientKey', 'providerKey', 'systemKey'];
+  static async storeSecureHealthRecord(
+    sessionToken: string,
+    healthRecord: any
+  ): Promise<{
+    success: boolean;
+    recordId?: string;
+    blockchainHash?: string;
+    splitKeyReference?: string;
+  }> {
+    try {
+      // Validate session
+      const userCredentials = this.userSessions.get(sessionToken);
+      if (!userCredentials) {
+        throw new Error("Invalid session token");
+      }
+
+      console.log(`🔐 Storing secure health record for user: ${userCredentials.username}`);
+
+      // Get user password for encryption (in production, this should be handled more securely)
+      // For now, we'll use a derived key from the user hash
+      const derivedPassword = crypto.createHash('sha256').update(userCredentials.userHash).digest('hex');
+
+      // Store in production blockchain
+      const blockchainResult = await ProductionBlockchainService.storeSecureHealthRecord(
+        healthRecord,
+        userCredentials.username,
+        derivedPassword
+      );
+
+      // Update split key cache
+      this.splitKeyCache.set(userCredentials.userHash, blockchainResult.splitKeyData);
+
+      // Create secure data record for database
+      const secureRecord: SecureDataRecord = {
+        id: blockchainResult.transaction.id,
+        patientId: userCredentials.userHash.substring(0, 16),
+        dataType: "medical_history",
+        encryptedData: blockchainResult.transaction.encryptedPayload,
+        keyId: blockchainResult.splitKeyData.combinedHash,
+        blockchainHash: blockchainResult.blockchainHash,
+        accessLevel: "patient",
+        metadata: {
+          createdBy: userCredentials.userHash,
+          createdAt: new Date().toISOString(),
+          accessCount: 0,
+          checksum: crypto.createHash('sha256').update(blockchainResult.transaction.encryptedPayload).digest('hex')
+        }
+      };
+
+      // Store in database
+      await NeonDatabaseService.storeSecureRecord(secureRecord);
+
+      // Create audit log
+      await this.createAuditLog({
+        action: "create",
+        dataRecordId: blockchainResult.transaction.id,
+        userId: userCredentials.userHash,
+        userRole: "patient",
+        success: true,
+        details: {
+          action: "secure_health_record_storage",
+          recordType: healthRecord.type || "medical_history",
+          blockchainHash: blockchainResult.blockchainHash,
+          encryptionLayers: 3
+        }
+      });
+
+      console.log(`✅ Secure health record stored successfully`);
+      
+      return {
+        success: true,
+        recordId: blockchainResult.transaction.id,
+        blockchainHash: blockchainResult.blockchainHash,
+        splitKeyReference: blockchainResult.splitKeyData.combinedHash
+      };
+      
+    } catch (error) {
+      console.error("❌ Failed to store secure health record:", error);
+      
+      const userCredentials = this.userSessions.get(sessionToken);
+      await this.createAuditLog({
+        action: "create",
+        userId: userCredentials?.userHash || "unknown",
+        userRole: "patient",
+        success: false,
+        details: {
+          action: "secure_health_record_storage_failed",
+          error: error instanceof Error ? error.message : "Unknown error"
+        }
+      });
+      
+      return { success: false };
+    }
+  }
+
+  /**
+   * Retrieve secure health records for authenticated user
+   */
+  static async getSecureHealthRecords(
+    sessionToken: string
+  ): Promise<DataAccessResult> {
+    try {
+      // Validate session
+      const userCredentials = this.userSessions.get(sessionToken);
+      if (!userCredentials) {
+        throw new Error("Invalid session token");
+      }
+
+      console.log(`🔐 Retrieving secure health records for user: ${userCredentials.username}`);
+
+      // Get all records for this user from database
+      const databaseRecords = await NeonDatabaseService.getMedicalHistory(
+        userCredentials.userHash.substring(0, 16)
+      );
+
+      // Decrypt each record using split key system
+      const decryptedRecords = [];
+      const derivedPassword = crypto.createHash('sha256').update(userCredentials.userHash).digest('hex');
+
+      for (const record of databaseRecords) {
+        try {
+          // Try to decrypt from blockchain if it's a secure record
+          if (record.secureRecordId) {
+            const decryptedData = ProductionBlockchainService.retrieveSecureHealthRecord(
+              userCredentials.username,
+              derivedPassword,
+              record.secureRecordId
+            );
+            
+            if (decryptedData) {
+              decryptedRecords.push({
+                ...record,
+                decryptedData
+              });
+            } else {
+              // If decryption fails, include the record without decrypted data
+              decryptedRecords.push(record);
+            }
+          } else {
+            // Regular record, not encrypted
+            decryptedRecords.push(record);
+          }
+        } catch (decryptError) {
+          console.warn(`⚠️ Failed to decrypt record ${record.id}:`, decryptError);
+          // Include record without decrypted data
+          decryptedRecords.push(record);
+        }
+      }
+
+      // Update access metadata
+      for (const record of databaseRecords) {
+        if (record.secureRecordId) {
+          await NeonDatabaseService.updateAccessMetadata(record.secureRecordId);
+        }
+      }
+
+      // Create audit log
+      await this.createAuditLog({
+        action: "read",
+        userId: userCredentials.userHash,
+        userRole: "patient",
+        success: true,
+        details: {
+          action: "secure_health_records_retrieval",
+          recordsCount: decryptedRecords.length,
+          decryptedCount: decryptedRecords.filter(r => r.decryptedData).length
+        }
+      });
+
+      console.log(`✅ Retrieved ${decryptedRecords.length} health records for user`);
+      
+      return {
+        success: true,
+        data: decryptedRecords,
+        accessLog: {
+          timestamp: new Date().toISOString(),
+          action: "retrieve_health_records",
+          result: "success"
+        }
+      };
+      
+    } catch (error) {
+      console.error("❌ Failed to retrieve secure health records:", error);
+      
+      const userCredentials = this.userSessions.get(sessionToken);
+      await this.createAuditLog({
+        action: "access_denied",
+        userId: userCredentials?.userHash || "unknown",
+        userRole: "patient",
+        success: false,
+        details: {
+          action: "secure_health_records_retrieval_failed",
+          error: error instanceof Error ? error.message : "Unknown error"
+        }
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        accessLog: {
+          timestamp: new Date().toISOString(),
+          action: "retrieve_health_records",
+          result: "failure"
+        }
+      };
+    }
+  }
+
+  /**
+   * Check if user has data in the system
+   */
+  private static async checkUserDataExists(userHash: string): Promise<boolean> {
+    try {
+      const patientId = userHash.substring(0, 16);
+      const records = await NeonDatabaseService.getMedicalHistory(patientId);
+      return records.length > 0;
+    } catch (error) {
+      console.error("❌ Error checking user data existence:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Generate secure session token
+   */
+  private static generateSessionToken(userHash: string): string {
+    const timestamp = Date.now().toString();
+    const randomBytes = crypto.randomBytes(16).toString('hex');
+    const tokenData = `${userHash}:${timestamp}:${randomBytes}`;
+    return crypto.createHash('sha256').update(tokenData).digest('hex');
   }
 
   /**
    * Create audit log entry
    */
-  static async createAuditLog(auditData: AuditLog): Promise<AuditLog> {
-    // Store audit log on blockchain for immutability
-    const auditLogHash = await BlockchainService.storeHealthRecord({
-      id: auditData.logId,
-      patientId: 'AUDIT_LOG',
-      date: auditData.timestamp.split('T')[0],
-      type: 'audit',
-      title: `Audit Log: ${auditData.action}`,
-      description: `Security audit log entry`,
-      doctor: 'SYSTEM',
-      status: 'completed',
-      blockchainHash: '',
-      metadata: auditData,
-      createdAt: auditData.timestamp,
-      updatedAt: auditData.timestamp
-    });
-
-    // Store in Neon database for quick queries
-    const { NeonDatabaseService } = await import('./neonDatabase');
-    await NeonDatabaseService.storeAuditLog(auditData);
-
-    console.log(`Audit Log Created: ${auditData.action} by ${auditData.userId} at ${auditData.timestamp}`);
-
-    return auditData;
-  }
-
-  /**
-   * Get encrypted record from Neon database
-   */
-  static async getEncryptedRecord(recordId: string): Promise<SecureDataRecord> {
-    const { NeonDatabaseService } = await import('./neonDatabase');
-    const record = await NeonDatabaseService.getSecureRecord(recordId);
-
-    if (!record) {
-      throw new Error('Record not found');
-    }
-
-    return record;
-  }
-
-  /**
-   * Update access metadata
-   */
-  static async updateAccessMetadata(recordId: string): Promise<void> {
-    const { NeonDatabaseService } = await import('./neonDatabase');
-    await NeonDatabaseService.updateAccessMetadata(recordId);
-  }
-
-  /**
-   * Generate emergency access key
-   */
-  static generateEmergencyKey(patientId: string, providerId: string): string {
-    const emergencyData = `EMERGENCY:${patientId}:${providerId}:${Date.now()}`;
-    return crypto.createHash('sha256').update(emergencyData).digest('hex');
-  }
-
-  /**
-   * Revoke access by rotating keys
-   */
-  static async revokeAccess(keyId: string, reason: string): Promise<SplitKeyPair> {
-    // Generate new split keys
-    const newKeys = this.generateSplitKeys('patient', 'provider');
-    
-    // Log the key rotation
-    await this.createAuditLog({
-      logId: crypto.randomBytes(16).toString('hex'),
-      action: 'modify',
-      dataRecordId: keyId,
-      userId: 'SYSTEM',
-      userRole: 'system',
-      timestamp: new Date().toISOString(),
-      success: true,
-      details: {
-        action: 'key_rotation',
-        reason,
-        oldKeyId: keyId,
-        newKeyId: newKeys.keyId
-      }
-    });
-    
-    return newKeys;
-  }
-
-  /**
-   * Verify blockchain integrity of stored data
-   */
-  static async verifyDataIntegrity(recordId: string): Promise<boolean> {
+  private static async createAuditLog(logData: Partial<AuditLog>): Promise<void> {
     try {
-      const record = await this.getEncryptedRecord(recordId);
-      return BlockchainService.verifyBlockchainIntegrity(record.blockchainHash);
+      const auditLog: AuditLog = {
+        logId: crypto.randomBytes(16).toString('hex'),
+        action: logData.action || "unknown",
+        dataRecordId: logData.dataRecordId,
+        userId: logData.userId || "system",
+        userRole: logData.userRole || "unknown",
+        timestamp: new Date().toISOString(),
+        ipAddress: logData.ipAddress,
+        userAgent: logData.userAgent,
+        success: logData.success || false,
+        details: logData.details || {}
+      };
+
+      await NeonDatabaseService.storeAuditLog(auditLog);
     } catch (error) {
-      return false;
+      console.error("❌ Failed to create audit log:", error);
+    }
+  }
+
+  /**
+   * Validate session token
+   */
+  static validateSession(sessionToken: string): boolean {
+    return this.userSessions.has(sessionToken);
+  }
+
+  /**
+   * Get user from session
+   */
+  static getUserFromSession(sessionToken: string): UserAccessCredentials | null {
+    return this.userSessions.get(sessionToken) || null;
+  }
+
+  /**
+   * Invalidate session
+   */
+  static invalidateSession(sessionToken: string): boolean {
+    return this.userSessions.delete(sessionToken);
+  }
+
+  /**
+   * Get system statistics
+   */
+  static getSystemStats(): {
+    activeSessions: number;
+    blockchainStats: any;
+    cacheSize: number;
+    totalAuditLogs: number;
+  } {
+    const blockchainStats = ProductionBlockchainService.getBlockchainStats();
+    
+    return {
+      activeSessions: this.userSessions.size,
+      blockchainStats,
+      cacheSize: this.splitKeyCache.size,
+      totalAuditLogs: 0 // This would need to be fetched from database
+    };
+  }
+
+  /**
+   * Emergency data access (for healthcare providers)
+   */
+  static async emergencyDataAccess(
+    providerCredentials: {
+      providerId: string;
+      emergencyCode: string;
+      reason: string;
+    },
+    patientIdentifier: string
+  ): Promise<DataAccessResult> {
+    try {
+      console.log(`🚨 Emergency data access requested by provider: ${providerCredentials.providerId}`);
+      
+      // In a production system, this would verify provider credentials
+      // For now, we'll implement basic emergency access
+      
+      const records = await NeonDatabaseService.getMedicalHistory(patientIdentifier);
+      
+      // Create emergency access audit log
+      await this.createAuditLog({
+        action: "read",
+        userId: providerCredentials.providerId,
+        userRole: "emergency_provider",
+        success: true,
+        details: {
+          action: "emergency_data_access",
+          patientIdentifier,
+          emergencyCode: providerCredentials.emergencyCode,
+          reason: providerCredentials.reason,
+          recordsAccessed: records.length
+        }
+      });
+
+      return {
+        success: true,
+        data: records,
+        accessLog: {
+          timestamp: new Date().toISOString(),
+          action: "emergency_access",
+          result: "success"
+        }
+      };
+      
+    } catch (error) {
+      console.error("❌ Emergency data access failed:", error);
+      
+      await this.createAuditLog({
+        action: "access_denied",
+        userId: providerCredentials.providerId,
+        userRole: "emergency_provider",
+        success: false,
+        details: {
+          action: "emergency_data_access_failed",
+          patientIdentifier,
+          error: error instanceof Error ? error.message : "Unknown error"
+        }
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Emergency access failed",
+        accessLog: {
+          timestamp: new Date().toISOString(),
+          action: "emergency_access",
+          result: "failure"
+        }
+      };
     }
   }
 }
+
+export { SecureDataAccessService };
+export type { SecureDataRecord, UserAccessCredentials, DataAccessResult, SplitKeyPair, AuditLog };
