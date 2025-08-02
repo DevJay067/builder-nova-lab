@@ -146,53 +146,7 @@ export function createServer() {
     });
   });
 
-  // Test authentication endpoint
-  app.post("/api/test/auth", async (req, res) => {
-    try {
-      console.log("🧪 Testing authentication with:", req.body);
-      const { username, password } = req.body;
 
-      if (!username || !password) {
-        return res.status(400).json({
-          success: false,
-          error: "Username and password required for test"
-        });
-      }
-
-      // Create a test user and try to authenticate
-      const { UserAuthenticationService } = await import("./services/userAuthentication");
-
-      // Try to register first
-      const registerResult = await UserAuthenticationService.registerUser(
-        username,
-        password,
-        "test@example.com",
-        { firstName: "Test", lastName: "User" }
-      );
-
-      console.log("🧪 Registration result:", registerResult);
-
-      // Then try to authenticate
-      const authResult = await UserAuthenticationService.authenticateUser(username, password);
-
-      console.log("🧪 Authentication result:", authResult);
-
-      res.json({
-        success: true,
-        registration: registerResult,
-        authentication: authResult,
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (error) {
-      console.error("🧪 Auth test error:", error);
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
 
   app.get("/api/demo", handleDemo);
 
