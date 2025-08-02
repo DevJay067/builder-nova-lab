@@ -50,7 +50,7 @@ export class DatabaseInitService {
 
       // Sample medical history record
       const sampleMedicalRecord = {
-        id: 'med-record-001',
+        id: `med-record-${Date.now()}`,
         patientId: 'default-patient',
         recordType: 'checkup',
         title: 'Annual Physical Examination',
