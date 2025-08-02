@@ -53,12 +53,30 @@ export function createServer() {
     try {
       console.log("🚀 Attempting to initialize secure healthcare system...");
 
-      // Try to initialize user authentication system first
+      // Initialize production blockchain system
+      try {
+        const { ProductionBlockchainService } = await import("./services/productionBlockchain");
+        ProductionBlockchainService.initializeBlockchain();
+        console.log("✅ Production blockchain system initialized successfully");
+      } catch (blockchainError) {
+        console.log("⚠️ Production blockchain initialization failed, continuing...");
+      }
+
+      // Initialize secure data access system
+      try {
+        const { SecureDataAccessService } = await import("./services/secureDataAccess");
+        await SecureDataAccessService.initialize();
+        console.log("✅ Secure data access system initialized successfully");
+      } catch (secureError) {
+        console.log("⚠️ Secure data access system initialization failed, continuing...");
+      }
+
+      // Try to initialize user authentication system with production features
       try {
         const { UserAuthenticationService } = await import(
           "./services/userAuthentication"
         );
-        await UserAuthenticationService.initializeUserTables();
+        await UserAuthenticationService.initialize();
         console.log("✅ User authentication system initialized successfully");
       } catch (authError) {
         console.log(
