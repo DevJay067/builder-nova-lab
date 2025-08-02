@@ -318,8 +318,12 @@ class UserAuthenticationService {
         splitKeySystemActive: false
       };
 
-      // Store user
-      this.users.set(username, user);
+      // Store user in database if available, otherwise in memory
+      if (this.useDatabase) {
+        await this.storeUserInDatabase(user);
+      } else {
+        this.users.set(username, user);
+      }
 
       // Activate secure data access system for the user
       const secureAccountResult = await SecureDataAccessService.createSecureUserAccount(
