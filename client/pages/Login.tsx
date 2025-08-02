@@ -137,8 +137,8 @@ export default function Login() {
 
         setMessage({
           type: "success",
-          text: result.user.secureSystemActivated 
-            ? "Login successful! Secure blockchain system activated." 
+          text: result.user.secureSystemActivated
+            ? "Login successful! Secure blockchain system activated."
             : "Login successful! Setting up secure system...",
         });
 
@@ -146,7 +146,16 @@ export default function Login() {
           navigate("/");
         }, 1500);
       } else {
-        setMessage({ type: "error", text: result.message || "Login failed" });
+        // Provide more helpful error messages
+        let errorMessage = result.message || "Login failed";
+
+        if (response.status === 401) {
+          errorMessage = "Invalid username or password. If you created an account yesterday, you may need to register again due to system updates.";
+        } else if (response.status === 500) {
+          errorMessage = "Server error. Please try again in a moment.";
+        }
+
+        setMessage({ type: "error", text: errorMessage });
       }
     } catch (error) {
       console.error("Login error:", error);
