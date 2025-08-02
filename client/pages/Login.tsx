@@ -36,14 +36,20 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [isInitialized, setIsInitialized] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
-  // Page load animation
+  // Page load animation and initialization
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Small delay to ensure page is properly initialized
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Login form state
