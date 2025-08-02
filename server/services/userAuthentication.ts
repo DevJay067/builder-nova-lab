@@ -88,10 +88,13 @@ class UserAuthenticationService {
       await DatabaseHealthService.withFallback(
         async () => {
           await NeonDatabaseService.initializeDatabase();
+          await this.createUserTables();
+          this.useDatabase = true;
           console.log("✅ User authentication tables initialized successfully");
         },
         () => {
           console.warn("⚠️ Using fallback database initialization");
+          this.useDatabase = false;
           SimpleDatabaseInit.createMedicalHistoryTable().catch(() => {
             console.warn("⚠️ Fallback initialization also failed, using in-memory only");
           });
