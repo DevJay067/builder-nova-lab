@@ -192,5 +192,10 @@ export function createServer() {
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
 
+  // Personalized Medical Context API Routes
+  app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
+  app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
+  app.get("/api/medical-context/insights", getPersonalizedInsights);
+
   return app;
 }
