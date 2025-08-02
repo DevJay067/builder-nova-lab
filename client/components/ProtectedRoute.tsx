@@ -9,11 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Shield, 
-  Lock, 
-  LogIn, 
-  Loader2, 
+import {
+  Shield,
+  Lock,
+  LogIn,
+  Loader2,
   AlertTriangle,
   CheckCircle,
   ArrowRight,
@@ -26,11 +26,11 @@ interface ProtectedRouteProps {
   fallbackMessage?: string;
 }
 
-export default function ProtectedRoute({ 
-  children, 
-  requireAuth = true, 
+export default function ProtectedRoute({
+  children,
+  requireAuth = true,
   redirectTo = "/login",
-  fallbackMessage 
+  fallbackMessage,
 }: ProtectedRouteProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,8 +47,12 @@ export default function ProtectedRoute({
       setAuthError(null);
 
       // Check for session token
-      const sessionToken = localStorage.getItem("sessionToken") || 
-                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
 
       if (!sessionToken) {
         setIsAuthenticated(false);
@@ -59,7 +63,7 @@ export default function ProtectedRoute({
       // Verify session with server
       const response = await fetch("/api/auth/verify", {
         headers: {
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
@@ -74,7 +78,8 @@ export default function ProtectedRoute({
           // Clear invalid session
           localStorage.removeItem("sessionToken");
           localStorage.removeItem("healthchain_user");
-          document.cookie = "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie =
+            "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
       } else {
         setIsAuthenticated(false);
@@ -98,8 +103,12 @@ export default function ProtectedRoute({
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-foreground">Authenticating...</h3>
-            <p className="text-sm text-muted-foreground">Verifying your secure session</p>
+            <h3 className="text-lg font-semibold text-foreground">
+              Authenticating...
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Verifying your secure session
+            </p>
           </div>
         </div>
       </div>
@@ -117,7 +126,10 @@ export default function ProtectedRoute({
   }
 
   // Store the attempted location for post-login redirect
-  localStorage.setItem("redirectAfterLogin", location.pathname + location.search);
+  localStorage.setItem(
+    "redirectAfterLogin",
+    location.pathname + location.search,
+  );
 
   // Authentication required but user is not authenticated
   return (
@@ -132,7 +144,7 @@ export default function ProtectedRoute({
             {fallbackMessage || "You need to be logged in to access this page."}
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {authError && (
             <Alert className="border-red-200 bg-red-50">
@@ -144,25 +156,18 @@ export default function ProtectedRoute({
           )}
 
           <div className="space-y-3">
-            <Button 
-              asChild 
-              className="w-full btn-smooth shadow-colored"
-            >
-              <a href={`${redirectTo}?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
+            <Button asChild className="w-full btn-smooth shadow-colored">
+              <a
+                href={`${redirectTo}?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+              >
                 <LogIn className="w-4 h-4 mr-2" />
                 Sign In to Continue
                 <ArrowRight className="w-4 h-4 ml-2" />
               </a>
             </Button>
 
-            <Button 
-              variant="outline" 
-              asChild 
-              className="w-full btn-smooth"
-            >
-              <a href="/">
-                Return to Home
-              </a>
+            <Button variant="outline" asChild className="w-full btn-smooth">
+              <a href="/">Return to Home</a>
             </Button>
           </div>
 
@@ -181,9 +186,10 @@ export default function ProtectedRoute({
                 <span>Encrypted</span>
               </div>
             </div>
-            
+
             <p className="text-xs text-muted-foreground">
-              Your health data is protected with blockchain security and end-to-end encryption.
+              Your health data is protected with blockchain security and
+              end-to-end encryption.
             </p>
           </div>
         </CardContent>
@@ -193,12 +199,12 @@ export default function ProtectedRoute({
 }
 
 // Redirect component for authenticated users
-export function AuthenticatedRedirect({ 
-  to = "/", 
-  children 
-}: { 
-  to?: string; 
-  children?: React.ReactNode; 
+export function AuthenticatedRedirect({
+  to = "/",
+  children,
+}: {
+  to?: string;
+  children?: React.ReactNode;
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -213,11 +219,11 @@ export function AuthenticatedRedirect({
       if (sessionToken) {
         const response = await fetch("/api/auth/verify", {
           headers: {
-            "Authorization": `Bearer ${sessionToken}`,
+            Authorization: `Bearer ${sessionToken}`,
             "x-session-token": sessionToken,
           },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setIsAuthenticated(data.success);

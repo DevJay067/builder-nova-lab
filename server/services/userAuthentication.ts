@@ -149,7 +149,9 @@ class UserAuthenticationService {
   /**
    * Get user from database
    */
-  private static async getUserFromDatabase(username: string): Promise<User | null> {
+  private static async getUserFromDatabase(
+    username: string,
+  ): Promise<User | null> {
     try {
       const { neon } = await import("@neondatabase/serverless");
       const sql = neon(process.env.DATABASE_URL || "");
@@ -220,7 +222,9 @@ class UserAuthenticationService {
       // Check database health first
       const healthCheck = await DatabaseHealthService.checkHealth();
       if (!healthCheck.isHealthy) {
-        console.warn("⚠️ Database health check failed, continuing with in-memory storage");
+        console.warn(
+          "⚠️ Database health check failed, continuing with in-memory storage",
+        );
       }
 
       // Initialize secure data access system
@@ -238,14 +242,15 @@ class UserAuthenticationService {
           console.warn("⚠️ Using fallback database initialization");
           this.useDatabase = false;
           SimpleDatabaseInit.createMedicalHistoryTable().catch(() => {
-            console.warn("⚠️ Fallback initialization also failed, using in-memory only");
+            console.warn(
+              "⚠️ Fallback initialization also failed, using in-memory only",
+            );
           });
-        }
+        },
       );
 
       this.isInitialized = true;
       console.log("✅ User authentication system initialized successfully");
-
     } catch (error) {
       console.error("❌ Failed to initialize authentication system:", error);
       // Don't throw error, allow system to continue with in-memory storage
@@ -265,7 +270,7 @@ class UserAuthenticationService {
       firstName?: string;
       lastName?: string;
       dateOfBirth?: string;
-    }
+    },
   ): Promise<AuthResult> {
     try {
       console.log(`👤 Registering new user: ${username}`);
@@ -274,28 +279,29 @@ class UserAuthenticationService {
       if (!username || !password) {
         return {
           success: false,
-          message: "Username and password are required"
+          message: "Username and password are required",
         };
       }
 
       if (username.length < 3 || username.length > 30) {
         return {
           success: false,
-          message: "Username must be 3-30 characters"
+          message: "Username must be 3-30 characters",
         };
       }
 
       if (!/^[a-zA-Z0-9_]+$/.test(username)) {
         return {
           success: false,
-          message: "Username must contain only letters, numbers, and underscores"
+          message:
+            "Username must contain only letters, numbers, and underscores",
         };
       }
 
       if (password.length < 6) {
         return {
           success: false,
-          message: "Password must be at least 6 characters"
+          message: "Password must be at least 6 characters",
         };
       }
 
@@ -311,7 +317,7 @@ class UserAuthenticationService {
       if (existingUser) {
         return {
           success: false,
-          message: "Username already exists"
+          message: "Username already exists",
         };
       }
 
@@ -320,11 +326,14 @@ class UserAuthenticationService {
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
       // Generate user hash for the blockchain system
-      const userHash = ProductionBlockchainService.generateUserHash(username, password);
+      const userHash = ProductionBlockchainService.generateUserHash(
+        username,
+        password,
+      );
 
       // Create user record
       const user: User = {
-        id: crypto.randomBytes(16).toString('hex'),
+        id: crypto.randomBytes(16).toString("hex"),
         username,
         passwordHash,
         userHash,
@@ -332,7 +341,7 @@ class UserAuthenticationService {
         profile,
         createdAt: new Date().toISOString(),
         secureSystemActivated: false,
-        splitKeySystemActive: false
+        splitKeySystemActive: false,
       };
 
       // Store user in database if available, otherwise in memory
@@ -343,11 +352,12 @@ class UserAuthenticationService {
       }
 
       // Activate secure data access system for the user
-      const secureAccountResult = await SecureDataAccessService.createSecureUserAccount(
-        username,
-        password,
-        profile || {}
-      );
+      const secureAccountResult =
+        await SecureDataAccessService.createSecureUserAccount(
+          username,
+          password,
+          profile || {},
+        );
 
       // Update user with secure system activation
       user.secureSystemActivated = secureAccountResult.dataAccessActivated;
@@ -356,7 +366,9 @@ class UserAuthenticationService {
       // Create data access record for split key system
       await this.createDataAccessRecord(user.id, userHash, username, password);
 
-      console.log(`✅ User ${username} registered successfully with secure system activated`);
+      console.log(
+        `✅ User ${username} registered successfully with secure system activated`,
+      );
 
       return {
         success: true,
@@ -365,21 +377,21 @@ class UserAuthenticationService {
           username: user.username,
           userHash: user.userHash,
           sessionToken: secureAccountResult.sessionToken,
-          secureSystemActivated: user.secureSystemActivated
+          secureSystemActivated: user.secureSystemActivated,
         },
-        message: "User registered successfully with secure data access activated",
+        message:
+          "User registered successfully with secure data access activated",
         securityFeatures: {
           splitKeySystem: true,
           blockchainStorage: true,
-          encryptionLayers: 3
-        }
+          encryptionLayers: 3,
+        },
       };
-
     } catch (error) {
       console.error("❌ Failed to register user:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Registration failed"
+        message: error instanceof Error ? error.message : "Registration failed",
       };
     }
   }
@@ -387,7 +399,10 @@ class UserAuthenticationService {
   /**
    * Authenticate user and establish secure session
    */
-  static async authenticateUser(username: string, password: string): Promise<AuthResult> {
+  static async authenticateUser(
+    username: string,
+    password: string,
+  ): Promise<AuthResult> {
     try {
       console.log(`🔐 Authenticating user: ${username}`);
 
@@ -405,7 +420,7 @@ class UserAuthenticationService {
       if (!user) {
         return {
           success: false,
-          message: "Invalid username or password"
+          message: "Invalid username or password",
         };
       }
 
@@ -414,17 +429,20 @@ class UserAuthenticationService {
       if (!passwordValid) {
         return {
           success: false,
-          message: "Invalid username or password"
+          message: "Invalid username or password",
         };
       }
 
       // Authenticate with secure data access system
-      const secureAuthResult = await SecureDataAccessService.authenticateUser(username, password);
-      
+      const secureAuthResult = await SecureDataAccessService.authenticateUser(
+        username,
+        password,
+      );
+
       if (!secureAuthResult.authenticated) {
         return {
           success: false,
-          message: "Secure authentication failed"
+          message: "Secure authentication failed",
         };
       }
 
@@ -445,21 +463,20 @@ class UserAuthenticationService {
           username: user.username,
           userHash: user.userHash,
           sessionToken: secureAuthResult.sessionToken,
-          secureSystemActivated: user.secureSystemActivated
+          secureSystemActivated: user.secureSystemActivated,
         },
         message: "Authentication successful",
         securityFeatures: {
           splitKeySystem: secureAuthResult.splitKeySystemActive || false,
           blockchainStorage: true,
-          encryptionLayers: 3
-        }
+          encryptionLayers: 3,
+        },
       };
-
     } catch (error) {
       console.error("❌ Authentication failed:", error);
       return {
         success: false,
-        message: "Authentication failed"
+        message: "Authentication failed",
       };
     }
   }
@@ -473,14 +490,14 @@ class UserAuthenticationService {
       type: string;
       data: any;
       timestamp?: string;
-    }
+    },
   ): Promise<{ success: boolean; recordId?: string; message?: string }> {
     try {
       // Validate session
       if (!SecureDataAccessService.validateSession(sessionToken)) {
         return {
           success: false,
-          message: "Invalid session token"
+          message: "Invalid session token",
         };
       }
 
@@ -490,13 +507,13 @@ class UserAuthenticationService {
       const preparedRecord = {
         ...healthRecord,
         timestamp: healthRecord.timestamp || new Date().toISOString(),
-        id: crypto.randomBytes(16).toString('hex')
+        id: crypto.randomBytes(16).toString("hex"),
       };
 
       // Store using secure data access system
       const result = await SecureDataAccessService.storeSecureHealthRecord(
         sessionToken,
-        preparedRecord
+        preparedRecord,
       );
 
       if (result.success) {
@@ -509,40 +526,43 @@ class UserAuthenticationService {
             recordType: preparedRecord.type,
             title: `${preparedRecord.type} - ${new Date().toLocaleDateString()}`,
             description: JSON.stringify(preparedRecord.data),
-            date: preparedRecord.timestamp.split('T')[0],
+            date: preparedRecord.timestamp.split("T")[0],
             metadata: {
               secureStorage: true,
               encryptionLayers: 3,
-              splitKeySystem: true
+              splitKeySystem: true,
             },
-            secureRecordId: result.recordId
+            secureRecordId: result.recordId,
           };
 
           try {
             await NeonDatabaseService.storeMedicalHistory(medicalRecord);
           } catch (dbError) {
-            console.warn("⚠️ Failed to store in main database, record stored securely in blockchain");
+            console.warn(
+              "⚠️ Failed to store in main database, record stored securely in blockchain",
+            );
           }
         }
 
-        console.log("✅ Health record stored successfully with split key system");
+        console.log(
+          "✅ Health record stored successfully with split key system",
+        );
         return {
           success: true,
           recordId: result.recordId,
-          message: "Health record stored securely"
+          message: "Health record stored securely",
         };
       } else {
         return {
           success: false,
-          message: "Failed to store health record"
+          message: "Failed to store health record",
         };
       }
-
     } catch (error) {
       console.error("❌ Failed to store health record:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Storage failed"
+        message: error instanceof Error ? error.message : "Storage failed",
       };
     }
   }
@@ -560,34 +580,34 @@ class UserAuthenticationService {
       if (!SecureDataAccessService.validateSession(sessionToken)) {
         return {
           success: false,
-          message: "Invalid session token"
+          message: "Invalid session token",
         };
       }
 
       console.log("🔐 Retrieving health records with secure access control");
 
       // Retrieve using secure data access system
-      const result = await SecureDataAccessService.getSecureHealthRecords(sessionToken);
+      const result =
+        await SecureDataAccessService.getSecureHealthRecords(sessionToken);
 
       if (result.success) {
         console.log(`✅ Retrieved ${result.data?.length || 0} health records`);
         return {
           success: true,
           records: result.data,
-          message: "Health records retrieved successfully"
+          message: "Health records retrieved successfully",
         };
       } else {
         return {
           success: false,
-          message: result.error || "Failed to retrieve health records"
+          message: result.error || "Failed to retrieve health records",
         };
       }
-
     } catch (error) {
       console.error("❌ Failed to retrieve health records:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Retrieval failed"
+        message: error instanceof Error ? error.message : "Retrieval failed",
       };
     }
   }
@@ -599,21 +619,24 @@ class UserAuthenticationService {
     userId: string,
     userHash: string,
     username: string,
-    password: string
+    password: string,
   ): Promise<void> {
     try {
       // Generate a sample data hash for initialization
       const sampleData = {
         userId,
         accountCreated: new Date().toISOString(),
-        initialSetup: true
+        initialSetup: true,
       };
-      
+
       const dataHash = ProductionBlockchainService.generateDataHash(sampleData);
-      
+
       // Create split key system
-      const splitKeyData = ProductionBlockchainService.createSplitKeySystem(userHash, dataHash);
-      
+      const splitKeyData = ProductionBlockchainService.createSplitKeySystem(
+        userHash,
+        dataHash,
+      );
+
       const dataAccessRecord: DataAccessRecord = {
         userId,
         userHash,
@@ -623,12 +646,11 @@ class UserAuthenticationService {
         splitKeyPart2: splitKeyData.splitKeyPairs.part2,
         checksum: splitKeyData.splitKeyPairs.checksum,
         createdAt: new Date().toISOString(),
-        accessCount: 0
+        accessCount: 0,
       };
 
       this.dataAccessRecords.set(userId, dataAccessRecord);
       console.log(`✅ Data access record created for user: ${username}`);
-      
     } catch (error) {
       console.error("❌ Failed to create data access record:", error);
     }
@@ -643,10 +665,12 @@ class UserAuthenticationService {
       const user = SecureDataAccessService.getUserFromSession(sessionToken);
       return {
         valid: true,
-        user: user ? {
-          username: user.username,
-          userHash: user.userHash
-        } : undefined
+        user: user
+          ? {
+              username: user.username,
+              userHash: user.userHash,
+            }
+          : undefined,
       };
     }
     return { valid: false };
@@ -669,15 +693,17 @@ class UserAuthenticationService {
     dataAccessRecords: number;
     systemStats: any;
   } {
-    const secureUsers = Array.from(this.users.values()).filter(u => u.secureSystemActivated).length;
+    const secureUsers = Array.from(this.users.values()).filter(
+      (u) => u.secureSystemActivated,
+    ).length;
     const systemStats = SecureDataAccessService.getSystemStats();
-    
+
     return {
       totalUsers: this.users.size,
       activeUsers: systemStats.activeSessions,
       secureSystemUsers: secureUsers,
       dataAccessRecords: this.dataAccessRecords.size,
-      systemStats
+      systemStats,
     };
   }
 

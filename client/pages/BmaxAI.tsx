@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Brain, 
-  ArrowLeft, 
-  Settings, 
-  Sparkles, 
-  Clock, 
-  Shield, 
+import {
+  Brain,
+  ArrowLeft,
+  Settings,
+  Sparkles,
+  Clock,
+  Shield,
   Activity,
   AlertTriangle,
   User,
@@ -78,21 +78,24 @@ interface HealthInsight {
 }
 
 export default function BmaxAI() {
-  const [personalizedContext, setPersonalizedContext] = useState<PersonalizedContext | null>(null);
+  const [personalizedContext, setPersonalizedContext] =
+    useState<PersonalizedContext | null>(null);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showMedicalSummary, setShowMedicalSummary] = useState(false);
-  const [aiStatus, setAiStatus] = useState<'connecting' | 'ready' | 'active'>('connecting');
+  const [aiStatus, setAiStatus] = useState<"connecting" | "ready" | "active">(
+    "connecting",
+  );
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     checkAuthenticationAndLoadContext();
-    
+
     // Simulate AI status progression
     const statusTimer = setTimeout(() => {
-      setAiStatus('ready');
-      setTimeout(() => setAiStatus('active'), 1000);
+      setAiStatus("ready");
+      setTimeout(() => setAiStatus("active"), 1000);
     }, 2000);
 
     return () => clearTimeout(statusTimer);
@@ -101,9 +104,13 @@ export default function BmaxAI() {
   const checkAuthenticationAndLoadContext = async () => {
     try {
       setIsLoadingContext(true);
-      
-      const sessionToken = localStorage.getItem("sessionToken") || 
-                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
 
       if (!sessionToken) {
         setIsAuthenticated(false);
@@ -113,7 +120,7 @@ export default function BmaxAI() {
 
       const authResponse = await fetch("/api/auth/verify", {
         headers: {
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
@@ -127,7 +134,6 @@ export default function BmaxAI() {
       setIsAuthenticated(true);
       await loadPersonalizedContext(sessionToken);
       await loadHealthInsights(sessionToken);
-
     } catch (error) {
       console.error("Error checking authentication:", error);
       setIsAuthenticated(false);
@@ -140,7 +146,7 @@ export default function BmaxAI() {
     try {
       const response = await fetch("/api/medical-context/personalized", {
         headers: {
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
@@ -158,7 +164,7 @@ export default function BmaxAI() {
     try {
       const response = await fetch("/api/medical-context/insights", {
         headers: {
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
@@ -184,14 +190,17 @@ export default function BmaxAI() {
             <CardTitle className="text-sm font-medium flex items-center">
               <User className="h-4 w-4 mr-2 text-primary" />
               Your Medical Profile
-              <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-primary/20">
+              <Badge
+                variant="secondary"
+                className="ml-2 bg-primary/10 text-primary border-primary/20"
+              >
                 <Star className="h-3 w-3 mr-1" />
                 Personalized
               </Badge>
             </CardTitle>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setShowMedicalSummary(!showMedicalSummary)}
               className="btn-smooth text-primary hover:bg-primary/10"
             >
@@ -203,36 +212,60 @@ export default function BmaxAI() {
           <CardContent className="pt-0 space-y-4 fade-in-up">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="space-y-1">
-                <span className="font-medium text-muted-foreground">Conditions:</span>
-                <div className="text-foreground font-semibold">{personalizedContext.summary.totalConditions}</div>
+                <span className="font-medium text-muted-foreground">
+                  Conditions:
+                </span>
+                <div className="text-foreground font-semibold">
+                  {personalizedContext.summary.totalConditions}
+                </div>
               </div>
               <div className="space-y-1">
-                <span className="font-medium text-muted-foreground">Medications:</span>
-                <div className="text-foreground font-semibold">{personalizedContext.summary.currentMedications}</div>
+                <span className="font-medium text-muted-foreground">
+                  Medications:
+                </span>
+                <div className="text-foreground font-semibold">
+                  {personalizedContext.summary.currentMedications}
+                </div>
               </div>
               <div className="space-y-1">
-                <span className="font-medium text-muted-foreground">Allergies:</span>
-                <div className="text-foreground font-semibold">{personalizedContext.summary.knownAllergies}</div>
+                <span className="font-medium text-muted-foreground">
+                  Allergies:
+                </span>
+                <div className="text-foreground font-semibold">
+                  {personalizedContext.summary.knownAllergies}
+                </div>
               </div>
               <div className="space-y-1">
-                <span className="font-medium text-muted-foreground">Recent Symptoms:</span>
-                <div className="text-foreground font-semibold">{personalizedContext.summary.recentSymptoms}</div>
+                <span className="font-medium text-muted-foreground">
+                  Recent Symptoms:
+                </span>
+                <div className="text-foreground font-semibold">
+                  {personalizedContext.summary.recentSymptoms}
+                </div>
               </div>
             </div>
 
             {personalizedContext.medicalConditions.length > 0 && (
               <div className="fade-in-up fade-in-delay-1">
-                <span className="font-medium text-muted-foreground text-sm">Key Conditions:</span>
+                <span className="font-medium text-muted-foreground text-sm">
+                  Key Conditions:
+                </span>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {personalizedContext.medicalConditions.slice(0, 5).map((condition, index) => (
-                    <Badge 
-                      key={index} 
-                      variant={condition.type === 'chronic' ? 'destructive' : 'secondary'}
-                      className="text-xs transform-smooth hover:scale-105"
-                    >
-                      {condition.name}
-                    </Badge>
-                  ))}
+                  {personalizedContext.medicalConditions
+                    .slice(0, 5)
+                    .map((condition, index) => (
+                      <Badge
+                        key={index}
+                        variant={
+                          condition.type === "chronic"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                        className="text-xs transform-smooth hover:scale-105"
+                      >
+                        {condition.name}
+                      </Badge>
+                    ))}
                   {personalizedContext.medicalConditions.length > 5 && (
                     <Badge variant="outline" className="text-xs">
                       +{personalizedContext.medicalConditions.length - 5} more
@@ -253,9 +286,9 @@ export default function BmaxAI() {
     }
 
     const medicalConditionsText = personalizedContext.medicalConditions
-      .map(condition => condition.name)
+      .map((condition) => condition.name)
       .join(", ");
-    
+
     const medicationsText = personalizedContext.currentMedications.join(", ");
     const allergiesText = personalizedContext.allergies.join(", ");
 
@@ -316,7 +349,8 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
               </div>
               <CardTitle className="text-xl">Authentication Required</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Please log in to access your personalized B-max AI assistant with medical context.
+                Please log in to access your personalized B-max AI assistant
+                with medical context.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
@@ -328,7 +362,8 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
               </Link>
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  B-max AI uses your medical history to provide personalized health recommendations.
+                  B-max AI uses your medical history to provide personalized
+                  health recommendations.
                 </p>
                 <div className="flex items-center justify-center space-x-4 text-xs text-muted-foreground">
                   <div className="flex items-center space-x-1">
@@ -381,27 +416,44 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
             </div>
             <div className="flex items-center space-x-2 fade-in fade-in-delay-1">
               {personalizedContext?.hasData && (
-                <Badge variant="default" className="text-xs bg-gradient-to-r from-primary to-primary/80 border-primary/20">
+                <Badge
+                  variant="default"
+                  className="text-xs bg-gradient-to-r from-primary to-primary/80 border-primary/20"
+                >
                   <Activity className="h-3 w-3 mr-1" />
                   Personalized
                 </Badge>
               )}
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className={`text-xs transition-all ${
-                  aiStatus === 'active' ? 'bg-green-50 text-green-700 border-green-200' :
-                  aiStatus === 'ready' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                  'bg-gray-50 text-gray-700 border-gray-200'
+                  aiStatus === "active"
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : aiStatus === "ready"
+                      ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                      : "bg-gray-50 text-gray-700 border-gray-200"
                 }`}
               >
-                <div className={`w-2 h-2 rounded-full mr-1 ${
-                  aiStatus === 'active' ? 'status-online' :
-                  aiStatus === 'ready' ? 'status-warning' :
-                  'status-error'
-                }`}></div>
-                {aiStatus === 'active' ? 'AI Ready' : aiStatus === 'ready' ? 'Connecting' : 'Starting'}
+                <div
+                  className={`w-2 h-2 rounded-full mr-1 ${
+                    aiStatus === "active"
+                      ? "status-online"
+                      : aiStatus === "ready"
+                        ? "status-warning"
+                        : "status-error"
+                  }`}
+                ></div>
+                {aiStatus === "active"
+                  ? "AI Ready"
+                  : aiStatus === "ready"
+                    ? "Connecting"
+                    : "Starting"}
               </Badge>
-              <Button variant="outline" size="sm" className="btn-smooth hover:bg-muted">
+              <Button
+                variant="outline"
+                size="sm"
+                className="btn-smooth hover:bg-muted"
+              >
                 <Settings className="h-4 w-4" />
               </Button>
             </div>
@@ -423,25 +475,29 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
             </h3>
             <div className="grid gap-3">
               {healthInsights.slice(0, 2).map((insight, index) => (
-                <Alert 
-                  key={index} 
+                <Alert
+                  key={index}
                   className={`card-hover cursor-pointer ${
-                    insight.priority === 'high' 
-                      ? 'border-red-200 bg-gradient-to-r from-red-50 to-red-50/50' 
-                      : 'border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50/50'
+                    insight.priority === "high"
+                      ? "border-red-200 bg-gradient-to-r from-red-50 to-red-50/50"
+                      : "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50/50"
                   } fade-in-up`}
-                  style={{animationDelay: `${index * 0.1}s`}}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="flex items-start space-x-3">
-                    {insight.priority === 'high' ? (
+                    {insight.priority === "high" ? (
                       <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
                     ) : (
                       <TrendingUp className="h-4 w-4 text-blue-600 mt-0.5" />
                     )}
                     <div className="flex-1">
                       <AlertDescription className="text-sm">
-                        <div className="font-medium mb-1 text-foreground">{insight.title}</div>
-                        <div className="text-muted-foreground">{insight.description}</div>
+                        <div className="font-medium mb-1 text-foreground">
+                          {insight.title}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {insight.description}
+                        </div>
                       </AlertDescription>
                     </div>
                   </div>
@@ -466,7 +522,10 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
                     Loading Context
                   </Badge>
                 ) : personalizedContext?.hasData ? (
-                  <Badge variant="default" className="text-xs bg-gradient-to-r from-green-500 to-green-600">
+                  <Badge
+                    variant="default"
+                    className="text-xs bg-gradient-to-r from-green-500 to-green-600"
+                  >
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Context Enabled
                   </Badge>
@@ -483,11 +542,11 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
               </div>
             </div>
             <CardDescription className="text-sm leading-relaxed">
-              {isLoadingContext 
+              {isLoadingContext
                 ? "Loading your medical context..."
                 : personalizedContext?.hasData
-                ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
-                : "AI is ready to help with general health questions. Add medical history for personalized recommendations."}
+                  ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
+                  : "AI is ready to help with general health questions. Add medical history for personalized recommendations."}
             </CardDescription>
           </CardHeader>
 
@@ -500,13 +559,23 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
                     <Brain className="h-8 w-8 text-primary animate-pulse" />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-foreground font-medium">Loading your personalized medical context...</p>
-                    <p className="text-sm text-muted-foreground">Analyzing health history and preparing AI recommendations</p>
+                    <p className="text-foreground font-medium">
+                      Loading your personalized medical context...
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Analyzing health history and preparing AI recommendations
+                    </p>
                   </div>
                   <div className="flex justify-center space-x-1">
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div
+                      className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -521,11 +590,17 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
                 />
                 {/* AI Features Overlay */}
                 <div className="absolute top-4 right-4 flex space-x-2 pointer-events-none">
-                  <Badge variant="secondary" className="text-xs bg-white/90 backdrop-blur-sm">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-white/90 backdrop-blur-sm"
+                  >
                     <Mic className="w-3 h-3 mr-1" />
                     Voice
                   </Badge>
-                  <Badge variant="secondary" className="text-xs bg-white/90 backdrop-blur-sm">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-white/90 backdrop-blur-sm"
+                  >
                     <Video className="w-3 h-3 mr-1" />
                     Video
                   </Badge>
@@ -546,27 +621,47 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                {personalizedContext.medicalConditions.some(c => c.name.toLowerCase().includes('diabetes')) && (
+                {personalizedContext.medicalConditions.some((c) =>
+                  c.name.toLowerCase().includes("diabetes"),
+                ) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
-                    <div className="font-medium text-primary mb-1">"I'm feeling dizzy"</div>
-                    <div className="text-xs text-muted-foreground">Gets diabetes-specific advice</div>
+                    <div className="font-medium text-primary mb-1">
+                      "I'm feeling dizzy"
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Gets diabetes-specific advice
+                    </div>
                   </div>
                 )}
-                {personalizedContext.medicalConditions.some(c => c.name.toLowerCase().includes('hypertension')) && (
+                {personalizedContext.medicalConditions.some((c) =>
+                  c.name.toLowerCase().includes("hypertension"),
+                ) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
-                    <div className="font-medium text-primary mb-1">"I have a headache"</div>
-                    <div className="text-xs text-muted-foreground">Considers blood pressure</div>
+                    <div className="font-medium text-primary mb-1">
+                      "I have a headache"
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Considers blood pressure
+                    </div>
                   </div>
                 )}
                 {personalizedContext.currentMedications.length > 0 && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
-                    <div className="font-medium text-primary mb-1">"Can I take [medication]?"</div>
-                    <div className="text-xs text-muted-foreground">Checks interactions</div>
+                    <div className="font-medium text-primary mb-1">
+                      "Can I take [medication]?"
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Checks interactions
+                    </div>
                   </div>
                 )}
                 <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
-                  <div className="font-medium text-primary mb-1">"What should I monitor?"</div>
-                  <div className="text-xs text-muted-foreground">Personalized recommendations</div>
+                  <div className="font-medium text-primary mb-1">
+                    "What should I monitor?"
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Personalized recommendations
+                  </div>
                 </div>
               </div>
             </CardContent>

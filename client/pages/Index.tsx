@@ -41,9 +41,9 @@ export default function Index() {
 
   useEffect(() => {
     // Smooth scroll to top when component mounts
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     checkAuthStatus();
-    
+
     // Update time every minute
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
@@ -76,7 +76,8 @@ export default function Index() {
   const handleLogout = () => {
     localStorage.removeItem("healthchain_user");
     localStorage.removeItem("sessionToken");
-    document.cookie = "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie =
+      "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -153,26 +154,26 @@ export default function Index() {
   ];
 
   const stats = [
-    { 
-      label: "Data Security", 
-      value: "100%", 
+    {
+      label: "Data Security",
+      value: "100%",
       icon: Lock,
       description: "End-to-end encryption",
-      color: "text-cyan-600"
+      color: "text-cyan-600",
     },
-    { 
-      label: "AI Assistant", 
-      value: "24/7", 
+    {
+      label: "AI Assistant",
+      value: "24/7",
       icon: Brain,
       description: "Always available",
-      color: "text-green-600"
+      color: "text-green-600",
     },
-    { 
-      label: "Storage", 
-      value: "∞", 
+    {
+      label: "Storage",
+      value: "∞",
       icon: Globe,
       description: "Unlimited blockchain storage",
-      color: "text-purple-600"
+      color: "text-purple-600",
     },
   ];
 
@@ -223,10 +224,13 @@ export default function Index() {
                   <div className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
                     <div className="w-2 h-2 rounded-full status-online"></div>
                     <span className="text-sm font-medium text-foreground">
-                      {user?.username || 'User'}
+                      {user?.username || "User"}
                     </span>
                   </div>
-                  <Badge variant="secondary" className="hidden sm:flex items-center space-x-1 bg-green-50 text-green-700 border-green-200">
+                  <Badge
+                    variant="secondary"
+                    className="hidden sm:flex items-center space-x-1 bg-green-50 text-green-700 border-green-200"
+                  >
                     <CheckCircle className="w-3 h-3" />
                     <span>Blockchain Secured</span>
                   </Badge>
@@ -258,14 +262,20 @@ export default function Index() {
         {/* Animated Background Elements */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 left-10 w-20 h-20 bg-primary/5 rounded-full blur-xl float" />
-          <div className="absolute top-40 right-20 w-32 h-32 bg-purple-500/5 rounded-full blur-xl float" style={{animationDelay: '2s'}} />
-          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-green-500/5 rounded-full blur-xl float" style={{animationDelay: '4s'}} />
+          <div
+            className="absolute top-40 right-20 w-32 h-32 bg-purple-500/5 rounded-full blur-xl float"
+            style={{ animationDelay: "2s" }}
+          />
+          <div
+            className="absolute bottom-20 left-1/4 w-24 h-24 bg-green-500/5 rounded-full blur-xl float"
+            style={{ animationDelay: "4s" }}
+          />
         </div>
 
         <div className="container mx-auto px-4 text-center relative">
           {/* Enhanced Badge */}
-          <Badge 
-            variant="secondary" 
+          <Badge
+            variant="secondary"
             className="mb-8 px-4 py-2 text-sm font-medium bg-primary/10 text-primary border-primary/20 fade-in hover:bg-primary/15 transition-colors cursor-pointer"
           >
             <Sparkles className="w-4 h-4 mr-2" />
@@ -287,24 +297,27 @@ export default function Index() {
 
           {/* Enhanced Description */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed fade-in-up fade-in-delay-2">
-            Experience the future of healthcare with AI-powered insights,
-            secure blockchain storage, and comprehensive health
-            management tools designed for your wellbeing.
+            Experience the future of healthcare with AI-powered insights, secure
+            blockchain storage, and comprehensive health management tools
+            designed for your wellbeing.
           </p>
 
           {/* Enhanced CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 fade-in-up fade-in-delay-3">
             <Link to="/bmax" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto btn-smooth shadow-colored-lg text-lg px-8 py-4 h-auto">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto btn-smooth shadow-colored-lg text-lg px-8 py-4 h-auto"
+              >
                 <Brain className="w-5 h-5 mr-2" />
                 Try B-max AI
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link to="/history" className="w-full sm:w-auto">
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="w-full sm:w-auto btn-smooth border-border/50 text-lg px-8 py-4 h-auto hover:bg-muted"
               >
                 <History className="w-5 h-5 mr-2" />
@@ -346,38 +359,50 @@ export default function Index() {
               Comprehensive Health Solutions
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Five powerful tools to transform your healthcare experience and keep
-              you in control
+              Five powerful tools to transform your healthcare experience and
+              keep you in control
             </p>
           </div>
 
           {/* Enhanced Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {features.map((feature, index) => (
-              <Link 
-                key={feature.id} 
+              <Link
+                key={feature.id}
                 to={feature.route}
                 className={`block group fade-in-up`}
-                style={{animationDelay: `${index * 0.1 + 0.2}s`}}
+                style={{ animationDelay: `${index * 0.1 + 0.2}s` }}
               >
-                <Card className={`h-full card-hover shadow-colored transition-all duration-300 border-border/50 ${
-                  feature.highlight ? 'ring-2 ring-primary/20 bg-primary/5' : ''
-                } ${
-                  feature.urgent ? 'ring-2 ring-red-200 bg-red-50' : ''
-                } hover:shadow-lg hover:border-border group-hover:shadow-xl`}>
+                <Card
+                  className={`h-full card-hover shadow-colored transition-all duration-300 border-border/50 ${
+                    feature.highlight
+                      ? "ring-2 ring-primary/20 bg-primary/5"
+                      : ""
+                  } ${
+                    feature.urgent ? "ring-2 ring-red-200 bg-red-50" : ""
+                  } hover:shadow-lg hover:border-border group-hover:shadow-xl`}
+                >
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between mb-3">
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${feature.color} text-white shadow-lg shadow-${feature.color.split('-')[1]}-500/25 group-hover:scale-110 transition-transform`}>
+                      <div
+                        className={`flex items-center justify-center w-12 h-12 rounded-xl ${feature.color} text-white shadow-lg shadow-${feature.color.split("-")[1]}-500/25 group-hover:scale-110 transition-transform`}
+                      >
                         <feature.icon className="w-6 h-6" />
                       </div>
                       {feature.highlight && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                        <Badge
+                          variant="secondary"
+                          className="bg-primary/10 text-primary border-primary/20"
+                        >
                           <Star className="w-3 h-3 mr-1" />
                           Popular
                         </Badge>
                       )}
                       {feature.urgent && (
-                        <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
+                        <Badge
+                          variant="destructive"
+                          className="bg-red-100 text-red-700 border-red-200"
+                        >
                           <Zap className="w-3 h-3 mr-1" />
                           Emergency
                         </Badge>
@@ -419,12 +444,16 @@ export default function Index() {
                   <Stethoscope className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">HealthChain</h3>
-                  <p className="text-sm text-muted-foreground">Blockchain Healthcare</p>
+                  <h3 className="text-lg font-bold text-foreground">
+                    HealthChain
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Blockchain Healthcare
+                  </p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-4 max-w-md">
-                Revolutionizing healthcare with secure blockchain technology, 
+                Revolutionizing healthcare with secure blockchain technology,
                 AI-powered insights, and comprehensive health management tools.
               </p>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -435,7 +464,9 @@ export default function Index() {
 
             {/* Quick Links */}
             <div className="fade-in fade-in-delay-1">
-              <h4 className="text-sm font-semibold text-foreground mb-4">Quick Access</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-4">
+                Quick Access
+              </h4>
               <div className="space-y-2">
                 {features.slice(0, 4).map((feature) => (
                   <Link
@@ -451,7 +482,9 @@ export default function Index() {
 
             {/* System Status */}
             <div className="fade-in fade-in-delay-2">
-              <h4 className="text-sm font-semibold text-foreground mb-4">System Status</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-4">
+                System Status
+              </h4>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Blockchain</span>
@@ -471,7 +504,9 @@ export default function Index() {
                   <span className="text-muted-foreground">Data Security</span>
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 rounded-full status-online"></div>
-                    <span className="text-green-600 font-medium">Encrypted</span>
+                    <span className="text-green-600 font-medium">
+                      Encrypted
+                    </span>
                   </div>
                 </div>
               </div>
@@ -484,11 +519,17 @@ export default function Index() {
               © 2024 HealthChain. Developed by Jay Magar. All rights reserved.
             </div>
             <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="text-xs border-green-200 text-green-700">
+              <Badge
+                variant="outline"
+                className="text-xs border-green-200 text-green-700"
+              >
                 <Shield className="w-3 h-3 mr-1" />
                 HIPAA Compliant
               </Badge>
-              <Badge variant="outline" className="text-xs border-blue-200 text-blue-700">
+              <Badge
+                variant="outline"
+                className="text-xs border-blue-200 text-blue-700"
+              >
                 <Lock className="w-3 h-3 mr-1" />
                 End-to-End Encrypted
               </Badge>

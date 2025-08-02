@@ -22,36 +22,35 @@ export class DatabaseHealthService {
     latency?: number;
   }> {
     const startTime = Date.now();
-    
+
     try {
       console.log("🔍 Checking database health...");
-      
+
       // Simple connectivity test
       const result = await sql`SELECT 1 as health_check`;
-      
+
       const latency = Date.now() - startTime;
       this.isHealthy = true;
       this.lastHealthCheck = new Date();
-      
+
       console.log(`✅ Database is healthy (${latency}ms latency)`);
-      
+
       return {
         isHealthy: true,
         lastChecked: this.lastHealthCheck,
         connectionStatus: "connected",
-        latency
+        latency,
       };
-      
     } catch (error) {
       console.error("❌ Database health check failed:", error);
-      
+
       this.isHealthy = false;
       this.lastHealthCheck = new Date();
-      
+
       return {
         isHealthy: false,
         lastChecked: this.lastHealthCheck,
-        connectionStatus: `error: ${error instanceof Error ? error.message : "Unknown error"}`
+        connectionStatus: `error: ${error instanceof Error ? error.message : "Unknown error"}`,
       };
     }
   }
@@ -64,13 +63,14 @@ export class DatabaseHealthService {
     lastChecked: Date | null;
     needsCheck: boolean;
   } {
-    const needsCheck = !this.lastHealthCheck || 
-                      (Date.now() - this.lastHealthCheck.getTime()) > 30000; // 30 seconds
-    
+    const needsCheck =
+      !this.lastHealthCheck ||
+      Date.now() - this.lastHealthCheck.getTime() > 30000; // 30 seconds
+
     return {
       isHealthy: this.isHealthy,
       lastChecked: this.lastHealthCheck,
-      needsCheck
+      needsCheck,
     };
   }
 
@@ -79,12 +79,12 @@ export class DatabaseHealthService {
    */
   static async ensureConnection(): Promise<boolean> {
     const currentHealth = this.getCurrentHealth();
-    
+
     if (currentHealth.needsCheck || !currentHealth.isHealthy) {
       const healthCheck = await this.checkHealth();
       return healthCheck.isHealthy;
     }
-    
+
     return currentHealth.isHealthy;
   }
 
@@ -94,10 +94,10 @@ export class DatabaseHealthService {
   static async withFallback<T>(
     operation: () => Promise<T>,
     fallback: () => T,
-    maxRetries: number = 3
+    maxRetries: number = 3,
   ): Promise<T> {
     let lastError: Error | null = null;
-    
+
     for (let i = 0; i < maxRetries; i++) {
       try {
         const isConnected = await this.ensureConnection();
@@ -105,20 +105,22 @@ export class DatabaseHealthService {
           console.log("Database not connected, retrying...");
           continue;
         }
-        
+
         return await operation();
-        
       } catch (error) {
         lastError = error instanceof Error ? error : new Error("Unknown error");
-        console.error(`Database operation failed (attempt ${i + 1}/${maxRetries}):`, error);
-        
+        console.error(
+          `Database operation failed (attempt ${i + 1}/${maxRetries}):`,
+          error,
+        );
+
         if (i < maxRetries - 1) {
           // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
         }
       }
     }
-    
+
     console.log("All database retries failed, using fallback");
     return fallback();
   }
@@ -146,7 +148,7 @@ export class DatabaseHealthService {
       isHealthy: this.isHealthy,
       lastChecked: this.lastHealthCheck?.toISOString() || null,
       uptime: process.uptime().toFixed(2) + " seconds",
-      connectionAttempts: 0 // Could be implemented if needed
+      connectionAttempts: 0, // Could be implemented if needed
     };
   }
 }

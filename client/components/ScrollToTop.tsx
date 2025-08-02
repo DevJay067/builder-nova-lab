@@ -10,7 +10,7 @@ export default function ScrollToTop() {
       window.scrollTo({
         top: 0,
         left: 0,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     };
 
@@ -20,8 +20,8 @@ export default function ScrollToTop() {
     });
 
     // Clean up any existing scroll restoration from browser
-    if ('scrollRestoration' in history) {
-      history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
     }
 
     // Clear any redirect flags stored in localStorage
@@ -29,7 +29,6 @@ export default function ScrollToTop() {
     if (redirectFrom && pathname === "/") {
       localStorage.removeItem("redirectFrom");
     }
-
   }, [pathname]);
 
   return null;
@@ -44,7 +43,7 @@ export const smoothScrollTo = (elementId: string, offset: number = 0) => {
 
     window.scrollTo({
       top: offsetPosition,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   }
 };
@@ -58,7 +57,7 @@ export const useSmoothScroll = () => {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 

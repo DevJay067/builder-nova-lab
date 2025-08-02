@@ -60,20 +60,28 @@ export function createServer() {
 
       // Initialize production blockchain system
       try {
-        const { ProductionBlockchainService } = await import("./services/productionBlockchain");
+        const { ProductionBlockchainService } = await import(
+          "./services/productionBlockchain"
+        );
         ProductionBlockchainService.initializeBlockchain();
         console.log("✅ Production blockchain system initialized successfully");
       } catch (blockchainError) {
-        console.log("⚠️ Production blockchain initialization failed, continuing...");
+        console.log(
+          "⚠️ Production blockchain initialization failed, continuing...",
+        );
       }
 
       // Initialize secure data access system
       try {
-        const { SecureDataAccessService } = await import("./services/secureDataAccess");
+        const { SecureDataAccessService } = await import(
+          "./services/secureDataAccess"
+        );
         await SecureDataAccessService.initialize();
         console.log("✅ Secure data access system initialized successfully");
       } catch (secureError) {
-        console.log("⚠️ Secure data access system initialization failed, continuing...");
+        console.log(
+          "⚠️ Secure data access system initialization failed, continuing...",
+        );
       }
 
       // Try to initialize user authentication system with production features
@@ -150,7 +158,9 @@ export function createServer() {
   app.get("/api/debug/user/:username", async (req, res) => {
     try {
       const { username } = req.params;
-      const { UserAuthenticationService } = await import("./services/userAuthentication");
+      const { UserAuthenticationService } = await import(
+        "./services/userAuthentication"
+      );
 
       // Check both memory and database
       const stats = UserAuthenticationService.getSystemStats();
@@ -159,12 +169,12 @@ export function createServer() {
         success: true,
         username: username,
         systemStats: stats,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
@@ -223,7 +233,9 @@ export function createServer() {
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
     try {
-      const { DatabaseHealthService } = await import("./services/databaseHealthCheck");
+      const { DatabaseHealthService } = await import(
+        "./services/databaseHealthCheck"
+      );
       const health = await DatabaseHealthService.checkHealth();
       res.json({
         success: true,
@@ -231,14 +243,14 @@ export function createServer() {
         server: {
           uptime: process.uptime(),
           memory: process.memoryUsage(),
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   });

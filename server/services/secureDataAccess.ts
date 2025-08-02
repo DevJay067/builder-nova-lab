@@ -1,10 +1,13 @@
 import crypto from "crypto";
-import { ProductionBlockchainService, SplitKeyData } from "./productionBlockchain";
+import {
+  ProductionBlockchainService,
+  SplitKeyData,
+} from "./productionBlockchain";
 import { NeonDatabaseService } from "./neonDatabase";
 
 /**
  * Secure Data Access System with Production Blockchain Integration
- * 
+ *
  * This service provides secure data access using:
  * - User authentication with hash generation
  * - Split key cryptography (user hash + data hash)
@@ -15,7 +18,12 @@ import { NeonDatabaseService } from "./neonDatabase";
 export interface SecureDataRecord {
   id: string;
   patientId: string;
-  dataType: "medical_history" | "lab_results" | "prescription" | "imaging" | "emergency";
+  dataType:
+    | "medical_history"
+    | "lab_results"
+    | "prescription"
+    | "imaging"
+    | "emergency";
   encryptedData: string;
   keyId: string;
   blockchainHash: string;
@@ -84,18 +92,20 @@ class SecureDataAccessService {
 
     try {
       console.log("🔐 Initializing secure data access system...");
-      
+
       // Initialize production blockchain
       ProductionBlockchainService.initializeBlockchain();
-      
+
       // Validate blockchain integrity
       ProductionBlockchainService.validateBlockchain();
-      
+
       this.isInitialized = true;
       console.log("✅ Secure data access system initialized successfully");
-      
     } catch (error) {
-      console.error("❌ Failed to initialize secure data access system:", error);
+      console.error(
+        "❌ Failed to initialize secure data access system:",
+        error,
+      );
       throw error;
     }
   }
@@ -111,7 +121,7 @@ class SecureDataAccessService {
       firstName?: string;
       lastName?: string;
       dateOfBirth?: string;
-    }
+    },
   ): Promise<{
     userHash: string;
     splitKeySystem: boolean;
@@ -120,10 +130,13 @@ class SecureDataAccessService {
   }> {
     try {
       console.log(`🔐 Creating secure account for user: ${username}`);
-      
+
       // Generate user hash
-      const userHash = ProductionBlockchainService.generateUserHash(username, password);
-      
+      const userHash = ProductionBlockchainService.generateUserHash(
+        username,
+        password,
+      );
+
       // Create initial health record to activate split key system
       const initialHealthRecord = {
         patientId: userHash.substring(0, 16),
@@ -132,17 +145,18 @@ class SecureDataAccessService {
           accountCreated: new Date().toISOString(),
           username: username,
           profile: userProfile,
-          systemVersion: "1.0.0"
+          systemVersion: "1.0.0",
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Store in production blockchain with split key system
-      const blockchainResult = await ProductionBlockchainService.storeSecureHealthRecord(
-        initialHealthRecord,
-        username,
-        password
-      );
+      const blockchainResult =
+        await ProductionBlockchainService.storeSecureHealthRecord(
+          initialHealthRecord,
+          username,
+          password,
+        );
 
       // Store split key data in cache for quick access
       this.splitKeyCache.set(userHash, blockchainResult.splitKeyData);
@@ -155,7 +169,7 @@ class SecureDataAccessService {
         username,
         password: "", // Don't store password in session
         userHash,
-        sessionToken
+        sessionToken,
       };
       this.userSessions.set(sessionToken, userCredentials);
 
@@ -170,22 +184,23 @@ class SecureDataAccessService {
           action: "secure_account_creation",
           username: username,
           blockchainHash: blockchainResult.blockchainHash,
-          splitKeySystemActivated: true
-        }
+          splitKeySystemActivated: true,
+        },
       });
 
-      console.log(`✅ Secure account created for ${username} with split key system activated`);
-      
+      console.log(
+        `✅ Secure account created for ${username} with split key system activated`,
+      );
+
       return {
         userHash,
         splitKeySystem: true,
         dataAccessActivated: true,
-        sessionToken
+        sessionToken,
       };
-      
     } catch (error) {
       console.error("❌ Failed to create secure user account:", error);
-      
+
       // Create failure audit log
       await this.createAuditLog({
         action: "create",
@@ -194,10 +209,10 @@ class SecureDataAccessService {
         success: false,
         details: {
           action: "secure_account_creation_failed",
-          error: error instanceof Error ? error.message : "Unknown error"
-        }
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
-      
+
       throw error;
     }
   }
@@ -207,7 +222,7 @@ class SecureDataAccessService {
    */
   static async authenticateUser(
     username: string,
-    password: string
+    password: string,
   ): Promise<{
     authenticated: boolean;
     userHash?: string;
@@ -216,13 +231,16 @@ class SecureDataAccessService {
   }> {
     try {
       console.log(`🔐 Authenticating user: ${username}`);
-      
+
       // Generate user hash
-      const userHash = ProductionBlockchainService.generateUserHash(username, password);
-      
+      const userHash = ProductionBlockchainService.generateUserHash(
+        username,
+        password,
+      );
+
       // Check if user has data in blockchain (this verifies they exist)
       const hasData = await this.checkUserDataExists(userHash);
-      
+
       if (!hasData) {
         await this.createAuditLog({
           action: "access_denied",
@@ -231,10 +249,10 @@ class SecureDataAccessService {
           success: false,
           details: {
             reason: "user_not_found",
-            attempted_username: username
-          }
+            attempted_username: username,
+          },
         });
-        
+
         return { authenticated: false };
       }
 
@@ -246,7 +264,7 @@ class SecureDataAccessService {
         username,
         password: "", // Don't store password
         userHash,
-        sessionToken
+        sessionToken,
       };
       this.userSessions.set(sessionToken, userCredentials);
 
@@ -259,22 +277,21 @@ class SecureDataAccessService {
         details: {
           action: "user_authentication",
           username: username,
-          sessionEstablished: true
-        }
+          sessionEstablished: true,
+        },
       });
 
       console.log(`✅ User ${username} authenticated successfully`);
-      
+
       return {
         authenticated: true,
         userHash,
         sessionToken,
-        splitKeySystemActive: true
+        splitKeySystemActive: true,
       };
-      
     } catch (error) {
       console.error("❌ Authentication failed:", error);
-      
+
       await this.createAuditLog({
         action: "access_denied",
         userId: username,
@@ -282,10 +299,10 @@ class SecureDataAccessService {
         success: false,
         details: {
           action: "authentication_failed",
-          error: error instanceof Error ? error.message : "Unknown error"
-        }
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
-      
+
       return { authenticated: false };
     }
   }
@@ -295,7 +312,7 @@ class SecureDataAccessService {
    */
   static async storeSecureHealthRecord(
     sessionToken: string,
-    healthRecord: any
+    healthRecord: any,
   ): Promise<{
     success: boolean;
     recordId?: string;
@@ -309,21 +326,30 @@ class SecureDataAccessService {
         throw new Error("Invalid session token");
       }
 
-      console.log(`🔐 Storing secure health record for user: ${userCredentials.username}`);
+      console.log(
+        `🔐 Storing secure health record for user: ${userCredentials.username}`,
+      );
 
       // Get user password for encryption (in production, this should be handled more securely)
       // For now, we'll use a derived key from the user hash
-      const derivedPassword = crypto.createHash('sha256').update(userCredentials.userHash).digest('hex');
+      const derivedPassword = crypto
+        .createHash("sha256")
+        .update(userCredentials.userHash)
+        .digest("hex");
 
       // Store in production blockchain
-      const blockchainResult = await ProductionBlockchainService.storeSecureHealthRecord(
-        healthRecord,
-        userCredentials.username,
-        derivedPassword
-      );
+      const blockchainResult =
+        await ProductionBlockchainService.storeSecureHealthRecord(
+          healthRecord,
+          userCredentials.username,
+          derivedPassword,
+        );
 
       // Update split key cache
-      this.splitKeyCache.set(userCredentials.userHash, blockchainResult.splitKeyData);
+      this.splitKeyCache.set(
+        userCredentials.userHash,
+        blockchainResult.splitKeyData,
+      );
 
       // Create secure data record for database
       const secureRecord: SecureDataRecord = {
@@ -338,8 +364,11 @@ class SecureDataAccessService {
           createdBy: userCredentials.userHash,
           createdAt: new Date().toISOString(),
           accessCount: 0,
-          checksum: crypto.createHash('sha256').update(blockchainResult.transaction.encryptedPayload).digest('hex')
-        }
+          checksum: crypto
+            .createHash("sha256")
+            .update(blockchainResult.transaction.encryptedPayload)
+            .digest("hex"),
+        },
       };
 
       // Store in database
@@ -356,22 +385,21 @@ class SecureDataAccessService {
           action: "secure_health_record_storage",
           recordType: healthRecord.type || "medical_history",
           blockchainHash: blockchainResult.blockchainHash,
-          encryptionLayers: 3
-        }
+          encryptionLayers: 3,
+        },
       });
 
       console.log(`✅ Secure health record stored successfully`);
-      
+
       return {
         success: true,
         recordId: blockchainResult.transaction.id,
         blockchainHash: blockchainResult.blockchainHash,
-        splitKeyReference: blockchainResult.splitKeyData.combinedHash
+        splitKeyReference: blockchainResult.splitKeyData.combinedHash,
       };
-      
     } catch (error) {
       console.error("❌ Failed to store secure health record:", error);
-      
+
       const userCredentials = this.userSessions.get(sessionToken);
       await this.createAuditLog({
         action: "create",
@@ -380,10 +408,10 @@ class SecureDataAccessService {
         success: false,
         details: {
           action: "secure_health_record_storage_failed",
-          error: error instanceof Error ? error.message : "Unknown error"
-        }
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
-      
+
       return { success: false };
     }
   }
@@ -392,7 +420,7 @@ class SecureDataAccessService {
    * Retrieve secure health records for authenticated user
    */
   static async getSecureHealthRecords(
-    sessionToken: string
+    sessionToken: string,
   ): Promise<DataAccessResult> {
     try {
       // Validate session
@@ -401,31 +429,37 @@ class SecureDataAccessService {
         throw new Error("Invalid session token");
       }
 
-      console.log(`🔐 Retrieving secure health records for user: ${userCredentials.username}`);
+      console.log(
+        `🔐 Retrieving secure health records for user: ${userCredentials.username}`,
+      );
 
       // Get all records for this user from database
       const databaseRecords = await NeonDatabaseService.getMedicalHistory(
-        userCredentials.userHash.substring(0, 16)
+        userCredentials.userHash.substring(0, 16),
       );
 
       // Decrypt each record using split key system
       const decryptedRecords = [];
-      const derivedPassword = crypto.createHash('sha256').update(userCredentials.userHash).digest('hex');
+      const derivedPassword = crypto
+        .createHash("sha256")
+        .update(userCredentials.userHash)
+        .digest("hex");
 
       for (const record of databaseRecords) {
         try {
           // Try to decrypt from blockchain if it's a secure record
           if (record.secureRecordId) {
-            const decryptedData = ProductionBlockchainService.retrieveSecureHealthRecord(
-              userCredentials.username,
-              derivedPassword,
-              record.secureRecordId
-            );
-            
+            const decryptedData =
+              ProductionBlockchainService.retrieveSecureHealthRecord(
+                userCredentials.username,
+                derivedPassword,
+                record.secureRecordId,
+              );
+
             if (decryptedData) {
               decryptedRecords.push({
                 ...record,
-                decryptedData
+                decryptedData,
               });
             } else {
               // If decryption fails, include the record without decrypted data
@@ -436,7 +470,10 @@ class SecureDataAccessService {
             decryptedRecords.push(record);
           }
         } catch (decryptError) {
-          console.warn(`⚠️ Failed to decrypt record ${record.id}:`, decryptError);
+          console.warn(
+            `⚠️ Failed to decrypt record ${record.id}:`,
+            decryptError,
+          );
           // Include record without decrypted data
           decryptedRecords.push(record);
         }
@@ -458,25 +495,27 @@ class SecureDataAccessService {
         details: {
           action: "secure_health_records_retrieval",
           recordsCount: decryptedRecords.length,
-          decryptedCount: decryptedRecords.filter(r => r.decryptedData).length
-        }
+          decryptedCount: decryptedRecords.filter((r) => r.decryptedData)
+            .length,
+        },
       });
 
-      console.log(`✅ Retrieved ${decryptedRecords.length} health records for user`);
-      
+      console.log(
+        `✅ Retrieved ${decryptedRecords.length} health records for user`,
+      );
+
       return {
         success: true,
         data: decryptedRecords,
         accessLog: {
           timestamp: new Date().toISOString(),
           action: "retrieve_health_records",
-          result: "success"
-        }
+          result: "success",
+        },
       };
-      
     } catch (error) {
       console.error("❌ Failed to retrieve secure health records:", error);
-      
+
       const userCredentials = this.userSessions.get(sessionToken);
       await this.createAuditLog({
         action: "access_denied",
@@ -485,18 +524,18 @@ class SecureDataAccessService {
         success: false,
         details: {
           action: "secure_health_records_retrieval_failed",
-          error: error instanceof Error ? error.message : "Unknown error"
-        }
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
-      
+
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
         accessLog: {
           timestamp: new Date().toISOString(),
           action: "retrieve_health_records",
-          result: "failure"
-        }
+          result: "failure",
+        },
       };
     }
   }
@@ -520,18 +559,20 @@ class SecureDataAccessService {
    */
   private static generateSessionToken(userHash: string): string {
     const timestamp = Date.now().toString();
-    const randomBytes = crypto.randomBytes(16).toString('hex');
+    const randomBytes = crypto.randomBytes(16).toString("hex");
     const tokenData = `${userHash}:${timestamp}:${randomBytes}`;
-    return crypto.createHash('sha256').update(tokenData).digest('hex');
+    return crypto.createHash("sha256").update(tokenData).digest("hex");
   }
 
   /**
    * Create audit log entry
    */
-  private static async createAuditLog(logData: Partial<AuditLog>): Promise<void> {
+  private static async createAuditLog(
+    logData: Partial<AuditLog>,
+  ): Promise<void> {
     try {
       const auditLog: AuditLog = {
-        logId: crypto.randomBytes(16).toString('hex'),
+        logId: crypto.randomBytes(16).toString("hex"),
         action: logData.action || "unknown",
         dataRecordId: logData.dataRecordId,
         userId: logData.userId || "system",
@@ -540,7 +581,7 @@ class SecureDataAccessService {
         ipAddress: logData.ipAddress,
         userAgent: logData.userAgent,
         success: logData.success || false,
-        details: logData.details || {}
+        details: logData.details || {},
       };
 
       await NeonDatabaseService.storeAuditLog(auditLog);
@@ -559,7 +600,9 @@ class SecureDataAccessService {
   /**
    * Get user from session
    */
-  static getUserFromSession(sessionToken: string): UserAccessCredentials | null {
+  static getUserFromSession(
+    sessionToken: string,
+  ): UserAccessCredentials | null {
     return this.userSessions.get(sessionToken) || null;
   }
 
@@ -580,12 +623,12 @@ class SecureDataAccessService {
     totalAuditLogs: number;
   } {
     const blockchainStats = ProductionBlockchainService.getBlockchainStats();
-    
+
     return {
       activeSessions: this.userSessions.size,
       blockchainStats,
       cacheSize: this.splitKeyCache.size,
-      totalAuditLogs: 0 // This would need to be fetched from database
+      totalAuditLogs: 0, // This would need to be fetched from database
     };
   }
 
@@ -598,16 +641,19 @@ class SecureDataAccessService {
       emergencyCode: string;
       reason: string;
     },
-    patientIdentifier: string
+    patientIdentifier: string,
   ): Promise<DataAccessResult> {
     try {
-      console.log(`🚨 Emergency data access requested by provider: ${providerCredentials.providerId}`);
-      
+      console.log(
+        `🚨 Emergency data access requested by provider: ${providerCredentials.providerId}`,
+      );
+
       // In a production system, this would verify provider credentials
       // For now, we'll implement basic emergency access
-      
-      const records = await NeonDatabaseService.getMedicalHistory(patientIdentifier);
-      
+
+      const records =
+        await NeonDatabaseService.getMedicalHistory(patientIdentifier);
+
       // Create emergency access audit log
       await this.createAuditLog({
         action: "read",
@@ -619,8 +665,8 @@ class SecureDataAccessService {
           patientIdentifier,
           emergencyCode: providerCredentials.emergencyCode,
           reason: providerCredentials.reason,
-          recordsAccessed: records.length
-        }
+          recordsAccessed: records.length,
+        },
       });
 
       return {
@@ -629,13 +675,12 @@ class SecureDataAccessService {
         accessLog: {
           timestamp: new Date().toISOString(),
           action: "emergency_access",
-          result: "success"
-        }
+          result: "success",
+        },
       };
-      
     } catch (error) {
       console.error("❌ Emergency data access failed:", error);
-      
+
       await this.createAuditLog({
         action: "access_denied",
         userId: providerCredentials.providerId,
@@ -644,22 +689,29 @@ class SecureDataAccessService {
         details: {
           action: "emergency_data_access_failed",
           patientIdentifier,
-          error: error instanceof Error ? error.message : "Unknown error"
-        }
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
-      
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Emergency access failed",
+        error:
+          error instanceof Error ? error.message : "Emergency access failed",
         accessLog: {
           timestamp: new Date().toISOString(),
           action: "emergency_access",
-          result: "failure"
-        }
+          result: "failure",
+        },
       };
     }
   }
 }
 
 export { SecureDataAccessService };
-export type { SecureDataRecord, UserAccessCredentials, DataAccessResult, SplitKeyPair, AuditLog };
+export type {
+  SecureDataRecord,
+  UserAccessCredentials,
+  DataAccessResult,
+  SplitKeyPair,
+  AuditLog,
+};

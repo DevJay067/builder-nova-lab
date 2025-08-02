@@ -44,7 +44,7 @@ export default function Login() {
 
   // Page load animation and initialization
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     // Small delay to ensure page is properly initialized
     const timer = setTimeout(() => {
       setIsInitialized(true);
@@ -70,26 +70,36 @@ export default function Login() {
     phone: "",
   });
 
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   const validateForm = (isLogin: boolean = false) => {
-    const errors: {[key: string]: string} = {};
+    const errors: { [key: string]: string } = {};
 
     if (isLogin) {
       if (!loginForm.email) errors.email = "Email or username is required";
       if (!loginForm.password) errors.password = "Password is required";
     } else {
       if (!registerForm.username) errors.username = "Username is required";
-      if (registerForm.username && (registerForm.username.length < 3 || registerForm.username.length > 30)) {
+      if (
+        registerForm.username &&
+        (registerForm.username.length < 3 || registerForm.username.length > 30)
+      ) {
         errors.username = "Username must be 3-30 characters";
       }
-      if (registerForm.username && !/^[a-zA-Z0-9_]+$/.test(registerForm.username)) {
-        errors.username = "Username can only contain letters, numbers, and underscores";
+      if (
+        registerForm.username &&
+        !/^[a-zA-Z0-9_]+$/.test(registerForm.username)
+      ) {
+        errors.username =
+          "Username can only contain letters, numbers, and underscores";
       }
       if (!registerForm.firstName) errors.firstName = "First name is required";
       if (!registerForm.lastName) errors.lastName = "Last name is required";
       if (!registerForm.email) errors.email = "Email is required";
-      if (registerForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)) {
+      if (
+        registerForm.email &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)
+      ) {
         errors.email = "Invalid email format";
       }
       if (!registerForm.password) errors.password = "Password is required";
@@ -108,7 +118,7 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
-    
+
     if (!validateForm(true)) return;
 
     setIsLoading(true);
@@ -134,7 +144,7 @@ export default function Login() {
           userHash: result.user.userHash,
           sessionToken: result.user.sessionToken,
           loginTime: new Date().toISOString(),
-          secureSystemActivated: result.user.secureSystemActivated
+          secureSystemActivated: result.user.secureSystemActivated,
         };
 
         localStorage.setItem("healthchain_user", JSON.stringify(userData));
@@ -156,7 +166,8 @@ export default function Login() {
         let errorMessage = result.message || "Login failed";
 
         if (response.status === 401) {
-          errorMessage = "Invalid username or password. If you created an account yesterday, you may need to register again due to system updates.";
+          errorMessage =
+            "Invalid username or password. If you created an account yesterday, you may need to register again due to system updates.";
         } else if (response.status === 500) {
           errorMessage = "Server error. Please try again in a moment.";
         }
@@ -211,7 +222,7 @@ export default function Login() {
           userHash: result.user.userHash,
           sessionToken: result.user.sessionToken,
           registrationTime: new Date().toISOString(),
-          secureSystemActivated: result.user.secureSystemActivated
+          secureSystemActivated: result.user.secureSystemActivated,
         };
 
         localStorage.setItem("healthchain_user", JSON.stringify(userData));
@@ -228,7 +239,10 @@ export default function Login() {
           }, 1000);
         }, 2000);
       } else {
-        setMessage({ type: "error", text: result.message || "Registration failed" });
+        setMessage({
+          type: "error",
+          text: result.message || "Registration failed",
+        });
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -271,7 +285,9 @@ export default function Login() {
                   <Stethoscope className="h-5 h-5" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold text-foreground">HealthChain</h1>
+                  <h1 className="text-lg font-bold text-foreground">
+                    HealthChain
+                  </h1>
                   <p className="text-sm text-muted-foreground">Secure Access</p>
                 </div>
               </div>
@@ -295,7 +311,9 @@ export default function Login() {
               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
                 <Key className="w-8 h-8 text-primary-foreground" />
               </div>
-              <CardTitle className="text-2xl font-bold">Welcome to HealthChain</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                Welcome to HealthChain
+              </CardTitle>
               <CardDescription className="text-muted-foreground">
                 Access your secure blockchain-powered healthcare platform
               </CardDescription>
@@ -304,11 +322,13 @@ export default function Login() {
 
           {/* Message Alert */}
           {message && (
-            <Alert className={`mb-6 fade-in ${
-              message.type === "success" 
-                ? "border-green-200 bg-green-50 text-green-800" 
-                : "border-red-200 bg-red-50 text-red-800"
-            }`}>
+            <Alert
+              className={`mb-6 fade-in ${
+                message.type === "success"
+                  ? "border-green-200 bg-green-50 text-green-800"
+                  : "border-red-200 bg-red-50 text-red-800"
+              }`}
+            >
               {message.type === "success" ? (
                 <CheckCircle className="h-4 w-4" />
               ) : (
@@ -322,13 +342,23 @@ export default function Login() {
 
           {/* Auth Tabs */}
           <Card className="shadow-colored-lg border-border/50 fade-in-up">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login" className="flex items-center space-x-2 state-transition">
+                <TabsTrigger
+                  value="login"
+                  className="flex items-center space-x-2 state-transition"
+                >
                   <LogIn className="w-4 h-4" />
                   <span>Login</span>
                 </TabsTrigger>
-                <TabsTrigger value="register" className="flex items-center space-x-2 state-transition">
+                <TabsTrigger
+                  value="register"
+                  className="flex items-center space-x-2 state-transition"
+                >
                   <UserPlus className="w-4 h-4" />
                   <span>Register</span>
                 </TabsTrigger>
@@ -348,7 +378,10 @@ export default function Login() {
                 <CardContent>
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-email" className="text-sm font-medium">
+                      <Label
+                        htmlFor="login-email"
+                        className="text-sm font-medium"
+                      >
                         Email or Username
                       </Label>
                       <div className="relative">
@@ -359,20 +392,29 @@ export default function Login() {
                           placeholder="Enter your email or username"
                           value={loginForm.email}
                           onChange={(e) => {
-                            setLoginForm(prev => ({ ...prev, email: e.target.value }));
-                            if (formErrors.email) setFormErrors(prev => ({ ...prev, email: "" }));
+                            setLoginForm((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }));
+                            if (formErrors.email)
+                              setFormErrors((prev) => ({ ...prev, email: "" }));
                           }}
-                          className={`pl-10 focus-enhanced ${formErrors.email ? 'border-red-500' : ''}`}
+                          className={`pl-10 focus-enhanced ${formErrors.email ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                       </div>
                       {formErrors.email && (
-                        <p className="text-sm text-red-600">{formErrors.email}</p>
+                        <p className="text-sm text-red-600">
+                          {formErrors.email}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="login-password" className="text-sm font-medium">
+                      <Label
+                        htmlFor="login-password"
+                        className="text-sm font-medium"
+                      >
                         Password
                       </Label>
                       <div className="relative">
@@ -383,10 +425,17 @@ export default function Login() {
                           placeholder="Enter your password"
                           value={loginForm.password}
                           onChange={(e) => {
-                            setLoginForm(prev => ({ ...prev, password: e.target.value }));
-                            if (formErrors.password) setFormErrors(prev => ({ ...prev, password: "" }));
+                            setLoginForm((prev) => ({
+                              ...prev,
+                              password: e.target.value,
+                            }));
+                            if (formErrors.password)
+                              setFormErrors((prev) => ({
+                                ...prev,
+                                password: "",
+                              }));
                           }}
-                          className={`pl-10 pr-10 focus-enhanced ${formErrors.password ? 'border-red-500' : ''}`}
+                          className={`pl-10 pr-10 focus-enhanced ${formErrors.password ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                         <Button
@@ -405,7 +454,9 @@ export default function Login() {
                         </Button>
                       </div>
                       {formErrors.password && (
-                        <p className="text-sm text-red-600">{formErrors.password}</p>
+                        <p className="text-sm text-red-600">
+                          {formErrors.password}
+                        </p>
                       )}
                     </div>
 
@@ -445,7 +496,10 @@ export default function Login() {
                   <form onSubmit={handleRegister} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName" className="text-sm font-medium">
+                        <Label
+                          htmlFor="firstName"
+                          className="text-sm font-medium"
+                        >
                           First Name
                         </Label>
                         <Input
@@ -453,18 +507,30 @@ export default function Login() {
                           placeholder="John"
                           value={registerForm.firstName}
                           onChange={(e) => {
-                            setRegisterForm(prev => ({ ...prev, firstName: e.target.value }));
-                            if (formErrors.firstName) setFormErrors(prev => ({ ...prev, firstName: "" }));
+                            setRegisterForm((prev) => ({
+                              ...prev,
+                              firstName: e.target.value,
+                            }));
+                            if (formErrors.firstName)
+                              setFormErrors((prev) => ({
+                                ...prev,
+                                firstName: "",
+                              }));
                           }}
-                          className={`focus-enhanced ${formErrors.firstName ? 'border-red-500' : ''}`}
+                          className={`focus-enhanced ${formErrors.firstName ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                         {formErrors.firstName && (
-                          <p className="text-sm text-red-600">{formErrors.firstName}</p>
+                          <p className="text-sm text-red-600">
+                            {formErrors.firstName}
+                          </p>
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName" className="text-sm font-medium">
+                        <Label
+                          htmlFor="lastName"
+                          className="text-sm font-medium"
+                        >
                           Last Name
                         </Label>
                         <Input
@@ -472,14 +538,23 @@ export default function Login() {
                           placeholder="Doe"
                           value={registerForm.lastName}
                           onChange={(e) => {
-                            setRegisterForm(prev => ({ ...prev, lastName: e.target.value }));
-                            if (formErrors.lastName) setFormErrors(prev => ({ ...prev, lastName: "" }));
+                            setRegisterForm((prev) => ({
+                              ...prev,
+                              lastName: e.target.value,
+                            }));
+                            if (formErrors.lastName)
+                              setFormErrors((prev) => ({
+                                ...prev,
+                                lastName: "",
+                              }));
                           }}
-                          className={`focus-enhanced ${formErrors.lastName ? 'border-red-500' : ''}`}
+                          className={`focus-enhanced ${formErrors.lastName ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                         {formErrors.lastName && (
-                          <p className="text-sm text-red-600">{formErrors.lastName}</p>
+                          <p className="text-sm text-red-600">
+                            {formErrors.lastName}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -495,15 +570,24 @@ export default function Login() {
                           placeholder="Choose a unique username"
                           value={registerForm.username}
                           onChange={(e) => {
-                            setRegisterForm(prev => ({ ...prev, username: e.target.value }));
-                            if (formErrors.username) setFormErrors(prev => ({ ...prev, username: "" }));
+                            setRegisterForm((prev) => ({
+                              ...prev,
+                              username: e.target.value,
+                            }));
+                            if (formErrors.username)
+                              setFormErrors((prev) => ({
+                                ...prev,
+                                username: "",
+                              }));
                           }}
-                          className={`pl-10 focus-enhanced ${formErrors.username ? 'border-red-500' : ''}`}
+                          className={`pl-10 focus-enhanced ${formErrors.username ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                       </div>
                       {formErrors.username && (
-                        <p className="text-sm text-red-600">{formErrors.username}</p>
+                        <p className="text-sm text-red-600">
+                          {formErrors.username}
+                        </p>
                       )}
                     </div>
 
@@ -519,15 +603,21 @@ export default function Login() {
                           placeholder="your.email@example.com"
                           value={registerForm.email}
                           onChange={(e) => {
-                            setRegisterForm(prev => ({ ...prev, email: e.target.value }));
-                            if (formErrors.email) setFormErrors(prev => ({ ...prev, email: "" }));
+                            setRegisterForm((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }));
+                            if (formErrors.email)
+                              setFormErrors((prev) => ({ ...prev, email: "" }));
                           }}
-                          className={`pl-10 focus-enhanced ${formErrors.email ? 'border-red-500' : ''}`}
+                          className={`pl-10 focus-enhanced ${formErrors.email ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                       </div>
                       {formErrors.email && (
-                        <p className="text-sm text-red-600">{formErrors.email}</p>
+                        <p className="text-sm text-red-600">
+                          {formErrors.email}
+                        </p>
                       )}
                     </div>
 
@@ -543,10 +633,17 @@ export default function Login() {
                           placeholder="Create a secure password"
                           value={registerForm.password}
                           onChange={(e) => {
-                            setRegisterForm(prev => ({ ...prev, password: e.target.value }));
-                            if (formErrors.password) setFormErrors(prev => ({ ...prev, password: "" }));
+                            setRegisterForm((prev) => ({
+                              ...prev,
+                              password: e.target.value,
+                            }));
+                            if (formErrors.password)
+                              setFormErrors((prev) => ({
+                                ...prev,
+                                password: "",
+                              }));
                           }}
-                          className={`pl-10 pr-10 focus-enhanced ${formErrors.password ? 'border-red-500' : ''}`}
+                          className={`pl-10 pr-10 focus-enhanced ${formErrors.password ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                         <Button
@@ -565,12 +662,17 @@ export default function Login() {
                         </Button>
                       </div>
                       {formErrors.password && (
-                        <p className="text-sm text-red-600">{formErrors.password}</p>
+                        <p className="text-sm text-red-600">
+                          {formErrors.password}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                      <Label
+                        htmlFor="confirmPassword"
+                        className="text-sm font-medium"
+                      >
                         Confirm Password
                       </Label>
                       <div className="relative">
@@ -581,10 +683,17 @@ export default function Login() {
                           placeholder="Confirm your password"
                           value={registerForm.confirmPassword}
                           onChange={(e) => {
-                            setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }));
-                            if (formErrors.confirmPassword) setFormErrors(prev => ({ ...prev, confirmPassword: "" }));
+                            setRegisterForm((prev) => ({
+                              ...prev,
+                              confirmPassword: e.target.value,
+                            }));
+                            if (formErrors.confirmPassword)
+                              setFormErrors((prev) => ({
+                                ...prev,
+                                confirmPassword: "",
+                              }));
                           }}
-                          className={`pl-10 pr-10 focus-enhanced ${formErrors.confirmPassword ? 'border-red-500' : ''}`}
+                          className={`pl-10 pr-10 focus-enhanced ${formErrors.confirmPassword ? "border-red-500" : ""}`}
                           disabled={isLoading}
                         />
                         <Button
@@ -592,7 +701,9 @@ export default function Login() {
                           variant="ghost"
                           size="sm"
                           className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           disabled={isLoading}
                         >
                           {showConfirmPassword ? (
@@ -603,7 +714,9 @@ export default function Login() {
                         </Button>
                       </div>
                       {formErrors.confirmPassword && (
-                        <p className="text-sm text-red-600">{formErrors.confirmPassword}</p>
+                        <p className="text-sm text-red-600">
+                          {formErrors.confirmPassword}
+                        </p>
                       )}
                     </div>
 
@@ -636,10 +749,13 @@ export default function Login() {
               <div className="flex items-start space-x-3">
                 <Shield className="w-5 h-5 text-primary mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-primary mb-1">Blockchain Security</p>
+                  <p className="font-medium text-primary mb-1">
+                    Blockchain Security
+                  </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    Your data is protected with end-to-end encryption and stored securely on the blockchain. 
-                    We never store your passwords in plain text.
+                    Your data is protected with end-to-end encryption and stored
+                    securely on the blockchain. We never store your passwords in
+                    plain text.
                   </p>
                 </div>
               </div>

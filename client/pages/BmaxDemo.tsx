@@ -11,16 +11,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Brain, 
-  ArrowLeft, 
-  Search, 
-  Sparkles, 
+import {
+  Brain,
+  ArrowLeft,
+  Search,
+  Sparkles,
   User,
   Heart,
   Activity,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 
 interface QueryEnhancement {
@@ -44,8 +44,12 @@ export default function BmaxDemo() {
 
   const checkAuthentication = async () => {
     try {
-      const sessionToken = localStorage.getItem("sessionToken") || 
-                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
 
       if (!sessionToken) {
         setIsAuthenticated(false);
@@ -54,7 +58,7 @@ export default function BmaxDemo() {
 
       const response = await fetch("/api/auth/verify", {
         headers: {
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
@@ -71,14 +75,18 @@ export default function BmaxDemo() {
 
     setIsLoading(true);
     try {
-      const sessionToken = localStorage.getItem("sessionToken") || 
-                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
 
       const response = await fetch("/api/medical-context/enhance-query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken || "",
         },
         body: JSON.stringify({ query }),
@@ -103,7 +111,7 @@ export default function BmaxDemo() {
     "Can I take ibuprofen?",
     "I'm feeling tired lately",
     "What should I monitor for my health?",
-    "I'm experiencing chest pain"
+    "I'm experiencing chest pain",
   ];
 
   return (
@@ -148,8 +156,11 @@ export default function BmaxDemo() {
           <Alert className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              You need to be logged in to see personalized query enhancements. 
-              <Link to="/login" className="underline ml-1">Log in here</Link> to try with your medical history.
+              You need to be logged in to see personalized query enhancements.
+              <Link to="/login" className="underline ml-1">
+                Log in here
+              </Link>{" "}
+              to try with your medical history.
             </AlertDescription>
           </Alert>
         )}
@@ -162,7 +173,8 @@ export default function BmaxDemo() {
               Test Query Enhancement
             </CardTitle>
             <CardDescription>
-              Enter a health question to see how B-max AI enhances it with your medical history.
+              Enter a health question to see how B-max AI enhances it with your
+              medical history.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -173,8 +185,8 @@ export default function BmaxDemo() {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && enhanceQuery()}
               />
-              <Button 
-                onClick={enhanceQuery} 
+              <Button
+                onClick={enhanceQuery}
                 disabled={!query.trim() || isLoading}
               >
                 {isLoading ? "Enhancing..." : "Enhance"}
@@ -183,7 +195,9 @@ export default function BmaxDemo() {
 
             {/* Sample Queries */}
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Try these sample queries:</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                Try these sample queries:
+              </p>
               <div className="flex flex-wrap gap-2">
                 {sampleQueries.map((sampleQuery, index) => (
                   <Button
@@ -235,8 +249,8 @@ export default function BmaxDemo() {
                     "{enhancement.enhancedQuery}"
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {enhancement.hasPersonalization 
-                      ? "Personalized with your medical history" 
+                    {enhancement.hasPersonalization
+                      ? "Personalized with your medical history"
                       : "No medical history available for personalization"}
                   </p>
                 </CardContent>
@@ -255,13 +269,18 @@ export default function BmaxDemo() {
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {enhancement.relevantConditions.map((condition, index) => (
-                      <Badge key={index} variant="destructive" className="text-xs">
+                      <Badge
+                        key={index}
+                        variant="destructive"
+                        className="text-xs"
+                      >
                         {condition}
                       </Badge>
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    These conditions from your medical history are relevant to your query
+                    These conditions from your medical history are relevant to
+                    your query
                   </p>
                 </CardContent>
               </Card>
@@ -281,7 +300,8 @@ export default function BmaxDemo() {
                     {enhancement.searchContext}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Additional context provided to B-max AI for personalized recommendations
+                    Additional context provided to B-max AI for personalized
+                    recommendations
                   </p>
                 </CardContent>
               </Card>
@@ -302,7 +322,8 @@ export default function BmaxDemo() {
                   </pre>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  This is the complete prompt sent to B-max AI, including your medical context
+                  This is the complete prompt sent to B-max AI, including your
+                  medical context
                 </p>
               </CardContent>
             </Card>
@@ -312,7 +333,9 @@ export default function BmaxDemo() {
         {/* How It Works */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="text-lg">How Medical Context Enhances B-max AI</CardTitle>
+            <CardTitle className="text-lg">
+              How Medical Context Enhances B-max AI
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-6">
@@ -326,11 +349,13 @@ export default function BmaxDemo() {
                   <li>• General symptom information</li>
                 </ul>
               </div>
-              
+
               <div>
                 <h4 className="font-medium mb-2">With Medical History:</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Condition-specific advice (e.g., diabetic dizziness)</li>
+                  <li>
+                    • Condition-specific advice (e.g., diabetic dizziness)
+                  </li>
                   <li>• Considers your current medications</li>
                   <li>• Warns about drug interactions</li>
                   <li>• Includes allergy precautions</li>
@@ -342,8 +367,10 @@ export default function BmaxDemo() {
             <Alert>
               <Brain className="h-4 w-4" />
               <AlertDescription>
-                <strong>Example:</strong> If you have diabetes and ask "I'm feeling dizzy", B-max AI will specifically 
-                address diabetic-related causes of dizziness like blood sugar fluctuations, rather than just general dizziness causes.
+                <strong>Example:</strong> If you have diabetes and ask "I'm
+                feeling dizzy", B-max AI will specifically address
+                diabetic-related causes of dizziness like blood sugar
+                fluctuations, rather than just general dizziness causes.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -353,21 +380,20 @@ export default function BmaxDemo() {
         <Card className="mt-6">
           <CardContent className="text-center py-6">
             <Brain className="h-12 w-12 mx-auto mb-4 text-primary" />
-            <h3 className="text-lg font-semibold mb-2">Ready to Try B-max AI?</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              Ready to Try B-max AI?
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Experience personalized health AI that considers your complete medical history.
+              Experience personalized health AI that considers your complete
+              medical history.
             </p>
             <div className="flex justify-center gap-3">
               <Link to="/bmax">
-                <Button>
-                  Try B-max AI Now
-                </Button>
+                <Button>Try B-max AI Now</Button>
               </Link>
               {!isAuthenticated && (
                 <Link to="/login">
-                  <Button variant="outline">
-                    Login for Personalization
-                  </Button>
+                  <Button variant="outline">Login for Personalization</Button>
                 </Link>
               )}
             </div>

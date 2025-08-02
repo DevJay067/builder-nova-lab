@@ -87,7 +87,10 @@ export default function HealthHistory() {
   const [sortBy, setSortBy] = useState("date");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [message, setMessage] = useState<{type: "success" | "error"; text: string} | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [activeTab, setActiveTab] = useState("records");
   const [stats, setStats] = useState({
     totalRecords: 0,
@@ -99,7 +102,7 @@ export default function HealthHistory() {
     type: "",
     title: "",
     description: "",
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     doctor: "",
     metadata: {
       weight: "",
@@ -112,25 +115,69 @@ export default function HealthHistory() {
   });
 
   const recordTypes = [
-    { value: "checkup", label: "Regular Checkup", icon: Stethoscope, color: "bg-blue-500" },
-    { value: "medication", label: "Medication", icon: Pill, color: "bg-green-500" },
-    { value: "lab", label: "Lab Results", icon: FileText, color: "bg-purple-500" },
-    { value: "imaging", label: "Imaging", icon: Activity, color: "bg-orange-500" },
-    { value: "emergency", label: "Emergency", icon: Heart, color: "bg-red-500" },
-    { value: "specialist", label: "Specialist Visit", icon: User, color: "bg-indigo-500" },
-    { value: "vitals", label: "Vital Signs", icon: TrendingUp, color: "bg-teal-500" },
-    { value: "other", label: "Other", icon: MoreHorizontal, color: "bg-gray-500" },
+    {
+      value: "checkup",
+      label: "Regular Checkup",
+      icon: Stethoscope,
+      color: "bg-blue-500",
+    },
+    {
+      value: "medication",
+      label: "Medication",
+      icon: Pill,
+      color: "bg-green-500",
+    },
+    {
+      value: "lab",
+      label: "Lab Results",
+      icon: FileText,
+      color: "bg-purple-500",
+    },
+    {
+      value: "imaging",
+      label: "Imaging",
+      icon: Activity,
+      color: "bg-orange-500",
+    },
+    {
+      value: "emergency",
+      label: "Emergency",
+      icon: Heart,
+      color: "bg-red-500",
+    },
+    {
+      value: "specialist",
+      label: "Specialist Visit",
+      icon: User,
+      color: "bg-indigo-500",
+    },
+    {
+      value: "vitals",
+      label: "Vital Signs",
+      icon: TrendingUp,
+      color: "bg-teal-500",
+    },
+    {
+      value: "other",
+      label: "Other",
+      icon: MoreHorizontal,
+      color: "bg-gray-500",
+    },
   ];
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     checkAuthAndLoadRecords();
   }, []);
 
   const checkAuthAndLoadRecords = async () => {
     try {
-      const sessionToken = localStorage.getItem("sessionToken") || 
-                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
 
       if (!sessionToken) {
         setIsAuthenticated(false);
@@ -140,7 +187,7 @@ export default function HealthHistory() {
 
       const authResponse = await fetch("/api/auth/verify", {
         headers: {
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
@@ -165,7 +212,7 @@ export default function HealthHistory() {
       setIsLoading(true);
       const response = await fetch("/api/auth/data-access/records", {
         headers: {
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
@@ -184,11 +231,12 @@ export default function HealthHistory() {
             blockchainHash: record.secureRecordId,
             metadata: record.metadata,
           }));
-          
+
           setRecords(transformedRecords);
           setStats({
             totalRecords: transformedRecords.length,
-            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure)
+              .length,
             lastUpdate: new Date().toISOString(),
           });
         }
@@ -207,8 +255,12 @@ export default function HealthHistory() {
     setMessage(null);
 
     try {
-      const sessionToken = localStorage.getItem("sessionToken") || 
-                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
 
       if (!sessionToken) {
         setMessage({ type: "error", text: "Please log in to save records" });
@@ -219,7 +271,7 @@ export default function HealthHistory() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
         body: JSON.stringify({
@@ -237,13 +289,16 @@ export default function HealthHistory() {
       const result = await response.json();
 
       if (result.success) {
-        setMessage({ type: "success", text: "Health record saved securely to blockchain!" });
+        setMessage({
+          type: "success",
+          text: "Health record saved securely to blockchain!",
+        });
         setIsDialogOpen(false);
         setNewRecord({
           type: "",
           title: "",
           description: "",
-          date: new Date().toISOString().split('T')[0],
+          date: new Date().toISOString().split("T")[0],
           doctor: "",
           metadata: {
             weight: "",
@@ -254,11 +309,14 @@ export default function HealthHistory() {
             notes: "",
           },
         });
-        
+
         // Reload records
         await loadHealthRecords(sessionToken);
       } else {
-        setMessage({ type: "error", text: result.message || "Failed to save record" });
+        setMessage({
+          type: "error",
+          text: result.message || "Failed to save record",
+        });
       }
     } catch (error) {
       console.error("Error saving record:", error);
@@ -269,27 +327,31 @@ export default function HealthHistory() {
   };
 
   const filteredRecords = records
-    .filter(record => {
-      const matchesSearch = record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (record.doctor && record.doctor.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesType = selectedType === "all" || record.type === selectedType;
+    .filter((record) => {
+      const matchesSearch =
+        record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (record.doctor &&
+          record.doctor.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesType =
+        selectedType === "all" || record.type === selectedType;
       return matchesSearch && matchesType;
     })
     .sort((a, b) => {
-      if (sortBy === "date") return new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (sortBy === "date")
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
       if (sortBy === "type") return a.type.localeCompare(b.type);
       if (sortBy === "title") return a.title.localeCompare(b.title);
       return 0;
     });
 
   const getRecordIcon = (type: string) => {
-    const recordType = recordTypes.find(rt => rt.value === type);
+    const recordType = recordTypes.find((rt) => rt.value === type);
     return recordType ? recordType.icon : FileText;
   };
 
   const getRecordColor = (type: string) => {
-    const recordType = recordTypes.find(rt => rt.value === type);
+    const recordType = recordTypes.find((rt) => rt.value === type);
     return recordType ? recordType.color : "bg-gray-500";
   };
 
@@ -310,8 +372,12 @@ export default function HealthHistory() {
                   <History className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Health History</h1>
-                  <p className="text-sm text-muted-foreground">Secure Medical Records</p>
+                  <h1 className="text-xl font-bold text-foreground">
+                    Health History
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Secure Medical Records
+                  </p>
                 </div>
               </div>
             </div>
@@ -326,7 +392,8 @@ export default function HealthHistory() {
               </div>
               <CardTitle className="text-xl">Authentication Required</CardTitle>
               <CardDescription>
-                Please log in to access your secure health history and medical records.
+                Please log in to access your secure health history and medical
+                records.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -361,14 +428,21 @@ export default function HealthHistory() {
                   <History className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Health History</h1>
-                  <p className="text-sm text-muted-foreground">Secure Medical Records</p>
+                  <h1 className="text-xl font-bold text-foreground">
+                    Health History
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Secure Medical Records
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
-              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+              <Badge
+                variant="secondary"
+                className="bg-green-50 text-green-700 border-green-200"
+              >
                 <Database className="w-3 h-3 mr-1" />
                 Blockchain Secured
               </Badge>
@@ -386,15 +460,21 @@ export default function HealthHistory() {
                       <span>Add New Health Record</span>
                     </DialogTitle>
                     <DialogDescription>
-                      Create a new health record that will be securely stored on the blockchain.
+                      Create a new health record that will be securely stored on
+                      the blockchain.
                     </DialogDescription>
                   </DialogHeader>
-                  
+
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="type">Record Type *</Label>
-                        <Select value={newRecord.type} onValueChange={(value) => setNewRecord(prev => ({ ...prev, type: value }))}>
+                        <Select
+                          value={newRecord.type}
+                          onValueChange={(value) =>
+                            setNewRecord((prev) => ({ ...prev, type: value }))
+                          }
+                        >
                           <SelectTrigger className="focus-enhanced">
                             <SelectValue placeholder="Select record type" />
                           </SelectTrigger>
@@ -410,14 +490,19 @@ export default function HealthHistory() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="date">Date *</Label>
                         <Input
                           id="date"
                           type="date"
                           value={newRecord.date}
-                          onChange={(e) => setNewRecord(prev => ({ ...prev, date: e.target.value }))}
+                          onChange={(e) =>
+                            setNewRecord((prev) => ({
+                              ...prev,
+                              date: e.target.value,
+                            }))
+                          }
                           className="focus-enhanced"
                           required
                         />
@@ -430,7 +515,12 @@ export default function HealthHistory() {
                         id="title"
                         placeholder="e.g., Annual Physical Exam"
                         value={newRecord.title}
-                        onChange={(e) => setNewRecord(prev => ({ ...prev, title: e.target.value }))}
+                        onChange={(e) =>
+                          setNewRecord((prev) => ({
+                            ...prev,
+                            title: e.target.value,
+                          }))
+                        }
                         className="focus-enhanced"
                         required
                       />
@@ -442,7 +532,12 @@ export default function HealthHistory() {
                         id="description"
                         placeholder="Detailed description of the medical record..."
                         value={newRecord.description}
-                        onChange={(e) => setNewRecord(prev => ({ ...prev, description: e.target.value }))}
+                        onChange={(e) =>
+                          setNewRecord((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
                         rows={3}
                         className="focus-enhanced"
                         required
@@ -455,7 +550,12 @@ export default function HealthHistory() {
                         id="doctor"
                         placeholder="e.g., Dr. Smith"
                         value={newRecord.doctor}
-                        onChange={(e) => setNewRecord(prev => ({ ...prev, doctor: e.target.value }))}
+                        onChange={(e) =>
+                          setNewRecord((prev) => ({
+                            ...prev,
+                            doctor: e.target.value,
+                          }))
+                        }
                         className="focus-enhanced"
                       />
                     </div>
@@ -463,8 +563,10 @@ export default function HealthHistory() {
                     <Separator />
 
                     <div className="space-y-4">
-                      <h4 className="font-medium text-foreground">Additional Information (Optional)</h4>
-                      
+                      <h4 className="font-medium text-foreground">
+                        Additional Information (Optional)
+                      </h4>
+
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="weight">Weight</Label>
@@ -474,15 +576,20 @@ export default function HealthHistory() {
                               id="weight"
                               placeholder="kg"
                               value={newRecord.metadata.weight}
-                              onChange={(e) => setNewRecord(prev => ({ 
-                                ...prev, 
-                                metadata: { ...prev.metadata, weight: e.target.value }
-                              }))}
+                              onChange={(e) =>
+                                setNewRecord((prev) => ({
+                                  ...prev,
+                                  metadata: {
+                                    ...prev.metadata,
+                                    weight: e.target.value,
+                                  },
+                                }))
+                              }
                               className="pl-10 focus-enhanced"
                             />
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <Label htmlFor="height">Height</Label>
                           <div className="relative">
@@ -491,10 +598,15 @@ export default function HealthHistory() {
                               id="height"
                               placeholder="cm"
                               value={newRecord.metadata.height}
-                              onChange={(e) => setNewRecord(prev => ({ 
-                                ...prev, 
-                                metadata: { ...prev.metadata, height: e.target.value }
-                              }))}
+                              onChange={(e) =>
+                                setNewRecord((prev) => ({
+                                  ...prev,
+                                  metadata: {
+                                    ...prev.metadata,
+                                    height: e.target.value,
+                                  },
+                                }))
+                              }
                               className="pl-10 focus-enhanced"
                             />
                           </div>
@@ -510,15 +622,20 @@ export default function HealthHistory() {
                               id="bloodPressure"
                               placeholder="120/80"
                               value={newRecord.metadata.bloodPressure}
-                              onChange={(e) => setNewRecord(prev => ({ 
-                                ...prev, 
-                                metadata: { ...prev.metadata, bloodPressure: e.target.value }
-                              }))}
+                              onChange={(e) =>
+                                setNewRecord((prev) => ({
+                                  ...prev,
+                                  metadata: {
+                                    ...prev.metadata,
+                                    bloodPressure: e.target.value,
+                                  },
+                                }))
+                              }
                               className="pl-10 focus-enhanced"
                             />
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <Label htmlFor="heartRate">Heart Rate</Label>
                           <div className="relative">
@@ -527,10 +644,15 @@ export default function HealthHistory() {
                               id="heartRate"
                               placeholder="bpm"
                               value={newRecord.metadata.heartRate}
-                              onChange={(e) => setNewRecord(prev => ({ 
-                                ...prev, 
-                                metadata: { ...prev.metadata, heartRate: e.target.value }
-                              }))}
+                              onChange={(e) =>
+                                setNewRecord((prev) => ({
+                                  ...prev,
+                                  metadata: {
+                                    ...prev.metadata,
+                                    heartRate: e.target.value,
+                                  },
+                                }))
+                              }
                               className="pl-10 focus-enhanced"
                             />
                           </div>
@@ -543,10 +665,15 @@ export default function HealthHistory() {
                           id="notes"
                           placeholder="Any additional notes or observations..."
                           value={newRecord.metadata.notes}
-                          onChange={(e) => setNewRecord(prev => ({ 
-                            ...prev, 
-                            metadata: { ...prev.metadata, notes: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setNewRecord((prev) => ({
+                              ...prev,
+                              metadata: {
+                                ...prev.metadata,
+                                notes: e.target.value,
+                              },
+                            }))
+                          }
                           rows={2}
                           className="focus-enhanced"
                         />
@@ -554,10 +681,18 @@ export default function HealthHistory() {
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-4 border-t">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDialogOpen(false)}
+                      >
                         Cancel
                       </Button>
-                      <Button type="submit" disabled={isSubmitting} className="btn-smooth shadow-colored">
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="btn-smooth shadow-colored"
+                      >
                         {isSubmitting ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -582,11 +717,13 @@ export default function HealthHistory() {
       {/* Message Alert */}
       {message && (
         <div className="container mx-auto px-4 pt-4">
-          <Alert className={`fade-in ${
-            message.type === "success" 
-              ? "border-green-200 bg-green-50 text-green-800" 
-              : "border-red-200 bg-red-50 text-red-800"
-          }`}>
+          <Alert
+            className={`fade-in ${
+              message.type === "success"
+                ? "border-green-200 bg-green-50 text-green-800"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
             {message.type === "success" ? (
               <CheckCircle className="h-4 w-4" />
             ) : (
@@ -601,17 +738,30 @@ export default function HealthHistory() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="records" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="records"
+              className="flex items-center space-x-2"
+            >
               <FileText className="w-4 h-4" />
               <span>Records</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="analytics"
+              className="flex items-center space-x-2"
+            >
               <TrendingUp className="w-4 h-4" />
               <span>Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="security"
+              className="flex items-center space-x-2"
+            >
               <Shield className="w-4 h-4" />
               <span>Security</span>
             </TabsTrigger>
@@ -622,7 +772,9 @@ export default function HealthHistory() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in">
               <Card className="card-hover shadow-colored border-border/50">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Records</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Records
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-3">
@@ -630,8 +782,12 @@ export default function HealthHistory() {
                       <FileText className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-foreground">{stats.totalRecords}</div>
-                      <div className="text-sm text-muted-foreground">Health records</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {stats.totalRecords}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Health records
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -639,7 +795,9 @@ export default function HealthHistory() {
 
               <Card className="card-hover shadow-colored border-border/50">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Secure Records</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Secure Records
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-3">
@@ -647,8 +805,12 @@ export default function HealthHistory() {
                       <Shield className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-foreground">{stats.secureRecords}</div>
-                      <div className="text-sm text-muted-foreground">Blockchain protected</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {stats.secureRecords}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Blockchain protected
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -656,7 +818,9 @@ export default function HealthHistory() {
 
               <Card className="card-hover shadow-colored border-border/50">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Last Update</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Last Update
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-3">
@@ -665,9 +829,13 @@ export default function HealthHistory() {
                     </div>
                     <div>
                       <div className="text-lg font-bold text-foreground">
-                        {stats.lastUpdate ? new Date(stats.lastUpdate).toLocaleDateString() : "Never"}
+                        {stats.lastUpdate
+                          ? new Date(stats.lastUpdate).toLocaleDateString()
+                          : "Never"}
                       </div>
-                      <div className="text-sm text-muted-foreground">Most recent</div>
+                      <div className="text-sm text-muted-foreground">
+                        Most recent
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -677,7 +845,9 @@ export default function HealthHistory() {
             {/* Search and Filters */}
             <Card className="shadow-colored border-border/50 fade-in fade-in-delay-1">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Search & Filter Records</CardTitle>
+                <CardTitle className="text-lg">
+                  Search & Filter Records
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -690,7 +860,7 @@ export default function HealthHistory() {
                       className="pl-10 focus-enhanced"
                     />
                   </div>
-                  
+
                   <Select value={selectedType} onValueChange={setSelectedType}>
                     <SelectTrigger className="w-full sm:w-48 focus-enhanced">
                       <Filter className="w-4 h-4 mr-2" />
@@ -747,13 +917,18 @@ export default function HealthHistory() {
                 <Card className="shadow-colored border-border/50 text-center py-12">
                   <CardContent>
                     <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold text-foreground mb-2">No Records Found</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      No Records Found
+                    </h3>
                     <p className="text-muted-foreground mb-6">
-                      {searchTerm || selectedType !== "all" 
-                        ? "No records match your search criteria." 
+                      {searchTerm || selectedType !== "all"
+                        ? "No records match your search criteria."
                         : "Start by adding your first health record."}
                     </p>
-                    <Button onClick={() => setIsDialogOpen(true)} className="btn-smooth shadow-colored">
+                    <Button
+                      onClick={() => setIsDialogOpen(true)}
+                      className="btn-smooth shadow-colored"
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Your First Record
                     </Button>
@@ -763,17 +938,19 @@ export default function HealthHistory() {
                 filteredRecords.map((record, index) => {
                   const RecordIcon = getRecordIcon(record.type);
                   return (
-                    <Card 
-                      key={record.id} 
+                    <Card
+                      key={record.id}
                       className="shadow-colored border-border/50 card-hover fade-in-up"
-                      style={{animationDelay: `${index * 0.1}s`}}
+                      style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <CardContent className="p-6">
                         <div className="flex items-start space-x-4">
-                          <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${getRecordColor(record.type)} text-white shadow-lg transform-smooth hover:scale-110`}>
+                          <div
+                            className={`flex items-center justify-center w-12 h-12 rounded-xl ${getRecordColor(record.type)} text-white shadow-lg transform-smooth hover:scale-110`}
+                          >
                             <RecordIcon className="w-6 h-6" />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between mb-2">
                               <div>
@@ -783,7 +960,11 @@ export default function HealthHistory() {
                                 <div className="flex items-center space-x-3 text-sm text-muted-foreground">
                                   <div className="flex items-center space-x-1">
                                     <Calendar className="w-3 h-3" />
-                                    <span>{new Date(record.date).toLocaleDateString()}</span>
+                                    <span>
+                                      {new Date(
+                                        record.date,
+                                      ).toLocaleDateString()}
+                                    </span>
                                   </div>
                                   {record.doctor && (
                                     <div className="flex items-center space-x-1">
@@ -793,52 +974,76 @@ export default function HealthHistory() {
                                   )}
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center space-x-2">
                                 {record.isSecure && (
-                                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-green-50 text-green-700 border-green-200"
+                                  >
                                     <Lock className="w-3 h-3 mr-1" />
                                     Secure
                                   </Badge>
                                 )}
                                 <Badge variant="outline" className="text-xs">
-                                  {recordTypes.find(rt => rt.value === record.type)?.label || record.type}
+                                  {recordTypes.find(
+                                    (rt) => rt.value === record.type,
+                                  )?.label || record.type}
                                 </Badge>
                               </div>
                             </div>
-                            
+
                             <p className="text-muted-foreground mb-3 line-clamp-2">
                               {record.description}
                             </p>
-                            
-                            {record.metadata && Object.keys(record.metadata).some(key => record.metadata[key]) && (
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-3">
-                                {record.metadata.weight && (
-                                  <div>
-                                    <span className="text-muted-foreground">Weight:</span>
-                                    <div className="font-medium">{record.metadata.weight} kg</div>
-                                  </div>
-                                )}
-                                {record.metadata.bloodPressure && (
-                                  <div>
-                                    <span className="text-muted-foreground">BP:</span>
-                                    <div className="font-medium">{record.metadata.bloodPressure}</div>
-                                  </div>
-                                )}
-                                {record.metadata.heartRate && (
-                                  <div>
-                                    <span className="text-muted-foreground">HR:</span>
-                                    <div className="font-medium">{record.metadata.heartRate} bpm</div>
-                                  </div>
-                                )}
-                                {record.metadata.temperature && (
-                                  <div>
-                                    <span className="text-muted-foreground">Temp:</span>
-                                    <div className="font-medium">{record.metadata.temperature}°C</div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+
+                            {record.metadata &&
+                              Object.keys(record.metadata).some(
+                                (key) => record.metadata[key],
+                              ) && (
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-3">
+                                  {record.metadata.weight && (
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        Weight:
+                                      </span>
+                                      <div className="font-medium">
+                                        {record.metadata.weight} kg
+                                      </div>
+                                    </div>
+                                  )}
+                                  {record.metadata.bloodPressure && (
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        BP:
+                                      </span>
+                                      <div className="font-medium">
+                                        {record.metadata.bloodPressure}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {record.metadata.heartRate && (
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        HR:
+                                      </span>
+                                      <div className="font-medium">
+                                        {record.metadata.heartRate} bpm
+                                      </div>
+                                    </div>
+                                  )}
+                                  {record.metadata.temperature && (
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        Temp:
+                                      </span>
+                                      <div className="font-medium">
+                                        {record.metadata.temperature}°C
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                           </div>
                         </div>
                       </CardContent>
@@ -862,9 +1067,12 @@ export default function HealthHistory() {
               </CardHeader>
               <CardContent className="text-center py-12">
                 <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">Analytics Coming Soon</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Analytics Coming Soon
+                </h3>
                 <p className="text-muted-foreground">
-                  We're working on powerful analytics features to help you understand your health trends and patterns.
+                  We're working on powerful analytics features to help you
+                  understand your health trends and patterns.
                 </p>
               </CardContent>
             </Card>
@@ -884,57 +1092,82 @@ export default function HealthHistory() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h4 className="font-medium text-foreground">Encryption Status</h4>
+                    <h4 className="font-medium text-foreground">
+                      Encryption Status
+                    </h4>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-medium">End-to-End Encryption</span>
+                          <span className="text-sm font-medium">
+                            End-to-End Encryption
+                          </span>
                         </div>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
                           Active
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-medium">Blockchain Storage</span>
+                          <span className="text-sm font-medium">
+                            Blockchain Storage
+                          </span>
                         </div>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
                           Secured
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-medium">Split Key Encryption</span>
+                          <span className="text-sm font-medium">
+                            Split Key Encryption
+                          </span>
                         </div>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
                           Enabled
                         </Badge>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4">
-                    <h4 className="font-medium text-foreground">Privacy Controls</h4>
+                    <h4 className="font-medium text-foreground">
+                      Privacy Controls
+                    </h4>
                     <div className="space-y-3">
                       <div className="p-3 rounded-lg border border-border">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">Data Ownership</span>
+                          <span className="text-sm font-medium">
+                            Data Ownership
+                          </span>
                           <Badge variant="outline">You Own Your Data</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Your health data belongs to you and is never shared without your consent.
+                          Your health data belongs to you and is never shared
+                          without your consent.
                         </p>
                       </div>
                       <div className="p-3 rounded-lg border border-border">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">Access Control</span>
+                          <span className="text-sm font-medium">
+                            Access Control
+                          </span>
                           <Badge variant="outline">Private by Default</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Only you can access your health records with your unique authentication.
+                          Only you can access your health records with your
+                          unique authentication.
                         </p>
                       </div>
                     </div>

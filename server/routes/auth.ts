@@ -20,8 +20,8 @@ export const registerUser: RequestHandler = async (req, res) => {
       email,
       {
         firstName,
-        lastName
-      }
+        lastName,
+      },
     );
 
     if (result.success) {
@@ -58,7 +58,10 @@ export const loginUser: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await UserAuthenticationService.authenticateUser(username, password);
+    const result = await UserAuthenticationService.authenticateUser(
+      username,
+      password,
+    );
 
     if (result.success) {
       // Set session cookie
@@ -226,7 +229,7 @@ export const createDataAccess: RequestHandler = async (req, res) => {
 
     const result = await UserAuthenticationService.storeHealthRecord(
       sessionToken,
-      { type, data }
+      { type, data },
     );
 
     if (result.success) {
@@ -267,7 +270,8 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await UserAuthenticationService.getHealthRecords(sessionToken);
+    const result =
+      await UserAuthenticationService.getHealthRecords(sessionToken);
 
     if (result.success) {
       res.json({

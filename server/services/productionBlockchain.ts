@@ -3,7 +3,7 @@ import { HealthRecord, BlockchainTransaction } from "@shared/api";
 
 /**
  * Production-Level Blockchain Service with Split Key Cryptography
- * 
+ *
  * This service implements a secure healthcare blockchain system with:
  * - Split key cryptography for enhanced security
  * - User hash + data hash combination for secure data access
@@ -50,7 +50,7 @@ export interface ProductionBlock {
 
 export interface ProductionTransaction {
   id: string;
-  type: 'CREATE' | 'ACCESS' | 'UPDATE' | 'REVOKE';
+  type: "CREATE" | "ACCESS" | "UPDATE" | "REVOKE";
   patientId: string;
   dataHash: string;
   splitKeyReference: string;
@@ -95,7 +95,7 @@ class ProductionBlockchainService {
     const merkleRoot = this.calculateMerkleRoot([]);
     const blockData = `${genesisData.blockNumber}${genesisData.previousHash}${merkleRoot}${genesisData.timestamp}${genesisData.difficulty}`;
     const hash = this.calculateHash(blockData + genesisData.nonce);
-    
+
     return {
       ...genesisData,
       merkleRoot,
@@ -108,9 +108,13 @@ class ProductionBlockchainService {
    * Generate user hash from username and password
    */
   static generateUserHash(username: string, password: string): string {
-    const salt = crypto.createHash('sha256').update(username).digest('hex').substring(0, 16);
-    const userKey = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
-    return crypto.createHash('sha256').update(userKey).digest('hex');
+    const salt = crypto
+      .createHash("sha256")
+      .update(username)
+      .digest("hex")
+      .substring(0, 16);
+    const userKey = crypto.pbkdf2Sync(password, salt, 100000, 32, "sha256");
+    return crypto.createHash("sha256").update(userKey).digest("hex");
   }
 
   /**
@@ -121,19 +125,23 @@ class ProductionBlockchainService {
       type: healthRecord.type,
       data: healthRecord.data,
       timestamp: healthRecord.timestamp,
-      patientId: healthRecord.patientId
+      patientId: healthRecord.patientId,
     });
-    return crypto.createHash('sha256').update(recordString).digest('hex');
+    return crypto.createHash("sha256").update(recordString).digest("hex");
   }
 
   /**
    * Create split key system (User Hash + Data Hash = Combined Hash → Split)
    */
-  static createSplitKeySystem(userHash: string, dataHash: string): SplitKeyData {
+  static createSplitKeySystem(
+    userHash: string,
+    dataHash: string,
+  ): SplitKeyData {
     // Combine user hash and data hash
-    const combinedHash = crypto.createHash('sha256')
+    const combinedHash = crypto
+      .createHash("sha256")
       .update(userHash + dataHash)
-      .digest('hex');
+      .digest("hex");
 
     // Split the combined hash into two parts
     const midPoint = combinedHash.length / 2;
@@ -141,9 +149,10 @@ class ProductionBlockchainService {
     const part2 = combinedHash.substring(midPoint);
 
     // Create checksum for integrity verification
-    const checksum = crypto.createHash('sha256')
+    const checksum = crypto
+      .createHash("sha256")
       .update(part1 + part2)
-      .digest('hex')
+      .digest("hex")
       .substring(0, 8);
 
     return {
@@ -153,8 +162,8 @@ class ProductionBlockchainService {
       splitKeyPairs: {
         part1,
         part2,
-        checksum
-      }
+        checksum,
+      },
     };
   }
 
@@ -164,18 +173,19 @@ class ProductionBlockchainService {
   static verifySplitKey(splitKeyData: SplitKeyData): boolean {
     const { part1, part2, checksum } = splitKeyData.splitKeyPairs;
     const reconstructedHash = part1 + part2;
-    
+
     // Verify reconstruction matches original combined hash
     if (reconstructedHash !== splitKeyData.combinedHash) {
       return false;
     }
 
     // Verify checksum
-    const calculatedChecksum = crypto.createHash('sha256')
+    const calculatedChecksum = crypto
+      .createHash("sha256")
       .update(part1 + part2)
-      .digest('hex')
+      .digest("hex")
       .substring(0, 8);
-    
+
     return calculatedChecksum === checksum;
   }
 
@@ -183,51 +193,65 @@ class ProductionBlockchainService {
    * Encrypt health data with multiple layers
    */
   static encryptHealthData(
-    healthRecord: any, 
-    splitKeyData: SplitKeyData
+    healthRecord: any,
+    splitKeyData: SplitKeyData,
   ): { encryptedData: string; encryptionLayers: any } {
     const { userHash, dataHash, combinedHash } = splitKeyData;
 
     // Layer 1: Encrypt with user hash (user-specific encryption)
-    const userLayerKey = crypto.createHash('sha256').update(userHash).digest();
-    const userCipher = crypto.createCipherGCM('aes-256-gcm', userLayerKey);
+    const userLayerKey = crypto.createHash("sha256").update(userHash).digest();
+    const userCipher = crypto.createCipherGCM("aes-256-gcm", userLayerKey);
     const userIv = crypto.randomBytes(16);
-    userCipher.setAAD(Buffer.from('user-layer'));
-    
-    let userEncrypted = userCipher.update(JSON.stringify(healthRecord), 'utf8', 'hex');
-    userEncrypted += userCipher.final('hex');
+    userCipher.setAAD(Buffer.from("user-layer"));
+
+    let userEncrypted = userCipher.update(
+      JSON.stringify(healthRecord),
+      "utf8",
+      "hex",
+    );
+    userEncrypted += userCipher.final("hex");
     const userAuthTag = userCipher.getAuthTag();
-    const userLayerData = `${userIv.toString('hex')}:${userAuthTag.toString('hex')}:${userEncrypted}`;
+    const userLayerData = `${userIv.toString("hex")}:${userAuthTag.toString("hex")}:${userEncrypted}`;
 
     // Layer 2: Encrypt with data hash (data-specific encryption)
-    const dataLayerKey = crypto.createHash('sha256').update(dataHash).digest();
-    const dataCipher = crypto.createCipherGCM('aes-256-gcm', dataLayerKey);
+    const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
+    const dataCipher = crypto.createCipherGCM("aes-256-gcm", dataLayerKey);
     const dataIv = crypto.randomBytes(16);
-    dataCipher.setAAD(Buffer.from('data-layer'));
-    
-    let dataEncrypted = dataCipher.update(userLayerData, 'utf8', 'hex');
-    dataEncrypted += dataCipher.final('hex');
+    dataCipher.setAAD(Buffer.from("data-layer"));
+
+    let dataEncrypted = dataCipher.update(userLayerData, "utf8", "hex");
+    dataEncrypted += dataCipher.final("hex");
     const dataAuthTag = dataCipher.getAuthTag();
-    const dataLayerData = `${dataIv.toString('hex')}:${dataAuthTag.toString('hex')}:${dataEncrypted}`;
+    const dataLayerData = `${dataIv.toString("hex")}:${dataAuthTag.toString("hex")}:${dataEncrypted}`;
 
     // Layer 3: Encrypt with combined hash (blockchain-specific encryption)
-    const blockchainLayerKey = crypto.createHash('sha256').update(combinedHash).digest();
-    const blockchainCipher = crypto.createCipherGCM('aes-256-gcm', blockchainLayerKey);
+    const blockchainLayerKey = crypto
+      .createHash("sha256")
+      .update(combinedHash)
+      .digest();
+    const blockchainCipher = crypto.createCipherGCM(
+      "aes-256-gcm",
+      blockchainLayerKey,
+    );
     const blockchainIv = crypto.randomBytes(16);
-    blockchainCipher.setAAD(Buffer.from('blockchain-layer'));
-    
-    let blockchainEncrypted = blockchainCipher.update(dataLayerData, 'utf8', 'hex');
-    blockchainEncrypted += blockchainCipher.final('hex');
+    blockchainCipher.setAAD(Buffer.from("blockchain-layer"));
+
+    let blockchainEncrypted = blockchainCipher.update(
+      dataLayerData,
+      "utf8",
+      "hex",
+    );
+    blockchainEncrypted += blockchainCipher.final("hex");
     const blockchainAuthTag = blockchainCipher.getAuthTag();
-    const finalEncryptedData = `${blockchainIv.toString('hex')}:${blockchainAuthTag.toString('hex')}:${blockchainEncrypted}`;
+    const finalEncryptedData = `${blockchainIv.toString("hex")}:${blockchainAuthTag.toString("hex")}:${blockchainEncrypted}`;
 
     return {
       encryptedData: finalEncryptedData,
       encryptionLayers: {
         userLayer: userLayerData,
         dataLayer: dataLayerData,
-        blockchainLayer: finalEncryptedData
-      }
+        blockchainLayer: finalEncryptedData,
+      },
     };
   }
 
@@ -236,54 +260,81 @@ class ProductionBlockchainService {
    */
   static decryptHealthData(
     encryptedData: string,
-    splitKeyData: SplitKeyData
+    splitKeyData: SplitKeyData,
   ): any {
     try {
       const { userHash, dataHash, combinedHash } = splitKeyData;
 
       // Layer 3: Decrypt blockchain layer
-      const blockchainLayerKey = crypto.createHash('sha256').update(combinedHash).digest();
-      const [blockchainIvHex, blockchainAuthTagHex, blockchainEncrypted] = encryptedData.split(':');
-      const blockchainIv = Buffer.from(blockchainIvHex, 'hex');
-      const blockchainAuthTag = Buffer.from(blockchainAuthTagHex, 'hex');
-      
-      const blockchainDecipher = crypto.createDecipherGCM('aes-256-gcm', blockchainLayerKey);
-      blockchainDecipher.setAAD(Buffer.from('blockchain-layer'));
+      const blockchainLayerKey = crypto
+        .createHash("sha256")
+        .update(combinedHash)
+        .digest();
+      const [blockchainIvHex, blockchainAuthTagHex, blockchainEncrypted] =
+        encryptedData.split(":");
+      const blockchainIv = Buffer.from(blockchainIvHex, "hex");
+      const blockchainAuthTag = Buffer.from(blockchainAuthTagHex, "hex");
+
+      const blockchainDecipher = crypto.createDecipherGCM(
+        "aes-256-gcm",
+        blockchainLayerKey,
+      );
+      blockchainDecipher.setAAD(Buffer.from("blockchain-layer"));
       blockchainDecipher.setAuthTag(blockchainAuthTag);
-      
-      let dataLayerData = blockchainDecipher.update(blockchainEncrypted, 'hex', 'utf8');
-      dataLayerData += blockchainDecipher.final('utf8');
+
+      let dataLayerData = blockchainDecipher.update(
+        blockchainEncrypted,
+        "hex",
+        "utf8",
+      );
+      dataLayerData += blockchainDecipher.final("utf8");
 
       // Layer 2: Decrypt data layer
-      const dataLayerKey = crypto.createHash('sha256').update(dataHash).digest();
-      const [dataIvHex, dataAuthTagHex, dataEncrypted] = dataLayerData.split(':');
-      const dataIv = Buffer.from(dataIvHex, 'hex');
-      const dataAuthTag = Buffer.from(dataAuthTagHex, 'hex');
-      
-      const dataDecipher = crypto.createDecipherGCM('aes-256-gcm', dataLayerKey);
-      dataDecipher.setAAD(Buffer.from('data-layer'));
+      const dataLayerKey = crypto
+        .createHash("sha256")
+        .update(dataHash)
+        .digest();
+      const [dataIvHex, dataAuthTagHex, dataEncrypted] =
+        dataLayerData.split(":");
+      const dataIv = Buffer.from(dataIvHex, "hex");
+      const dataAuthTag = Buffer.from(dataAuthTagHex, "hex");
+
+      const dataDecipher = crypto.createDecipherGCM(
+        "aes-256-gcm",
+        dataLayerKey,
+      );
+      dataDecipher.setAAD(Buffer.from("data-layer"));
       dataDecipher.setAuthTag(dataAuthTag);
-      
-      let userLayerData = dataDecipher.update(dataEncrypted, 'hex', 'utf8');
-      userLayerData += dataDecipher.final('utf8');
+
+      let userLayerData = dataDecipher.update(dataEncrypted, "hex", "utf8");
+      userLayerData += dataDecipher.final("utf8");
 
       // Layer 1: Decrypt user layer
-      const userLayerKey = crypto.createHash('sha256').update(userHash).digest();
-      const [userIvHex, userAuthTagHex, userEncrypted] = userLayerData.split(':');
-      const userIv = Buffer.from(userIvHex, 'hex');
-      const userAuthTag = Buffer.from(userAuthTagHex, 'hex');
-      
-      const userDecipher = crypto.createDecipherGCM('aes-256-gcm', userLayerKey);
-      userDecipher.setAAD(Buffer.from('user-layer'));
+      const userLayerKey = crypto
+        .createHash("sha256")
+        .update(userHash)
+        .digest();
+      const [userIvHex, userAuthTagHex, userEncrypted] =
+        userLayerData.split(":");
+      const userIv = Buffer.from(userIvHex, "hex");
+      const userAuthTag = Buffer.from(userAuthTagHex, "hex");
+
+      const userDecipher = crypto.createDecipherGCM(
+        "aes-256-gcm",
+        userLayerKey,
+      );
+      userDecipher.setAAD(Buffer.from("user-layer"));
       userDecipher.setAuthTag(userAuthTag);
-      
-      let decryptedData = userDecipher.update(userEncrypted, 'hex', 'utf8');
-      decryptedData += userDecipher.final('utf8');
+
+      let decryptedData = userDecipher.update(userEncrypted, "hex", "utf8");
+      decryptedData += userDecipher.final("utf8");
 
       return JSON.parse(decryptedData);
     } catch (error) {
-      console.error('❌ Failed to decrypt health data:', error);
-      throw new Error('Failed to decrypt health data - invalid keys or corrupted data');
+      console.error("❌ Failed to decrypt health data:", error);
+      throw new Error(
+        "Failed to decrypt health data - invalid keys or corrupted data",
+      );
     }
   }
 
@@ -293,7 +344,7 @@ class ProductionBlockchainService {
   static async storeSecureHealthRecord(
     healthRecord: any,
     username: string,
-    password: string
+    password: string,
   ): Promise<{
     transaction: ProductionTransaction;
     splitKeyData: SplitKeyData;
@@ -302,17 +353,20 @@ class ProductionBlockchainService {
     // Generate hashes
     const userHash = this.generateUserHash(username, password);
     const dataHash = this.generateDataHash(healthRecord);
-    
+
     // Create split key system
     const splitKeyData = this.createSplitKeySystem(userHash, dataHash);
-    
+
     // Encrypt the health data
-    const { encryptedData, encryptionLayers } = this.encryptHealthData(healthRecord, splitKeyData);
-    
+    const { encryptedData, encryptionLayers } = this.encryptHealthData(
+      healthRecord,
+      splitKeyData,
+    );
+
     // Create secure transaction
     const transaction: ProductionTransaction = {
-      id: crypto.randomBytes(16).toString('hex'),
-      type: 'CREATE',
+      id: crypto.randomBytes(16).toString("hex"),
+      type: "CREATE",
       patientId: healthRecord.patientId || userHash.substring(0, 16),
       dataHash: dataHash,
       splitKeyReference: splitKeyData.combinedHash,
@@ -320,27 +374,30 @@ class ProductionBlockchainService {
       timestamp: new Date().toISOString(),
       signature: this.signTransaction(encryptedData),
       gasUsed: this.calculateGasUsage(encryptedData),
-      validationProof: this.generateValidationProof(splitKeyData)
+      validationProof: this.generateValidationProof(splitKeyData),
     };
 
     // Add to pending transactions
     this.pendingTransactions.push(transaction);
-    
+
     // Mine block if enough transactions
     if (this.pendingTransactions.length >= this.MAX_TRANSACTIONS_PER_BLOCK) {
       await this.mineBlock();
     }
 
-    const blockchainHash = crypto.createHash('sha256')
+    const blockchainHash = crypto
+      .createHash("sha256")
       .update(transaction.id + transaction.encryptedPayload)
-      .digest('hex');
+      .digest("hex");
 
-    console.log(`✅ Secure health record stored with blockchain hash: ${blockchainHash}`);
-    
+    console.log(
+      `✅ Secure health record stored with blockchain hash: ${blockchainHash}`,
+    );
+
     return {
       transaction,
       splitKeyData,
-      blockchainHash
+      blockchainHash,
     };
   }
 
@@ -350,37 +407,42 @@ class ProductionBlockchainService {
   static retrieveSecureHealthRecord(
     username: string,
     password: string,
-    dataIdentifier: string
+    dataIdentifier: string,
   ): any | null {
     try {
       // Generate user hash
       const userHash = this.generateUserHash(username, password);
-      
+
       // Search for transaction in blockchain
-      const transaction = this.findTransactionByIdentifier(dataIdentifier, userHash);
-      
+      const transaction = this.findTransactionByIdentifier(
+        dataIdentifier,
+        userHash,
+      );
+
       if (!transaction) {
-        console.log('❌ No matching transaction found for user');
+        console.log("❌ No matching transaction found for user");
         return null;
       }
 
       // Reconstruct split key data
       const splitKeyData = this.reconstructSplitKeyData(userHash, transaction);
-      
+
       // Verify split key integrity
       if (!this.verifySplitKey(splitKeyData)) {
-        console.error('❌ Split key verification failed');
+        console.error("❌ Split key verification failed");
         return null;
       }
 
       // Decrypt the health data
-      const decryptedData = this.decryptHealthData(transaction.encryptedPayload, splitKeyData);
-      
+      const decryptedData = this.decryptHealthData(
+        transaction.encryptedPayload,
+        splitKeyData,
+      );
+
       console.log(`✅ Successfully retrieved secure health record for user`);
       return decryptedData;
-      
     } catch (error) {
-      console.error('❌ Failed to retrieve secure health record:', error);
+      console.error("❌ Failed to retrieve secure health record:", error);
       return null;
     }
   }
@@ -390,14 +452,16 @@ class ProductionBlockchainService {
    */
   private static findTransactionByIdentifier(
     identifier: string,
-    userHash: string
+    userHash: string,
   ): ProductionTransaction | null {
     for (const block of this.blockchain) {
       for (const transaction of block.transactions) {
         if (
-          (transaction.id === identifier || 
-           transaction.dataHash === identifier ||
-           transaction.splitKeyReference.includes(userHash.substring(0, 16))) &&
+          (transaction.id === identifier ||
+            transaction.dataHash === identifier ||
+            transaction.splitKeyReference.includes(
+              userHash.substring(0, 16),
+            )) &&
           transaction.patientId === userHash.substring(0, 16)
         ) {
           return transaction;
@@ -412,7 +476,7 @@ class ProductionBlockchainService {
    */
   private static reconstructSplitKeyData(
     userHash: string,
-    transaction: ProductionTransaction
+    transaction: ProductionTransaction,
   ): SplitKeyData {
     const dataHash = transaction.dataHash;
     return this.createSplitKeySystem(userHash, dataHash);
@@ -427,17 +491,17 @@ class ProductionBlockchainService {
     const timestamp = new Date().toISOString();
     const transactions = [...this.pendingTransactions];
     const merkleRoot = this.calculateMerkleRoot(transactions);
-    
+
     // Clear pending transactions
     this.pendingTransactions = [];
-    
+
     // Mine the block (proof of work)
     const { nonce, hash } = await this.proofOfWork(
       blockNumber,
       previousBlock.hash,
       merkleRoot,
       timestamp,
-      this.DIFFICULTY
+      this.DIFFICULTY,
     );
 
     const newBlock: ProductionBlock = {
@@ -449,12 +513,14 @@ class ProductionBlockchainService {
       nonce,
       difficulty: this.DIFFICULTY,
       hash,
-      signature: this.signBlock(hash)
+      signature: this.signBlock(hash),
     };
 
     this.blockchain.push(newBlock);
-    console.log(`⛏️  Successfully mined block #${blockNumber} with ${transactions.length} transactions`);
-    
+    console.log(
+      `⛏️  Successfully mined block #${blockNumber} with ${transactions.length} transactions`,
+    );
+
     return newBlock;
   }
 
@@ -466,7 +532,7 @@ class ProductionBlockchainService {
     previousHash: string,
     merkleRoot: string,
     timestamp: string,
-    difficulty: number
+    difficulty: number,
   ): Promise<{ nonce: number; hash: string }> {
     const target = "0".repeat(difficulty);
     let nonce = 0;
@@ -476,10 +542,10 @@ class ProductionBlockchainService {
       nonce++;
       const blockData = `${blockNumber}${previousHash}${merkleRoot}${timestamp}${difficulty}${nonce}`;
       hash = this.calculateHash(blockData);
-      
+
       // Yield control periodically to prevent blocking
       if (nonce % 10000 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
     }
 
@@ -489,25 +555,33 @@ class ProductionBlockchainService {
   /**
    * Calculate Merkle root of transactions
    */
-  private static calculateMerkleRoot(transactions: ProductionTransaction[]): string {
+  private static calculateMerkleRoot(
+    transactions: ProductionTransaction[],
+  ): string {
     if (transactions.length === 0) {
-      return crypto.createHash('sha256').update('empty').digest('hex');
+      return crypto.createHash("sha256").update("empty").digest("hex");
     }
 
-    let hashes = transactions.map(tx => 
-      crypto.createHash('sha256').update(tx.id + tx.encryptedPayload).digest('hex')
+    let hashes = transactions.map((tx) =>
+      crypto
+        .createHash("sha256")
+        .update(tx.id + tx.encryptedPayload)
+        .digest("hex"),
     );
 
     while (hashes.length > 1) {
       const newHashes: string[] = [];
-      
+
       for (let i = 0; i < hashes.length; i += 2) {
         const left = hashes[i];
         const right = hashes[i + 1] || hashes[i]; // Use left hash if odd number
-        const combined = crypto.createHash('sha256').update(left + right).digest('hex');
+        const combined = crypto
+          .createHash("sha256")
+          .update(left + right)
+          .digest("hex");
         newHashes.push(combined);
       }
-      
+
       hashes = newHashes;
     }
 
@@ -518,25 +592,27 @@ class ProductionBlockchainService {
    * Calculate hash using SHA-256
    */
   private static calculateHash(data: string): string {
-    return crypto.createHash('sha256').update(data).digest('hex');
+    return crypto.createHash("sha256").update(data).digest("hex");
   }
 
   /**
    * Sign transaction
    */
   private static signTransaction(data: string): string {
-    return crypto.createHmac('sha256', 'healthcare-blockchain-secret')
+    return crypto
+      .createHmac("sha256", "healthcare-blockchain-secret")
       .update(data)
-      .digest('hex');
+      .digest("hex");
   }
 
   /**
    * Sign block
    */
   private static signBlock(hash: string): string {
-    return crypto.createHmac('sha256', 'healthcare-blockchain-block-secret')
+    return crypto
+      .createHmac("sha256", "healthcare-blockchain-block-secret")
       .update(hash)
-      .digest('hex');
+      .digest("hex");
   }
 
   /**
@@ -552,9 +628,10 @@ class ProductionBlockchainService {
    * Generate validation proof
    */
   private static generateValidationProof(splitKeyData: SplitKeyData): string {
-    return crypto.createHash('sha256')
+    return crypto
+      .createHash("sha256")
       .update(splitKeyData.combinedHash + splitKeyData.splitKeyPairs.checksum)
-      .digest('hex');
+      .digest("hex");
   }
 
   /**
@@ -568,16 +645,19 @@ class ProductionBlockchainService {
     difficulty: number;
     averageBlockTime: number;
   } {
-    const totalTransactions = this.blockchain.reduce((total, block) => total + block.transactions.length, 0);
+    const totalTransactions = this.blockchain.reduce(
+      (total, block) => total + block.transactions.length,
+      0,
+    );
     const lastBlock = this.blockchain[this.blockchain.length - 1];
-    
+
     return {
       totalBlocks: this.blockchain.length,
       totalTransactions,
       pendingTransactions: this.pendingTransactions.length,
-      lastBlockHash: lastBlock?.hash || 'none',
+      lastBlockHash: lastBlock?.hash || "none",
       difficulty: this.DIFFICULTY,
-      averageBlockTime: this.BLOCK_TIME
+      averageBlockTime: this.BLOCK_TIME,
     };
   }
 
@@ -598,7 +678,7 @@ class ProductionBlockchainService {
       // Recalculate and verify hash
       const blockData = `${currentBlock.blockNumber}${currentBlock.previousHash}${currentBlock.merkleRoot}${currentBlock.timestamp}${currentBlock.difficulty}${currentBlock.nonce}`;
       const calculatedHash = this.calculateHash(blockData);
-      
+
       if (currentBlock.hash !== calculatedHash) {
         console.error(`❌ Invalid hash at block ${i}`);
         return false;
@@ -611,7 +691,7 @@ class ProductionBlockchainService {
       }
     }
 
-    console.log('✅ Blockchain integrity validated successfully');
+    console.log("✅ Blockchain integrity validated successfully");
     return true;
   }
 }
@@ -625,7 +705,10 @@ class KeyManagementService {
   /**
    * Store split key data securely
    */
-  static storeSplitKeyData(identifier: string, splitKeyData: SplitKeyData): void {
+  static storeSplitKeyData(
+    identifier: string,
+    splitKeyData: SplitKeyData,
+  ): void {
     this.keyStore.set(identifier, splitKeyData);
   }
 
@@ -649,10 +732,15 @@ class KeyManagementService {
   static getKeyStoreStats(): { totalKeys: number; memoryUsage: string } {
     return {
       totalKeys: this.keyStore.size,
-      memoryUsage: `${(JSON.stringify([...this.keyStore.entries()]).length / 1024).toFixed(2)} KB`
+      memoryUsage: `${(JSON.stringify([...this.keyStore.entries()]).length / 1024).toFixed(2)} KB`,
     };
   }
 }
 
 export { ProductionBlockchainService, KeyManagementService };
-export type { SplitKeyData, SecureHealthRecord, ProductionBlock, ProductionTransaction };
+export type {
+  SplitKeyData,
+  SecureHealthRecord,
+  ProductionBlock,
+  ProductionTransaction,
+};

@@ -9,43 +9,51 @@ interface LoadingProps {
   fullScreen?: boolean;
 }
 
-export function Loading({ 
-  size = "md", 
-  variant = "spinner", 
+export function Loading({
+  size = "md",
+  variant = "spinner",
   text,
   className,
-  fullScreen = false 
+  fullScreen = false,
 }: LoadingProps) {
   const sizeClasses = {
     sm: "w-4 h-4",
-    md: "w-6 h-6", 
+    md: "w-6 h-6",
     lg: "w-8 h-8",
-    xl: "w-12 h-12"
+    xl: "w-12 h-12",
   };
 
   const textSizeClasses = {
     sm: "text-sm",
     md: "text-base",
-    lg: "text-lg", 
-    xl: "text-xl"
+    lg: "text-lg",
+    xl: "text-xl",
   };
 
   const containerClass = cn(
     "flex items-center justify-center",
-    fullScreen && "min-h-screen bg-gradient-to-br from-background via-background to-primary/5",
-    className
+    fullScreen &&
+      "min-h-screen bg-gradient-to-br from-background via-background to-primary/5",
+    className,
   );
 
   const renderLoader = () => {
     switch (variant) {
       case "spinner":
         return (
-          <Loader2 className={cn("animate-spin text-primary", sizeClasses[size])} />
+          <Loader2
+            className={cn("animate-spin text-primary", sizeClasses[size])}
+          />
         );
 
       case "pulse":
         return (
-          <div className={cn("bg-primary rounded-full animate-pulse", sizeClasses[size])} />
+          <div
+            className={cn(
+              "bg-primary rounded-full animate-pulse",
+              sizeClasses[size],
+            )}
+          />
         );
 
       case "dots":
@@ -57,9 +65,9 @@ export function Loading({
                 className={cn(
                   "bg-primary rounded-full animate-bounce",
                   size === "sm" && "w-1.5 h-1.5",
-                  size === "md" && "w-2 h-2", 
+                  size === "md" && "w-2 h-2",
                   size === "lg" && "w-3 h-3",
-                  size === "xl" && "w-4 h-4"
+                  size === "xl" && "w-4 h-4",
                 )}
                 style={{ animationDelay: `${i * 0.1}s` }}
               />
@@ -70,8 +78,15 @@ export function Loading({
       case "medical":
         return (
           <div className="relative">
-            <div className={cn("absolute inset-0 animate-ping bg-primary/20 rounded-full", sizeClasses[size])} />
-            <Heart className={cn("text-primary animate-pulse", sizeClasses[size])} />
+            <div
+              className={cn(
+                "absolute inset-0 animate-ping bg-primary/20 rounded-full",
+                sizeClasses[size],
+              )}
+            />
+            <Heart
+              className={cn("text-primary animate-pulse", sizeClasses[size])}
+            />
           </div>
         );
 
@@ -86,7 +101,9 @@ export function Loading({
 
       default:
         return (
-          <Loader2 className={cn("animate-spin text-primary", sizeClasses[size])} />
+          <Loader2
+            className={cn("animate-spin text-primary", sizeClasses[size])}
+          />
         );
     }
   };
@@ -95,12 +112,15 @@ export function Loading({
     return (
       <div className={containerClass}>
         <div className="text-center space-y-4 fade-in">
-          <div className="flex justify-center">
-            {renderLoader()}
-          </div>
+          <div className="flex justify-center">{renderLoader()}</div>
           {text && (
             <div className="space-y-2">
-              <p className={cn("font-medium text-foreground", textSizeClasses[size])}>
+              <p
+                className={cn(
+                  "font-medium text-foreground",
+                  textSizeClasses[size],
+                )}
+              >
                 {text}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -128,7 +148,11 @@ export function Loading({
 }
 
 // Specialized loading components for different contexts
-export function MedicalLoading({ text = "Loading health data..." }: { text?: string }) {
+export function MedicalLoading({
+  text = "Loading health data...",
+}: {
+  text?: string;
+}) {
   return (
     <div className="flex items-center justify-center py-12">
       <div className="text-center space-y-4 fade-in">
@@ -155,7 +179,11 @@ export function MedicalLoading({ text = "Loading health data..." }: { text?: str
   );
 }
 
-export function SecurityLoading({ text = "Securing your data..." }: { text?: string }) {
+export function SecurityLoading({
+  text = "Securing your data...",
+}: {
+  text?: string;
+}) {
   return (
     <div className="flex items-center justify-center py-12">
       <div className="text-center space-y-4 fade-in">
@@ -167,7 +195,9 @@ export function SecurityLoading({ text = "Securing your data..." }: { text?: str
         </div>
         <div className="space-y-2">
           <p className="font-medium text-foreground">{text}</p>
-          <p className="text-sm text-muted-foreground">Blockchain encryption in progress</p>
+          <p className="text-sm text-muted-foreground">
+            Blockchain encryption in progress
+          </p>
           <div className="w-48 h-2 bg-muted rounded-full mx-auto overflow-hidden">
             <div className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full animate-pulse"></div>
           </div>
