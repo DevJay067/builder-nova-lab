@@ -46,6 +46,11 @@ import {
   getAuthStats,
   authenticateUser,
 } from "./routes/auth";
+import {
+  getPersonalizedMedicalContext,
+  enhanceQueryWithContext,
+  getPersonalizedInsights,
+} from "./routes/personalizedContext";
 
 export function createServer() {
   // Initialize secure database on server startup
