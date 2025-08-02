@@ -24,20 +24,26 @@ import {
   User,
   CheckCircle,
   AlertTriangle,
+  ArrowLeft,
+  Loader2,
+  Sparkles,
+  Stethoscope,
 } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
-  // Scroll to top when component mounts
+  // Page load animation
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   // Login form state
@@ -58,37 +64,64 @@ export default function Login() {
     phone: "",
   });
 
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+
+  const validateForm = (isLogin: boolean = false) => {
+    const errors: {[key: string]: string} = {};
+
+    if (isLogin) {
+      if (!loginForm.email) errors.email = "Email or username is required";
+      if (!loginForm.password) errors.password = "Password is required";
+    } else {
+      if (!registerForm.username) errors.username = "Username is required";
+      if (registerForm.username && (registerForm.username.length < 3 || registerForm.username.length > 30)) {
+        errors.username = "Username must be 3-30 characters";
+      }
+      if (registerForm.username && !/^[a-zA-Z0-9_]+$/.test(registerForm.username)) {
+        errors.username = "Username can only contain letters, numbers, and underscores";
+      }
+      if (!registerForm.firstName) errors.firstName = "First name is required";
+      if (!registerForm.lastName) errors.lastName = "Last name is required";
+      if (!registerForm.email) errors.email = "Email is required";
+      if (registerForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)) {
+        errors.email = "Invalid email format";
+      }
+      if (!registerForm.password) errors.password = "Password is required";
+      if (registerForm.password && registerForm.password.length < 6) {
+        errors.password = "Password must be at least 6 characters";
+      }
+      if (registerForm.password !== registerForm.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match";
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setMessage(null);
+    
+    if (!validateForm(true)) return;
+
+    setIsLoading(true);
 
     try {
-      if (!loginForm.email || !loginForm.password) {
-        setMessage({ type: "error", text: "Please fill in all fields" });
-        setIsLoading(false);
-        return;
-      }
-
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: loginForm.email, // Can be username or email
+          username: loginForm.email,
           password: loginForm.password,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
 
       if (result.success) {
-        // Store user session with secure data
         const userData = {
           id: result.user.id,
           username: result.user.username,
@@ -100,35 +133,26 @@ export default function Login() {
 
         localStorage.setItem("healthchain_user", JSON.stringify(userData));
         localStorage.setItem("sessionToken", result.user.sessionToken);
-
-        // Also set in cookie for server-side access
         document.cookie = `healthchain_session=${result.user.sessionToken}; path=/; max-age=86400; samesite=strict`;
-
-        console.log("✅ User session stored:", userData);
 
         setMessage({
           type: "success",
-          text: result.user.secureSystemActivated
-            ? "Login successful! Secure blockchain system activated."
+          text: result.user.secureSystemActivated 
+            ? "Login successful! Secure blockchain system activated." 
             : "Login successful! Setting up secure system...",
         });
 
-        // Redirect faster for better UX
         setTimeout(() => {
           navigate("/");
-          // Ensure scroll to top after navigation
-          setTimeout(() => window.scrollTo(0, 0), 100);
-        }, 1000);
+        }, 1500);
       } else {
         setMessage({ type: "error", text: result.message || "Login failed" });
       }
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
       setMessage({
         type: "error",
-        text: `Login failed: ${errorMessage}`,
+        text: "Network error. Please check your connection and try again.",
       });
     } finally {
       setIsLoading(false);
@@ -137,53 +161,13 @@ export default function Login() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setMessage(null);
 
+    if (!validateForm(false)) return;
+
+    setIsLoading(true);
+
     try {
-      // Validate form
-      if (
-        !registerForm.username ||
-        !registerForm.firstName ||
-        !registerForm.lastName ||
-        !registerForm.email ||
-        !registerForm.password
-      ) {
-        setMessage({
-          type: "error",
-          text: "Please fill in all required fields",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      if (registerForm.password !== registerForm.confirmPassword) {
-        setMessage({ type: "error", text: "Passwords do not match" });
-        setIsLoading(false);
-        return;
-      }
-
-      if (registerForm.password.length < 8) {
-        setMessage({
-          type: "error",
-          text: "Password must be at least 8 characters long",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate username format
-      const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
-      if (!usernameRegex.test(registerForm.username)) {
-        setMessage({
-          type: "error",
-          text: "Username must be 3-30 characters and contain only letters, numbers, and underscores",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Register user with backend
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -195,395 +179,445 @@ export default function Login() {
           password: registerForm.password,
           firstName: registerForm.firstName,
           lastName: registerForm.lastName,
-          dateOfBirth: registerForm.dateOfBirth,
-          phone: registerForm.phone,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const result = await response.json();
 
       if (result.success) {
         setMessage({
           type: "success",
-          text: "Registration successful! Setting up your secure keys...",
+          text: "Registration successful! Setting up your secure blockchain account...",
         });
 
-        // Auto-login after registration
-        setTimeout(async () => {
-          const loginResponse = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username: registerForm.username,
-              password: registerForm.password,
-            }),
+        const userData = {
+          id: result.user.id,
+          username: result.user.username,
+          userHash: result.user.userHash,
+          sessionToken: result.user.sessionToken,
+          registrationTime: new Date().toISOString(),
+          secureSystemActivated: result.user.secureSystemActivated
+        };
+
+        localStorage.setItem("healthchain_user", JSON.stringify(userData));
+        localStorage.setItem("sessionToken", result.user.sessionToken);
+        document.cookie = `healthchain_session=${result.user.sessionToken}; path=/; max-age=86400; samesite=strict`;
+
+        setTimeout(() => {
+          setMessage({
+            type: "success",
+            text: "Secure blockchain account created! Redirecting...",
           });
-
-          if (!loginResponse.ok) {
-            throw new Error(
-              `Auto-login HTTP error! status: ${loginResponse.status}`,
-            );
-          }
-
-          const loginResult = await loginResponse.json();
-
-          if (loginResult.success) {
-            // Store user session with secure data
-            localStorage.setItem(
-              "healthchain_user",
-              JSON.stringify({
-                id: loginResult.user.id,
-                username: loginResult.user.username,
-                email: loginResult.user.email,
-                name: `${loginResult.user.firstName} ${loginResult.user.lastName}`,
-                userHash: loginResult.user.userHash,
-                sessionToken: loginResult.sessionToken,
-                dataAccessHash: loginResult.dataAccessHash,
-                registrationTime: new Date().toISOString(),
-              }),
-            );
-
-            setMessage({
-              type: "success",
-              text: "Secure keys generated! Redirecting to dashboard...",
-            });
-            setTimeout(() => {
-              navigate("/");
-              // Ensure scroll to top after navigation
-              setTimeout(() => window.scrollTo(0, 0), 100);
-            }, 1500);
-          }
+          setTimeout(() => {
+            navigate("/");
+          }, 1000);
         }, 2000);
       } else {
-        setMessage({
-          type: "error",
-          text: result.error || "Registration failed",
-        });
-        setIsLoading(false);
+        setMessage({ type: "error", text: result.message || "Registration failed" });
       }
     } catch (error) {
       console.error("Registration error:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
       setMessage({
         type: "error",
-        text: `Registration failed: ${errorMessage}`,
+        text: "Network error. Please check your connection and try again.",
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mx-auto mb-4">
-            <Shield className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            HealthChain Security
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Secure access to your blockchain-protected health data
-          </p>
-        </div>
-
-        {/* Status Messages */}
-        {message && (
-          <Alert
-            className={`mb-6 ${message.type === "error" ? "border-destructive" : "border-green-500"}`}
-          >
-            {message.type === "error" ? (
-              <AlertTriangle className="h-4 w-4" />
-            ) : (
-              <CheckCircle className="h-4 w-4" />
-            )}
-            <AlertDescription>{message.text}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Login/Register Tabs */}
-        <Card>
-          <Tabs defaultValue="login" className="w-full">
-            <CardHeader className="space-y-1 pb-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
-            </CardHeader>
-
-            {/* Login Tab */}
-            <TabsContent value="login">
-              <form onSubmit={handleLogin}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Username/Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="Enter your email"
-                        className="pl-9"
-                        value={loginForm.email}
-                        onChange={(e) =>
-                          setLoginForm((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="login-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        className="pl-9 pr-9"
-                        value={loginForm.password}
-                        onChange={(e) =>
-                          setLoginForm((prev) => ({
-                            ...prev,
-                            password: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    <LogIn className="h-4 w-4 mr-2" />
-                    {isLoading ? "Signing In..." : "Sign In"}
-                  </Button>
-
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      className="text-sm text-primary hover:underline"
-                      onClick={() =>
-                        alert("Demo: Use any email/password to login")
-                      }
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                </CardContent>
-              </form>
-            </TabsContent>
-
-            {/* Register Tab */}
-            <TabsContent value="register">
-              <form onSubmit={handleRegister}>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        placeholder="John"
-                        value={registerForm.firstName}
-                        onChange={(e) =>
-                          setRegisterForm((prev) => ({
-                            ...prev,
-                            firstName: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        placeholder="Doe"
-                        value={registerForm.lastName}
-                        onChange={(e) =>
-                          setRegisterForm((prev) => ({
-                            ...prev,
-                            lastName: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="username"
-                        type="text"
-                        placeholder="john_doe (3-30 chars, letters, numbers, underscores)"
-                        className="pl-9"
-                        value={registerForm.username}
-                        onChange={(e) =>
-                          setRegisterForm((prev) => ({
-                            ...prev,
-                            username: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="register-email"
-                        type="email"
-                        placeholder="john@example.com"
-                        className="pl-9"
-                        value={registerForm.email}
-                        onChange={(e) =>
-                          setRegisterForm((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="register-password">Password</Label>
-                      <Input
-                        id="register-password"
-                        type="password"
-                        placeholder="Minimum 8 characters"
-                        value={registerForm.password}
-                        onChange={(e) =>
-                          setRegisterForm((prev) => ({
-                            ...prev,
-                            password: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="Confirm password"
-                        value={registerForm.confirmPassword}
-                        onChange={(e) =>
-                          setRegisterForm((prev) => ({
-                            ...prev,
-                            confirmPassword: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                    <Input
-                      id="dateOfBirth"
-                      type="date"
-                      value={registerForm.dateOfBirth}
-                      onChange={(e) =>
-                        setRegisterForm((prev) => ({
-                          ...prev,
-                          dateOfBirth: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone (Optional)</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 123-4567"
-                      value={registerForm.phone}
-                      onChange={(e) =>
-                        setRegisterForm((prev) => ({
-                          ...prev,
-                          phone: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    {isLoading ? "Creating Account..." : "Create Account"}
-                  </Button>
-                </CardContent>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </Card>
-
-        {/* Security Benefits */}
-        <Card className="mt-6 bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-3">
-              <h3 className="font-semibold flex items-center justify-center">
-                <Key className="h-4 w-4 mr-2" />
-                Why Login Matters
-              </h3>
-              <div className="text-sm text-muted-foreground space-y-2">
-                <div className="flex items-center justify-center">
-                  <Shield className="h-3 w-3 mr-2 text-primary" />
-                  Personal split-key generation for your data
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 page-transition">
+      {/* Enhanced Header */}
+      <header className="border-b border-border/40 glass backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="btn-smooth">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg">
+                  <Stethoscope className="h-5 h-5" />
                 </div>
-                <div className="flex items-center justify-center">
-                  <Lock className="h-3 w-3 mr-2 text-primary" />
-                  Secure access to your encrypted health records
-                </div>
-                <div className="flex items-center justify-center">
-                  <User className="h-3 w-3 mr-2 text-primary" />
-                  Personalized AI recommendations based on your history
+                <div className="hidden sm:block">
+                  <h1 className="text-lg font-bold text-foreground">HealthChain</h1>
+                  <p className="text-sm text-muted-foreground">Secure Access</p>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                <Shield className="w-4 h-4 text-green-600" />
+                <span className="hidden sm:inline">Secure Login</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-        {/* Demo Mode */}
-        <div className="text-center mt-4">
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              Continue as Guest (Demo Mode)
-            </Button>
-          </Link>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="w-full max-w-md">
+          {/* Welcome Card */}
+          <Card className="mb-6 shadow-colored border-border/50 fade-in">
+            <CardHeader className="text-center pb-4">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
+                <Key className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <CardTitle className="text-2xl font-bold">Welcome to HealthChain</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Access your secure blockchain-powered healthcare platform
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          {/* Message Alert */}
+          {message && (
+            <Alert className={`mb-6 fade-in ${
+              message.type === "success" 
+                ? "border-green-200 bg-green-50 text-green-800" 
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}>
+              {message.type === "success" ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <AlertTriangle className="h-4 w-4" />
+              )}
+              <AlertDescription className="font-medium">
+                {message.text}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Auth Tabs */}
+          <Card className="shadow-colored-lg border-border/50 fade-in-up">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login" className="flex items-center space-x-2 state-transition">
+                  <LogIn className="w-4 h-4" />
+                  <span>Login</span>
+                </TabsTrigger>
+                <TabsTrigger value="register" className="flex items-center space-x-2 state-transition">
+                  <UserPlus className="w-4 h-4" />
+                  <span>Register</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Login Tab */}
+              <TabsContent value="login" className="space-y-0">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center space-x-2">
+                    <LogIn className="w-5 h-5 text-primary" />
+                    <span>Sign In</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Enter your credentials to access your health dashboard
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email" className="text-sm font-medium">
+                        Email or Username
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="login-email"
+                          type="text"
+                          placeholder="Enter your email or username"
+                          value={loginForm.email}
+                          onChange={(e) => {
+                            setLoginForm(prev => ({ ...prev, email: e.target.value }));
+                            if (formErrors.email) setFormErrors(prev => ({ ...prev, email: "" }));
+                          }}
+                          className={`pl-10 focus-enhanced ${formErrors.email ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      {formErrors.email && (
+                        <p className="text-sm text-red-600">{formErrors.email}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password" className="text-sm font-medium">
+                        Password
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="login-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          value={loginForm.password}
+                          onChange={(e) => {
+                            setLoginForm(prev => ({ ...prev, password: e.target.value }));
+                            if (formErrors.password) setFormErrors(prev => ({ ...prev, password: "" }));
+                          }}
+                          className={`pl-10 pr-10 focus-enhanced ${formErrors.password ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={isLoading}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {formErrors.password && (
+                        <p className="text-sm text-red-600">{formErrors.password}</p>
+                      )}
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full btn-smooth shadow-colored"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Signing In...
+                        </>
+                      ) : (
+                        <>
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Sign In
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </TabsContent>
+
+              {/* Register Tab */}
+              <TabsContent value="register" className="space-y-0">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center space-x-2">
+                    <UserPlus className="w-5 h-5 text-primary" />
+                    <span>Create Account</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Join HealthChain and secure your health data with blockchain
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName" className="text-sm font-medium">
+                          First Name
+                        </Label>
+                        <Input
+                          id="firstName"
+                          placeholder="John"
+                          value={registerForm.firstName}
+                          onChange={(e) => {
+                            setRegisterForm(prev => ({ ...prev, firstName: e.target.value }));
+                            if (formErrors.firstName) setFormErrors(prev => ({ ...prev, firstName: "" }));
+                          }}
+                          className={`focus-enhanced ${formErrors.firstName ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                        {formErrors.firstName && (
+                          <p className="text-sm text-red-600">{formErrors.firstName}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName" className="text-sm font-medium">
+                          Last Name
+                        </Label>
+                        <Input
+                          id="lastName"
+                          placeholder="Doe"
+                          value={registerForm.lastName}
+                          onChange={(e) => {
+                            setRegisterForm(prev => ({ ...prev, lastName: e.target.value }));
+                            if (formErrors.lastName) setFormErrors(prev => ({ ...prev, lastName: "" }));
+                          }}
+                          className={`focus-enhanced ${formErrors.lastName ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                        {formErrors.lastName && (
+                          <p className="text-sm text-red-600">{formErrors.lastName}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="username" className="text-sm font-medium">
+                        Username
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="username"
+                          placeholder="Choose a unique username"
+                          value={registerForm.username}
+                          onChange={(e) => {
+                            setRegisterForm(prev => ({ ...prev, username: e.target.value }));
+                            if (formErrors.username) setFormErrors(prev => ({ ...prev, username: "" }));
+                          }}
+                          className={`pl-10 focus-enhanced ${formErrors.username ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      {formErrors.username && (
+                        <p className="text-sm text-red-600">{formErrors.username}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm font-medium">
+                        Email
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="your.email@example.com"
+                          value={registerForm.email}
+                          onChange={(e) => {
+                            setRegisterForm(prev => ({ ...prev, email: e.target.value }));
+                            if (formErrors.email) setFormErrors(prev => ({ ...prev, email: "" }));
+                          }}
+                          className={`pl-10 focus-enhanced ${formErrors.email ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      {formErrors.email && (
+                        <p className="text-sm text-red-600">{formErrors.email}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm font-medium">
+                        Password
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Create a secure password"
+                          value={registerForm.password}
+                          onChange={(e) => {
+                            setRegisterForm(prev => ({ ...prev, password: e.target.value }));
+                            if (formErrors.password) setFormErrors(prev => ({ ...prev, password: "" }));
+                          }}
+                          className={`pl-10 pr-10 focus-enhanced ${formErrors.password ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={isLoading}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {formErrors.password && (
+                        <p className="text-sm text-red-600">{formErrors.password}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                        Confirm Password
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm your password"
+                          value={registerForm.confirmPassword}
+                          onChange={(e) => {
+                            setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }));
+                            if (formErrors.confirmPassword) setFormErrors(prev => ({ ...prev, confirmPassword: "" }));
+                          }}
+                          className={`pl-10 pr-10 focus-enhanced ${formErrors.confirmPassword ? 'border-red-500' : ''}`}
+                          disabled={isLoading}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          disabled={isLoading}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {formErrors.confirmPassword && (
+                        <p className="text-sm text-red-600">{formErrors.confirmPassword}</p>
+                      )}
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full btn-smooth shadow-colored"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creating Account...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Create Secure Account
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </TabsContent>
+            </Tabs>
+          </Card>
+
+          {/* Security Notice */}
+          <Card className="mt-6 border-primary/20 bg-primary/5 fade-in fade-in-delay-1">
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3">
+                <Shield className="w-5 h-5 text-primary mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-primary mb-1">Blockchain Security</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Your data is protected with end-to-end encryption and stored securely on the blockchain. 
+                    We never store your passwords in plain text.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
