@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   History,
   ArrowLeft,
@@ -48,1023 +49,901 @@ import {
   Weight,
   Ruler,
   Heart,
-  Thermometer,
-  Save,
-  UserPlus,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
+  Star,
+  TrendingUp,
+  Zap,
+  Eye,
+  Filter,
+  SortDesc,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Share,
+  Globe,
+  Database,
 } from "lucide-react";
 
+interface HealthRecord {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  date: string;
+  doctor?: string;
+  isSecure?: boolean;
+  blockchainHash?: string;
+  metadata?: any;
+}
+
 export default function HealthHistory() {
+  const [records, setRecords] = useState<HealthRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isNewUser, setIsNewUser] = useState(true);
-  const [showAddRecordDialog, setShowAddRecordDialog] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    // Personal Information
-    age: "",
-    gender: "",
-    bloodType: "",
-    // Vitals
-    weight: "",
-    height: "",
-    systolicBP: "",
-    diastolicBP: "",
-    heartRate: "",
-    temperature: "",
-    // Medical History
-    medications: "",
-    allergies: "",
-    chronicConditions: "",
-    lastCheckupDate: "",
-    doctor: "",
-    // Additional Notes
-    notes: "",
+  const [selectedType, setSelectedType] = useState("all");
+  const [sortBy, setSortBy] = useState("date");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [message, setMessage] = useState<{type: "success" | "error"; text: string} | null>(null);
+  const [activeTab, setActiveTab] = useState("records");
+  const [stats, setStats] = useState({
+    totalRecords: 0,
+    secureRecords: 0,
+    lastUpdate: null as string | null,
   });
 
-  const [healthRecords, setHealthRecords] = useState([]);
-  const [userInfo, setUserInfo] = useState(null);
+  const [newRecord, setNewRecord] = useState({
+    type: "",
+    title: "",
+    description: "",
+    date: new Date().toISOString().split('T')[0],
+    doctor: "",
+    metadata: {
+      weight: "",
+      height: "",
+      bloodPressure: "",
+      heartRate: "",
+      temperature: "",
+      notes: "",
+    },
+  });
 
-  // Load health records on component mount and scroll to top
+  const recordTypes = [
+    { value: "checkup", label: "Regular Checkup", icon: Stethoscope, color: "bg-blue-500" },
+    { value: "medication", label: "Medication", icon: Pill, color: "bg-green-500" },
+    { value: "lab", label: "Lab Results", icon: FileText, color: "bg-purple-500" },
+    { value: "imaging", label: "Imaging", icon: Activity, color: "bg-orange-500" },
+    { value: "emergency", label: "Emergency", icon: Heart, color: "bg-red-500" },
+    { value: "specialist", label: "Specialist Visit", icon: User, color: "bg-indigo-500" },
+    { value: "vitals", label: "Vital Signs", icon: TrendingUp, color: "bg-teal-500" },
+    { value: "other", label: "Other", icon: MoreHorizontal, color: "bg-gray-500" },
+  ];
+
   useEffect(() => {
-    window.scrollTo(0, 0);
-    loadHealthRecords();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    checkAuthAndLoadRecords();
   }, []);
 
-  const loadHealthRecords = async () => {
+  const checkAuthAndLoadRecords = async () => {
+    try {
+      const sessionToken = localStorage.getItem("sessionToken") || 
+                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+
+      if (!sessionToken) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      const authResponse = await fetch("/api/auth/verify", {
+        headers: {
+          "Authorization": `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      if (!authResponse.ok) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
+      await loadHealthRecords(sessionToken);
+    } catch (error) {
+      console.error("Error checking auth:", error);
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    }
+  };
+
+  const loadHealthRecords = async (sessionToken: string) => {
     try {
       setIsLoading(true);
-
-      // Get user session token
-      const storedUser = localStorage.getItem("healthchain_user");
-      const headers: Record<string, string> = {};
-
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        if (user.sessionToken) {
-          headers["Authorization"] = `Bearer ${user.sessionToken}`;
-          headers["x-session-token"] = user.sessionToken;
-        }
-      }
-
-      // Fallback for demo mode
-      if (Object.keys(headers).length === 0) {
-        headers["patient-id"] = "default-patient";
-      }
-
-      const response = await fetch("/api/health-records", {
-        headers,
+      const response = await fetch("/api/auth/data-access/records", {
+        headers: {
+          "Authorization": `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setHealthRecords(data.records || []);
-        setUserInfo(data.userInfo || null);
-        setIsNewUser(data.records.length === 0);
-
-        if (data.userInfo?.isAuthenticated) {
-          console.log(
-            `✅ Loaded ${data.records.length} records for user: ${data.userInfo.username}`,
-          );
-        } else {
-          console.log(`📋 Demo mode: ${data.records.length} records loaded`);
+        if (data.success && data.records) {
+          const transformedRecords = data.records.map((record: any) => ({
+            id: record.id,
+            type: record.recordType || record.type,
+            title: record.title,
+            description: record.description,
+            date: record.date,
+            doctor: record.doctor,
+            isSecure: !!record.secureRecordId,
+            blockchainHash: record.secureRecordId,
+            metadata: record.metadata,
+          }));
+          
+          setRecords(transformedRecords);
+          setStats({
+            totalRecords: transformedRecords.length,
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
+            lastUpdate: new Date().toISOString(),
+          });
         }
       }
     } catch (error) {
-      console.error("Failed to load health records:", error);
+      console.error("Error loading records:", error);
+      setMessage({ type: "error", text: "Failed to load health records" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setMessage(null);
 
-  const addTestData = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch("/api/add-test-data", {
+      const sessionToken = localStorage.getItem("sessionToken") || 
+                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+
+      if (!sessionToken) {
+        setMessage({ type: "error", text: "Please log in to save records" });
+        return;
+      }
+
+      const response = await fetch("/api/auth/data-access", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "patient-id": "default-patient",
+          "Authorization": `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
         },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          await loadHealthRecords();
-          setIsNewUser(false);
-          alert(
-            `Test data added successfully! Created ${result.recordsCreated} blockchain-secured health records.`,
-          );
-        } else {
-          alert("Failed to add test data: " + result.error);
-        }
-      } else {
-        alert("Failed to add test data. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error adding test data:", error);
-      alert("Failed to add test data. Please check your connection.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmitRecord = async () => {
-    if (
-      !formData.weight ||
-      !formData.height ||
-      !formData.systolicBP ||
-      !formData.diastolicBP
-    ) {
-      alert(
-        "Please fill in all required vital signs (weight, height, blood pressure)",
-      );
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      // Prepare comprehensive health record data
-      const healthRecordData = {
-        // Personal Information
-        personalInfo: {
-          age: formData.age ? parseInt(formData.age) : undefined,
-          gender: formData.gender,
-          bloodType: formData.bloodType,
-        },
-
-        // Vital Signs
-        vitals: {
-          weight: parseFloat(formData.weight),
-          height: parseFloat(formData.height),
-          systolicBP: parseInt(formData.systolicBP),
-          diastolicBP: parseInt(formData.diastolicBP),
-          heartRate: formData.heartRate
-            ? parseInt(formData.heartRate)
-            : undefined,
-          temperature: formData.temperature
-            ? parseFloat(formData.temperature)
-            : undefined,
-          bmi: (
-            parseFloat(formData.weight) /
-            Math.pow(parseFloat(formData.height) / 100, 2)
-          ).toFixed(1),
-        },
-
-        // Medical History
-        medicalHistory: {
-          medications: formData.medications
-            ? formData.medications.split(",").map((m) => m.trim())
-            : [],
-          allergies: formData.allergies
-            ? formData.allergies.split(",").map((a) => a.trim())
-            : [],
-          chronicConditions: formData.chronicConditions
-            ? formData.chronicConditions.split(",").map((c) => c.trim())
-            : [],
-          lastCheckupDate: formData.lastCheckupDate,
-          primaryDoctor: formData.doctor || "Self-reported",
-        },
-
-        // Additional Information
-        additionalInfo: {
-          notes: formData.notes,
-          recordedAt: new Date().toISOString(),
-          dataSource: "patient_input",
-        },
-      };
-
-      // First, save to the traditional health records API (for backward compatibility)
-      const traditionalBody = {
-        type: "medical_history",
-        title: "Comprehensive Health Assessment",
-        description: `BMI: ${healthRecordData.vitals.bmi}, Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
-        doctor: formData.doctor || "Self-reported",
-        metadata: {
-          ...healthRecordData.personalInfo,
-          ...healthRecordData.vitals,
-          medications: healthRecordData.medicalHistory.medications,
-          allergies: healthRecordData.medicalHistory.allergies,
-          chronicConditions: healthRecordData.medicalHistory.chronicConditions,
-          notes: formData.notes,
-        },
-      };
-
-      const traditionalResponse = await fetch("/api/health-records", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "patient-id": "default-patient",
-        },
-        body: JSON.stringify(traditionalBody),
-      });
-
-      let traditionalResult = null;
-      if (traditionalResponse.ok) {
-        traditionalResult = await traditionalResponse.json();
-      }
-
-      // Save to secure Neon database with user authentication
-      let secureResult = null;
-      try {
-        // Get user session token
-        const storedUser = localStorage.getItem("healthchain_user");
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          if (user.sessionToken) {
-            headers["Authorization"] = `Bearer ${user.sessionToken}`;
-            headers["x-session-token"] = user.sessionToken;
-          }
-        }
-
-        // Fallback for demo mode
-        if (!headers["Authorization"]) {
-          headers["patient-id"] = "default-patient";
-        }
-
-        const directNeonResponse = await fetch(
-          "/api/health-records/store-direct",
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              recordType: "medical_history",
-              title: "Comprehensive Health Assessment",
-              description: `BMI: ${healthRecordData.vitals.bmi}, Weight: ${formData.weight}kg, Height: ${formData.height}cm, BP: ${formData.systolicBP}/${formData.diastolicBP}mmHg`,
-              doctor: formData.doctor || "Self-reported",
-              date: new Date().toISOString().split("T")[0],
-              metadata: healthRecordData,
-            }),
+        body: JSON.stringify({
+          type: newRecord.type,
+          data: {
+            title: newRecord.title,
+            description: newRecord.description,
+            date: newRecord.date,
+            doctor: newRecord.doctor,
+            metadata: newRecord.metadata,
           },
-        );
+        }),
+      });
 
-        if (directNeonResponse.ok) {
-          secureResult = await directNeonResponse.json();
-          secureResult.success = true;
-          secureResult.record = {
-            id: secureResult.recordId || "neon-" + Date.now(),
-          };
+      const result = await response.json();
 
-          if (secureResult.userInfo) {
-            console.log(
-              `✅ Health record saved for user: ${secureResult.userInfo.username}`,
-            );
-          }
-        } else {
-          console.error(
-            "Failed to save to secure database:",
-            await directNeonResponse.text(),
-          );
-        }
-      } catch (error) {
-        console.error("Error saving to secure database:", error);
-        // Continue with traditional storage only
-      }
-
-      // Check if at least one storage method succeeded
-      if (
-        (traditionalResult && traditionalResult.success) ||
-        (secureResult && secureResult.success)
-      ) {
-        // Reload health records
-        await loadHealthRecords();
-        setIsNewUser(false);
-        setShowAddRecordDialog(false);
-
-        // Reset form
-        setFormData({
-          age: "",
-          gender: "",
-          bloodType: "",
-          weight: "",
-          height: "",
-          systolicBP: "",
-          diastolicBP: "",
-          heartRate: "",
-          temperature: "",
-          medications: "",
-          allergies: "",
-          chronicConditions: "",
-          lastCheckupDate: "",
+      if (result.success) {
+        setMessage({ type: "success", text: "Health record saved securely to blockchain!" });
+        setIsDialogOpen(false);
+        setNewRecord({
+          type: "",
+          title: "",
+          description: "",
+          date: new Date().toISOString().split('T')[0],
           doctor: "",
-          notes: "",
+          metadata: {
+            weight: "",
+            height: "",
+            bloodPressure: "",
+            heartRate: "",
+            temperature: "",
+            notes: "",
+          },
         });
-
-        // Show success message with user info
-        let successMessage = "🎉 Health Record Saved Successfully!\n\n";
-        let storageCount = 0;
-
-        if (traditionalResult && traditionalResult.success) {
-          successMessage += "✅ Blockchain Storage: Secured\n";
-          storageCount++;
-        }
-
-        if (secureResult && secureResult.success) {
-          successMessage += "✅ Secure Database: Stored with Hash Linking\n";
-          storageCount++;
-
-          if (secureResult.userInfo) {
-            successMessage += `👤 User: ${secureResult.userInfo.username}\n`;
-            successMessage += `🔐 Hash ID: ${secureResult.userInfo.userHash.slice(0, 12)}...\n`;
-          }
-        }
-
-        successMessage += `\n📊 Your health data is saved in ${storageCount} secure location${storageCount > 1 ? "s" : ""}`;
-        successMessage += "\n🔒 Split-key encryption & hash linking active";
-
-        alert(successMessage);
+        
+        // Reload records
+        await loadHealthRecords(sessionToken);
       } else {
-        // Show error details
-        let errorMessage = "Failed to save health record:\n";
-        if (traditionalResult && !traditionalResult.success) {
-          errorMessage += `Traditional Storage: ${traditionalResult.error}\n`;
-        }
-        if (secureResult && !secureResult.success) {
-          errorMessage += `Secure Storage: ${secureResult.error}`;
-        }
-        alert(errorMessage);
+        setMessage({ type: "error", text: result.message || "Failed to save record" });
       }
     } catch (error) {
-      console.error("Error saving health record:", error);
-      alert("Failed to save health record. Please check your connection.");
+      console.error("Error saving record:", error);
+      setMessage({ type: "error", text: "Network error. Please try again." });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const aiSearchHistory = [
-    {
-      id: 1,
-      query: "What are the side effects of blood pressure medication?",
-      timestamp: "2024-01-15 14:30",
-      response: "Common side effects include dizziness, fatigue, and nausea...",
-      relevance: "high",
-    },
-    {
-      id: 2,
-      query: "How to manage stress-related headaches?",
-      timestamp: "2024-01-14 09:15",
-      response: "Stress management techniques include deep breathing...",
-      relevance: "medium",
-    },
-    {
-      id: 3,
-      query: "Healthy diet for hypertension",
-      timestamp: "2024-01-12 16:45",
-      response: "DASH diet is recommended for managing blood pressure...",
-      relevance: "high",
-    },
-  ];
+  const filteredRecords = records
+    .filter(record => {
+      const matchesSearch = record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (record.doctor && record.doctor.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesType = selectedType === "all" || record.type === selectedType;
+      return matchesSearch && matchesType;
+    })
+    .sort((a, b) => {
+      if (sortBy === "date") return new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (sortBy === "type") return a.type.localeCompare(b.type);
+      if (sortBy === "title") return a.title.localeCompare(b.title);
+      return 0;
+    });
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "checkup":
-        return <Stethoscope className="h-4 w-4" />;
-      case "medication":
-        return <Pill className="h-4 w-4" />;
-      case "symptom":
-        return <Activity className="h-4 w-4" />;
-      default:
-        return <FileText className="h-4 w-4" />;
-    }
+  const getRecordIcon = (type: string) => {
+    const recordType = recordTypes.find(rt => rt.value === type);
+    return recordType ? recordType.icon : FileText;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-success text-success-foreground";
-      case "active":
-        return "bg-primary text-primary-foreground";
-      case "monitoring":
-        return "bg-warning text-warning-foreground";
-      default:
-        return "bg-secondary text-secondary-foreground";
-    }
+  const getRecordColor = (type: string) => {
+    const recordType = recordTypes.find(rt => rt.value === type);
+    return recordType ? recordType.color : "bg-gray-500";
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-card/95 backdrop-blur">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 page-transition">
+        <header className="border-b border-border/40 glass backdrop-blur-xl sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4">
             <div className="flex items-center space-x-4">
               <Link to="/">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="btn-smooth">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Dashboard
                 </Button>
               </Link>
               <div className="flex items-center space-x-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent text-accent-foreground">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg">
                   <History className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    Health History
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    {userInfo?.isAuthenticated
-                      ? `Secure Records for ${userInfo.name}`
-                      : "Blockchain-Secured Records"}
-                  </p>
+                  <h1 className="text-xl font-bold text-foreground">Health History</h1>
+                  <p className="text-sm text-muted-foreground">Secure Medical Records</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="text-xs">
-                <Shield className="h-3 w-3 mr-1" />
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-16">
+          <Card className="max-w-md mx-auto shadow-colored-lg card-hover fade-in">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-xl">Authentication Required</CardTitle>
+              <CardDescription>
+                Please log in to access your secure health history and medical records.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/login" className="w-full">
+                <Button className="w-full btn-smooth shadow-colored">
+                  <Lock className="w-4 h-4 mr-2" />
+                  Log In to View Records
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 page-transition">
+      {/* Enhanced Header */}
+      <header className="border-b border-border/40 glass backdrop-blur-xl sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 fade-in">
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="btn-smooth">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/25 transform-smooth hover:scale-110">
+                  <History className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">Health History</h1>
+                  <p className="text-sm text-muted-foreground">Secure Medical Records</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
+              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                <Database className="w-3 h-3 mr-1" />
                 Blockchain Secured
               </Badge>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Dialog
-                open={showAddRecordDialog}
-                onOpenChange={setShowAddRecordDialog}
-              >
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
+                  <Button className="btn-smooth shadow-colored">
+                    <Plus className="w-4 h-4 mr-2" />
                     Add Record
                   </Button>
                 </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center space-x-2">
+                      <Plus className="w-5 h-5 text-primary" />
+                      <span>Add New Health Record</span>
+                    </DialogTitle>
+                    <DialogDescription>
+                      Create a new health record that will be securely stored on the blockchain.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="type">Record Type *</Label>
+                        <Select value={newRecord.type} onValueChange={(value) => setNewRecord(prev => ({ ...prev, type: value }))}>
+                          <SelectTrigger className="focus-enhanced">
+                            <SelectValue placeholder="Select record type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {recordTypes.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                <div className="flex items-center space-x-2">
+                                  <type.icon className="w-4 h-4" />
+                                  <span>{type.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="date">Date *</Label>
+                        <Input
+                          id="date"
+                          type="date"
+                          value={newRecord.date}
+                          onChange={(e) => setNewRecord(prev => ({ ...prev, date: e.target.value }))}
+                          className="focus-enhanced"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title *</Label>
+                      <Input
+                        id="title"
+                        placeholder="e.g., Annual Physical Exam"
+                        value={newRecord.title}
+                        onChange={(e) => setNewRecord(prev => ({ ...prev, title: e.target.value }))}
+                        className="focus-enhanced"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Detailed description of the medical record..."
+                        value={newRecord.description}
+                        onChange={(e) => setNewRecord(prev => ({ ...prev, description: e.target.value }))}
+                        rows={3}
+                        className="focus-enhanced"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="doctor">Healthcare Provider</Label>
+                      <Input
+                        id="doctor"
+                        placeholder="e.g., Dr. Smith"
+                        value={newRecord.doctor}
+                        onChange={(e) => setNewRecord(prev => ({ ...prev, doctor: e.target.value }))}
+                        className="focus-enhanced"
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-foreground">Additional Information (Optional)</h4>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="weight">Weight</Label>
+                          <div className="relative">
+                            <Weight className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="weight"
+                              placeholder="kg"
+                              value={newRecord.metadata.weight}
+                              onChange={(e) => setNewRecord(prev => ({ 
+                                ...prev, 
+                                metadata: { ...prev.metadata, weight: e.target.value }
+                              }))}
+                              className="pl-10 focus-enhanced"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="height">Height</Label>
+                          <div className="relative">
+                            <Ruler className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="height"
+                              placeholder="cm"
+                              value={newRecord.metadata.height}
+                              onChange={(e) => setNewRecord(prev => ({ 
+                                ...prev, 
+                                metadata: { ...prev.metadata, height: e.target.value }
+                              }))}
+                              className="pl-10 focus-enhanced"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="bloodPressure">Blood Pressure</Label>
+                          <div className="relative">
+                            <Heart className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="bloodPressure"
+                              placeholder="120/80"
+                              value={newRecord.metadata.bloodPressure}
+                              onChange={(e) => setNewRecord(prev => ({ 
+                                ...prev, 
+                                metadata: { ...prev.metadata, bloodPressure: e.target.value }
+                              }))}
+                              className="pl-10 focus-enhanced"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="heartRate">Heart Rate</Label>
+                          <div className="relative">
+                            <Activity className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="heartRate"
+                              placeholder="bpm"
+                              value={newRecord.metadata.heartRate}
+                              onChange={(e) => setNewRecord(prev => ({ 
+                                ...prev, 
+                                metadata: { ...prev.metadata, heartRate: e.target.value }
+                              }))}
+                              className="pl-10 focus-enhanced"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Additional Notes</Label>
+                        <Textarea
+                          id="notes"
+                          placeholder="Any additional notes or observations..."
+                          value={newRecord.metadata.notes}
+                          onChange={(e) => setNewRecord(prev => ({ 
+                            ...prev, 
+                            metadata: { ...prev.metadata, notes: e.target.value }
+                          }))}
+                          rows={2}
+                          className="focus-enhanced"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4 border-t">
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting} className="btn-smooth shadow-colored">
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-4 h-4 mr-2" />
+                            Save Securely
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
               </Dialog>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* New User Welcome Section */}
-        {isNewUser && healthRecords.length === 0 && (
-          <Card className="mb-8 bg-gradient-to-r from-primary/5 to-accent/5 border-2 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mx-auto">
-                  <UserPlus className="h-8 w-8" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    Welcome to HealthChain!
-                  </h2>
-                  <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                    Let's get started by adding your basic health information.
-                    This data will be securely stored on the blockchain and only
-                    accessible by you. This helps us provide better AI
-                    recommendations and track your health journey.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                  <Button
-                    size="lg"
-                    onClick={() => setShowAddRecordDialog(true)}
-                    className="px-6 sm:px-8 h-12 text-sm sm:text-base touch-manipulation"
-                  >
-                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                    Add Your Health Data
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={addTestData}
-                    className="px-6 sm:px-8 h-12 text-sm sm:text-base touch-manipulation"
-                    disabled={isLoading}
-                  >
-                    <Activity className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                    {isLoading ? "Adding Test Data..." : "Add Test Data (Demo)"}
-                  </Button>
-                </div>
-                <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground mt-4">
-                  <div className="flex items-center">
-                    <Shield className="h-4 w-4 mr-1 text-primary" />
-                    Blockchain Secured
-                  </div>
-                  <div className="flex items-center">
-                    <Lock className="h-4 w-4 mr-1 text-primary" />
-                    Private & Encrypted
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      {/* Message Alert */}
+      {message && (
+        <div className="container mx-auto px-4 pt-4">
+          <Alert className={`fade-in ${
+            message.type === "success" 
+              ? "border-green-200 bg-green-50 text-green-800" 
+              : "border-red-200 bg-red-50 text-red-800"
+          }`}>
+            {message.type === "success" ? (
+              <CheckCircle className="h-4 w-4" />
+            ) : (
+              <AlertTriangle className="h-4 w-4" />
+            )}
+            <AlertDescription className="font-medium">
+              {message.text}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
-        {/* Search Bar */}
-        {healthRecords.length > 0 && (
-          <div className="mb-8">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search health records and AI history..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="records" className="flex items-center space-x-2">
+              <FileText className="w-4 h-4" />
+              <span>Records</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+              <TrendingUp className="w-4 h-4" />
+              <span>Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center space-x-2">
+              <Shield className="w-4 h-4" />
+              <span>Security</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="records" className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in">
+              <Card className="card-hover shadow-colored border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Records</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-foreground">{stats.totalRecords}</div>
+                      <div className="text-sm text-muted-foreground">Health records</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="card-hover shadow-colored border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Secure Records</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-foreground">{stats.secureRecords}</div>
+                      <div className="text-sm text-muted-foreground">Blockchain protected</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="card-hover shadow-colored border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Last Update</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-foreground">
+                        {stats.lastUpdate ? new Date(stats.lastUpdate).toLocaleDateString() : "Never"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Most recent</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        )}
 
-        {/* Medical Data Entry Dialog */}
-        <Dialog
-          open={showAddRecordDialog}
-          onOpenChange={setShowAddRecordDialog}
-        >
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center">
-                <Stethoscope className="h-6 w-6 mr-2 text-primary" />
-                Add Your Health Information
-              </DialogTitle>
-              <DialogDescription>
-                Please fill in your health information. All data is encrypted
-                and stored securely on the blockchain.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-8 py-4">
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <User className="h-5 w-5 mr-2" />
-                  Personal Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="age">Age *</Label>
+            {/* Search and Filters */}
+            <Card className="shadow-colored border-border/50 fade-in fade-in-delay-1">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Search & Filter Records</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="age"
-                      type="number"
-                      placeholder="25"
-                      value={formData.age}
-                      onChange={(e) => handleInputChange("age", e.target.value)}
+                      placeholder="Search records, descriptions, or doctors..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 focus-enhanced"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender *</Label>
-                    <Select
-                      value={formData.gender}
-                      onValueChange={(value) =>
-                        handleInputChange("gender", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="prefer-not-to-say">
-                          Prefer not to say
+                  
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger className="w-full sm:w-48 focus-enhanced">
+                      <Filter className="w-4 h-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {recordTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center space-x-2">
+                            <type.icon className="w-4 h-4" />
+                            <span>{type.label}</span>
+                          </div>
                         </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bloodType">Blood Type</Label>
-                    <Select
-                      value={formData.bloodType}
-                      onValueChange={(value) =>
-                        handleInputChange("bloodType", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select blood type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="A+">A+</SelectItem>
-                        <SelectItem value="A-">A-</SelectItem>
-                        <SelectItem value="B+">B+</SelectItem>
-                        <SelectItem value="B-">B-</SelectItem>
-                        <SelectItem value="AB+">AB+</SelectItem>
-                        <SelectItem value="AB-">AB-</SelectItem>
-                        <SelectItem value="O+">O+</SelectItem>
-                        <SelectItem value="O-">O-</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-full sm:w-48 focus-enhanced">
+                      <SortDesc className="w-4 h-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">Sort by Date</SelectItem>
+                      <SelectItem value="type">Sort by Type</SelectItem>
+                      <SelectItem value="title">Sort by Title</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <Separator />
-
-              {/* Vital Signs */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <Activity className="h-5 w-5 mr-2" />
-                  Vital Signs
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="weight" className="flex items-center">
-                      <Weight className="h-4 w-4 mr-1" />
-                      Weight (kg) *
-                    </Label>
-                    <Input
-                      id="weight"
-                      type="number"
-                      placeholder="70"
-                      value={formData.weight}
-                      onChange={(e) =>
-                        handleInputChange("weight", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="height" className="flex items-center">
-                      <Ruler className="h-4 w-4 mr-1" />
-                      Height (cm) *
-                    </Label>
-                    <Input
-                      id="height"
-                      type="number"
-                      placeholder="175"
-                      value={formData.height}
-                      onChange={(e) =>
-                        handleInputChange("height", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="heartRate" className="flex items-center">
-                      <Heart className="h-4 w-4 mr-1" />
-                      Heart Rate (bpm)
-                    </Label>
-                    <Input
-                      id="heartRate"
-                      type="number"
-                      placeholder="72"
-                      value={formData.heartRate}
-                      onChange={(e) =>
-                        handleInputChange("heartRate", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="systolicBP">Systolic BP (mmHg) *</Label>
-                    <Input
-                      id="systolicBP"
-                      type="number"
-                      placeholder="120"
-                      value={formData.systolicBP}
-                      onChange={(e) =>
-                        handleInputChange("systolicBP", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="diastolicBP">Diastolic BP (mmHg) *</Label>
-                    <Input
-                      id="diastolicBP"
-                      type="number"
-                      placeholder="80"
-                      value={formData.diastolicBP}
-                      onChange={(e) =>
-                        handleInputChange("diastolicBP", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="temperature" className="flex items-center">
-                      <Thermometer className="h-4 w-4 mr-1" />
-                      Temperature (°C)
-                    </Label>
-                    <Input
-                      id="temperature"
-                      type="number"
-                      step="0.1"
-                      placeholder="36.5"
-                      value={formData.temperature}
-                      onChange={(e) =>
-                        handleInputChange("temperature", e.target.value)
-                      }
-                    />
-                  </div>
+            {/* Records List */}
+            <div className="space-y-4">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="shadow-colored border-border/50">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-muted rounded-xl skeleton"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-muted rounded skeleton w-1/3"></div>
+                            <div className="h-3 bg-muted rounded skeleton w-2/3"></div>
+                            <div className="h-3 bg-muted rounded skeleton w-1/4"></div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </div>
-
-              <Separator />
-
-              {/* Medical History */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <FileText className="h-5 w-5 mr-2" />
-                  Medical History
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="medications" className="flex items-center">
-                      <Pill className="h-4 w-4 mr-1" />
-                      Current Medications
-                    </Label>
-                    <Textarea
-                      id="medications"
-                      placeholder="List any medications you are currently taking..."
-                      value={formData.medications}
-                      onChange={(e) =>
-                        handleInputChange("medications", e.target.value)
-                      }
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="allergies">Known Allergies</Label>
-                    <Textarea
-                      id="allergies"
-                      placeholder="List any known allergies..."
-                      value={formData.allergies}
-                      onChange={(e) =>
-                        handleInputChange("allergies", e.target.value)
-                      }
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="chronicConditions">
-                      Chronic Conditions
-                    </Label>
-                    <Textarea
-                      id="chronicConditions"
-                      placeholder="List any chronic health conditions..."
-                      value={formData.chronicConditions}
-                      onChange={(e) =>
-                        handleInputChange("chronicConditions", e.target.value)
-                      }
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Additional Notes</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Any additional health information..."
-                      value={formData.notes}
-                      onChange={(e) =>
-                        handleInputChange("notes", e.target.value)
-                      }
-                      rows={3}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="lastCheckupDate">Last Checkup Date</Label>
-                    <Input
-                      id="lastCheckupDate"
-                      type="date"
-                      value={formData.lastCheckupDate}
-                      onChange={(e) =>
-                        handleInputChange("lastCheckupDate", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="doctor">Primary Doctor</Label>
-                    <Input
-                      id="doctor"
-                      placeholder="Dr. Smith"
-                      value={formData.doctor}
-                      onChange={(e) =>
-                        handleInputChange("doctor", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Enhanced Security Notice */}
-              <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-4 rounded-lg border border-primary/20">
-                <div className="flex items-center space-x-3">
-                  <Shield className="h-6 w-6 text-primary" />
-                  <div>
-                    <h4 className="font-semibold text-foreground">
-                      Advanced Security Architecture
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Your health data is protected by our dual-layer security
-                      system:
+              ) : filteredRecords.length === 0 ? (
+                <Card className="shadow-colored border-border/50 text-center py-12">
+                  <CardContent>
+                    <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No Records Found</h3>
+                    <p className="text-muted-foreground mb-6">
+                      {searchTerm || selectedType !== "all" 
+                        ? "No records match your search criteria." 
+                        : "Start by adding your first health record."}
                     </p>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li className="flex items-center">
-                        <Lock className="h-3 w-3 mr-2 text-primary" />
-                        <strong>Split-Key Encryption:</strong> Data encrypted
-                        with patient + provider + system keys
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="h-3 w-3 mr-2 text-accent" />
-                        <strong>Blockchain Immutability:</strong> Records stored
-                        on tamper-proof blockchain
-                      </li>
-                      <li className="flex items-center">
-                        <FileText className="h-3 w-3 mr-2 text-info" />
-                        <strong>Neon Database:</strong> Encrypted storage in
-                        secure PostgreSQL database
-                      </li>
-                    </ul>
+                    <Button onClick={() => setIsDialogOpen(true)} className="btn-smooth shadow-colored">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Record
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredRecords.map((record, index) => {
+                  const RecordIcon = getRecordIcon(record.type);
+                  return (
+                    <Card 
+                      key={record.id} 
+                      className="shadow-colored border-border/50 card-hover fade-in-up"
+                      style={{animationDelay: `${index * 0.1}s`}}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start space-x-4">
+                          <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${getRecordColor(record.type)} text-white shadow-lg transform-smooth hover:scale-110`}>
+                            <RecordIcon className="w-6 h-6" />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h3 className="text-lg font-semibold text-foreground truncate">
+                                  {record.title}
+                                </h3>
+                                <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                                  <div className="flex items-center space-x-1">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>{new Date(record.date).toLocaleDateString()}</span>
+                                  </div>
+                                  {record.doctor && (
+                                    <div className="flex items-center space-x-1">
+                                      <User className="w-3 h-3" />
+                                      <span>{record.doctor}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                {record.isSecure && (
+                                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                                    <Lock className="w-3 h-3 mr-1" />
+                                    Secure
+                                  </Badge>
+                                )}
+                                <Badge variant="outline" className="text-xs">
+                                  {recordTypes.find(rt => rt.value === record.type)?.label || record.type}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <p className="text-muted-foreground mb-3 line-clamp-2">
+                              {record.description}
+                            </p>
+                            
+                            {record.metadata && Object.keys(record.metadata).some(key => record.metadata[key]) && (
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm bg-muted/30 rounded-lg p-3">
+                                {record.metadata.weight && (
+                                  <div>
+                                    <span className="text-muted-foreground">Weight:</span>
+                                    <div className="font-medium">{record.metadata.weight} kg</div>
+                                  </div>
+                                )}
+                                {record.metadata.bloodPressure && (
+                                  <div>
+                                    <span className="text-muted-foreground">BP:</span>
+                                    <div className="font-medium">{record.metadata.bloodPressure}</div>
+                                  </div>
+                                )}
+                                {record.metadata.heartRate && (
+                                  <div>
+                                    <span className="text-muted-foreground">HR:</span>
+                                    <div className="font-medium">{record.metadata.heartRate} bpm</div>
+                                  </div>
+                                )}
+                                {record.metadata.temperature && (
+                                  <div>
+                                    <span className="text-muted-foreground">Temp:</span>
+                                    <div className="font-medium">{record.metadata.temperature}°C</div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <Card className="shadow-colored border-border/50 fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <span>Health Analytics</span>
+                </CardTitle>
+                <CardDescription>
+                  Insights and trends from your health data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center py-12">
+                <TrendingUp className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">Analytics Coming Soon</h3>
+                <p className="text-muted-foreground">
+                  We're working on powerful analytics features to help you understand your health trends and patterns.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <Card className="shadow-colored border-border/50 fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  <span>Security & Privacy</span>
+                </CardTitle>
+                <CardDescription>
+                  Your data protection and privacy controls
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-foreground">Encryption Status</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium">End-to-End Encryption</span>
+                        </div>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          Active
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium">Blockchain Storage</span>
+                        </div>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          Secured
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium">Split Key Encryption</span>
+                        </div>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          Enabled
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-foreground">Privacy Controls</h4>
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-lg border border-border">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">Data Ownership</span>
+                          <Badge variant="outline">You Own Your Data</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Your health data belongs to you and is never shared without your consent.
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg border border-border">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">Access Control</span>
+                          <Badge variant="outline">Private by Default</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Only you can access your health records with your unique authentication.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddRecordDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSubmitRecord}
-                  className="px-8"
-                  disabled={isLoading}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isLoading ? "Saving to Blockchain..." : "Save to Blockchain"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {healthRecords.length > 0 && (
-          <Tabs defaultValue="records" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 max-w-md">
-              <TabsTrigger
-                value="records"
-                className="flex items-center space-x-2"
-              >
-                <FileText className="h-4 w-4" />
-                <span>Health Records</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="ai-history"
-                className="flex items-center space-x-2"
-              >
-                <Brain className="h-4 w-4" />
-                <span>AI Search History</span>
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Health Records Tab */}
-            <TabsContent value="records" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Medical Records</span>
-                    <Badge variant="outline" className="text-xs">
-                      {healthRecords.length} records
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    All your health records are encrypted and stored on the
-                    blockchain for maximum security.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {healthRecords.map((record) => (
-                    <Card
-                      key={record.id}
-                      className="border-l-4 border-l-primary"
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
-                              {getTypeIcon(record.type)}
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">{record.title}</h3>
-                              <p className="text-sm text-muted-foreground flex items-center">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                {record.date} • {record.doctor}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge className={getStatusColor(record.status)}>
-                            {record.status}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {record.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                            <Lock className="h-3 w-3" />
-                            <span>Blockchain: {record.blockchainHash}</span>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            View Details
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* AI Search History Tab */}
-            <TabsContent value="ai-history" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>AI Search History</span>
-                    <Badge variant="outline" className="text-xs">
-                      {aiSearchHistory.length} searches
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Your B-max AI search history, helping track your health
-                    journey and concerns.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {aiSearchHistory.map((search) => (
-                    <Card
-                      key={search.id}
-                      className="border-l-4 border-l-accent"
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent/10 text-accent">
-                              <Brain className="h-4 w-4" />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-sm">
-                                {search.query}
-                              </h3>
-                              <p className="text-xs text-muted-foreground flex items-center">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {search.timestamp}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge
-                            variant={
-                              search.relevance === "high"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {search.relevance}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {search.response.length > 100
-                            ? `${search.response.substring(0, 100)}...`
-                            : search.response}
-                        </p>
-                        <Button variant="ghost" size="sm">
-                          View Full Response
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        )}
-
-        {/* Security Info */}
-        <Card className="mt-8 bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary">
-                <Shield className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold mb-1">
-                  End-to-End Blockchain Security
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Your health data is encrypted and stored on an immutable
-                  blockchain, ensuring complete privacy and security. Only you
-                  control access to your information.
-                </p>
-              </div>
-              <Button variant="outline">Learn More</Button>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
