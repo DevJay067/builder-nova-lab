@@ -34,7 +34,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/bmax" element={<BmaxAI />} />
           <Route path="/bmax-demo" element={<BmaxDemo />} />
-          <Route path="/login-test" element={<LoginTest />} />
           <Route
             path="/history"
             element={
