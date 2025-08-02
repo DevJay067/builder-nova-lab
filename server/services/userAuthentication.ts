@@ -4,6 +4,7 @@ import { SecureDataAccessService } from "./secureDataAccess";
 import { ProductionBlockchainService } from "./productionBlockchain";
 import { NeonDatabaseService } from "./neonDatabase";
 import { SimpleDatabaseInit } from "./simpleDatabaseInit";
+import { DatabaseHealthService } from "./databaseHealthCheck";
 
 /**
  * Enhanced User Authentication Service
