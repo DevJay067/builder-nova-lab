@@ -64,7 +64,6 @@ export interface ProductionTransaction {
 class ProductionBlockchainService {
   private static blockchain: ProductionBlock[] = [];
   private static pendingTransactions: ProductionTransaction[] = [];
-  private static keyManagementService = new KeyManagementService();
   private static readonly DIFFICULTY = 4; // Adjustable mining difficulty
   private static readonly BLOCK_TIME = 10000; // 10 seconds per block
   private static readonly MAX_TRANSACTIONS_PER_BLOCK = 100;
