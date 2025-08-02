@@ -414,6 +414,11 @@ class UserAuthenticationService {
       // Update last login
       user.lastLogin = new Date().toISOString();
 
+      // Update in database if available
+      if (this.useDatabase) {
+        await this.updateUserLastLogin(username);
+      }
+
       console.log(`✅ User ${username} authenticated successfully`);
 
       return {
