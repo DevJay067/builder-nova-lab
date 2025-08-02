@@ -197,5 +197,28 @@ export function createServer() {
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
 
+  // Database Health Check Endpoint
+  app.get("/api/health/database", async (req, res) => {
+    try {
+      const { DatabaseHealthService } = await import("./services/databaseHealthCheck");
+      const health = await DatabaseHealthService.checkHealth();
+      res.json({
+        success: true,
+        database: health,
+        server: {
+          uptime: process.uptime(),
+          memory: process.memoryUsage(),
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   return app;
 }
