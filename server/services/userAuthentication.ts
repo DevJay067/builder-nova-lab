@@ -166,8 +166,8 @@ class UserAuthenticationService {
         },
         createdAt: row.created_at,
         lastLogin: row.last_login,
-        secureSystemActivated: row.secure_system_activated,
-        splitKeySystemActive: row.split_key_system_active,
+        secureSystemActivated: row.secure_system_activated || false,
+        splitKeySystemActive: row.split_key_system_active || false,
       };
 
       return user;
