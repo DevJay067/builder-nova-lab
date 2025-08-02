@@ -112,7 +112,7 @@ export default function Index() {
         "Comprehensive health records and AI search history securely stored on blockchain.",
       icon: History,
       color: "bg-green-500",
-      route: "/health-history",
+      route: "/history",
       stats: "Secure & Private",
       gradient: "from-green-500/20 to-emerald-500/20",
     },
@@ -301,7 +301,7 @@ export default function Index() {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <Link to="/health-history" className="w-full sm:w-auto">
+            <Link to="/history" className="w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 size="lg" 
