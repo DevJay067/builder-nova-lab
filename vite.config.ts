@@ -16,7 +16,13 @@ export default defineConfig(({ mode }) => ({
   appType: "spa",
   build: {
     outDir: "dist/spa",
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+      },
+    },
   },
+  publicDir: 'public',
   plugins: [react(), expressPlugin()],
   resolve: {
     alias: {
