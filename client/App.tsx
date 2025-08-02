@@ -10,7 +10,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BmaxAI from "./pages/BmaxAI";
 import BmaxDemo from "./pages/BmaxDemo";
-import LoginTest from "./pages/LoginTest";
+
 import HealthHistory from "./pages/HealthHistory";
 import FirstAid from "./pages/FirstAid";
 import HealthAnalytics from "./pages/HealthAnalytics";
