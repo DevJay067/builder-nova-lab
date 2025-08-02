@@ -102,8 +102,7 @@ export class NeonDatabaseService {
           ip_address VARCHAR(45),
           user_agent TEXT,
           success BOOLEAN NOT NULL,
-          details JSONB,
-
+          details JSONB
         )
       `;
 
