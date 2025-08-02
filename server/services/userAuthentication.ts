@@ -299,8 +299,16 @@ class UserAuthenticationService {
         };
       }
 
-      // Check if user already exists
-      if (this.users.has(username)) {
+      // Check if user already exists (database first, then memory)
+      let existingUser = null;
+      if (this.useDatabase) {
+        existingUser = await this.getUserFromDatabase(username);
+      }
+      if (!existingUser && this.users.has(username)) {
+        existingUser = this.users.get(username);
+      }
+
+      if (existingUser) {
         return {
           success: false,
           message: "Username already exists"
