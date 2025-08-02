@@ -146,9 +146,7 @@ export class NeonDatabaseService {
           metadata JSONB,
           secure_record_id VARCHAR(255),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
 
