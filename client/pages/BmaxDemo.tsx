@@ -1,0 +1,379 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Brain, 
+  ArrowLeft, 
+  Search, 
+  Sparkles, 
+  User,
+  Heart,
+  Activity,
+  AlertTriangle,
+  CheckCircle
+} from "lucide-react";
+
+interface QueryEnhancement {
+  originalQuery: string;
+  enhancedQuery: string;
+  relevantConditions: string[];
+  searchContext: string;
+  personalizedPrompt: string;
+  hasPersonalization: boolean;
+}
+
+export default function BmaxDemo() {
+  const [query, setQuery] = useState("");
+  const [enhancement, setEnhancement] = useState<QueryEnhancement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
+
+  const checkAuthentication = async () => {
+    try {
+      const sessionToken = localStorage.getItem("sessionToken") || 
+                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+
+      if (!sessionToken) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      const response = await fetch("/api/auth/verify", {
+        headers: {
+          "Authorization": `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      setIsAuthenticated(response.ok);
+    } catch (error) {
+      console.error("Error checking authentication:", error);
+      setIsAuthenticated(false);
+    }
+  };
+
+  const enhanceQuery = async () => {
+    if (!query.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const sessionToken = localStorage.getItem("sessionToken") || 
+                          document.cookie.split('; ').find(row => row.startsWith('healthchain_session='))?.split('=')[1];
+
+      const response = await fetch("/api/medical-context/enhance-query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken || "",
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEnhancement(data);
+      } else {
+        console.error("Failed to enhance query");
+      }
+    } catch (error) {
+      console.error("Error enhancing query:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sampleQueries = [
+    "I'm feeling dizzy",
+    "I have a headache",
+    "Can I take ibuprofen?",
+    "I'm feeling tired lately",
+    "What should I monitor for my health?",
+    "I'm experiencing chest pain"
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Header */}
+      <header className="border-b border-border/40 bg-card/95 backdrop-blur">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link to="/">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
+                  <Brain className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">
+                    B-max AI Demo
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    See How Medical History Personalizes AI
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-xs">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Demo Mode
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {!isAuthenticated && (
+          <Alert className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              You need to be logged in to see personalized query enhancements. 
+              <Link to="/login" className="underline ml-1">Log in here</Link> to try with your medical history.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Query Input */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Search className="h-5 w-5 mr-2" />
+              Test Query Enhancement
+            </CardTitle>
+            <CardDescription>
+              Enter a health question to see how B-max AI enhances it with your medical history.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g., I'm feeling dizzy"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && enhanceQuery()}
+              />
+              <Button 
+                onClick={enhanceQuery} 
+                disabled={!query.trim() || isLoading}
+              >
+                {isLoading ? "Enhancing..." : "Enhance"}
+              </Button>
+            </div>
+
+            {/* Sample Queries */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Try these sample queries:</p>
+              <div className="flex flex-wrap gap-2">
+                {sampleQueries.map((sampleQuery, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setQuery(sampleQuery)}
+                    className="text-xs"
+                  >
+                    {sampleQuery}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Enhancement Results */}
+        {enhancement && (
+          <div className="space-y-4">
+            {/* Original vs Enhanced Query */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Original Query
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm bg-muted p-3 rounded">
+                    "{enhancement.originalQuery}"
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Generic health question without context
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center">
+                    <Brain className="h-4 w-4 mr-2" />
+                    Enhanced Query
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm bg-primary/10 p-3 rounded border border-primary/20">
+                    "{enhancement.enhancedQuery}"
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {enhancement.hasPersonalization 
+                      ? "Personalized with your medical history" 
+                      : "No medical history available for personalization"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Relevant Conditions */}
+            {enhancement.relevantConditions.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center">
+                    <Activity className="h-4 w-4 mr-2" />
+                    Relevant Medical Conditions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {enhancement.relevantConditions.map((condition, index) => (
+                      <Badge key={index} variant="destructive" className="text-xs">
+                        {condition}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    These conditions from your medical history are relevant to your query
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Search Context */}
+            {enhancement.searchContext && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center">
+                    <Heart className="h-4 w-4 mr-2" />
+                    Medical Context
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm bg-blue-50 p-3 rounded border border-blue-200">
+                    {enhancement.searchContext}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Additional context provided to B-max AI for personalized recommendations
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Personalized Prompt */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Personalized AI Prompt
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-green-50 p-3 rounded border border-green-200">
+                  <pre className="text-xs whitespace-pre-wrap text-green-800">
+                    {enhancement.personalizedPrompt}
+                  </pre>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  This is the complete prompt sent to B-max AI, including your medical context
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* How It Works */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-lg">How Medical Context Enhances B-max AI</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium mb-2">Without Medical History:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Generic health advice</li>
+                  <li>• No condition-specific recommendations</li>
+                  <li>• Cannot consider medication interactions</li>
+                  <li>• No allergy warnings</li>
+                  <li>• General symptom information</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">With Medical History:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Condition-specific advice (e.g., diabetic dizziness)</li>
+                  <li>• Considers your current medications</li>
+                  <li>• Warns about drug interactions</li>
+                  <li>• Includes allergy precautions</li>
+                  <li>• Tailored monitoring recommendations</li>
+                </ul>
+              </div>
+            </div>
+
+            <Alert>
+              <Brain className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Example:</strong> If you have diabetes and ask "I'm feeling dizzy", B-max AI will specifically 
+                address diabetic-related causes of dizziness like blood sugar fluctuations, rather than just general dizziness causes.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
+        {/* Call to Action */}
+        <Card className="mt-6">
+          <CardContent className="text-center py-6">
+            <Brain className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Ready to Try B-max AI?</h3>
+            <p className="text-muted-foreground mb-4">
+              Experience personalized health AI that considers your complete medical history.
+            </p>
+            <div className="flex justify-center gap-3">
+              <Link to="/bmax">
+                <Button>
+                  Try B-max AI Now
+                </Button>
+              </Link>
+              {!isAuthenticated && (
+                <Link to="/login">
+                  <Button variant="outline">
+                    Login for Personalization
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
