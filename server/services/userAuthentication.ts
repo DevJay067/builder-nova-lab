@@ -65,6 +65,139 @@ class UserAuthenticationService {
   private static useDatabase = false;
 
   /**
+   * Create user tables in database
+   */
+  private static async createUserTables(): Promise<void> {
+    try {
+      const { neon } = await import("@neondatabase/serverless");
+      const sql = neon(process.env.DATABASE_URL || "");
+
+      // Create users table
+      await sql`
+        CREATE TABLE IF NOT EXISTS users (
+          id VARCHAR(255) PRIMARY KEY,
+          username VARCHAR(255) UNIQUE NOT NULL,
+          password_hash VARCHAR(255) NOT NULL,
+          user_hash VARCHAR(255) NOT NULL,
+          email VARCHAR(255),
+          first_name VARCHAR(255),
+          last_name VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          last_login TIMESTAMP,
+          secure_system_activated BOOLEAN DEFAULT false,
+          split_key_system_active BOOLEAN DEFAULT false
+        )
+      `;
+
+      // Create index on username for faster lookups
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_users_user_hash ON users(user_hash)`;
+
+      console.log("✅ User tables created successfully");
+    } catch (error) {
+      console.error("❌ Error creating user tables:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Store user in database
+   */
+  private static async storeUserInDatabase(user: User): Promise<void> {
+    try {
+      const { neon } = await import("@neondatabase/serverless");
+      const sql = neon(process.env.DATABASE_URL || "");
+
+      await sql`
+        INSERT INTO users (
+          id, username, password_hash, user_hash, email,
+          first_name, last_name, created_at, secure_system_activated,
+          split_key_system_active
+        ) VALUES (
+          ${user.id}, ${user.username}, ${user.passwordHash},
+          ${user.userHash}, ${user.email || null},
+          ${user.profile?.firstName || null}, ${user.profile?.lastName || null},
+          ${user.createdAt}, ${user.secureSystemActivated},
+          ${user.splitKeySystemActive}
+        )
+        ON CONFLICT (username) DO UPDATE SET
+          password_hash = EXCLUDED.password_hash,
+          user_hash = EXCLUDED.user_hash,
+          email = EXCLUDED.email,
+          first_name = EXCLUDED.first_name,
+          last_name = EXCLUDED.last_name,
+          secure_system_activated = EXCLUDED.secure_system_activated,
+          split_key_system_active = EXCLUDED.split_key_system_active
+      `;
+
+      console.log(`✅ User ${user.username} stored in database`);
+    } catch (error) {
+      console.error("❌ Error storing user in database:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user from database
+   */
+  private static async getUserFromDatabase(username: string): Promise<User | null> {
+    try {
+      const { neon } = await import("@neondatabase/serverless");
+      const sql = neon(process.env.DATABASE_URL || "");
+
+      const result = await sql`
+        SELECT * FROM users WHERE username = ${username}
+      `;
+
+      if (result.length === 0) {
+        return null;
+      }
+
+      const row = result[0];
+      const user: User = {
+        id: row.id,
+        username: row.username,
+        passwordHash: row.password_hash,
+        userHash: row.user_hash,
+        email: row.email,
+        profile: {
+          firstName: row.first_name,
+          lastName: row.last_name,
+        },
+        createdAt: row.created_at,
+        lastLogin: row.last_login,
+        secureSystemActivated: row.secure_system_activated,
+        splitKeySystemActive: row.split_key_system_active,
+      };
+
+      return user;
+    } catch (error) {
+      console.error("❌ Error getting user from database:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Update user last login in database
+   */
+  private static async updateUserLastLogin(username: string): Promise<void> {
+    try {
+      const { neon } = await import("@neondatabase/serverless");
+      const sql = neon(process.env.DATABASE_URL || "");
+
+      await sql`
+        UPDATE users
+        SET last_login = CURRENT_TIMESTAMP
+        WHERE username = ${username}
+      `;
+
+      console.log(`✅ Updated last login for user: ${username}`);
+    } catch (error) {
+      console.error("❌ Error updating user last login:", error);
+    }
+  }
+
+  /**
    * Initialize the authentication service
    */
   static async initialize(): Promise<void> {
