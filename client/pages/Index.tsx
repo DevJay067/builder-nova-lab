@@ -99,17 +99,7 @@ export default function Index() {
       stats: "Interactive Demo",
       gradient: "from-purple-500/20 to-indigo-500/20",
     },
-    {
-      id: "login-test",
-      title: "Login Test",
-      description:
-        "Debug authentication issues and test database connectivity. For troubleshooting login problems.",
-      icon: TestTube,
-      color: "bg-orange-500",
-      route: "/login-test",
-      stats: "Debug Tool",
-      gradient: "from-orange-500/20 to-red-500/20",
-    },
+
     {
       id: "history",
       title: "Health History",
