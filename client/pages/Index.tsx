@@ -24,6 +24,7 @@ import {
   User,
   LogOut,
   LogIn,
+  TestTube,
 } from "lucide-react";
 
 export default function Index() {
