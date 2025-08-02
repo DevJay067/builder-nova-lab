@@ -34,7 +34,7 @@ export class DatabaseInitService {
     try {
       // Sample key store record
       const sampleKeyStore = {
-        keyId: 'demo-key-123',
+        keyId: `demo-key-${Date.now()}`,
         patientId: 'default-patient',
         providerId: 'dr-smith-001',
         systemKeyEncrypted: 'encrypted-system-key-data',
