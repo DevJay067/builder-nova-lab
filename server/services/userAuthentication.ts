@@ -62,6 +62,7 @@ class UserAuthenticationService {
   private static users: Map<string, User> = new Map();
   private static dataAccessRecords: Map<string, DataAccessRecord> = new Map();
   private static isInitialized = false;
+  private static useDatabase = false;
 
   /**
    * Initialize the authentication service
