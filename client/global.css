@@ -318,6 +318,8 @@
   /* Smooth page transitions */
   .page-transition {
     animation: pageSlideIn 0.5s ease-out;
+    min-opacity: 0.1; /* Prevent complete black screen */
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--background)) 95%, hsl(var(--primary))/5% 100%);
   }
 
   @keyframes pageSlideIn {
