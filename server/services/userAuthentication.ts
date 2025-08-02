@@ -73,25 +73,38 @@ class UserAuthenticationService {
 
     try {
       console.log("🚀 Initializing enhanced user authentication system...");
-      
+
+      // Check database health first
+      const healthCheck = await DatabaseHealthService.checkHealth();
+      if (!healthCheck.isHealthy) {
+        console.warn("⚠️ Database health check failed, continuing with in-memory storage");
+      }
+
       // Initialize secure data access system
       await SecureDataAccessService.initialize();
-      
-      // Initialize database connections
-      try {
-        await NeonDatabaseService.initializeDatabase();
-        console.log("✅ User authentication tables initialized successfully");
-      } catch (dbError) {
-        console.warn("⚠️ Main database initialization failed, using fallback");
-        await SimpleDatabaseInit.createMedicalHistoryTable();
-      }
+
+      // Initialize database connections with fallback
+      await DatabaseHealthService.withFallback(
+        async () => {
+          await NeonDatabaseService.initializeDatabase();
+          console.log("✅ User authentication tables initialized successfully");
+        },
+        () => {
+          console.warn("⚠️ Using fallback database initialization");
+          SimpleDatabaseInit.createMedicalHistoryTable().catch(() => {
+            console.warn("⚠️ Fallback initialization also failed, using in-memory only");
+          });
+        }
+      );
 
       this.isInitialized = true;
       console.log("✅ User authentication system initialized successfully");
-      
+
     } catch (error) {
       console.error("❌ Failed to initialize authentication system:", error);
-      throw error;
+      // Don't throw error, allow system to continue with in-memory storage
+      this.isInitialized = true;
+      console.log("✅ Authentication system initialized in degraded mode");
     }
   }
 
