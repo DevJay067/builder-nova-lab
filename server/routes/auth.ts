@@ -1,9 +1,5 @@
 import { RequestHandler } from "express";
-import {
-  UserAuthenticationService,
-  UserRegistration,
-  UserLogin,
-} from "../services/userAuthentication";
+import { UserAuthenticationService } from "../services/userAuthentication";
 
 /**
  * Register a new user
