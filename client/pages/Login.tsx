@@ -108,22 +108,19 @@ export default function Login() {
 
         setMessage({
           type: "success",
-          text: "Login successful! Generating secure keys...",
+          text: result.user.secureSystemActivated
+            ? "Login successful! Secure blockchain system activated."
+            : "Login successful! Setting up secure system...",
         });
 
+        // Redirect faster for better UX
         setTimeout(() => {
-          setMessage({
-            type: "success",
-            text: "Secure access configured! Redirecting...",
-          });
-          setTimeout(() => {
-            navigate("/");
-            // Ensure scroll to top after navigation
-            setTimeout(() => window.scrollTo(0, 0), 100);
-          }, 1000);
-        }, 1500);
+          navigate("/");
+          // Ensure scroll to top after navigation
+          setTimeout(() => window.scrollTo(0, 0), 100);
+        }, 1000);
       } else {
-        setMessage({ type: "error", text: result.error || "Login failed" });
+        setMessage({ type: "error", text: result.message || "Login failed" });
       }
     } catch (error) {
       console.error("Login error:", error);
