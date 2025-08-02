@@ -2,109 +2,67 @@ import { RequestHandler } from "express";
 import { UserAuthenticationService } from "../services/userAuthentication";
 
 /**
- * Register a new user
+ * Register a new user with production blockchain system
  */
 export const registerUser: RequestHandler = async (req, res) => {
   try {
-    // Add debugging
     console.log("🔍 Registration request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
     });
 
-    const userData: UserRegistration = req.body;
+    const { username, password, email, firstName, lastName } = req.body;
 
-    // Validate required fields
-    if (
-      !userData.username ||
-      !userData.email ||
-      !userData.password ||
-      !userData.firstName ||
-      !userData.lastName
-    ) {
-      return res.status(400).json({
-        success: false,
-        error:
-          "Username, email, password, first name, and last name are required",
-      });
-    }
-
-    // Validate password strength
-    if (userData.password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        error: "Password must be at least 8 characters long",
-      });
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid email format",
-      });
-    }
-
-    // Validate username (no special characters, 3-30 chars)
-    const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
-    if (!usernameRegex.test(userData.username)) {
-      return res.status(400).json({
-        success: false,
-        error:
-          "Username must be 3-30 characters and contain only letters, numbers, and underscores",
-      });
-    }
-
-    const result = await UserAuthenticationService.registerUser(userData);
+    // Use the new authentication service
+    const result = await UserAuthenticationService.registerUser(
+      username,
+      password,
+      email,
+      {
+        firstName,
+        lastName
+      }
+    );
 
     if (result.success) {
-      res.status(201).json({
-        success: true,
-        message: "User registered successfully",
-        user: result.user,
-      });
+      return res.status(201).json(result);
     } else {
-      res.status(400).json({
-        success: false,
-        error: result.error,
-      });
+      return res.status(400).json(result);
     }
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during registration",
+      message: "Internal server error during registration",
     });
   }
 };
 
 /**
- * Login user
+ * Login user with secure data access system
  */
 export const loginUser: RequestHandler = async (req, res) => {
   try {
-    // Add debugging
     console.log("🔍 Login request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
     });
 
-    const loginData: UserLogin = req.body;
+    const { username, password } = req.body;
 
     // Validate required fields
-    if (!loginData.username || !loginData.password) {
+    if (!username || !password) {
       return res.status(400).json({
         success: false,
-        error: "Username and password are required",
+        message: "Username and password are required",
       });
     }
 
-    const result = await UserAuthenticationService.authenticateUser(loginData);
+    const result = await UserAuthenticationService.authenticateUser(username, password);
 
     if (result.success) {
       // Set session cookie
-      res.cookie("healthchain_session", result.session!.sessionToken, {
+      res.cookie("healthchain_session", result.user!.sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -113,22 +71,21 @@ export const loginUser: RequestHandler = async (req, res) => {
 
       res.json({
         success: true,
-        message: "Login successful",
+        message: result.message,
         user: result.user,
-        sessionToken: result.session!.sessionToken,
-        dataAccessHash: result.session!.dataAccessHash,
+        securityFeatures: result.securityFeatures,
       });
     } else {
       res.status(401).json({
         success: false,
-        error: result.error,
+        message: result.message,
       });
     }
   } catch (error) {
     console.error("Error logging in user:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during login",
+      message: "Internal server error during login",
     });
   }
 };
@@ -146,30 +103,28 @@ export const verifySession: RequestHandler = async (req, res) => {
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "No session token provided",
+        message: "No session token provided",
       });
     }
 
-    const result =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const result = UserAuthenticationService.verifySession(sessionToken);
 
     if (result.valid) {
       res.json({
         success: true,
         user: result.user,
-        session: result.session,
       });
     } else {
       res.status(401).json({
         success: false,
-        error: result.error,
+        message: "Invalid session token",
       });
     }
   } catch (error) {
     console.error("Error verifying session:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during session verification",
+      message: "Internal server error during session verification",
     });
   }
 };
@@ -185,7 +140,7 @@ export const logoutUser: RequestHandler = async (req, res) => {
       (req.headers["x-session-token"] as string);
 
     if (sessionToken) {
-      await UserAuthenticationService.logoutUser(sessionToken);
+      UserAuthenticationService.logout(sessionToken);
     }
 
     // Clear session cookie
@@ -199,7 +154,7 @@ export const logoutUser: RequestHandler = async (req, res) => {
     console.error("Error logging out user:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error during logout",
+      message: "Internal server error during logout",
     });
   }
 };
@@ -217,51 +172,37 @@ export const getUserProfile: RequestHandler = async (req, res) => {
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        message: "Authentication required",
       });
     }
 
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const sessionResult = UserAuthenticationService.verifySession(sessionToken);
 
     if (!sessionResult.valid) {
       return res.status(401).json({
         success: false,
-        error: sessionResult.error,
+        message: "Invalid session",
       });
     }
-
-    // Get user data access records
-    const dataAccess = await UserAuthenticationService.getUserDataAccess(
-      sessionResult.user!.id,
-    );
 
     res.json({
       success: true,
       user: sessionResult.user,
-      dataAccess,
-      sessionInfo: {
-        sessionId: sessionResult.session!.id,
-        createdAt: sessionResult.session!.createdAt,
-        expiresAt: sessionResult.session!.expiresAt,
-        lastActivity: sessionResult.session!.lastActivity,
-      },
     });
   } catch (error) {
     console.error("Error getting user profile:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      message: "Internal server error",
     });
   }
 };
 
 /**
- * Create data access record for user
+ * Store health record for authenticated user
  */
 export const createDataAccess: RequestHandler = async (req, res) => {
   try {
-    const { dataRecordId } = req.body;
     const sessionToken =
       req.headers.authorization?.replace("Bearer ", "") ||
       req.cookies.healthchain_session ||
@@ -270,60 +211,50 @@ export const createDataAccess: RequestHandler = async (req, res) => {
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        message: "Authentication required",
       });
     }
 
-    if (!dataRecordId) {
+    const { type, data } = req.body;
+
+    if (!type || !data) {
       return res.status(400).json({
         success: false,
-        error: "Data record ID is required",
+        message: "Health record type and data are required",
       });
     }
 
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
-
-    if (!sessionResult.valid) {
-      return res.status(401).json({
-        success: false,
-        error: sessionResult.error,
-      });
-    }
-
-    const result = await UserAuthenticationService.createDataAccessRecord(
-      sessionResult.user!.id,
-      dataRecordId,
-      sessionResult.user!.userHash,
+    const result = await UserAuthenticationService.storeHealthRecord(
+      sessionToken,
+      { type, data }
     );
 
     if (result.success) {
       res.json({
         success: true,
-        message: "Data access record created",
-        accessId: result.accessId,
+        message: result.message,
+        recordId: result.recordId,
       });
     } else {
       res.status(500).json({
         success: false,
-        error: result.error,
+        message: result.message,
       });
     }
   } catch (error) {
-    console.error("Error creating data access record:", error);
+    console.error("Error storing health record:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      message: "Internal server error",
     });
   }
 };
 
 /**
- * Verify user data access
+ * Get health records for authenticated user
  */
 export const verifyDataAccess: RequestHandler = async (req, res) => {
   try {
-    const { dataRecordId } = req.params;
     const sessionToken =
       req.headers.authorization?.replace("Bearer ", "") ||
       req.cookies.healthchain_session ||
@@ -332,36 +263,29 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        message: "Authentication required",
       });
     }
 
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const result = await UserAuthenticationService.getHealthRecords(sessionToken);
 
-    if (!sessionResult.valid) {
-      return res.status(401).json({
+    if (result.success) {
+      res.json({
+        success: true,
+        records: result.records,
+        message: result.message,
+      });
+    } else {
+      res.status(500).json({
         success: false,
-        error: sessionResult.error,
+        message: result.message,
       });
     }
-
-    const accessResult = await UserAuthenticationService.verifyDataAccess(
-      sessionResult.user!.id,
-      dataRecordId,
-    );
-
-    res.json({
-      success: true,
-      hasAccess: accessResult.hasAccess,
-      combinedHash: accessResult.combinedHash,
-      error: accessResult.error,
-    });
   } catch (error) {
-    console.error("Error verifying data access:", error);
+    console.error("Error retrieving health records:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      message: "Internal server error",
     });
   }
 };
@@ -371,7 +295,7 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
  */
 export const getAuthStats: RequestHandler = async (req, res) => {
   try {
-    const stats = await UserAuthenticationService.getUserStats();
+    const stats = UserAuthenticationService.getSystemStats();
 
     res.json({
       success: true,
@@ -381,7 +305,7 @@ export const getAuthStats: RequestHandler = async (req, res) => {
     console.error("Error getting auth stats:", error);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      message: "Internal server error",
     });
   }
 };
@@ -399,29 +323,27 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
     if (!sessionToken) {
       return res.status(401).json({
         success: false,
-        error: "Authentication required",
+        message: "Authentication required",
       });
     }
 
-    const result =
-      await UserAuthenticationService.validateSession(sessionToken);
+    const result = UserAuthenticationService.verifySession(sessionToken);
 
     if (result.valid) {
-      // Add user and session to request object
+      // Add user to request object
       (req as any).user = result.user;
-      (req as any).session = result.session;
       next();
     } else {
       return res.status(401).json({
         success: false,
-        error: result.error,
+        message: "Invalid session",
       });
     }
   } catch (error) {
     console.error("Error in auth middleware:", error);
     return res.status(500).json({
       success: false,
-      error: "Authentication error",
+      message: "Authentication error",
     });
   }
 };
