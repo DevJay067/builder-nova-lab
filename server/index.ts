@@ -146,7 +146,28 @@ export function createServer() {
     });
   });
 
+  // Debug endpoint to check user existence
+  app.get("/api/debug/user/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const { UserAuthenticationService } = await import("./services/userAuthentication");
 
+      // Check both memory and database
+      const stats = UserAuthenticationService.getSystemStats();
+
+      res.json({
+        success: true,
+        username: username,
+        systemStats: stats,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   app.get("/api/demo", handleDemo);
 
