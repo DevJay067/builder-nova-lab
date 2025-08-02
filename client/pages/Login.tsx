@@ -89,19 +89,22 @@ export default function Login() {
 
       if (result.success) {
         // Store user session with secure data
-        localStorage.setItem(
-          "healthchain_user",
-          JSON.stringify({
-            id: result.user.id,
-            username: result.user.username,
-            email: result.user.email,
-            name: `${result.user.firstName} ${result.user.lastName}`,
-            userHash: result.user.userHash,
-            sessionToken: result.sessionToken,
-            dataAccessHash: result.dataAccessHash,
-            loginTime: new Date().toISOString(),
-          }),
-        );
+        const userData = {
+          id: result.user.id,
+          username: result.user.username,
+          userHash: result.user.userHash,
+          sessionToken: result.user.sessionToken,
+          loginTime: new Date().toISOString(),
+          secureSystemActivated: result.user.secureSystemActivated
+        };
+
+        localStorage.setItem("healthchain_user", JSON.stringify(userData));
+        localStorage.setItem("sessionToken", result.user.sessionToken);
+
+        // Also set in cookie for server-side access
+        document.cookie = `healthchain_session=${result.user.sessionToken}; path=/; max-age=86400; samesite=strict`;
+
+        console.log("✅ User session stored:", userData);
 
         setMessage({
           type: "success",
