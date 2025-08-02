@@ -88,6 +88,17 @@ export default function Index() {
       gradient: "from-primary/20 to-accent/20",
     },
     {
+      id: "bmax-demo",
+      title: "B-max AI Demo",
+      description:
+        "See how medical history personalizes AI responses. Test query enhancement with your health data.",
+      icon: Sparkles,
+      color: "bg-purple-500",
+      route: "/bmax-demo",
+      stats: "Interactive Demo",
+      gradient: "from-purple-500/20 to-indigo-500/20",
+    },
+    {
       id: "history",
       title: "Health History",
       description:
