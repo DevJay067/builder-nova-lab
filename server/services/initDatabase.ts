@@ -77,7 +77,7 @@ export class DatabaseInitService {
 
       // Sample audit log
       const sampleAuditLog = {
-        logId: 'audit-001',
+        logId: `audit-${Date.now()}`,
         action: 'create' as const,
         dataRecordId: 'med-record-001',
         userId: 'dr-smith-001',
