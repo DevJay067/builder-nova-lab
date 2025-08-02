@@ -374,8 +374,17 @@ class UserAuthenticationService {
     try {
       console.log(`🔐 Authenticating user: ${username}`);
 
-      // Get user from storage
-      const user = this.users.get(username);
+      // Get user from database first, then fallback to memory
+      let user: User | null = null;
+
+      if (this.useDatabase) {
+        user = await this.getUserFromDatabase(username);
+      }
+
+      if (!user) {
+        user = this.users.get(username) || null;
+      }
+
       if (!user) {
         return {
           success: false,
