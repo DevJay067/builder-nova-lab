@@ -32,8 +32,11 @@ import {
   Globe,
   Lock,
 } from "lucide-react";
+import LanguageSelector from "@/components/LanguageSelector";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 export default function Index() {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
