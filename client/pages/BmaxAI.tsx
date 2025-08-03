@@ -30,6 +30,7 @@ import {
   Mic,
   Video,
 } from "lucide-react";
+import VoiceAssistant from "@/components/VoiceAssistant";
 
 interface MedicalCondition {
   name: string;
