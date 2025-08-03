@@ -118,6 +118,17 @@ export default function Index() {
       gradient: "from-green-500/20 to-emerald-500/20",
     },
     {
+      id: "monitoring",
+      title: "Real-time Monitoring",
+      description:
+        "Live health monitoring dashboard with IoT device integration and real-time vital signs tracking.",
+      icon: TrendingUp,
+      color: "bg-blue-500",
+      route: "/monitoring",
+      stats: "Live IoT Data",
+      gradient: "from-blue-500/20 to-cyan-500/20",
+    },
+    {
       id: "analytics",
       title: "Health Analytics",
       description:
