@@ -205,13 +205,13 @@ export default function Index() {
                 <Stethoscope className="w-7 h-7" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-foreground tracking-tight">
+                <h1 className="text-xl font-bold text-slate-800 tracking-tight">
                   HealthChain
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-slate-600 font-medium">
                   Blockchain-Powered Healthcare
                 </p>
-                <p className="text-xs text-primary font-medium">
+                <p className="text-xs text-blue-600 font-semibold">
                   Developer: Jay Magar
                 </p>
               </div>
