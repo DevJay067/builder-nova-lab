@@ -22,6 +22,7 @@ import WhyLogin from "./pages/WhyLogin";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,8 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <LanguageProvider>
+      <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -93,7 +95,8 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-    </TooltipProvider>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
   );
 };
