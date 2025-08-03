@@ -405,10 +405,10 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
                   <Brain className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
+                  <h1 className="text-xl font-bold text-slate-800">
                     B-max AI Assistant
                   </h1>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-slate-600 font-medium">
                     Personalized Health AI
                   </p>
                 </div>
