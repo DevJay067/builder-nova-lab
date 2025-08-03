@@ -3,10 +3,13 @@
   functions = "netlify/functions"
   publish = "dist/spa"
 
+[build.environment]
+  NODE_VERSION = "18"
 
 [functions]
-  external_node_modules = ["express"]
+  external_node_modules = ["express", "bcrypt", "@neondatabase/serverless", "serverless-http"]
   node_bundler = "esbuild"
+  included_files = ["server/**/*"]
   
 [[redirects]]
   force = true
