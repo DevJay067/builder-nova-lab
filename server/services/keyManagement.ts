@@ -365,7 +365,7 @@ export class KeyManagementService {
   private static encryptKeyFragment(keyFragment: string, recipientId: string): string {
     const derivedKey = crypto.scryptSync(recipientId + this.MASTER_SYSTEM_KEY, 'salt', 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher('aes-256-cbc', derivedKey);
+    const cipher = crypto.createCipheriv('aes-256-cbc', derivedKey, iv);
     
     let encrypted = cipher.update(keyFragment, 'utf8', 'hex');
     encrypted += cipher.final('hex');
