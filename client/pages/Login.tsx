@@ -285,10 +285,10 @@ export default function Login() {
                   <Stethoscope className="h-5 h-5" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold text-foreground">
+                  <h1 className="text-lg font-bold text-slate-800">
                     HealthChain
                   </h1>
-                  <p className="text-sm text-muted-foreground">Secure Access</p>
+                  <p className="text-sm text-slate-600 font-medium">Secure Access</p>
                 </div>
               </div>
             </div>
