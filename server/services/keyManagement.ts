@@ -328,13 +328,13 @@ export class KeyManagementService {
     const algorithm = 'aes-256-gcm';
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, 'salt', 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(algorithm, key);
-    
+    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+
     let encrypted = cipher.update(systemKey, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     const authTag = cipher.getAuthTag();
-    
+
     return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
   }
 
