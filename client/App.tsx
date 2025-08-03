@@ -18,6 +18,7 @@ import Legal from "./pages/Legal";
 import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
+import RealTimeMonitoring from "./pages/RealTimeMonitoring";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -62,6 +63,14 @@ const App = () => (
           />
           <Route path="/login" element={<Login />} />
           <Route path="/why-login" element={<WhyLogin />} />
+          <Route
+            path="/monitoring"
+            element={
+              <ProtectedRoute requireAuth={true}>
+                <RealTimeMonitoring />
+              </ProtectedRoute>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
