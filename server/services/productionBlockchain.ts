@@ -279,6 +279,7 @@ class ProductionBlockchainService {
       const blockchainDecipher = crypto.createDecipherGCM(
         "aes-256-gcm",
         blockchainLayerKey,
+        blockchainIv,
       );
       blockchainDecipher.setAAD(Buffer.from("blockchain-layer"));
       blockchainDecipher.setAuthTag(blockchainAuthTag);
@@ -303,6 +304,7 @@ class ProductionBlockchainService {
       const dataDecipher = crypto.createDecipherGCM(
         "aes-256-gcm",
         dataLayerKey,
+        dataIv,
       );
       dataDecipher.setAAD(Buffer.from("data-layer"));
       dataDecipher.setAuthTag(dataAuthTag);
@@ -323,6 +325,7 @@ class ProductionBlockchainService {
       const userDecipher = crypto.createDecipherGCM(
         "aes-256-gcm",
         userLayerKey,
+        userIv,
       );
       userDecipher.setAAD(Buffer.from("user-layer"));
       userDecipher.setAuthTag(userAuthTag);
