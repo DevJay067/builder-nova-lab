@@ -350,12 +350,12 @@ export class KeyManagementService {
     const authTag = Buffer.from(parts[1], 'hex');
     const encrypted = parts[2];
     
-    const decipher = crypto.createDecipher(algorithm, key);
+    const decipher = crypto.createDecipherGCM(algorithm, key, iv);
     decipher.setAuthTag(authTag);
-    
+
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
 
