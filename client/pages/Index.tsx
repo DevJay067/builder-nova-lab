@@ -217,19 +217,20 @@ export default function Index() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-slate-800 tracking-tight">
-                  HealthChain
+                  {t('app.title')}
                 </h1>
                 <p className="text-sm text-slate-600 font-medium">
-                  Blockchain-Powered Healthcare
+                  {t('app.subtitle')}
                 </p>
                 <p className="text-xs text-blue-600 font-semibold">
-                  Developer: Jay Magar
+                  {t('app.developer')}
                 </p>
               </div>
             </div>
 
             {/* Enhanced Auth Section */}
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
+              <LanguageSelector variant="compact" className="mr-2" />
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">
                   <div className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
