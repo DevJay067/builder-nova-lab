@@ -220,13 +220,13 @@ export default function Index() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-slate-800 tracking-tight">
-                  {t('app.title')}
+                  {t("app.title")}
                 </h1>
                 <p className="text-sm text-slate-600 font-medium">
-                  {t('app.subtitle')}
+                  {t("app.subtitle")}
                 </p>
                 <p className="text-xs text-blue-600 font-semibold">
-                  {t('app.developer')}
+                  {t("app.developer")}
                 </p>
               </div>
             </div>

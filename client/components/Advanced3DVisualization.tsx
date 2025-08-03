@@ -38,14 +38,14 @@ interface HealthDataPoint {
 }
 
 // Animated 3D Health Data Points
-function HealthDataSphere({ 
-  position, 
-  color, 
-  scale = 1, 
-  healthData 
-}: { 
-  position: [number, number, number]; 
-  color: string; 
+function HealthDataSphere({
+  position,
+  color,
+  scale = 1,
+  healthData,
+}: {
+  position: [number, number, number];
+  color: string;
   scale?: number;
   healthData: HealthDataPoint;
 }) {
@@ -57,7 +57,9 @@ function HealthDataSphere({
       meshRef.current.rotation.x = state.clock.elapsedTime * 0.5;
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.3;
       meshRef.current.scale.setScalar(
-        scale * (hovered ? 1.2 : 1) * (1 + Math.sin(state.clock.elapsedTime * 2) * 0.1)
+        scale *
+          (hovered ? 1.2 : 1) *
+          (1 + Math.sin(state.clock.elapsedTime * 2) * 0.1),
       );
     }
   });
@@ -93,7 +95,8 @@ function HealthMetricsGraph({ data }: { data: HealthDataPoint[] }) {
 
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
+      groupRef.current.rotation.y =
+        Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
     }
   });
 
@@ -109,7 +112,7 @@ function HealthMetricsGraph({ data }: { data: HealthDataPoint[] }) {
           <meshStandardMaterial color="#ef4444" />
         </Box>
       ))}
-      
+
       {/* Temperature Line */}
       {data.map((point, index) => (
         <Sphere
@@ -120,12 +123,16 @@ function HealthMetricsGraph({ data }: { data: HealthDataPoint[] }) {
           <meshStandardMaterial color="#f59e0b" />
         </Sphere>
       ))}
-      
+
       {/* Oxygen Saturation */}
       {data.map((point, index) => (
         <Box
           key={`o2-${index}`}
-          position={[index * 0.2 - 2, (point.oxygenSaturation - 95) / 10 - 0.5, 1]}
+          position={[
+            index * 0.2 - 2,
+            (point.oxygenSaturation - 95) / 10 - 0.5,
+            1,
+          ]}
           args={[0.08, (point.oxygenSaturation - 95) / 20, 0.08]}
         >
           <meshStandardMaterial color="#06b6d4" />
@@ -133,8 +140,17 @@ function HealthMetricsGraph({ data }: { data: HealthDataPoint[] }) {
       ))}
 
       {/* Grid */}
-      <Plane args={[5, 3]} position={[0, -0.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <meshBasicMaterial color="#f0f0f0" transparent opacity={0.3} wireframe />
+      <Plane
+        args={[5, 3]}
+        position={[0, -0.8, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <meshBasicMaterial
+          color="#f0f0f0"
+          transparent
+          opacity={0.3}
+          wireframe
+        />
       </Plane>
     </group>
   );
@@ -186,30 +202,39 @@ interface Advanced3DVisualizationProps {
   className?: string;
 }
 
-export default function Advanced3DVisualization({ className = "" }: Advanced3DVisualizationProps) {
+export default function Advanced3DVisualization({
+  className = "",
+}: Advanced3DVisualizationProps) {
   const [healthData, setHealthData] = useState<HealthDataPoint[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [viewMode, setViewMode] = useState<'timeline' | 'scatter' | 'network'>('timeline');
-  const [selectedMetric, setSelectedMetric] = useState<'all' | 'heartRate' | 'temperature' | 'oxygenSat'>('all');
+  const [viewMode, setViewMode] = useState<"timeline" | "scatter" | "network">(
+    "timeline",
+  );
+  const [selectedMetric, setSelectedMetric] = useState<
+    "all" | "heartRate" | "temperature" | "oxygenSat"
+  >("all");
 
   // Generate realistic health data
   useEffect(() => {
     const generateData = () => {
       const data: HealthDataPoint[] = [];
       const now = Date.now();
-      
+
       for (let i = 0; i < 20; i++) {
         const timestamp = now - (19 - i) * 60000; // 1 minute intervals
         const baseHeartRate = 72;
-        const heartRate = baseHeartRate + Math.sin(i * 0.3) * 15 + Math.random() * 10;
-        const temperature = 98.6 + Math.sin(i * 0.2) * 1.5 + (Math.random() - 0.5);
+        const heartRate =
+          baseHeartRate + Math.sin(i * 0.3) * 15 + Math.random() * 10;
+        const temperature =
+          98.6 + Math.sin(i * 0.2) * 1.5 + (Math.random() - 0.5);
         const oxygenSaturation = 98 + Math.sin(i * 0.4) * 2 + Math.random() * 2;
-        
+
         // Color based on heart rate
         let color = "#10b981"; // green (normal)
-        if (heartRate > 100) color = "#ef4444"; // red (high)
+        if (heartRate > 100)
+          color = "#ef4444"; // red (high)
         else if (heartRate < 60) color = "#3b82f6"; // blue (low)
-        
+
         data.push({
           timestamp,
           heartRate: Math.round(heartRate),
@@ -223,7 +248,7 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
           color,
         });
       }
-      
+
       return data;
     };
 
@@ -240,25 +265,39 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
   }, [isPlaying]);
 
   const metrics = [
-    { id: 'all', name: 'All Metrics', icon: BarChart3, color: 'bg-gray-500' },
-    { id: 'heartRate', name: 'Heart Rate', icon: Heart, color: 'bg-red-500' },
-    { id: 'temperature', name: 'Temperature', icon: Thermometer, color: 'bg-yellow-500' },
-    { id: 'oxygenSat', name: 'Oxygen Sat', icon: Droplets, color: 'bg-blue-500' },
+    { id: "all", name: "All Metrics", icon: BarChart3, color: "bg-gray-500" },
+    { id: "heartRate", name: "Heart Rate", icon: Heart, color: "bg-red-500" },
+    {
+      id: "temperature",
+      name: "Temperature",
+      icon: Thermometer,
+      color: "bg-yellow-500",
+    },
+    {
+      id: "oxygenSat",
+      name: "Oxygen Sat",
+      icon: Droplets,
+      color: "bg-blue-500",
+    },
   ];
 
   const viewModes = [
-    { id: 'timeline', name: 'Timeline View', icon: Activity },
-    { id: 'scatter', name: 'Scatter Plot', icon: Eye },
-    { id: 'network', name: 'Network View', icon: Layers },
+    { id: "timeline", name: "Timeline View", icon: Activity },
+    { id: "scatter", name: "Scatter Plot", icon: Eye },
+    { id: "network", name: "Network View", icon: Layers },
   ];
 
   const exportData = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Timestamp,Heart Rate,Temperature,Blood Pressure,Oxygen Saturation\n"
-      + healthData.map(row => 
-          `${new Date(row.timestamp).toISOString()},${row.heartRate},${row.temperature},${row.bloodPressure.systolic}/${row.bloodPressure.diastolic},${row.oxygenSaturation}`
-        ).join("\n");
-    
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      "Timestamp,Heart Rate,Temperature,Blood Pressure,Oxygen Saturation\n" +
+      healthData
+        .map(
+          (row) =>
+            `${new Date(row.timestamp).toISOString()},${row.heartRate},${row.temperature},${row.bloodPressure.systolic}/${row.bloodPressure.diastolic},${row.oxygenSaturation}`,
+        )
+        .join("\n");
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -277,7 +316,9 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
               <BarChart3 className="w-5 h-5" />
             </div>
             <div>
-              <CardTitle className="text-lg">Advanced 3D Health Visualization</CardTitle>
+              <CardTitle className="text-lg">
+                Advanced 3D Health Visualization
+              </CardTitle>
               <CardDescription>
                 Interactive 3D health data analysis with real-time rendering
               </CardDescription>
@@ -288,13 +329,16 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
               <Zap className="w-3 h-3 mr-1" />
               WebGL Powered
             </Badge>
-            <Badge variant={isPlaying ? "default" : "secondary"} className="text-xs">
+            <Badge
+              variant={isPlaying ? "default" : "secondary"}
+              className="text-xs"
+            >
               {isPlaying ? "Live" : "Paused"}
             </Badge>
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Controls */}
         <div className="flex flex-wrap items-center justify-between gap-4 p-3 bg-gray-50 rounded-lg">
@@ -304,7 +348,11 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
               size="sm"
               onClick={() => setIsPlaying(!isPlaying)}
             >
-              {isPlaying ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+              {isPlaying ? (
+                <Pause className="w-4 h-4 mr-1" />
+              ) : (
+                <Play className="w-4 h-4 mr-1" />
+              )}
               {isPlaying ? "Pause" : "Play"}
             </Button>
             <Button variant="outline" size="sm" onClick={exportData}>
@@ -312,7 +360,7 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
               Export
             </Button>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {viewModes.map((mode) => {
               const IconComponent = mode.icon;
@@ -360,23 +408,27 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
               {/* Lighting */}
               <ambientLight intensity={0.4} />
               <pointLight position={[10, 10, 10]} intensity={1} />
-              <pointLight position={[-10, -10, -10]} intensity={0.5} color="#3b82f6" />
-              
+              <pointLight
+                position={[-10, -10, -10]}
+                intensity={0.5}
+                color="#3b82f6"
+              />
+
               {/* Controls */}
-              <OrbitControls 
-                enablePan={true} 
-                enableZoom={true} 
+              <OrbitControls
+                enablePan={true}
+                enableZoom={true}
                 enableRotate={true}
                 autoRotate={isPlaying}
                 autoRotateSpeed={1}
               />
-              
+
               {/* Data Visualization */}
-              {viewMode === 'timeline' && (
+              {viewMode === "timeline" && (
                 <HealthMetricsGraph data={healthData} />
               )}
-              
-              {viewMode === 'scatter' && (
+
+              {viewMode === "scatter" && (
                 <group>
                   {healthData.map((point, index) => (
                     <HealthDataSphere
@@ -387,14 +439,14 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
                         (point.oxygenSaturation - 98) / 5,
                       ]}
                       color={point.color}
-                      scale={1 + (point.heartRate / 200)}
+                      scale={1 + point.heartRate / 200}
                       healthData={point}
                     />
                   ))}
                 </group>
               )}
-              
-              {viewMode === 'network' && (
+
+              {viewMode === "network" && (
                 <group>
                   {healthData.map((point, index) => (
                     <HealthDataSphere
@@ -411,7 +463,7 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
                   ))}
                 </group>
               )}
-              
+
               {/* Floating Labels */}
               <FloatingIndicators />
             </Suspense>
@@ -422,19 +474,19 @@ export default function Advanced3DVisualization({ className = "" }: Advanced3DVi
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div className="p-3 bg-red-50 rounded-lg">
             <div className="text-2xl font-bold text-red-600">
-              {healthData[healthData.length - 1]?.heartRate || '--'}
+              {healthData[healthData.length - 1]?.heartRate || "--"}
             </div>
             <div className="text-xs text-gray-600">Heart Rate (BPM)</div>
           </div>
           <div className="p-3 bg-yellow-50 rounded-lg">
             <div className="text-2xl font-bold text-yellow-600">
-              {healthData[healthData.length - 1]?.temperature || '--'}
+              {healthData[healthData.length - 1]?.temperature || "--"}
             </div>
             <div className="text-xs text-gray-600">Temperature (°F)</div>
           </div>
           <div className="p-3 bg-blue-50 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">
-              {healthData[healthData.length - 1]?.oxygenSaturation || '--'}%
+              {healthData[healthData.length - 1]?.oxygenSaturation || "--"}%
             </div>
             <div className="text-xs text-gray-600">Oxygen Saturation</div>
           </div>

@@ -5,31 +5,31 @@ export const handler: Handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
-        message: 'Netlify function is working',
+        message: "Netlify function is working",
         event: {
           path: event.path,
           httpMethod: event.httpMethod,
-          headers: Object.keys(event.headers || {})
-        }
-      })
+          headers: Object.keys(event.headers || {}),
+        },
+      }),
     };
   } catch (error) {
     return {
       statusCode: 500,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      })
+        status: "error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
     };
   }
 };

@@ -253,13 +253,16 @@
   .glass {
     backdrop-filter: blur(20px) saturate(200%);
     -webkit-backdrop-filter: blur(20px) saturate(200%);
-    background: linear-gradient(135deg,
+    background: linear-gradient(
+      135deg,
       rgba(255, 255, 255, 0.98) 0%,
-      rgba(248, 250, 252, 0.95) 100%);
+      rgba(248, 250, 252, 0.95) 100%
+    );
     border-top: 1px solid rgba(59, 130, 246, 0.1);
     border-bottom: 2px solid rgba(59, 130, 246, 0.15);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08),
-                0 2px 8px rgba(59, 130, 246, 0.1);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(59, 130, 246, 0.1);
     color: hsl(var(--foreground));
   }
 

@@ -22,13 +22,17 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-avatar'],
-          charts: ['recharts'],
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
-          utils: ['clsx', 'class-variance-authority', 'tailwind-merge']
-        }
-      }
+          vendor: ["react", "react-dom"],
+          ui: [
+            "@radix-ui/react-accordion",
+            "@radix-ui/react-alert-dialog",
+            "@radix-ui/react-avatar",
+          ],
+          charts: ["recharts"],
+          three: ["three", "@react-three/fiber", "@react-three/drei"],
+          utils: ["clsx", "class-variance-authority", "tailwind-merge"],
+        },
+      },
     },
     chunkSizeWarningLimit: 1000,
   },

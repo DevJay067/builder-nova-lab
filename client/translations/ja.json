@@ -40,23 +40,23 @@
   "features.aiAssistant": "B-max AIアシスタント",
   "features.aiAssistant.description": "自然言語処理と医療知識ベースを備えた高度なAI駆動健康ガイダンス",
   "features.aiAssistant.stats": "AI駆動",
-  
+
   "features.monitoring": "リアルタイム監視",
   "features.monitoring.description": "IoTデバイス統合とリアルタイムバイタルサイン追跡を備えたライブ健康監視ダッシュボード",
   "features.monitoring.stats": "ライブIoTデータ",
-  
+
   "features.history": "健康履歴",
   "features.history.description": "ブロックチェーンに安全に保存された包括的な健康記録とAI検索履歴",
   "features.history.stats": "安全でプライベート",
-  
+
   "features.analytics": "健康分析",
   "features.analytics.description": "予測AIモデリングを使用した健康データからの高度な分析と洞察",
   "features.analytics.stats": "AI洞察",
-  
+
   "features.firstAid": "緊急応急処置",
   "features.firstAid.description": "重要な状況のためのステップバイステップ緊急手順と応急処置ガイダンス",
   "features.firstAid.stats": "緊急対応",
-  
+
   "features.secure": "セキュアアクセス",
   "features.secure.description": "スプリットキー暗号化とエンドツーエンド暗号化を備えた高度なブロックチェーンセキュリティ",
   "features.secure.stats": "ブロックチェーン保護",
@@ -107,14 +107,14 @@
   "language.select": "言語を選択",
   "language.current": "現在の言語",
   "language.english": "英語",
-  "language.spanish": "スペイン語", 
+  "language.spanish": "スペイン語",
   "language.french": "フランス語",
   "language.hindi": "ヒンディー語",
   "language.german": "ドイツ語",
   "language.japanese": "日本語",
 
   "status.online": "オンライン",
-  "status.offline": "オフライン", 
+  "status.offline": "オフライン",
   "status.connecting": "接続中",
   "status.connected": "接続済み",
   "status.disconnected": "切断",

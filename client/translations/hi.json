@@ -40,23 +40,23 @@
   "features.aiAssistant": "B-max AI सहायक",
   "features.aiAssistant.description": "प्राकृतिक भाषा प्रसंस्करण और चिकित्सा ज्ञान आधार के साथ उन्नत AI-संचालित स्वास्थ्य मार्गदर्शन",
   "features.aiAssistant.stats": "AI संचालित",
-  
+
   "features.monitoring": "रीयल-टाइम मॉनिटरिंग",
   "features.monitoring.description": "IoT डिवाइस एकीकरण और रीयल-टाइम महत्वपूर्ण संकेत ट्रैकिंग के साथ लाइव स्वास्थ्य मॉनिटरिंग डैशबोर्ड",
   "features.monitoring.stats": "लाइव IoT डेटा",
-  
+
   "features.history": "स्वास्थ्य इतिहास",
   "features.history.description": "ब्लॉकचेन पर सुरक्षित रूप से संग्रहीत व्यापक स्वास्थ्य रिकॉर्ड और AI खोज इतिहास",
   "features.history.stats": "सुरक्षित और निजी",
-  
+
   "features.analytics": "स्वास्थ्य विश्लेषण",
   "features.analytics.description": "भविष्यवाणी AI मॉडलिंग के साथ आपके स्वास्थ्य डेटा से उन्नत विश्लेषण और अंतर्दृष्टि",
   "features.analytics.stats": "AI अंतर्दृष्टि",
-  
+
   "features.firstAid": "आपातकालीन प्राथमिक चिकित्सा",
   "features.firstAid.description": "गंभीर स्थितियों के लिए चरणबद्ध आपातकालीन प्रक्रियाएं और प्राथमिक चिकित्सा मार्गदर्शन",
   "features.firstAid.stats": "आपातकाल के लिए तैयार",
-  
+
   "features.secure": "सुरक्षित पहुंच",
   "features.secure.description": "स्प्लिट-की क्रिप्टोग्राफी और एंड-टू-एंड एन्क्रिप्शन के साथ उन्नत ब्लॉकचेन सुरक्षा",
   "features.secure.stats": "ब्लॉकचेन सुरक्षित",
@@ -107,14 +107,14 @@
   "language.select": "भाषा चुनें",
   "language.current": "वर्तमान भाषा",
   "language.english": "अंग्रेजी",
-  "language.spanish": "स्पेनिश", 
+  "language.spanish": "स्पेनिश",
   "language.french": "फ्रेंच",
   "language.hindi": "हिंदी",
   "language.german": "जर्मन",
   "language.japanese": "जापानी",
 
   "status.online": "ऑनलाइन",
-  "status.offline": "ऑफलाइन", 
+  "status.offline": "ऑफलाइन",
   "status.connecting": "कनेक्ट हो रहा है",
   "status.connected": "जुड़ा हुआ",
   "status.disconnected": "डिस्कनेक्ट",

@@ -40,23 +40,23 @@
   "features.aiAssistant": "B-max KI-Assistent",
   "features.aiAssistant.description": "Erweiterte KI-gesteuerte Gesundheitsberatung mit natürlicher Sprachverarbeitung und medizinischer Wissensbasis",
   "features.aiAssistant.stats": "KI-gesteuert",
-  
+
   "features.monitoring": "Echtzeit-Überwachung",
   "features.monitoring.description": "Live-Gesundheitsüberwachungs-Dashboard mit IoT-Geräteintegration und Echtzeit-Vitalzeichenverfolgung",
   "features.monitoring.stats": "Live IoT-Daten",
-  
+
   "features.history": "Gesundheitsverlauf",
   "features.history.description": "Umfassende Gesundheitsakten und KI-Suchverlauf sicher auf Blockchain gespeichert",
   "features.history.stats": "Sicher und privat",
-  
+
   "features.analytics": "Gesundheitsanalysen",
   "features.analytics.description": "Erweiterte Analysen und Einblicke aus Ihren Gesundheitsdaten mit prädiktiver KI-Modellierung",
   "features.analytics.stats": "KI-Einblicke",
-  
+
   "features.firstAid": "Notfall-Erste Hilfe",
   "features.firstAid.description": "Schritt-für-Schritt-Notfallverfahren und Erste-Hilfe-Anleitung für kritische Situationen",
   "features.firstAid.stats": "Notfall-bereit",
-  
+
   "features.secure": "Sicherer Zugang",
   "features.secure.description": "Erweiterte Blockchain-Sicherheit mit Split-Key-Kryptographie und Ende-zu-Ende-Verschlüsselung",
   "features.secure.stats": "Blockchain-gesichert",
@@ -107,14 +107,14 @@
   "language.select": "Sprache auswählen",
   "language.current": "Aktuelle Sprache",
   "language.english": "Englisch",
-  "language.spanish": "Spanisch", 
+  "language.spanish": "Spanisch",
   "language.french": "Französisch",
   "language.hindi": "Hindi",
   "language.german": "Deutsch",
   "language.japanese": "Japanisch",
 
   "status.online": "Online",
-  "status.offline": "Offline", 
+  "status.offline": "Offline",
   "status.connecting": "Verbindet",
   "status.connected": "Verbunden",
   "status.disconnected": "Getrennt",

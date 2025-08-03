@@ -18,7 +18,7 @@
       "label": "HealthChain Homepage on Mobile"
     },
     {
-      "src": "/screenshots/desktop-dashboard.png", 
+      "src": "/screenshots/desktop-dashboard.png",
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
@@ -89,7 +89,7 @@
       ]
     },
     {
-      "name": "Health Monitoring", 
+      "name": "Health Monitoring",
       "short_name": "Monitoring",
       "description": "Real-time health monitoring dashboard",
       "url": "/monitoring",

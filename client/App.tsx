@@ -28,12 +28,12 @@ const queryClient = new QueryClient();
 
 // PWA Service Worker Registration
 const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator) {
+  if ("serviceWorker" in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('🚀 Service Worker registered successfully');
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("🚀 Service Worker registered successfully");
     } catch (error) {
-      console.error('❌ Service Worker registration failed:', error);
+      console.error("❌ Service Worker registration failed:", error);
     }
   }
 };
@@ -44,60 +44,60 @@ const App = () => {
   }, []);
 
   return (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/bmax" element={<BmaxAI />} />
-          <Route path="/bmax-demo" element={<BmaxDemo />} />
-          <Route
-            path="/history"
-            element={
-              <ProtectedRoute requireAuth={true}>
-                <HealthHistory />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/first-aid" element={<FirstAid />} />
-          <Route
-            path="/analytics"
-            element={
-              <ProtectedRoute requireAuth={true}>
-                <HealthAnalytics />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/legal" element={<Legal />} />
-          <Route
-            path="/secure"
-            element={
-              <ProtectedRoute requireAuth={true}>
-                <SecureAccess />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/why-login" element={<WhyLogin />} />
-          <Route
-            path="/monitoring"
-            element={
-              <ProtectedRoute requireAuth={true}>
-                <RealTimeMonitoring />
-              </ProtectedRoute>
-            }
-          />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-      </TooltipProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/bmax" element={<BmaxAI />} />
+              <Route path="/bmax-demo" element={<BmaxDemo />} />
+              <Route
+                path="/history"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <HealthHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/first-aid" element={<FirstAid />} />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <HealthAnalytics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/legal" element={<Legal />} />
+              <Route
+                path="/secure"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <SecureAccess />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/login" element={<Login />} />
+              <Route path="/why-login" element={<WhyLogin />} />
+              <Route
+                path="/monitoring"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <RealTimeMonitoring />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
   );
 };
 

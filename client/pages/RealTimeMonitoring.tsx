@@ -55,8 +55,13 @@ interface VitalSigns {
 interface Device {
   id: string;
   name: string;
-  type: 'smartwatch' | 'fitness_tracker' | 'blood_pressure' | 'thermometer' | 'pulse_oximeter';
-  status: 'connected' | 'disconnected' | 'syncing';
+  type:
+    | "smartwatch"
+    | "fitness_tracker"
+    | "blood_pressure"
+    | "thermometer"
+    | "pulse_oximeter";
+  status: "connected" | "disconnected" | "syncing";
   battery: number;
   lastSync: string;
   icon: any;
@@ -75,39 +80,39 @@ export default function RealTimeMonitoring() {
   const [vitalsHistory, setVitalsHistory] = useState<any[]>([]);
   const [connectedDevices, setConnectedDevices] = useState<Device[]>([
     {
-      id: 'apple_watch',
-      name: 'Apple Watch Series 9',
-      type: 'smartwatch',
-      status: 'connected',
+      id: "apple_watch",
+      name: "Apple Watch Series 9",
+      type: "smartwatch",
+      status: "connected",
       battery: 85,
-      lastSync: '2 minutes ago',
+      lastSync: "2 minutes ago",
       icon: Watch,
     },
     {
-      id: 'fitbit_charge',
-      name: 'Fitbit Charge 6',
-      type: 'fitness_tracker',
-      status: 'connected',
+      id: "fitbit_charge",
+      name: "Fitbit Charge 6",
+      type: "fitness_tracker",
+      status: "connected",
       battery: 62,
-      lastSync: '5 minutes ago',
+      lastSync: "5 minutes ago",
       icon: Activity,
     },
     {
-      id: 'omron_bp',
-      name: 'Omron Blood Pressure Monitor',
-      type: 'blood_pressure',
-      status: 'syncing',
+      id: "omron_bp",
+      name: "Omron Blood Pressure Monitor",
+      type: "blood_pressure",
+      status: "syncing",
       battery: 45,
-      lastSync: '1 hour ago',
+      lastSync: "1 hour ago",
       icon: Heart,
     },
     {
-      id: 'pulse_ox',
-      name: 'Masimo Pulse Oximeter',
-      type: 'pulse_oximeter',
-      status: 'disconnected',
+      id: "pulse_ox",
+      name: "Masimo Pulse Oximeter",
+      type: "pulse_oximeter",
+      status: "disconnected",
       battery: 20,
-      lastSync: '3 hours ago',
+      lastSync: "3 hours ago",
       icon: Droplets,
     },
   ]);
@@ -115,18 +120,18 @@ export default function RealTimeMonitoring() {
   const [alerts, setAlerts] = useState([
     {
       id: 1,
-      type: 'warning',
-      message: 'Heart rate elevated above normal range (>100 BPM)',
-      timestamp: '2 minutes ago',
-      severity: 'medium',
+      type: "warning",
+      message: "Heart rate elevated above normal range (>100 BPM)",
+      timestamp: "2 minutes ago",
+      severity: "medium",
     },
     {
       id: 2,
-      type: 'info',
-      message: 'Fitbit sync completed successfully',
-      timestamp: '5 minutes ago',
-      severity: 'low',
-    }
+      type: "info",
+      message: "Fitbit sync completed successfully",
+      timestamp: "5 minutes ago",
+      severity: "low",
+    },
   ]);
 
   // Simulate real-time data updates
@@ -137,7 +142,7 @@ export default function RealTimeMonitoring() {
         heartRate: Math.floor(Math.random() * 20) + 65, // 65-85 BPM
         bloodPressure: {
           systolic: Math.floor(Math.random() * 20) + 110, // 110-130
-          diastolic: Math.floor(Math.random() * 15) + 70,  // 70-85
+          diastolic: Math.floor(Math.random() * 15) + 70, // 70-85
         },
         temperature: Math.random() * 2 + 97.5, // 97.5-99.5°F
         oxygenSaturation: Math.floor(Math.random() * 3) + 97, // 97-100%
@@ -148,7 +153,7 @@ export default function RealTimeMonitoring() {
       setVitalSigns(newVitals);
 
       // Update history (keep last 20 readings)
-      setVitalsHistory(prev => {
+      setVitalsHistory((prev) => {
         const newHistory = [
           ...prev,
           {
@@ -157,22 +162,22 @@ export default function RealTimeMonitoring() {
             temperature: newVitals.temperature,
             oxygenSat: newVitals.oxygenSaturation,
             systolic: newVitals.bloodPressure.systolic,
-          }
+          },
         ].slice(-20);
         return newHistory;
       });
 
       // Simulate alert generation
       if (newVitals.heartRate > 100 && Math.random() > 0.8) {
-        setAlerts(prev => [
+        setAlerts((prev) => [
           {
             id: Date.now(),
-            type: 'warning',
+            type: "warning",
             message: `Heart rate spike detected: ${newVitals.heartRate} BPM`,
-            timestamp: 'Just now',
-            severity: 'high',
+            timestamp: "Just now",
+            severity: "high",
           },
-          ...prev.slice(0, 4) // Keep only 5 most recent alerts
+          ...prev.slice(0, 4), // Keep only 5 most recent alerts
         ]);
       }
     }, 3000); // Update every 3 seconds
@@ -182,30 +187,33 @@ export default function RealTimeMonitoring() {
 
   const getVitalStatus = (type: string, value: number) => {
     switch (type) {
-      case 'heartRate':
-        if (value < 60) return { status: 'low', color: 'text-blue-600' };
-        if (value > 100) return { status: 'high', color: 'text-red-600' };
-        return { status: 'normal', color: 'text-green-600' };
-      case 'bloodPressure':
-        if (value > 140) return { status: 'high', color: 'text-red-600' };
-        if (value < 90) return { status: 'low', color: 'text-blue-600' };
-        return { status: 'normal', color: 'text-green-600' };
-      case 'temperature':
-        if (value > 100.4) return { status: 'fever', color: 'text-red-600' };
-        if (value < 97) return { status: 'low', color: 'text-blue-600' };
-        return { status: 'normal', color: 'text-green-600' };
-      case 'oxygenSat':
-        if (value < 95) return { status: 'low', color: 'text-red-600' };
-        return { status: 'normal', color: 'text-green-600' };
+      case "heartRate":
+        if (value < 60) return { status: "low", color: "text-blue-600" };
+        if (value > 100) return { status: "high", color: "text-red-600" };
+        return { status: "normal", color: "text-green-600" };
+      case "bloodPressure":
+        if (value > 140) return { status: "high", color: "text-red-600" };
+        if (value < 90) return { status: "low", color: "text-blue-600" };
+        return { status: "normal", color: "text-green-600" };
+      case "temperature":
+        if (value > 100.4) return { status: "fever", color: "text-red-600" };
+        if (value < 97) return { status: "low", color: "text-blue-600" };
+        return { status: "normal", color: "text-green-600" };
+      case "oxygenSat":
+        if (value < 95) return { status: "low", color: "text-red-600" };
+        return { status: "normal", color: "text-green-600" };
       default:
-        return { status: 'normal', color: 'text-green-600' };
+        return { status: "normal", color: "text-green-600" };
     }
   };
 
-  const heartRateStatus = getVitalStatus('heartRate', vitalSigns.heartRate);
-  const bpStatus = getVitalStatus('bloodPressure', vitalSigns.bloodPressure.systolic);
-  const tempStatus = getVitalStatus('temperature', vitalSigns.temperature);
-  const oxygenStatus = getVitalStatus('oxygenSat', vitalSigns.oxygenSaturation);
+  const heartRateStatus = getVitalStatus("heartRate", vitalSigns.heartRate);
+  const bpStatus = getVitalStatus(
+    "bloodPressure",
+    vitalSigns.bloodPressure.systolic,
+  );
+  const tempStatus = getVitalStatus("temperature", vitalSigns.temperature);
+  const oxygenStatus = getVitalStatus("oxygenSat", vitalSigns.oxygenSaturation);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50 page-transition">
@@ -235,7 +243,10 @@ export default function RealTimeMonitoring() {
               </div>
             </div>
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
-              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+              <Badge
+                variant="secondary"
+                className="bg-green-50 text-green-700 border-green-200"
+              >
                 <div className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></div>
                 Live Monitoring
               </Badge>
@@ -253,18 +264,22 @@ export default function RealTimeMonitoring() {
         {alerts.length > 0 && (
           <div className="mb-8 space-y-3 fade-in">
             {alerts.slice(0, 3).map((alert) => (
-              <Alert 
-                key={alert.id} 
+              <Alert
+                key={alert.id}
                 className={`border-l-4 ${
-                  alert.severity === 'high' ? 'border-red-500 bg-red-50' :
-                  alert.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
-                  'border-blue-500 bg-blue-50'
+                  alert.severity === "high"
+                    ? "border-red-500 bg-red-50"
+                    : alert.severity === "medium"
+                      ? "border-yellow-500 bg-yellow-50"
+                      : "border-blue-500 bg-blue-50"
                 }`}
               >
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="font-medium">
                   {alert.message}
-                  <span className="text-sm text-muted-foreground ml-2">• {alert.timestamp}</span>
+                  <span className="text-sm text-muted-foreground ml-2">
+                    • {alert.timestamp}
+                  </span>
                 </AlertDescription>
               </Alert>
             ))}
@@ -279,9 +294,17 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Heart className={`w-5 h-5 ${heartRateStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">Heart Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Heart Rate
+                  </CardTitle>
                 </div>
-                <Badge variant={heartRateStatus.status === 'normal' ? 'default' : 'destructive'}>
+                <Badge
+                  variant={
+                    heartRateStatus.status === "normal"
+                      ? "default"
+                      : "destructive"
+                  }
+                >
                   {heartRateStatus.status}
                 </Badge>
               </div>
@@ -304,9 +327,15 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Activity className={`w-5 h-5 ${bpStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">Blood Pressure</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Blood Pressure
+                  </CardTitle>
                 </div>
-                <Badge variant={bpStatus.status === 'normal' ? 'default' : 'destructive'}>
+                <Badge
+                  variant={
+                    bpStatus.status === "normal" ? "default" : "destructive"
+                  }
+                >
                   {bpStatus.status}
                 </Badge>
               </div>
@@ -314,7 +343,9 @@ export default function RealTimeMonitoring() {
             <CardContent>
               <div className="text-3xl font-bold mb-2 text-slate-800">
                 {vitalSigns.bloodPressure.systolic}
-                <span className="text-xl text-muted-foreground">/{vitalSigns.bloodPressure.diastolic}</span>
+                <span className="text-xl text-muted-foreground">
+                  /{vitalSigns.bloodPressure.diastolic}
+                </span>
                 <span className="text-lg text-muted-foreground ml-1">mmHg</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
@@ -330,9 +361,15 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Thermometer className={`w-5 h-5 ${tempStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">Temperature</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Temperature
+                  </CardTitle>
                 </div>
-                <Badge variant={tempStatus.status === 'normal' ? 'default' : 'destructive'}>
+                <Badge
+                  variant={
+                    tempStatus.status === "normal" ? "default" : "destructive"
+                  }
+                >
                   {tempStatus.status}
                 </Badge>
               </div>
@@ -355,9 +392,15 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Droplets className={`w-5 h-5 ${oxygenStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">Oxygen Saturation</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Oxygen Saturation
+                  </CardTitle>
                 </div>
-                <Badge variant={oxygenStatus.status === 'normal' ? 'default' : 'destructive'}>
+                <Badge
+                  variant={
+                    oxygenStatus.status === "normal" ? "default" : "destructive"
+                  }
+                >
                   {oxygenStatus.status}
                 </Badge>
               </div>
@@ -393,39 +436,42 @@ export default function RealTimeMonitoring() {
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={vitalsHistory}>
-                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="opacity-30"
+                      />
                       <XAxis dataKey="time" className="text-xs" />
                       <YAxis className="text-xs" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(255, 255, 255, 0.95)",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                         }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="heartRate" 
-                        stroke="#ef4444" 
+                      <Line
+                        type="monotone"
+                        dataKey="heartRate"
+                        stroke="#ef4444"
                         strokeWidth={2}
-                        dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
                         name="Heart Rate (BPM)"
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="oxygenSat" 
-                        stroke="#3b82f6" 
+                      <Line
+                        type="monotone"
+                        dataKey="oxygenSat"
+                        stroke="#3b82f6"
                         strokeWidth={2}
-                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
                         name="Oxygen Saturation (%)"
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="systolic" 
-                        stroke="#10b981" 
+                      <Line
+                        type="monotone"
+                        dataKey="systolic"
+                        stroke="#10b981"
                         strokeWidth={2}
-                        dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
                         name="Systolic BP (mmHg)"
                       />
                     </LineChart>
@@ -443,26 +489,33 @@ export default function RealTimeMonitoring() {
                   <Smartphone className="w-5 h-5 mr-2 text-green-600" />
                   Connected Devices
                 </CardTitle>
-                <CardDescription>
-                  IoT health monitoring devices
-                </CardDescription>
+                <CardDescription>IoT health monitoring devices</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {connectedDevices.map((device) => {
                   const IconComponent = device.icon;
                   return (
-                    <div key={device.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div
+                      key={device.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${
-                          device.status === 'connected' ? 'bg-green-100 text-green-600' :
-                          device.status === 'syncing' ? 'bg-yellow-100 text-yellow-600' :
-                          'bg-red-100 text-red-600'
-                        }`}>
+                        <div
+                          className={`p-2 rounded-lg ${
+                            device.status === "connected"
+                              ? "bg-green-100 text-green-600"
+                              : device.status === "syncing"
+                                ? "bg-yellow-100 text-yellow-600"
+                                : "bg-red-100 text-red-600"
+                          }`}
+                        >
                           <IconComponent className="w-4 h-4" />
                         </div>
                         <div>
                           <p className="font-medium text-sm">{device.name}</p>
-                          <p className="text-xs text-muted-foreground">{device.lastSync}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {device.lastSync}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -470,9 +523,9 @@ export default function RealTimeMonitoring() {
                           {device.battery}%
                         </div>
                         <Progress value={device.battery} className="w-12 h-2" />
-                        {device.status === 'connected' ? (
+                        {device.status === "connected" ? (
                           <Wifi className="w-4 h-4 text-green-600" />
-                        ) : device.status === 'syncing' ? (
+                        ) : device.status === "syncing" ? (
                           <Zap className="w-4 h-4 text-yellow-600 animate-pulse" />
                         ) : (
                           <WifiOff className="w-4 h-4 text-red-600" />

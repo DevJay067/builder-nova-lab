@@ -40,23 +40,23 @@
   "features.aiAssistant": "B-max AI Assistant",
   "features.aiAssistant.description": "Advanced AI-powered health guidance with natural language processing and medical knowledge base",
   "features.aiAssistant.stats": "AI Powered",
-  
+
   "features.monitoring": "Real-time Monitoring",
   "features.monitoring.description": "Live health monitoring dashboard with IoT device integration and real-time vital signs tracking",
   "features.monitoring.stats": "Live IoT Data",
-  
+
   "features.history": "Health History",
   "features.history.description": "Comprehensive health records and AI search history securely stored on blockchain",
   "features.history.stats": "Secure & Private",
-  
+
   "features.analytics": "Health Analytics",
   "features.analytics.description": "Advanced analytics and insights from your health data with predictive AI modeling",
   "features.analytics.stats": "AI Insights",
-  
+
   "features.firstAid": "Emergency First Aid",
   "features.firstAid.description": "Step-by-step emergency procedures and first aid guidance for critical situations",
   "features.firstAid.stats": "Emergency Ready",
-  
+
   "features.secure": "Secure Access",
   "features.secure.description": "Advanced blockchain security with split-key cryptography and end-to-end encryption",
   "features.secure.stats": "Blockchain Secured",
@@ -107,14 +107,14 @@
   "language.select": "Select Language",
   "language.current": "Current Language",
   "language.english": "English",
-  "language.spanish": "Spanish", 
+  "language.spanish": "Spanish",
   "language.french": "French",
   "language.hindi": "Hindi",
   "language.german": "German",
   "language.japanese": "Japanese",
 
   "status.online": "Online",
-  "status.offline": "Offline", 
+  "status.offline": "Offline",
   "status.connecting": "Connecting",
   "status.connected": "Connected",
   "status.disconnected": "Disconnected",

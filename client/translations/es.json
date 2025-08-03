@@ -40,23 +40,23 @@
   "features.aiAssistant": "Asistente IA B-max",
   "features.aiAssistant.description": "Orientación médica avanzada impulsada por IA con procesamiento de lenguaje natural y base de conocimientos médicos",
   "features.aiAssistant.stats": "Impulsado por IA",
-  
+
   "features.monitoring": "Monitoreo en Tiempo Real",
   "features.monitoring.description": "Panel de monitoreo de salud en vivo con integración de dispositivos IoT y seguimiento de signos vitales en tiempo real",
   "features.monitoring.stats": "Datos IoT en Vivo",
-  
+
   "features.history": "Historial de Salud",
   "features.history.description": "Registros médicos completos e historial de búsqueda de IA almacenados de forma segura en blockchain",
   "features.history.stats": "Seguro y Privado",
-  
+
   "features.analytics": "Análisis de Salud",
   "features.analytics.description": "Análisis avanzados e insights de tus datos de salud con modelado predictivo de IA",
   "features.analytics.stats": "Insights de IA",
-  
+
   "features.firstAid": "Primeros Auxilios de Emergencia",
   "features.firstAid.description": "Procedimientos de emergencia paso a paso y orientación de primeros auxilios para situaciones críticas",
   "features.firstAid.stats": "Listo para Emergencias",
-  
+
   "features.secure": "Acceso Seguro",
   "features.secure.description": "Seguridad blockchain avanzada con criptografía de clave dividida y cifrado de extremo a extremo",
   "features.secure.stats": "Protegido por Blockchain",
@@ -107,14 +107,14 @@
   "language.select": "Seleccionar Idioma",
   "language.current": "Idioma Actual",
   "language.english": "Inglés",
-  "language.spanish": "Español", 
+  "language.spanish": "Español",
   "language.french": "Francés",
   "language.hindi": "Hindi",
   "language.german": "Alemán",
   "language.japanese": "Japonés",
 
   "status.online": "En Línea",
-  "status.offline": "Sin Conexión", 
+  "status.offline": "Sin Conexión",
   "status.connecting": "Conectando",
   "status.connected": "Conectado",
   "status.disconnected": "Desconectado",

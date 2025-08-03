@@ -40,23 +40,23 @@
   "features.aiAssistant": "Assistant IA B-max",
   "features.aiAssistant.description": "Orientation médicale avancée alimentée par IA avec traitement du langage naturel et base de connaissances médicales",
   "features.aiAssistant.stats": "Alimenté par IA",
-  
+
   "features.monitoring": "Surveillance en Temps Réel",
   "features.monitoring.description": "Tableau de bord de surveillance de santé en direct avec intégration d'appareils IoT et suivi des signes vitaux en temps réel",
   "features.monitoring.stats": "Données IoT en Direct",
-  
+
   "features.history": "Historique de Santé",
   "features.history.description": "Dossiers médicaux complets et historique de recherche IA stockés en sécurité sur blockchain",
   "features.history.stats": "Sécurisé et Privé",
-  
+
   "features.analytics": "Analyses de Santé",
   "features.analytics.description": "Analyses avancées et insights de vos données de santé avec modélisation prédictive IA",
   "features.analytics.stats": "Insights IA",
-  
+
   "features.firstAid": "Premiers Secours d'Urgence",
   "features.firstAid.description": "Procédures d'urgence étape par étape et orientation de premiers secours pour situations critiques",
   "features.firstAid.stats": "Prêt pour l'Urgence",
-  
+
   "features.secure": "Accès Sécurisé",
   "features.secure.description": "Sécurité blockchain avancée avec cryptographie à clé divisée et chiffrement de bout en bout",
   "features.secure.stats": "Sécurisé par Blockchain",
@@ -107,14 +107,14 @@
   "language.select": "Sélectionner la Langue",
   "language.current": "Langue Actuelle",
   "language.english": "Anglais",
-  "language.spanish": "Espagnol", 
+  "language.spanish": "Espagnol",
   "language.french": "Français",
   "language.hindi": "Hindi",
   "language.german": "Allemand",
   "language.japanese": "Japonais",
 
   "status.online": "En ligne",
-  "status.offline": "Hors ligne", 
+  "status.offline": "Hors ligne",
   "status.connecting": "Connexion",
   "status.connected": "Connecté",
   "status.disconnected": "Déconnecté",
