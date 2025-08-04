@@ -286,7 +286,8 @@ class ProductionBlockchainService {
         .update(dataHash)
         .digest();
       const [dataIvHex, dataEncrypted] = dataLayerData.split(":");
-      const dataDecipher = crypto.createDecipher("aes-256-cbc", dataLayerKey);
+      const dataIv = Buffer.from(dataIvHex, "hex");
+      const dataDecipher = crypto.createDecipheriv("aes-256-cbc", dataLayerKey, dataIv);
 
       let userLayerData = dataDecipher.update(dataEncrypted, "hex", "utf8");
       userLayerData += dataDecipher.final("utf8");
