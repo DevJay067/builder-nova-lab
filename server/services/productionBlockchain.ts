@@ -201,7 +201,11 @@ class ProductionBlockchainService {
     // Layer 1: Encrypt with user hash (user-specific encryption)
     const userLayerKey = crypto.createHash("sha256").update(userHash).digest();
     const userIv = crypto.randomBytes(16);
-    const userCipher = crypto.createCipheriv("aes-256-cbc", userLayerKey, userIv);
+    const userCipher = crypto.createCipheriv(
+      "aes-256-cbc",
+      userLayerKey,
+      userIv,
+    );
 
     let userEncrypted = userCipher.update(
       JSON.stringify(healthRecord),
@@ -214,7 +218,11 @@ class ProductionBlockchainService {
     // Layer 2: Encrypt with data hash (data-specific encryption)
     const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
     const dataIv = crypto.randomBytes(16);
-    const dataCipher = crypto.createCipheriv("aes-256-cbc", dataLayerKey, dataIv);
+    const dataCipher = crypto.createCipheriv(
+      "aes-256-cbc",
+      dataLayerKey,
+      dataIv,
+    );
 
     let dataEncrypted = dataCipher.update(userLayerData, "utf8", "hex");
     dataEncrypted += dataCipher.final("hex");
@@ -287,7 +295,11 @@ class ProductionBlockchainService {
         .digest();
       const [dataIvHex, dataEncrypted] = dataLayerData.split(":");
       const dataIv = Buffer.from(dataIvHex, "hex");
-      const dataDecipher = crypto.createDecipheriv("aes-256-cbc", dataLayerKey, dataIv);
+      const dataDecipher = crypto.createDecipheriv(
+        "aes-256-cbc",
+        dataLayerKey,
+        dataIv,
+      );
 
       let userLayerData = dataDecipher.update(dataEncrypted, "hex", "utf8");
       userLayerData += dataDecipher.final("utf8");
@@ -299,7 +311,11 @@ class ProductionBlockchainService {
         .digest();
       const [userIvHex, userEncrypted] = userLayerData.split(":");
       const userIv = Buffer.from(userIvHex, "hex");
-      const userDecipher = crypto.createDecipheriv("aes-256-cbc", userLayerKey, userIv);
+      const userDecipher = crypto.createDecipheriv(
+        "aes-256-cbc",
+        userLayerKey,
+        userIv,
+      );
 
       let decryptedData = userDecipher.update(userEncrypted, "hex", "utf8");
       decryptedData += userDecipher.final("utf8");
