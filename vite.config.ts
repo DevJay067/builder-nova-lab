@@ -12,6 +12,25 @@ export default defineConfig(({ mode }) => ({
       allow: ["./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
+    hmr: {
+      overlay: false, // Disable error overlay that can cause crashes
+    },
+    watch: {
+      // Reduce file watching overhead
+      ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
+    },
+  },
+  optimizeDeps: {
+    // Pre-bundle dependencies to reduce hot reload issues
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-alert-dialog',
+      'lucide-react'
+    ],
+    exclude: ['@neondatabase/serverless'] // Exclude server-only deps
   },
   appType: "spa",
   build: {
