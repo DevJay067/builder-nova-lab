@@ -284,8 +284,19 @@ Focus on evidence-based recommendations tailored to this patient's medical profi
               <Button
                 onClick={enhanceQuery}
                 disabled={!query.trim() || isLoading}
+                className="min-w-[100px]"
               >
-                {isLoading ? "Enhancing..." : "Enhance"}
+                {isLoading ? (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2 animate-spin" />
+                    Enhancing...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="h-4 w-4 mr-2" />
+                    Enhance
+                  </>
+                )}
               </Button>
             </div>
 
