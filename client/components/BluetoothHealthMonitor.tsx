@@ -324,8 +324,17 @@ export default function BluetoothHealthMonitor() {
     }
   };
 
+  // Store active intervals for cleanup
+  const [dataIntervals, setDataIntervals] = useState<Map<string, NodeJS.Timeout>>(new Map());
+
   // Simulate continuous data collection (for demo purposes)
   const startDataSimulation = (deviceId: string) => {
+    // Clear existing interval if any
+    const existingInterval = dataIntervals.get(deviceId);
+    if (existingInterval) {
+      clearInterval(existingInterval);
+    }
+
     const interval = setInterval(() => {
       const simulatedData: Partial<VitalData> = {
         heartRate: Math.floor(Math.random() * 40) + 60, // 60-100 BPM
@@ -340,11 +349,20 @@ export default function BluetoothHealthMonitor() {
       };
 
       updateVitalData(deviceId, simulatedData);
-    }, 5000); // Update every 5 seconds
+    }, 3000); // Update every 3 seconds
 
     // Store interval for cleanup
+    setDataIntervals(prev => new Map(prev.set(deviceId, interval)));
+
     return interval;
   };
+
+  // Cleanup intervals when component unmounts
+  useEffect(() => {
+    return () => {
+      dataIntervals.forEach(interval => clearInterval(interval));
+    };
+  }, [dataIntervals]);
 
   // Update vital data
   const updateVitalData = (deviceId: string, data: Partial<VitalData>) => {
