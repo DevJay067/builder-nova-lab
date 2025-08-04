@@ -172,22 +172,27 @@ export default function BluetoothHealthMonitor() {
 
   // Connect to a Bluetooth device
   const connectToDevice = async (bluetoothDevice: BluetoothDevice) => {
-    const deviceId = bluetoothDevice.id || bluetoothDevice.name || "unknown";
+    const deviceId = bluetoothDevice.id || `device-${Date.now()}`;
+    const deviceName = bluetoothDevice.name || "Unknown Device";
 
     // Add device to list if not already present
     const existingDevice = devices.find(
-      (d) => d.bluetoothId === bluetoothDevice.id,
+      (d) => d.bluetoothId === bluetoothDevice.id || d.id === deviceId,
     );
+
+    let targetDevice: HealthDevice;
+
     if (!existingDevice) {
       const newDevice: HealthDevice = {
         id: deviceId,
-        name: bluetoothDevice.name || "Unknown Device",
-        type: getDeviceType(bluetoothDevice.name || ""),
+        name: deviceName,
+        type: getDeviceType(deviceName),
         bluetoothId: bluetoothDevice.id,
         connected: false,
         connecting: true,
+        battery: Math.floor(Math.random() * 40) + 60, // Simulate battery 60-100%
         lastSync: new Date(),
-        capabilities: getDeviceCapabilities(bluetoothDevice.name || ""),
+        capabilities: getDeviceCapabilities(deviceName),
         permissions: {
           heartRate: false,
           bloodPressure: false,
@@ -199,6 +204,17 @@ export default function BluetoothHealthMonitor() {
       };
 
       setDevices((prev) => [...prev, newDevice]);
+      targetDevice = newDevice;
+    } else {
+      // Update existing device to connecting state
+      setDevices((prev) =>
+        prev.map((device) =>
+          device.id === existingDevice.id || device.bluetoothId === bluetoothDevice.id
+            ? { ...device, connecting: true, connected: false }
+            : device,
+        ),
+      );
+      targetDevice = existingDevice;
     }
 
     try {
