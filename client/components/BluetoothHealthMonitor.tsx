@@ -375,11 +375,16 @@ export default function BluetoothHealthMonitor() {
     setVitalsData((prev) => [...prev.slice(-50), newVitalData]); // Keep last 50 readings
     setCurrentVitals(newVitalData);
 
-    // Update device last sync time
+    // Update device last sync time and ensure it stays connected
     setDevices((prev) =>
       prev.map((device) =>
         device.id === deviceId || device.bluetoothId === deviceId
-          ? { ...device, lastSync: new Date() }
+          ? {
+              ...device,
+              lastSync: new Date(),
+              connected: true, // Ensure device remains marked as connected
+              connecting: false
+            }
           : device,
       ),
     );
