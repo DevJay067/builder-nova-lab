@@ -248,10 +248,10 @@ Focus on evidence-based recommendations tailored to this patient's medical profi
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">
-                    B-max AI Demo
+                    B-max AI Interactive Demo
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    See How Medical History Personalizes AI
+                    Working Demo - See Real Query Enhancement
                   </p>
                 </div>
               </div>
