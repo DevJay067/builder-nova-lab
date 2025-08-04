@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
   Heart,
@@ -28,7 +29,10 @@ import {
   Smartphone,
   Watch,
   Brain,
+  Bluetooth,
+  BarChart3,
 } from "lucide-react";
+import BluetoothHealthMonitor from "@/components/BluetoothHealthMonitor";
 import {
   LineChart,
   Line,
