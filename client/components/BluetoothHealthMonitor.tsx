@@ -82,7 +82,55 @@ export default function BluetoothHealthMonitor() {
   // Check Bluetooth support on component mount
   useEffect(() => {
     checkBluetoothSupport();
+    // Add demo devices for testing (can be removed in production)
+    addDemoDevices();
   }, []);
+
+  // Add demo devices for testing purposes
+  const addDemoDevices = () => {
+    const demoDevices: HealthDevice[] = [
+      {
+        id: "demo-watch-1",
+        name: "Apple Watch Series 9",
+        type: "smartwatch",
+        bluetoothId: "demo-bt-1",
+        connected: false,
+        connecting: false,
+        battery: 85,
+        lastSync: new Date(),
+        capabilities: ["Heart Rate", "Steps", "Sleep", "Calories"],
+        permissions: {
+          heartRate: false,
+          bloodPressure: false,
+          temperature: false,
+          oxygenSaturation: false,
+          steps: false,
+          sleep: false,
+        },
+      },
+      {
+        id: "demo-fitbit-1",
+        name: "Fitbit Charge 6",
+        type: "fitness_tracker",
+        bluetoothId: "demo-bt-2",
+        connected: false,
+        connecting: false,
+        battery: 72,
+        lastSync: new Date(),
+        capabilities: ["Heart Rate", "Steps", "Sleep"],
+        permissions: {
+          heartRate: false,
+          bloodPressure: false,
+          temperature: false,
+          oxygenSaturation: false,
+          steps: false,
+          sleep: false,
+        },
+      },
+    ];
+
+    setDevices(demoDevices);
+  };
 
   const checkBluetoothSupport = async () => {
     if ("bluetooth" in navigator) {
