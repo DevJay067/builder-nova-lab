@@ -24,6 +24,20 @@ export class DatabaseHealthService {
   }> {
     const startTime = Date.now();
 
+    // If no DATABASE_URL is set, skip database checks
+    if (!process.env.DATABASE_URL) {
+      console.log("ℹ️ No DATABASE_URL configured, using in-memory storage only");
+      this.databaseDisabled = true;
+      this.isHealthy = false;
+      this.lastHealthCheck = new Date();
+
+      return {
+        isHealthy: false,
+        lastChecked: this.lastHealthCheck,
+        connectionStatus: "disabled: no DATABASE_URL configured",
+      };
+    }
+
     try {
       console.log("🔍 Checking database health...");
 
