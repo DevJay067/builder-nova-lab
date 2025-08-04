@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Activity, 
-  ArrowLeft, 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Activity,
+  ArrowLeft,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -21,8 +22,26 @@ import {
   PieChart,
   LineChart,
   Zap,
-  Shield
+  Shield,
+  RefreshCw,
+  Loader2,
+  Sparkles,
+  Info
 } from "lucide-react";
+import { useHealthData } from "@/hooks/useHealthData";
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar
+} from "recharts";
 
 export default function HealthAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
