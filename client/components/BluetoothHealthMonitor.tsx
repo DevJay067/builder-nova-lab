@@ -276,21 +276,27 @@ export default function BluetoothHealthMonitor() {
   // Start monitoring health data from connected device
   const startMonitoring = async (
     device: BluetoothDevice,
-    server: BluetoothRemoteGATTServer,
+    server: BluetoothRemoteGATTServer | null,
+    deviceId: string,
   ) => {
     try {
-      // Monitor heart rate if available
-      if (device.name?.includes("Watch") || device.name?.includes("Fitbit")) {
-        await monitorHeartRate(server, device.id || "unknown");
+      // Try to monitor real heart rate if GATT server is available
+      if (server && (device.name?.includes("Watch") || device.name?.includes("Fitbit"))) {
+        try {
+          await monitorHeartRate(server, deviceId);
+        } catch (hrError) {
+          console.log("Real heart rate monitoring failed, using simulation:", hrError);
+        }
       }
 
-      // Monitor other health metrics based on device capabilities
-      // This would be expanded based on specific device protocols
+      // Always start data simulation for demo purposes
+      startDataSimulation(deviceId);
 
-      // Simulate continuous data collection
-      startDataSimulation(device.id || "unknown");
+      console.log(`📊 Started monitoring for device: ${device.name || deviceId}`);
     } catch (error) {
       console.error("Monitoring setup failed:", error);
+      // Still start simulation even if real monitoring fails
+      startDataSimulation(deviceId);
     }
   };
 
