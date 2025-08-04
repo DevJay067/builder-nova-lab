@@ -417,6 +417,7 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
               </div>
             </div>
             <div className="flex items-center space-x-2 fade-in fade-in-delay-1">
+              <ThemeToggle />
               {personalizedContext?.hasData && (
                 <Badge
                   variant="default"
