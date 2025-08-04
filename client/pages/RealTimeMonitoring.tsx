@@ -425,15 +425,24 @@ export default function RealTimeMonitoring() {
         {/* Enhanced Monitoring Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 max-w-md">
-            <TabsTrigger value="overview" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="overview"
+              className="flex items-center space-x-2"
+            >
               <BarChart3 className="h-4 w-4" />
               <span>Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="bluetooth" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="bluetooth"
+              className="flex items-center space-x-2"
+            >
               <Bluetooth className="h-4 w-4" />
               <span>Bluetooth</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+            <TabsTrigger
+              value="analytics"
+              className="flex items-center space-x-2"
+            >
               <Brain className="h-4 w-4" />
               <span>Analytics</span>
             </TabsTrigger>
@@ -511,7 +520,9 @@ export default function RealTimeMonitoring() {
                       <Smartphone className="w-5 h-5 mr-2 text-green-600" />
                       Connected Devices
                     </CardTitle>
-                    <CardDescription>IoT health monitoring devices</CardDescription>
+                    <CardDescription>
+                      IoT health monitoring devices
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {connectedDevices.map((device) => {
@@ -534,7 +545,9 @@ export default function RealTimeMonitoring() {
                               <IconComponent className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="font-medium text-sm">{device.name}</p>
+                              <p className="font-medium text-sm">
+                                {device.name}
+                              </p>
                               <p className="text-xs text-muted-foreground">
                                 {device.lastSync}
                               </p>
@@ -544,7 +557,10 @@ export default function RealTimeMonitoring() {
                             <div className="text-xs text-muted-foreground">
                               {device.battery}%
                             </div>
-                            <Progress value={device.battery} className="w-12 h-2" />
+                            <Progress
+                              value={device.battery}
+                              className="w-12 h-2"
+                            />
                             {device.status === "connected" ? (
                               <Wifi className="w-4 h-4 text-green-600" />
                             ) : device.status === "syncing" ? (
@@ -582,19 +598,25 @@ export default function RealTimeMonitoring() {
                     <Alert className="border-blue-200 bg-blue-50">
                       <CheckCircle className="h-4 w-4 text-blue-600" />
                       <AlertDescription>
-                        <strong>Heart Rate Pattern:</strong> Your heart rate shows a healthy circadian rhythm with good variability during exercise.
+                        <strong>Heart Rate Pattern:</strong> Your heart rate
+                        shows a healthy circadian rhythm with good variability
+                        during exercise.
                       </AlertDescription>
                     </Alert>
                     <Alert className="border-green-200 bg-green-50">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <AlertDescription>
-                        <strong>Recovery Score:</strong> Excellent recovery patterns detected. Your body is adapting well to current activity levels.
+                        <strong>Recovery Score:</strong> Excellent recovery
+                        patterns detected. Your body is adapting well to current
+                        activity levels.
                       </AlertDescription>
                     </Alert>
                     <Alert className="border-yellow-200 bg-yellow-50">
                       <AlertTriangle className="h-4 w-4 text-yellow-600" />
                       <AlertDescription>
-                        <strong>Sleep Quality:</strong> Consider improving sleep consistency. Irregular sleep patterns detected in the last week.
+                        <strong>Sleep Quality:</strong> Consider improving sleep
+                        consistency. Irregular sleep patterns detected in the
+                        last week.
                       </AlertDescription>
                     </Alert>
                   </div>
@@ -608,10 +630,26 @@ export default function RealTimeMonitoring() {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { metric: "Cardiovascular", score: 87, color: "bg-red-500" },
-                      { metric: "Sleep Quality", score: 73, color: "bg-blue-500" },
-                      { metric: "Activity Level", score: 92, color: "bg-green-500" },
-                      { metric: "Stress Management", score: 68, color: "bg-yellow-500" }
+                      {
+                        metric: "Cardiovascular",
+                        score: 87,
+                        color: "bg-red-500",
+                      },
+                      {
+                        metric: "Sleep Quality",
+                        score: 73,
+                        color: "bg-blue-500",
+                      },
+                      {
+                        metric: "Activity Level",
+                        score: 92,
+                        color: "bg-green-500",
+                      },
+                      {
+                        metric: "Stress Management",
+                        score: 68,
+                        color: "bg-yellow-500",
+                      },
                     ].map((item, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between text-sm">
@@ -619,7 +657,9 @@ export default function RealTimeMonitoring() {
                           <span className="font-semibold">{item.score}%</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                          <div
+                            className={`w-3 h-3 rounded-full ${item.color}`}
+                          ></div>
                           <Progress value={item.score} className="flex-1 h-2" />
                         </div>
                       </div>
