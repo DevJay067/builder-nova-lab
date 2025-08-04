@@ -21,6 +21,11 @@ export class NeonDatabaseService {
    * Initialize database tables for secure data storage
    */
   static async initializeDatabase(): Promise<void> {
+    if (!sql || !process.env.DATABASE_URL) {
+      console.log("ℹ️ Database not configured, skipping Neon database initialization");
+      return;
+    }
+
     try {
       // Create secure_data_records table
       await sql`
@@ -327,7 +332,7 @@ export class NeonDatabaseService {
         )
       `;
 
-      console.log(`�� Stored audit log: ${auditLog.logId}`);
+      console.log(`✅ Stored audit log: ${auditLog.logId}`);
     } catch (error) {
       console.error("❌ Error storing audit log:", error);
       throw error;
