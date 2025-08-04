@@ -201,8 +201,12 @@ Focus on evidence-based recommendations tailored to this patient's medical profi
     "I have a headache",
     "Can I take ibuprofen?",
     "I'm feeling tired lately",
-    "What should I monitor for my health?",
     "I'm experiencing chest pain",
+    "My blood sugar is 180",
+    "I forgot to take my medication",
+    "Can I eat chocolate with diabetes?",
+    "What should I monitor daily?",
+    "I'm having heartburn",
   ];
 
   return (
