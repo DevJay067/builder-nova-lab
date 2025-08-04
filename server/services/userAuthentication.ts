@@ -206,9 +206,13 @@ class UserAuthenticationService {
    * Update user last login in database
    */
   private static async updateUserLastLogin(username: string): Promise<void> {
+    if (!process.env.DATABASE_URL) {
+      return;
+    }
+
     try {
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(process.env.DATABASE_URL);
 
       await sql`
         UPDATE users
