@@ -134,21 +134,17 @@ export default function BluetoothHealthMonitor() {
 
   // Quick connect demo device
   const connectDemoDevice = async (deviceId: string) => {
-    const device = devices.find(d => d.id === deviceId);
+    const device = devices.find((d) => d.id === deviceId);
     if (!device) return;
 
     // Set connecting state
-    setDevices(prev =>
-      prev.map(d =>
-        d.id === deviceId
-          ? { ...d, connecting: true }
-          : d
-      )
+    setDevices((prev) =>
+      prev.map((d) => (d.id === deviceId ? { ...d, connecting: true } : d)),
     );
 
     try {
       // Simulate connection delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Request permissions
       const permissions = await requestPermissions(deviceId);
@@ -157,18 +153,18 @@ export default function BluetoothHealthMonitor() {
       }
 
       // Set connected state
-      setDevices(prev =>
-        prev.map(d =>
+      setDevices((prev) =>
+        prev.map((d) =>
           d.id === deviceId
             ? {
                 ...d,
                 connected: true,
                 connecting: false,
                 permissions,
-                lastSync: new Date()
+                lastSync: new Date(),
               }
-            : d
-        )
+            : d,
+        ),
       );
 
       // Start data simulation
@@ -177,12 +173,10 @@ export default function BluetoothHealthMonitor() {
       console.log(`✅ Demo device connected: ${device.name}`);
     } catch (error) {
       console.error("Demo connection failed:", error);
-      setDevices(prev =>
-        prev.map(d =>
-          d.id === deviceId
-            ? { ...d, connected: false, connecting: false }
-            : d
-        )
+      setDevices((prev) =>
+        prev.map((d) =>
+          d.id === deviceId ? { ...d, connected: false, connecting: false } : d,
+        ),
       );
     }
   };
@@ -237,7 +231,9 @@ export default function BluetoothHealthMonitor() {
   // Scan for Bluetooth health devices
   const scanForDevices = async () => {
     if (!bluetoothSupported) {
-      alert("Bluetooth is not supported in this browser. Please use Chrome or Edge.");
+      alert(
+        "Bluetooth is not supported in this browser. Please use Chrome or Edge.",
+      );
       return;
     }
 
@@ -277,11 +273,13 @@ export default function BluetoothHealthMonitor() {
         await connectToDevice(device);
       }
     } catch (error: any) {
-      if (error.name === 'NotFoundError') {
+      if (error.name === "NotFoundError") {
         console.log("No device selected or no devices found");
-      } else if (error.name === 'SecurityError') {
+      } else if (error.name === "SecurityError") {
         console.error("Bluetooth access denied or not available");
-        alert("Bluetooth access was denied. Please allow Bluetooth access and try again.");
+        alert(
+          "Bluetooth access was denied. Please allow Bluetooth access and try again.",
+        );
       } else {
         console.error("Device scan failed:", error);
         alert("Failed to scan for devices. Please try again.");
@@ -330,7 +328,8 @@ export default function BluetoothHealthMonitor() {
       // Update existing device to connecting state
       setDevices((prev) =>
         prev.map((device) =>
-          device.id === existingDevice.id || device.bluetoothId === bluetoothDevice.id
+          device.id === existingDevice.id ||
+          device.bluetoothId === bluetoothDevice.id
             ? { ...device, connecting: true, connected: false }
             : device,
         ),
@@ -348,7 +347,8 @@ export default function BluetoothHealthMonitor() {
       // Update device permissions
       setDevices((prev) =>
         prev.map((device) =>
-          device.id === targetDevice.id || device.bluetoothId === bluetoothDevice.id
+          device.id === targetDevice.id ||
+          device.bluetoothId === bluetoothDevice.id
             ? { ...device, permissions }
             : device,
         ),
@@ -359,19 +359,23 @@ export default function BluetoothHealthMonitor() {
       try {
         server = await bluetoothDevice.gatt?.connect();
       } catch (gattError) {
-        console.log("GATT connection failed, using simulation mode:", gattError);
+        console.log(
+          "GATT connection failed, using simulation mode:",
+          gattError,
+        );
         // Continue with simulation even if GATT fails
       }
 
       // Update device as connected
       setDevices((prev) =>
         prev.map((device) =>
-          device.id === targetDevice.id || device.bluetoothId === bluetoothDevice.id
+          device.id === targetDevice.id ||
+          device.bluetoothId === bluetoothDevice.id
             ? {
                 ...device,
                 connected: true,
                 connecting: false,
-                lastSync: new Date()
+                lastSync: new Date(),
               }
             : device,
         ),
@@ -386,7 +390,8 @@ export default function BluetoothHealthMonitor() {
       // Update device as failed to connect
       setDevices((prev) =>
         prev.map((device) =>
-          device.id === targetDevice.id || device.bluetoothId === bluetoothDevice.id
+          device.id === targetDevice.id ||
+          device.bluetoothId === bluetoothDevice.id
             ? { ...device, connected: false, connecting: false }
             : device,
         ),
@@ -402,18 +407,26 @@ export default function BluetoothHealthMonitor() {
   ) => {
     try {
       // Try to monitor real heart rate if GATT server is available
-      if (server && (device.name?.includes("Watch") || device.name?.includes("Fitbit"))) {
+      if (
+        server &&
+        (device.name?.includes("Watch") || device.name?.includes("Fitbit"))
+      ) {
         try {
           await monitorHeartRate(server, deviceId);
         } catch (hrError) {
-          console.log("Real heart rate monitoring failed, using simulation:", hrError);
+          console.log(
+            "Real heart rate monitoring failed, using simulation:",
+            hrError,
+          );
         }
       }
 
       // Always start data simulation for demo purposes
       startDataSimulation(deviceId);
 
-      console.log(`📊 Started monitoring for device: ${device.name || deviceId}`);
+      console.log(
+        `📊 Started monitoring for device: ${device.name || deviceId}`,
+      );
     } catch (error) {
       console.error("Monitoring setup failed:", error);
       // Still start simulation even if real monitoring fails
@@ -446,7 +459,9 @@ export default function BluetoothHealthMonitor() {
   };
 
   // Store active intervals for cleanup
-  const [dataIntervals, setDataIntervals] = useState<Map<string, NodeJS.Timeout>>(new Map());
+  const [dataIntervals, setDataIntervals] = useState<
+    Map<string, NodeJS.Timeout>
+  >(new Map());
 
   // Simulate continuous data collection (for demo purposes)
   const startDataSimulation = (deviceId: string) => {
@@ -473,7 +488,7 @@ export default function BluetoothHealthMonitor() {
     }, 3000); // Update every 3 seconds
 
     // Store interval for cleanup
-    setDataIntervals(prev => new Map(prev.set(deviceId, interval)));
+    setDataIntervals((prev) => new Map(prev.set(deviceId, interval)));
 
     return interval;
   };
@@ -481,7 +496,7 @@ export default function BluetoothHealthMonitor() {
   // Cleanup intervals when component unmounts
   useEffect(() => {
     return () => {
-      dataIntervals.forEach(interval => clearInterval(interval));
+      dataIntervals.forEach((interval) => clearInterval(interval));
     };
   }, [dataIntervals]);
 
@@ -504,7 +519,7 @@ export default function BluetoothHealthMonitor() {
               ...device,
               lastSync: new Date(),
               connected: true, // Ensure device remains marked as connected
-              connecting: false
+              connecting: false,
             }
           : device,
       ),
@@ -517,7 +532,7 @@ export default function BluetoothHealthMonitor() {
     const interval = dataIntervals.get(deviceId);
     if (interval) {
       clearInterval(interval);
-      setDataIntervals(prev => {
+      setDataIntervals((prev) => {
         const newMap = new Map(prev);
         newMap.delete(deviceId);
         return newMap;
