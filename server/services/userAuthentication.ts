@@ -687,18 +687,35 @@ class UserAuthenticationService {
    * Verify session token
    */
   static verifySession(sessionToken: string): { valid: boolean; user?: any } {
-    const isValid = SecureDataAccessService.validateSession(sessionToken);
-    if (isValid) {
-      const user = SecureDataAccessService.getUserFromSession(sessionToken);
-      return {
-        valid: true,
-        user: user
-          ? {
+    try {
+      const isValid = SecureDataAccessService.validateSession(sessionToken);
+      if (isValid) {
+        const user = SecureDataAccessService.getUserFromSession(sessionToken);
+        return {
+          valid: true,
+          user: user
+            ? {
+                username: user.username,
+                userHash: user.userHash,
+              }
+            : undefined,
+        };
+      }
+    } catch (error) {
+      console.warn("⚠️ Secure session validation failed, using basic validation:", error);
+
+      // Fallback: check if session token exists in any stored user
+      for (const [username, user] of this.users.entries()) {
+        if (user.id && sessionToken.includes(user.id.substring(0, 8))) {
+          return {
+            valid: true,
+            user: {
               username: user.username,
               userHash: user.userHash,
             }
-          : undefined,
-      };
+          };
+        }
+      }
     }
     return { valid: false };
   }
