@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface QueryEnhancement {
   originalQuery: string;
