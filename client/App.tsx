@@ -24,6 +24,7 @@ import DatabaseTest from "./pages/DatabaseTest";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import GoogleTranslateLoader from "./components/GoogleTranslateLoader";
 
 const queryClient = new QueryClient();
 
