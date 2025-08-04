@@ -68,9 +68,14 @@ class UserAuthenticationService {
    * Create user tables in database
    */
   private static async createUserTables(): Promise<void> {
+    if (!process.env.DATABASE_URL) {
+      console.log("ℹ️ Database not configured, skipping user table creation");
+      return;
+    }
+
     try {
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(process.env.DATABASE_URL);
 
       // Create users table
       await sql`
