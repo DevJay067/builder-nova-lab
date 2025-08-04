@@ -346,17 +346,14 @@ export class KeyManagementService {
    * Encrypt system key for storage
    */
   private static encryptSystemKey(systemKey: string): string {
-    const algorithm = "aes-256-gcm";
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipher("aes-256-cbc", key);
 
     let encrypted = cipher.update(systemKey, "utf8", "hex");
     encrypted += cipher.final("hex");
 
-    const authTag = cipher.getAuthTag();
-
-    return iv.toString("hex") + ":" + authTag.toString("hex") + ":" + encrypted;
+    return iv.toString("hex") + ":" + encrypted;
   }
 
   /**
