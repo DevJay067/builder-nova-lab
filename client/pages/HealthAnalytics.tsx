@@ -362,34 +362,103 @@ export default function HealthAnalytics() {
 
           {/* Health Trends Tab */}
           <TabsContent value="trends" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Trends Chart */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <LineChart className="h-5 w-5 mr-2" />
+                    Health Trends - {selectedTimeframe}
+                  </CardTitle>
+                  <CardDescription>
+                    Track your health metrics over time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsLineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis dataKey="date" className="text-xs" />
+                        <YAxis className="text-xs" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="heartRate"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          dot={{ fill: "#ef4444", strokeWidth: 2, r: 3 }}
+                          name="Heart Rate (BPM)"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="steps"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          dot={{ fill: "#3b82f6", strokeWidth: 2, r: 3 }}
+                          name="Steps (thousands)"
+                          scale="linear"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="sleep"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          dot={{ fill: "#10b981", strokeWidth: 2, r: 3 }}
+                          name="Sleep (hours)"
+                        />
+                      </RechartsLineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Activity Summary */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <BarChart3 className="h-5 w-5 mr-2" />
-                    Activity Trends
+                    Activity Summary
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { activity: "Steps", value: 8500, target: 10000, unit: "steps" },
-                      { activity: "Sleep", value: 7.2, target: 8, unit: "hours" },
+                      {
+                        activity: "Steps",
+                        value: getLatestMetric('steps')?.value || 8500,
+                        target: 10000,
+                        unit: "steps"
+                      },
+                      {
+                        activity: "Sleep",
+                        value: getLatestMetric('sleep')?.value || 7.2,
+                        target: 8,
+                        unit: "hours"
+                      },
                       { activity: "Water", value: 6, target: 8, unit: "glasses" },
                       { activity: "Exercise", value: 4, target: 5, unit: "days/week" }
                     ].map((item, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>{item.activity}</span>
-                          <span>{item.value} / {item.target} {item.unit}</span>
+                          <span>{typeof item.value === 'number' ? item.value.toFixed(0) : item.value} / {item.target} {item.unit}</span>
                         </div>
-                        <Progress value={(item.value / item.target) * 100} className="h-2" />
+                        <Progress value={(Number(item.value) / item.target) * 100} className="h-2" />
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Health Categories */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
