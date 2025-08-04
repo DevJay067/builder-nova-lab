@@ -14,10 +14,7 @@ import {
  */
 
 // Database connection
-const sql = neon(
-  process.env.DATABASE_URL ||
-    "postgresql://misty-glitter-69745686-user:default@ep-empty-frog-a5lp6eyz.us-east-2.aws.neon.tech/misty-glitter-69745686-db?sslmode=require",
-);
+const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 
 export class NeonDatabaseService {
   /**
@@ -330,7 +327,7 @@ export class NeonDatabaseService {
         )
       `;
 
-      console.log(`✅ Stored audit log: ${auditLog.logId}`);
+      console.log(`�� Stored audit log: ${auditLog.logId}`);
     } catch (error) {
       console.error("❌ Error storing audit log:", error);
       throw error;
