@@ -323,7 +323,9 @@ class UserAuthenticationService {
 
       // Generate secure password hash
       const saltRounds = 12;
+      console.log("🔐 Generating password hash...");
       const passwordHash = await bcrypt.hash(password, saltRounds);
+      console.log("✅ Password hash generated successfully");
 
       // Generate user hash for the blockchain system
       const userHash = ProductionBlockchainService.generateUserHash(
