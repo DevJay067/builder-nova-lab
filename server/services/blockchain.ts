@@ -56,8 +56,9 @@ export class BlockchainService {
   static decryptHealthData(encryptedData: string, encryptionKey: string): any {
     try {
       const [ivHex, encrypted] = encryptedData.split(":");
+      const iv = Buffer.from(ivHex, "hex");
       const key = crypto.createHash("sha256").update(encryptionKey).digest();
-      const decipher = crypto.createDecipher("aes-256-cbc", key);
+      const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
 
       let decrypted = decipher.update(encrypted, "hex", "utf8");
       decrypted += decipher.final("utf8");
