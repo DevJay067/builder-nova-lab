@@ -21,6 +21,7 @@ import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
 import DatabaseTest from "./pages/DatabaseTest";
+import TranslationTest from "./pages/TranslationTest";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
