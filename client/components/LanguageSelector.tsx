@@ -26,8 +26,14 @@ export default function LanguageSelector({
   showFlag = true,
   className = "",
 }: LanguageSelectorProps) {
-  const { currentLanguage, changeLanguage, getCurrentLanguageInfo, t } =
-    useLanguage();
+  const {
+    currentLanguage,
+    changeLanguage,
+    getCurrentLanguageInfo,
+    t,
+    useGoogleTranslate,
+    toggleGoogleTranslate
+  } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
   const currentLang = getCurrentLanguageInfo();
@@ -197,7 +203,7 @@ export default function LanguageSelector({
 
         <div className="px-3 py-2 border-t bg-gray-50">
           <div className="text-xs text-muted-foreground text-center">
-            �� {SUPPORTED_LANGUAGES.length} languages supported
+            🌍 {SUPPORTED_LANGUAGES.length} languages supported
           </div>
         </div>
       </DropdownMenuContent>
