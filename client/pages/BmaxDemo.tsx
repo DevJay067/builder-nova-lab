@@ -258,6 +258,7 @@ Focus on evidence-based recommendations tailored to this patient's medical profi
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <ThemeToggle />
               <Badge variant="secondary" className="text-xs">
                 <Sparkles className="h-3 w-3 mr-1" />
                 Demo Mode
