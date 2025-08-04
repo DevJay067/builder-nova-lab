@@ -24,8 +24,11 @@ interface LanguageContextType {
   currentLanguage: SupportedLanguage;
   changeLanguage: (language: SupportedLanguage) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
+  translateText: (text: string, targetLang?: SupportedLanguage) => Promise<string>;
   isLoading: boolean;
   getCurrentLanguageInfo: () => LanguageOption;
+  useGoogleTranslate: boolean;
+  toggleGoogleTranslate: () => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
