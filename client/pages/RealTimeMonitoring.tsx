@@ -43,7 +43,6 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  RechartsProps,
 } from "recharts";
 
 // Simulated IoT device data
