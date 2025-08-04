@@ -360,16 +360,13 @@ export class KeyManagementService {
    * Decrypt system key from storage
    */
   private static decryptSystemKey(encryptedSystemKey: string): string {
-    const algorithm = "aes-256-gcm";
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
 
     const parts = encryptedSystemKey.split(":");
     const iv = Buffer.from(parts[0], "hex");
-    const authTag = Buffer.from(parts[1], "hex");
-    const encrypted = parts[2];
+    const encrypted = parts[1];
 
-    const decipher = crypto.createDecipherGCM(algorithm, key, iv);
-    decipher.setAuthTag(authTag);
+    const decipher = crypto.createDecipher("aes-256-cbc", key);
 
     let decrypted = decipher.update(encrypted, "hex", "utf8");
     decrypted += decipher.final("utf8");
