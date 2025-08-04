@@ -11,6 +11,7 @@ export class DatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
   private static isHealthy = false;
   private static connectionPool: any = null;
+  private static databaseDisabled = false;
 
   /**
    * Check database health
