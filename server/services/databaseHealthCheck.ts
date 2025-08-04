@@ -39,6 +39,10 @@ export class DatabaseHealthService {
     }
 
     try {
+      if (!sql) {
+        throw new Error("Database connection not initialized");
+      }
+
       console.log("🔍 Checking database health...");
 
       // Simple connectivity test
