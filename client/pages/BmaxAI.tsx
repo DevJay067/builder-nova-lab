@@ -31,6 +31,7 @@ import {
   Video,
 } from "lucide-react";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface MedicalCondition {
   name: string;
