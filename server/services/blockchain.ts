@@ -40,16 +40,14 @@ export class BlockchainService {
    * Encrypt sensitive health data
    */
   static encryptHealthData(data: any, encryptionKey: string): string {
-    const algorithm = "aes-256-gcm";
     const iv = crypto.randomBytes(16);
     const key = crypto.createHash("sha256").update(encryptionKey).digest();
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipher("aes-256-cbc", key);
 
     let encrypted = cipher.update(JSON.stringify(data), "utf8", "hex");
     encrypted += cipher.final("hex");
-    const authTag = cipher.getAuthTag();
 
-    return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
+    return `${iv.toString("hex")}:${encrypted}`;
   }
 
   /**
