@@ -190,8 +190,11 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         currentLanguage,
         changeLanguage,
         t,
+        translateText,
         isLoading,
         getCurrentLanguageInfo,
+        useGoogleTranslate,
+        toggleGoogleTranslate,
       }}
     >
       {children}
