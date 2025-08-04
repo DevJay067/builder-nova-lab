@@ -269,8 +269,8 @@ Focus on evidence-based recommendations tailored to this patient's medical profi
               Test Query Enhancement
             </CardTitle>
             <CardDescription>
-              Enter a health question to see how B-max AI enhances it with your
-              medical history.
+              Enter a health question to see how B-max AI enhances it with medical history.
+              {isAuthenticated ? " Using your real medical data." : " Demo uses sample medical profile."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
