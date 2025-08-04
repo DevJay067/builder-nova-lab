@@ -92,6 +92,7 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/database-test" element={<DatabaseTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
