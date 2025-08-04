@@ -1,18 +1,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Database, 
-  TestTube, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Database,
+  TestTube,
+  CheckCircle,
+  XCircle,
   Loader2,
   AlertTriangle,
   Settings,
   User,
-  Key
+  Key,
 } from "lucide-react";
 
 export default function DatabaseTest() {
@@ -31,7 +37,7 @@ export default function DatabaseTest() {
       setTestResults({
         success: false,
         message: "Failed to connect to test endpoint",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setIsLoading(false);
@@ -48,7 +54,7 @@ export default function DatabaseTest() {
       setConfigResults({
         success: false,
         message: "Failed to get database config",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setIsLoading(false);
@@ -63,35 +69,39 @@ export default function DatabaseTest() {
         password: "securepassword123",
         email: "test@example.com",
         firstName: "Test",
-        lastName: "User"
+        lastName: "User",
       };
 
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(testUser)
+        body: JSON.stringify(testUser),
       });
 
       const result = await response.json();
       setRegistrationTest({
         ...result,
         testUser: testUser.username,
-        httpStatus: response.status
+        httpStatus: response.status,
       });
     } catch (error) {
       setRegistrationTest({
         success: false,
         message: "Failed to test registration",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const renderTestResult = (result: any, title: string, icon: React.ReactNode) => {
+  const renderTestResult = (
+    result: any,
+    title: string,
+    icon: React.ReactNode,
+  ) => {
     if (!result) return null;
 
     return (
@@ -114,12 +124,18 @@ export default function DatabaseTest() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert className={result.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+          <Alert
+            className={
+              result.success
+                ? "border-green-200 bg-green-50"
+                : "border-red-200 bg-red-50"
+            }
+          >
             <AlertDescription>
               <strong>Message:</strong> {result.message}
             </AlertDescription>
           </Alert>
-          
+
           {result.error && (
             <Alert className="mt-2 border-red-200 bg-red-50">
               <AlertTriangle className="h-4 w-4" />
@@ -177,8 +193,12 @@ export default function DatabaseTest() {
           {result.testUser && (
             <div className="mt-4 p-3 bg-purple-50 rounded-md">
               <h4 className="font-semibold mb-2">Test Details:</h4>
-              <p><strong>Test Username:</strong> {result.testUser}</p>
-              <p><strong>HTTP Status:</strong> {result.httpStatus}</p>
+              <p>
+                <strong>Test Username:</strong> {result.testUser}
+              </p>
+              <p>
+                <strong>HTTP Status:</strong> {result.httpStatus}
+              </p>
               {result.user && (
                 <div className="mt-2">
                   <strong>Created User:</strong>
@@ -208,8 +228,8 @@ export default function DatabaseTest() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
-              onClick={checkDatabaseConfig} 
+            <Button
+              onClick={checkDatabaseConfig}
               disabled={isLoading}
               variant="outline"
               className="w-full"
@@ -221,9 +241,9 @@ export default function DatabaseTest() {
               )}
               Check DB Config
             </Button>
-            
-            <Button 
-              onClick={testDatabaseConnection} 
+
+            <Button
+              onClick={testDatabaseConnection}
               disabled={isLoading}
               variant="outline"
               className="w-full"
@@ -236,8 +256,8 @@ export default function DatabaseTest() {
               Test DB Connection
             </Button>
 
-            <Button 
-              onClick={testRegistration} 
+            <Button
+              onClick={testRegistration}
               disabled={isLoading}
               className="w-full"
             >
@@ -253,13 +273,25 @@ export default function DatabaseTest() {
       </Card>
 
       {/* Database Configuration Results */}
-      {renderTestResult(configResults, "Database Configuration", <Settings className="w-5 h-5" />)}
+      {renderTestResult(
+        configResults,
+        "Database Configuration",
+        <Settings className="w-5 h-5" />,
+      )}
 
       {/* Connection Test Results */}
-      {renderTestResult(testResults, "Connection Test", <Database className="w-5 h-5" />)}
+      {renderTestResult(
+        testResults,
+        "Connection Test",
+        <Database className="w-5 h-5" />,
+      )}
 
       {/* Registration Test Results */}
-      {renderTestResult(registrationTest, "Registration Test", <User className="w-5 h-5" />)}
+      {renderTestResult(
+        registrationTest,
+        "Registration Test",
+        <User className="w-5 h-5" />,
+      )}
 
       {/* Instructions Card */}
       <Card>
@@ -274,20 +306,34 @@ export default function DatabaseTest() {
             <div>
               <h4 className="font-semibold">To Set Up Neon Database:</h4>
               <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 mt-2">
-                <li>Go to <a href="https://console.neon.tech" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://console.neon.tech</a></li>
+                <li>
+                  Go to{" "}
+                  <a
+                    href="https://console.neon.tech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    https://console.neon.tech
+                  </a>
+                </li>
                 <li>Create a new project or select existing one</li>
                 <li>Go to "Connection string" section</li>
                 <li>Copy the connection string with password</li>
-                <li>Use DevServerControl tool to set DATABASE_URL environment variable</li>
+                <li>
+                  Use DevServerControl tool to set DATABASE_URL environment
+                  variable
+                </li>
                 <li>Restart the development server</li>
               </ol>
             </div>
-            
+
             <div className="mt-4">
               <h4 className="font-semibold">Current Status:</h4>
               <p className="text-sm text-gray-600 mt-1">
-                The system is currently running in fallback mode with in-memory storage. 
-                This means registration and login work, but data is not persisted between server restarts.
+                The system is currently running in fallback mode with in-memory
+                storage. This means registration and login work, but data is not
+                persisted between server restarts.
               </p>
             </div>
           </div>

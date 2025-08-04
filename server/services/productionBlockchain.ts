@@ -226,7 +226,10 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipher("aes-256-cbc", blockchainLayerKey);
+    const blockchainCipher = crypto.createCipher(
+      "aes-256-cbc",
+      blockchainLayerKey,
+    );
 
     let blockchainEncrypted = blockchainCipher.update(
       dataLayerData,
@@ -262,7 +265,10 @@ class ProductionBlockchainService {
         .update(combinedHash)
         .digest();
       const [blockchainIvHex, blockchainEncrypted] = encryptedData.split(":");
-      const blockchainDecipher = crypto.createDecipher("aes-256-cbc", blockchainLayerKey);
+      const blockchainDecipher = crypto.createDecipher(
+        "aes-256-cbc",
+        blockchainLayerKey,
+      );
 
       let dataLayerData = blockchainDecipher.update(
         blockchainEncrypted,
