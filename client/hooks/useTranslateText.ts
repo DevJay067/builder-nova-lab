@@ -8,42 +8,45 @@ interface UseTranslateTextOptions {
 }
 
 export function useTranslateText(
-  text: string, 
-  options: UseTranslateTextOptions = {}
+  text: string,
+  options: UseTranslateTextOptions = {},
 ) {
-  const { 
-    sourceLang = "en", 
-    cache = true, 
-    immediate = true 
-  } = options;
-  
+  const { sourceLang = "en", cache = true, immediate = true } = options;
+
   const { currentLanguage, translateText, useGoogleTranslate } = useLanguage();
   const [translatedText, setTranslatedText] = useState(text);
   const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const translate = useCallback(async (textToTranslate: string = text) => {
-    if (!useGoogleTranslate || currentLanguage === sourceLang) {
-      setTranslatedText(textToTranslate);
-      return textToTranslate;
-    }
+  const translate = useCallback(
+    async (textToTranslate: string = text) => {
+      if (!useGoogleTranslate || currentLanguage === sourceLang) {
+        setTranslatedText(textToTranslate);
+        return textToTranslate;
+      }
 
-    setIsTranslating(true);
-    setError(null);
-    
-    try {
-      const translated = await translateText(textToTranslate, currentLanguage);
-      setTranslatedText(translated);
-      return translated;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Translation failed";
-      setError(errorMessage);
-      setTranslatedText(textToTranslate);
-      return textToTranslate;
-    } finally {
-      setIsTranslating(false);
-    }
-  }, [text, currentLanguage, useGoogleTranslate, sourceLang, translateText]);
+      setIsTranslating(true);
+      setError(null);
+
+      try {
+        const translated = await translateText(
+          textToTranslate,
+          currentLanguage,
+        );
+        setTranslatedText(translated);
+        return translated;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Translation failed";
+        setError(errorMessage);
+        setTranslatedText(textToTranslate);
+        return textToTranslate;
+      } finally {
+        setIsTranslating(false);
+      }
+    },
+    [text, currentLanguage, useGoogleTranslate, sourceLang, translateText],
+  );
 
   useEffect(() => {
     if (immediate) {
@@ -56,13 +59,13 @@ export function useTranslateText(
     isTranslating,
     error,
     translate,
-    retranslate: () => translate(text)
+    retranslate: () => translate(text),
   };
 }
 
 export function useTranslateBatch(
-  texts: string[], 
-  options: UseTranslateTextOptions = {}
+  texts: string[],
+  options: UseTranslateTextOptions = {},
 ) {
   const { sourceLang = "en" } = options;
   const { currentLanguage, translateText, useGoogleTranslate } = useLanguage();
@@ -70,31 +73,35 @@ export function useTranslateBatch(
   const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const translateBatch = useCallback(async (textsToTranslate: string[] = texts) => {
-    if (!useGoogleTranslate || currentLanguage === sourceLang) {
-      setTranslatedTexts(textsToTranslate);
-      return textsToTranslate;
-    }
+  const translateBatch = useCallback(
+    async (textsToTranslate: string[] = texts) => {
+      if (!useGoogleTranslate || currentLanguage === sourceLang) {
+        setTranslatedTexts(textsToTranslate);
+        return textsToTranslate;
+      }
 
-    setIsTranslating(true);
-    setError(null);
-    
-    try {
-      const promises = textsToTranslate.map(text => 
-        translateText(text, currentLanguage)
-      );
-      const translated = await Promise.all(promises);
-      setTranslatedTexts(translated);
-      return translated;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Batch translation failed";
-      setError(errorMessage);
-      setTranslatedTexts(textsToTranslate);
-      return textsToTranslate;
-    } finally {
-      setIsTranslating(false);
-    }
-  }, [texts, currentLanguage, useGoogleTranslate, sourceLang, translateText]);
+      setIsTranslating(true);
+      setError(null);
+
+      try {
+        const promises = textsToTranslate.map((text) =>
+          translateText(text, currentLanguage),
+        );
+        const translated = await Promise.all(promises);
+        setTranslatedTexts(translated);
+        return translated;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Batch translation failed";
+        setError(errorMessage);
+        setTranslatedTexts(textsToTranslate);
+        return textsToTranslate;
+      } finally {
+        setIsTranslating(false);
+      }
+    },
+    [texts, currentLanguage, useGoogleTranslate, sourceLang, translateText],
+  );
 
   useEffect(() => {
     translateBatch();
@@ -105,7 +112,7 @@ export function useTranslateBatch(
     isTranslating,
     error,
     translateBatch,
-    retranslate: () => translateBatch(texts)
+    retranslate: () => translateBatch(texts),
   };
 }
 

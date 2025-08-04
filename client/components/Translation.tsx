@@ -9,12 +9,12 @@ interface TranslationProps {
   cache?: boolean;
 }
 
-export function Translation({ 
-  text, 
-  sourceLang = "en", 
-  className = "", 
+export function Translation({
+  text,
+  sourceLang = "en",
+  className = "",
   fallback = "",
-  cache = true 
+  cache = true,
 }: TranslationProps) {
   const { currentLanguage, translateText, useGoogleTranslate } = useLanguage();
   const [translatedText, setTranslatedText] = useState(text);
@@ -40,7 +40,14 @@ export function Translation({
     };
 
     performTranslation();
-  }, [text, currentLanguage, useGoogleTranslate, sourceLang, translateText, fallback]);
+  }, [
+    text,
+    currentLanguage,
+    useGoogleTranslate,
+    sourceLang,
+    translateText,
+    fallback,
+  ]);
 
   return (
     <span className={`${className} ${isTranslating ? "opacity-75" : ""}`}>
@@ -55,12 +62,16 @@ interface TranslateProps {
   className?: string;
 }
 
-export function Translate({ children, sourceLang = "en", className = "" }: TranslateProps) {
+export function Translate({
+  children,
+  sourceLang = "en",
+  className = "",
+}: TranslateProps) {
   return (
-    <Translation 
-      text={children} 
-      sourceLang={sourceLang} 
-      className={className} 
+    <Translation
+      text={children}
+      sourceLang={sourceLang}
+      className={className}
     />
   );
 }

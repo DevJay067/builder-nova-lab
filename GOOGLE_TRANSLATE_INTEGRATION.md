@@ -5,18 +5,21 @@ The HealthChain platform now includes comprehensive Google Translate integration
 ## Features
 
 ### 🌍 Dynamic Translation
+
 - Real-time translation using Google Translate API
 - Fallback to Microsoft Translator API
 - Browser-based translation support (no API key required)
 - Automatic language detection
 
 ### 🎛️ Translation Controls
+
 - Toggle Google Translate on/off via language selector
 - Persistent user preference storage
 - Visual indicators for translation status
 - Manual translation trigger options
 
 ### 🔧 Developer Tools
+
 - `Translation` component for wrapping text
 - `useTranslateText` hook for programmatic translation
 - `translateText` context method for dynamic translation
@@ -50,8 +53,9 @@ import { Translation } from "@/components/Translation";
 import { useTranslateText } from "@/hooks/useTranslateText";
 
 function MyComponent() {
-  const { translatedText, isTranslating, translate } = useTranslateText("Hello World");
-  
+  const { translatedText, isTranslating, translate } =
+    useTranslateText("Hello World");
+
   return (
     <div>
       <p>{translatedText}</p>
@@ -68,8 +72,9 @@ function MyComponent() {
 import { useLanguage } from "@/contexts/LanguageContext";
 
 function MyComponent() {
-  const { translateText, useGoogleTranslate, toggleGoogleTranslate } = useLanguage();
-  
+  const { translateText, useGoogleTranslate, toggleGoogleTranslate } =
+    useLanguage();
+
   const handleTranslate = async () => {
     const result = await translateText("Hello World", "es");
     console.log(result); // "Hola Mundo"
@@ -94,6 +99,7 @@ VITE_MICROSOFT_TRANSLATOR_KEY=your_microsoft_translator_key
 ### Getting API Keys
 
 #### Google Translate API
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing
 3. Enable the Google Translate API
@@ -101,6 +107,7 @@ VITE_MICROSOFT_TRANSLATOR_KEY=your_microsoft_translator_key
 5. Add the key to your environment variables
 
 #### Microsoft Translator API (Optional)
+
 1. Go to [Azure Portal](https://portal.azure.com/)
 2. Create a Translator resource
 3. Get the subscription key
@@ -109,8 +116,9 @@ VITE_MICROSOFT_TRANSLATOR_KEY=your_microsoft_translator_key
 ## Supported Languages
 
 The system supports all major languages including:
+
 - English (en)
-- Spanish (es) 
+- Spanish (es)
 - French (fr)
 - German (de)
 - Italian (it)
@@ -135,18 +143,21 @@ The translation system has multiple fallback levels:
 ## Components
 
 ### Translation Component
+
 - `<Translation text="..." />` - Simple text translation
 - Automatic language detection
 - Loading states and error handling
 - Caching for performance
 
 ### LanguageSelector Enhancement
+
 - Google Translate toggle switch
 - Visual status indicators
 - Settings persistence
 - Improved UX with notifications
 
 ### TranslationDemo Page
+
 - Comprehensive testing interface
 - Sample translations
 - Interactive translation testing
@@ -155,16 +166,19 @@ The translation system has multiple fallback levels:
 ## Performance Optimization
 
 ### Caching
+
 - Translation results are cached in memory
 - Reduces API calls for repeated translations
 - Cache can be cleared when needed
 
 ### Batch Translation
+
 - Multiple texts can be translated in a single request
 - Improved performance for large content blocks
 - Automatic batching for lists and arrays
 
 ### Loading States
+
 - Visual indicators during translation
 - Graceful degradation on API failures
 - Non-blocking UI updates
@@ -193,6 +207,7 @@ The translation system has multiple fallback levels:
 ## Testing
 
 Visit `/translation-test` to:
+
 - Test real-time translation
 - See sample translations
 - Toggle Google Translate on/off
@@ -203,16 +218,19 @@ Visit `/translation-test` to:
 ### Common Issues
 
 **Translation not working:**
+
 - Check if Google Translate is enabled in language selector
 - Verify API key configuration
 - Check browser console for errors
 
 **API limits reached:**
+
 - Google Translate API has usage limits
 - Consider upgrading your Google Cloud plan
 - Fallback systems will activate automatically
 
 **Slow translation:**
+
 - Network connection may be slow
 - API response times vary by region
 - Caching reduces subsequent translation times
@@ -220,8 +238,9 @@ Visit `/translation-test` to:
 ### Debug Mode
 
 Enable debug logging by adding to console:
+
 ```javascript
-localStorage.setItem('translation_debug', 'true');
+localStorage.setItem("translation_debug", "true");
 ```
 
 This will log translation requests and responses for debugging.

@@ -9,16 +9,22 @@ import { Translation } from "./Translation";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function TranslationDemo() {
-  const [inputText, setInputText] = useState("Hello, this is a test message for translation!");
-  const { currentLanguage, useGoogleTranslate, toggleGoogleTranslate } = useLanguage();
-  const { translatedText, isTranslating, translate } = useTranslateText(inputText, { immediate: false });
+  const [inputText, setInputText] = useState(
+    "Hello, this is a test message for translation!",
+  );
+  const { currentLanguage, useGoogleTranslate, toggleGoogleTranslate } =
+    useLanguage();
+  const { translatedText, isTranslating, translate } = useTranslateText(
+    inputText,
+    { immediate: false },
+  );
 
   const sampleTexts = [
     "Welcome to our healthcare platform",
     "Your health data is secure and private",
     "Real-time monitoring helps track your vitals",
     "AI-powered insights for better health decisions",
-    "Emergency first aid procedures available 24/7"
+    "Emergency first aid procedures available 24/7",
   ];
 
   return (
@@ -48,7 +54,8 @@ export default function TranslationDemo() {
         <CardContent className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Test Text Translation (Current Language: {currentLanguage.toUpperCase()})
+              Test Text Translation (Current Language:{" "}
+              {currentLanguage.toUpperCase()})
             </label>
             <div className="flex space-x-2">
               <Input
@@ -57,7 +64,7 @@ export default function TranslationDemo() {
                 placeholder="Enter text to translate..."
                 className="flex-1"
               />
-              <Button 
+              <Button
                 onClick={() => translate(inputText)}
                 disabled={isTranslating}
               >
@@ -72,7 +79,9 @@ export default function TranslationDemo() {
 
           {translatedText && (
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Translated Result:</div>
+              <div className="text-sm text-gray-600 mb-1">
+                Translated Result:
+              </div>
               <div className="font-medium">{translatedText}</div>
             </div>
           )}

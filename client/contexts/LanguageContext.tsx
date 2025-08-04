@@ -24,7 +24,10 @@ interface LanguageContextType {
   currentLanguage: SupportedLanguage;
   changeLanguage: (language: SupportedLanguage) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
-  translateText: (text: string, targetLang?: SupportedLanguage) => Promise<string>;
+  translateText: (
+    text: string,
+    targetLang?: SupportedLanguage,
+  ) => Promise<string>;
   isLoading: boolean;
   getCurrentLanguageInfo: () => LanguageOption;
   useGoogleTranslate: boolean;
@@ -126,7 +129,10 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     setTimeout(() => document.body.removeChild(announcer), 1000);
   };
 
-  const translateText = async (text: string, targetLang?: SupportedLanguage): Promise<string> => {
+  const translateText = async (
+    text: string,
+    targetLang?: SupportedLanguage,
+  ): Promise<string> => {
     const target = targetLang || currentLanguage;
     if (target === "en" || !useGoogleTranslate) {
       return text;
@@ -161,11 +167,15 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const toggleGoogleTranslate = () => {
     const newValue = !useGoogleTranslate;
     setUseGoogleTranslate(newValue);
-    localStorage.setItem("healthchain_use_google_translate", newValue.toString());
+    localStorage.setItem(
+      "healthchain_use_google_translate",
+      newValue.toString(),
+    );
 
     // Show notification
     const notification = document.createElement("div");
-    notification.className = "fixed top-4 right-4 bg-blue-100 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg shadow-lg z-50";
+    notification.className =
+      "fixed top-4 right-4 bg-blue-100 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg shadow-lg z-50";
     notification.textContent = newValue
       ? "Google Translate enabled - Dynamic translation active"
       : "Google Translate disabled - Using static translations";
