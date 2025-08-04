@@ -48,12 +48,13 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
+        <GoogleTranslateLoader>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/bmax" element={<BmaxAI />} />
               <Route path="/bmax-demo" element={<BmaxDemo />} />
@@ -96,9 +97,10 @@ const App = () => {
               <Route path="/database-test" element={<DatabaseTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </GoogleTranslateLoader>
       </LanguageProvider>
     </QueryClientProvider>
   );
