@@ -176,11 +176,51 @@ export function createServer() {
 
   const app = express();
 
-  // Middleware
-  app.use(cors());
+  // Enhanced middleware with error handling and limits
+  app.use(cors({
+    credentials: true,
+    origin: true
+  }));
+
   app.use(cookieParser());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+
+  // Add request size limits and timeout protection
+  app.use(express.json({
+    limit: '10mb',
+    type: 'application/json'
+  }));
+
+  app.use(express.urlencoded({
+    extended: true,
+    limit: '10mb',
+    parameterLimit: 1000
+  }));
+
+  // Request timeout middleware
+  app.use((req, res, next) => {
+    req.setTimeout(30000, () => { // 30 second timeout
+      console.warn(`⚠️ Request timeout for ${req.method} ${req.url}`);
+      if (!res.headersSent) {
+        res.status(408).json({
+          success: false,
+          message: 'Request timeout'
+        });
+      }
+    });
+    next();
+  });
+
+  // Request logging middleware
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      if (duration > 1000) { // Log slow requests
+        console.log(`🐌 Slow request: ${req.method} ${req.url} took ${duration}ms`);
+      }
+    });
+    next();
+  });
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {
