@@ -114,16 +114,22 @@ export class DatabaseHealthService {
   static async withFallback<T>(
     operation: () => Promise<T>,
     fallback: () => T,
-    maxRetries: number = 3,
+    maxRetries: number = 1,
   ): Promise<T> {
+    // If database is disabled, use fallback immediately
+    if (this.databaseDisabled || !process.env.DATABASE_URL) {
+      console.log("⚠️ Using fallback: database disabled or not configured");
+      return fallback();
+    }
+
     let lastError: Error | null = null;
 
     for (let i = 0; i < maxRetries; i++) {
       try {
         const isConnected = await this.ensureConnection();
-        if (!isConnected && i === 0) {
-          console.log("Database not connected, retrying...");
-          continue;
+        if (!isConnected) {
+          console.log("⚠️ Database not connected, using fallback");
+          return fallback();
         }
 
         return await operation();
@@ -134,6 +140,13 @@ export class DatabaseHealthService {
           error,
         );
 
+        // For auth errors, immediately use fallback
+        if (error instanceof Error && error.message.includes('password authentication failed')) {
+          console.log("⚠️ Authentication failed, using fallback mode");
+          this.databaseDisabled = true;
+          return fallback();
+        }
+
         if (i < maxRetries - 1) {
           // Wait before retry
           await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
@@ -141,7 +154,7 @@ export class DatabaseHealthService {
       }
     }
 
-    console.log("All database retries failed, using fallback");
+    console.log("⚠️ Using fallback: database retries failed");
     return fallback();
   }
 
