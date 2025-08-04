@@ -47,7 +47,8 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
+      <ThemeProvider defaultTheme="system" storageKey="healthchain-theme">
+        <LanguageProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -99,7 +100,8 @@ const App = () => {
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </LanguageProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
