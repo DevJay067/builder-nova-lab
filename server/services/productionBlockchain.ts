@@ -226,12 +226,7 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      blockchainLayerKey,
-      blockchainIv,
-    );
-    blockchainCipher.setAAD(Buffer.from("blockchain-layer"));
+    const blockchainCipher = crypto.createCipher("aes-256-cbc", blockchainLayerKey);
 
     let blockchainEncrypted = blockchainCipher.update(
       dataLayerData,
@@ -239,8 +234,7 @@ class ProductionBlockchainService {
       "hex",
     );
     blockchainEncrypted += blockchainCipher.final("hex");
-    const blockchainAuthTag = blockchainCipher.getAuthTag();
-    const finalEncryptedData = `${blockchainIv.toString("hex")}:${blockchainAuthTag.toString("hex")}:${blockchainEncrypted}`;
+    const finalEncryptedData = `${blockchainIv.toString("hex")}:${blockchainEncrypted}`;
 
     return {
       encryptedData: finalEncryptedData,
