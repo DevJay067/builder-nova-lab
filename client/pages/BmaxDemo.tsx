@@ -134,7 +134,7 @@ export default function BmaxDemo() {
     let searchContext = "";
     let enhancedQuery = query;
 
-    // Enhance based on symptoms
+    // Enhance based on symptoms and queries
     if (lowerQuery.includes("dizzy") || lowerQuery.includes("dizziness")) {
       relevantConditions = ["Type 2 Diabetes", "Hypertension"];
       enhancedQuery = `${query} - considering patient with diabetes and hypertension, check for blood sugar fluctuations and blood pressure changes`;
@@ -147,7 +147,7 @@ export default function BmaxDemo() {
       relevantConditions = ["Type 2 Diabetes"];
       enhancedQuery = `${query} - in diabetic patient, evaluate blood glucose control and medication effectiveness`;
       searchContext = "Patient has Type 2 diabetes on Metformin. Fatigue may indicate poor glucose control.";
-    } else if (lowerQuery.includes("ibuprofen") || lowerQuery.includes("medication")) {
+    } else if (lowerQuery.includes("ibuprofen") || lowerQuery.includes("nsaid")) {
       relevantConditions = ["Hypertension", "GERD"];
       enhancedQuery = `${query} - check interactions with Lisinopril and consider GERD history before NSAIDs`;
       searchContext = "Patient takes Lisinopril for hypertension and has GERD. NSAIDs may interact with BP medication and worsen GERD.";
@@ -155,6 +155,26 @@ export default function BmaxDemo() {
       relevantConditions = ["Hypertension", "GERD"];
       enhancedQuery = `${query} - differential diagnosis needed: cardiac (hypertension) vs GERD-related chest pain`;
       searchContext = "Patient has hypertension and GERD. Chest pain requires careful evaluation of both cardiac and GI causes.";
+    } else if (lowerQuery.includes("blood sugar") || lowerQuery.includes("glucose")) {
+      relevantConditions = ["Type 2 Diabetes"];
+      enhancedQuery = `${query} - for Type 2 diabetic on Metformin, assess if dosage adjustment needed and lifestyle factors`;
+      searchContext = "Patient has Type 2 diabetes managed with Metformin 500mg. Blood sugar levels guide medication and lifestyle adjustments.";
+    } else if (lowerQuery.includes("medication") || lowerQuery.includes("forgot")) {
+      relevantConditions = ["Type 2 Diabetes", "Hypertension", "GERD"];
+      enhancedQuery = `${query} - patient takes Metformin, Lisinopril, and Omeprazole - provide guidance for missed dose protocol`;
+      searchContext = "Patient's current medications: Metformin (diabetes), Lisinopril (hypertension), Omeprazole (GERD). Each has different missed dose guidelines.";
+    } else if (lowerQuery.includes("chocolate") || lowerQuery.includes("eat") || lowerQuery.includes("food")) {
+      relevantConditions = ["Type 2 Diabetes", "GERD"];
+      enhancedQuery = `${query} - diabetic dietary guidance considering GERD restrictions and blood glucose impact`;
+      searchContext = "Patient has diabetes (carb counting important) and GERD (avoid trigger foods). Need balanced approach to diet.";
+    } else if (lowerQuery.includes("monitor") || lowerQuery.includes("daily")) {
+      relevantConditions = ["Type 2 Diabetes", "Hypertension"];
+      enhancedQuery = `${query} - daily monitoring plan for diabetes and hypertension management`;
+      searchContext = "Patient should monitor blood glucose (diabetes) and blood pressure (hypertension) regularly. Medication adherence tracking also important.";
+    } else if (lowerQuery.includes("heartburn") || lowerQuery.includes("acid") || lowerQuery.includes("reflux")) {
+      relevantConditions = ["GERD"];
+      enhancedQuery = `${query} - GERD management with current Omeprazole therapy, lifestyle modifications needed`;
+      searchContext = "Patient has GERD managed with Omeprazole 20mg. May need dosage adjustment or lifestyle changes if symptoms persist.";
     } else {
       // Generic enhancement
       enhancedQuery = `${query} - personalized for patient with diabetes, hypertension, and GERD`;
