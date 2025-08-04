@@ -242,6 +242,11 @@ export class NeonDatabaseService {
    * Store key record in database
    */
   static async storeKeyRecord(keyStore: KeyStore): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, cannot store key record");
+      return;
+    }
+
     try {
       await sql`
         INSERT INTO key_store (
@@ -266,6 +271,11 @@ export class NeonDatabaseService {
    * Get key record from database
    */
   static async getKeyRecord(keyId: string): Promise<KeyStore | null> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, cannot get key record");
+      return null;
+    }
+
     try {
       const result = await sql`
         SELECT * FROM key_store WHERE key_id = ${keyId} AND status = 'active'
@@ -301,6 +311,11 @@ export class NeonDatabaseService {
   static async storeDistributionRecord(
     distribution: KeyDistribution,
   ): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, cannot store distribution record");
+      return;
+    }
+
     try {
       await sql`
         INSERT INTO key_distributions (
@@ -329,6 +344,11 @@ export class NeonDatabaseService {
    * Store audit log in database
    */
   static async storeAuditLog(auditLog: AuditLog): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, cannot store audit log");
+      return;
+    }
+
     try {
       await sql`
         INSERT INTO audit_logs (
@@ -541,6 +561,11 @@ export class NeonDatabaseService {
     metadata?: any;
     secureRecordId?: string;
   }): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, cannot store medical history");
+      return;
+    }
+
     try {
       await sql`
         INSERT INTO medical_history (
