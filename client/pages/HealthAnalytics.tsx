@@ -449,8 +449,17 @@ export default function HealthAnalytics() {
                           strokeDasharray="3 3"
                           className="opacity-30"
                         />
-                        <XAxis dataKey="date" className="text-xs" />
-                        <YAxis className="text-xs" />
+                        <XAxis
+                          dataKey="date"
+                          className="text-xs"
+                          axisLine={true}
+                          tickLine={true}
+                        />
+                        <YAxis
+                          className="text-xs"
+                          axisLine={true}
+                          tickLine={true}
+                        />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "rgba(255, 255, 255, 0.95)",
