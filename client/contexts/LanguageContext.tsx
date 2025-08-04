@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import googleTranslateService from "../services/googleTranslate";
 
 export type SupportedLanguage = "en" | "es" | "fr" | "hi" | "de" | "ja";
 
