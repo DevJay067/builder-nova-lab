@@ -83,7 +83,6 @@ const App = () => {
               />
               <Route path="/login" element={<Login />} />
               <Route path="/why-login" element={<WhyLogin />} />
-              <Route path="/auth-test" element={<AuthTest />} />
               <Route
                 path="/monitoring"
                 element={
