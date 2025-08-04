@@ -119,40 +119,14 @@ export default function HealthAnalytics() {
     }
   ];
 
-  const insights = [
-    {
-      type: "positive",
-      icon: CheckCircle,
-      title: "Improved Sleep Pattern",
-      description: "Your sleep quality has improved by 15% this month. Keep maintaining your bedtime routine.",
-      importance: "medium",
-      action: "Continue current sleep schedule"
-    },
-    {
-      type: "warning",
-      icon: AlertCircle,
-      title: "Hydration Alert",
-      description: "Water intake is below recommended levels. Consider increasing daily fluid consumption.",
-      importance: "high",
-      action: "Increase water intake to 8 glasses daily"
-    },
-    {
-      type: "positive",
-      icon: Award,
-      title: "Exercise Goal Achieved",
-      description: "You've met your weekly exercise target for 3 consecutive weeks. Excellent progress!",
-      importance: "low",
-      action: "Maintain current activity level"
-    },
-    {
-      type: "neutral",
-      icon: Target,
-      title: "Nutrition Balance",
-      description: "Your protein intake is optimal, but consider adding more fiber-rich foods to your diet.",
-      importance: "medium",
-      action: "Add 2 servings of vegetables daily"
-    }
-  ];
+  // Use insights from hook, with fallback icons
+  const enhancedInsights = insights.map(insight => ({
+    ...insight,
+    icon: insight.type === 'positive' ? CheckCircle :
+          insight.type === 'warning' ? AlertCircle :
+          insight.type === 'critical' ? AlertTriangle :
+          Info
+  }));
 
   const riskFactors = [
     {
