@@ -118,9 +118,14 @@ class UserAuthenticationService {
    * Store user in database
    */
   private static async storeUserInDatabase(user: User): Promise<void> {
+    if (!process.env.DATABASE_URL) {
+      console.log("ℹ️ Database not configured, cannot store user in database");
+      return;
+    }
+
     try {
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(process.env.DATABASE_URL);
 
       await sql`
         INSERT INTO users (
