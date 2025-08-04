@@ -366,7 +366,7 @@ export class KeyManagementService {
     const iv = Buffer.from(parts[0], "hex");
     const encrypted = parts[1];
 
-    const decipher = crypto.createDecipher("aes-256-cbc", key);
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
 
     let decrypted = decipher.update(encrypted, "hex", "utf8");
     decrypted += decipher.final("utf8");
