@@ -132,6 +132,61 @@ export default function BluetoothHealthMonitor() {
     setDevices(demoDevices);
   };
 
+  // Quick connect demo device
+  const connectDemoDevice = async (deviceId: string) => {
+    const device = devices.find(d => d.id === deviceId);
+    if (!device) return;
+
+    // Set connecting state
+    setDevices(prev =>
+      prev.map(d =>
+        d.id === deviceId
+          ? { ...d, connecting: true }
+          : d
+      )
+    );
+
+    try {
+      // Simulate connection delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Request permissions
+      const permissions = await requestPermissions(deviceId);
+      if (!permissions) {
+        throw new Error("Permissions denied");
+      }
+
+      // Set connected state
+      setDevices(prev =>
+        prev.map(d =>
+          d.id === deviceId
+            ? {
+                ...d,
+                connected: true,
+                connecting: false,
+                permissions,
+                lastSync: new Date()
+              }
+            : d
+        )
+      );
+
+      // Start data simulation
+      startDataSimulation(deviceId);
+
+      console.log(`✅ Demo device connected: ${device.name}`);
+    } catch (error) {
+      console.error("Demo connection failed:", error);
+      setDevices(prev =>
+        prev.map(d =>
+          d.id === deviceId
+            ? { ...d, connected: false, connecting: false }
+            : d
+        )
+      );
+    }
+  };
+
   const checkBluetoothSupport = async () => {
     if ("bluetooth" in navigator) {
       setBluetoothSupported(true);
