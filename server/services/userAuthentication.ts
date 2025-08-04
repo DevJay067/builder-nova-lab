@@ -328,10 +328,12 @@ class UserAuthenticationService {
       console.log("✅ Password hash generated successfully");
 
       // Generate user hash for the blockchain system
+      console.log("🔗 Generating blockchain user hash...");
       const userHash = ProductionBlockchainService.generateUserHash(
         username,
         password,
       );
+      console.log("✅ Blockchain user hash generated successfully");
 
       // Create user record
       const user: User = {
