@@ -312,7 +312,7 @@ export default function HealthAnalytics() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {insights.map((insight, index) => {
+                {enhancedInsights.map((insight, index) => {
                   const IconComponent = insight.icon;
                   return (
                     <Card key={index} className={`border-l-4 ${getInsightColor(insight.type)}`}>
@@ -322,11 +322,20 @@ export default function HealthAnalytics() {
                             <IconComponent className={`h-5 w-5 ${
                               insight.type === 'positive' ? 'text-success' :
                               insight.type === 'warning' ? 'text-warning' :
+                              insight.type === 'critical' ? 'text-destructive' :
                               'text-info'
                             }`} />
                             <div>
                               <h3 className="font-semibold">{insight.title}</h3>
                               <p className="text-sm text-muted-foreground">{insight.description}</p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {insight.category}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  Confidence: {insight.confidence}%
+                                </span>
+                              </div>
                             </div>
                           </div>
                           <Badge variant={insight.importance === 'high' ? 'destructive' : 'secondary'}>
