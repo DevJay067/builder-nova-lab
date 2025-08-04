@@ -387,11 +387,25 @@ export default function BluetoothHealthMonitor() {
 
   // Disconnect from device
   const disconnectDevice = (deviceId: string) => {
+    // Clear data simulation interval
+    const interval = dataIntervals.get(deviceId);
+    if (interval) {
+      clearInterval(interval);
+      setDataIntervals(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(deviceId);
+        return newMap;
+      });
+    }
+
+    // Update device state
     setDevices((prev) =>
       prev.map((device) =>
         device.id === deviceId ? { ...device, connected: false } : device,
       ),
     );
+
+    console.log(`📱 Device disconnected: ${deviceId}`);
   };
 
   // Helper functions
