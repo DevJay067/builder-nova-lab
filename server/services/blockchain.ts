@@ -42,7 +42,7 @@ export class BlockchainService {
   static encryptHealthData(data: any, encryptionKey: string): string {
     const iv = crypto.randomBytes(16);
     const key = crypto.createHash("sha256").update(encryptionKey).digest();
-    const cipher = crypto.createCipher("aes-256-cbc", key);
+    const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
 
     let encrypted = cipher.update(JSON.stringify(data), "utf8", "hex");
     encrypted += cipher.final("hex");
