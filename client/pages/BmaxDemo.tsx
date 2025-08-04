@@ -243,18 +243,23 @@ Focus on evidence-based recommendations tailored to this patient's medical profi
       </header>
 
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {!isAuthenticated && (
-          <Alert className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              You need to be logged in to see personalized query enhancements.
-              <Link to="/login" className="underline ml-1">
-                Log in here
-              </Link>{" "}
-              to try with your medical history.
-            </AlertDescription>
-          </Alert>
-        )}
+        <Alert className="mb-6">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            {isAuthenticated ? (
+              <>
+                <strong>Personalized Mode:</strong> Using your real medical history for query enhancement.
+              </>
+            ) : (
+              <>
+                <strong>Demo Mode:</strong> Try B-max AI with sample medical history (Diabetes, Hypertension, GERD).{" "}
+                <Link to="/login" className="underline">
+                  Login for real personalization
+                </Link>.
+              </>
+            )}
+          </AlertDescription>
+        </Alert>
 
         {/* Query Input */}
         <Card className="mb-6">
