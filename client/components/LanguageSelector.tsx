@@ -43,10 +43,16 @@ export default function LanguageSelector({
     setIsOpen(false);
 
     // Optional: Show a brief notification
+    const selectedLang = SUPPORTED_LANGUAGES.find((l) => l.code === languageCode);
     const notification = document.createElement("div");
     notification.className =
       "fixed top-4 right-4 bg-green-100 border border-green-200 text-green-800 px-4 py-2 rounded-lg shadow-lg z-50 fade-in";
-    notification.textContent = `${t("language.current")}: ${SUPPORTED_LANGUAGES.find((l) => l.code === languageCode)?.nativeName}`;
+    notification.innerHTML = `
+      <div class="font-medium">${t("language.current")}: ${selectedLang?.nativeName}</div>
+      <div class="text-sm opacity-75">
+        ${useGoogleTranslate ? "🌐 Google Translate: Active" : "📄 Static translations only"}
+      </div>
+    `;
     document.body.appendChild(notification);
 
     setTimeout(() => {
