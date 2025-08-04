@@ -191,6 +191,20 @@ export default function HealthAnalytics() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refreshData}
+                disabled={isLoading}
+                className="text-xs"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                )}
+                Refresh
+              </Button>
               <Badge variant="secondary" className="text-xs">
                 <Brain className="h-3 w-3 mr-1" />
                 AI Powered
