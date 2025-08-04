@@ -7,7 +7,7 @@
   NODE_VERSION = "18"
 
 [functions]
-  external_node_modules = ["express", "bcrypt", "@neondatabase/serverless", "serverless-http"]
+  external_node_modules = ["express", "bcryptjs", "@neondatabase/serverless", "serverless-http"]
   node_bundler = "esbuild"
   included_files = ["server/**/*"]
   
