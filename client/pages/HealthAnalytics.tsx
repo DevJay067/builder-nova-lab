@@ -228,40 +228,60 @@ export default function HealthAnalytics() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Health Score Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {healthMetrics.map((metric, index) => (
-            <Card key={index} className="relative overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
-                  <div className={`flex items-center text-xs ${
-                    metric.trend === 'up' ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {metric.trend === 'up' ? 
-                      <TrendingUp className="h-3 w-3 mr-1" /> : 
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    }
-                    {metric.change}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-end space-x-2">
-                    <span className="text-2xl font-bold">{metric.value}</span>
-                    <span className="text-sm text-muted-foreground">/{metric.target}</span>
-                  </div>
-                  <Progress 
-                    value={(metric.value / metric.target) * 100} 
-                    className="h-2"
-                  />
-                  <p className="text-xs text-muted-foreground">{metric.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {/* Error Display */}
+        {error && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription>
+              {error}. Please try refreshing the page.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading health analytics...</p>
+          </div>
+        ) : (
+          <>
+            {/* Health Score Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {healthMetrics.map((metric, index) => (
+                <Card key={index} className="relative overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
+                      <div className={`flex items-center text-xs ${
+                        metric.trend === 'up' ? 'text-success' : 'text-destructive'
+                      }`}>
+                        {metric.trend === 'up' ?
+                          <TrendingUp className="h-3 w-3 mr-1" /> :
+                          <TrendingDown className="h-3 w-3 mr-1" />
+                        }
+                        {metric.change}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-end space-x-2">
+                        <span className="text-2xl font-bold">{metric.value}</span>
+                        <span className="text-sm text-muted-foreground">/{metric.target}</span>
+                      </div>
+                      <Progress
+                        value={(metric.value / metric.target) * 100}
+                        className="h-2"
+                      />
+                      <p className="text-xs text-muted-foreground">{metric.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
 
         <Tabs defaultValue="insights" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 max-w-lg">
