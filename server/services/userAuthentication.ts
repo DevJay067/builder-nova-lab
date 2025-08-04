@@ -349,9 +349,15 @@ class UserAuthenticationService {
       };
 
       // Store user in database if available, otherwise in memory
-      if (this.useDatabase) {
-        await this.storeUserInDatabase(user);
-      } else {
+      try {
+        if (this.useDatabase) {
+          await this.storeUserInDatabase(user);
+        } else {
+          this.users.set(username, user);
+        }
+      } catch (dbError) {
+        console.warn("⚠️ Database storage failed, using in-memory fallback:", dbError);
+        this.useDatabase = false;
         this.users.set(username, user);
       }
 
