@@ -98,6 +98,7 @@ const App = () => {
               />
               <Route path="/database-test" element={<DatabaseTest />} />
               <Route path="/translation-test" element={<TranslationTest />} />
+              <Route path="/registration-test" element={<RegistrationTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
               </Routes>
