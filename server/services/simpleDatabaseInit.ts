@@ -7,6 +7,11 @@ export class SimpleDatabaseInit {
    * Initialize only the essential medical_history table
    */
   static async initializeMedicalHistoryTable(): Promise<void> {
+    if (!sql || !process.env.DATABASE_URL) {
+      console.log("ℹ️ Database not configured, skipping table creation");
+      return;
+    }
+
     try {
       console.log("🏥 Creating medical_history table...");
 
