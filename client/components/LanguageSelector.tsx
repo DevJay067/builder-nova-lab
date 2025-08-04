@@ -4,10 +4,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Languages, Check, Globe } from "lucide-react";
+import { Languages, Check, Globe, Zap } from "lucide-react";
 import {
   useLanguage,
   SUPPORTED_LANGUAGES,
@@ -196,7 +197,7 @@ export default function LanguageSelector({
 
         <div className="px-3 py-2 border-t bg-gray-50">
           <div className="text-xs text-muted-foreground text-center">
-            🌍 {SUPPORTED_LANGUAGES.length} languages supported
+            �� {SUPPORTED_LANGUAGES.length} languages supported
           </div>
         </div>
       </DropdownMenuContent>
