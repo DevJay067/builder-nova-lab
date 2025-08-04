@@ -356,7 +356,10 @@ class UserAuthenticationService {
           this.users.set(username, user);
         }
       } catch (dbError) {
-        console.warn("⚠️ Database storage failed, using in-memory fallback:", dbError);
+        console.warn(
+          "⚠️ Database storage failed, using in-memory fallback:",
+          dbError,
+        );
         this.useDatabase = false;
         this.users.set(username, user);
       }
@@ -364,20 +367,29 @@ class UserAuthenticationService {
       // Activate secure data access system for the user
       let secureAccountResult;
       try {
-        secureAccountResult = await SecureDataAccessService.createSecureUserAccount(
-          username,
-          password,
-          profile || {},
-        );
+        secureAccountResult =
+          await SecureDataAccessService.createSecureUserAccount(
+            username,
+            password,
+            profile || {},
+          );
 
         // Update user with secure system activation
         user.secureSystemActivated = secureAccountResult.dataAccessActivated;
         user.splitKeySystemActive = secureAccountResult.splitKeySystem;
 
         // Create data access record for split key system
-        await this.createDataAccessRecord(user.id, userHash, username, password);
+        await this.createDataAccessRecord(
+          user.id,
+          userHash,
+          username,
+          password,
+        );
       } catch (secureError) {
-        console.warn("⚠��� Secure system activation failed, using basic auth:", secureError);
+        console.warn(
+          "⚠��� Secure system activation failed, using basic auth:",
+          secureError,
+        );
 
         // Create basic secure account result
         secureAccountResult = {
@@ -385,7 +397,7 @@ class UserAuthenticationService {
           dataAccessActivated: false,
           splitKeySystem: false,
           sessionToken: crypto.randomBytes(32).toString("hex"),
-          message: "Basic authentication active (secure system unavailable)"
+          message: "Basic authentication active (secure system unavailable)",
         };
 
         user.secureSystemActivated = false;
@@ -702,7 +714,10 @@ class UserAuthenticationService {
         };
       }
     } catch (error) {
-      console.warn("⚠️ Secure session validation failed, using basic validation:", error);
+      console.warn(
+        "⚠️ Secure session validation failed, using basic validation:",
+        error,
+      );
 
       // Fallback: check if session token exists in any stored user
       for (const [username, user] of this.users.entries()) {
@@ -712,7 +727,7 @@ class UserAuthenticationService {
             user: {
               username: user.username,
               userHash: user.userHash,
-            }
+            },
           };
         }
       }

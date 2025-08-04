@@ -14,18 +14,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-          charts: ['recharts'],
-          three: ['three']
-        }
-      }
-    }
+          vendor: ["react", "react-dom", "react-router-dom"],
+          ui: ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu"],
+          charts: ["recharts"],
+          three: ["three"],
+        },
+      },
+    },
   },
   esbuild: {
-    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+    logOverride: { "this-is-undefined-in-esm": "silent" },
   },
   define: {
-    global: 'globalThis',
-  }
+    global: "globalThis",
+  },
 });

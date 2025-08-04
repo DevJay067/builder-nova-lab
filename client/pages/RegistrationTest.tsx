@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, UserPlus, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  UserPlus,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 
 export default function RegistrationTest() {
   const [formData, setFormData] = useState({
@@ -34,23 +40,26 @@ export default function RegistrationTest() {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setResult(data);
       } else {
         setError(data.message || "Registration failed");
       }
     } catch (err) {
-      setError("Network error: " + (err instanceof Error ? err.message : "Unknown error"));
+      setError(
+        "Network error: " +
+          (err instanceof Error ? err.message : "Unknown error"),
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -154,11 +163,7 @@ export default function RegistrationTest() {
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={loading}
-                >
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -181,7 +186,9 @@ export default function RegistrationTest() {
               <CardHeader>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-6 w-6 text-green-600" />
-                  <CardTitle className="text-green-800">Registration Successful!</CardTitle>
+                  <CardTitle className="text-green-800">
+                    Registration Successful!
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -191,14 +198,33 @@ export default function RegistrationTest() {
                     <div className="bg-white p-4 rounded border">
                       <h4 className="font-semibold mb-2">User Details:</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div><strong>ID:</strong> {result.user.id}</div>
-                        <div><strong>Username:</strong> {result.user.username}</div>
-                        <div><strong>User Hash:</strong> {result.user.userHash?.substring(0, 16)}...</div>
-                        <div><strong>Session Token:</strong> {result.user.sessionToken?.substring(0, 16)}...</div>
+                        <div>
+                          <strong>ID:</strong> {result.user.id}
+                        </div>
+                        <div>
+                          <strong>Username:</strong> {result.user.username}
+                        </div>
+                        <div>
+                          <strong>User Hash:</strong>{" "}
+                          {result.user.userHash?.substring(0, 16)}...
+                        </div>
+                        <div>
+                          <strong>Session Token:</strong>{" "}
+                          {result.user.sessionToken?.substring(0, 16)}...
+                        </div>
                       </div>
                       <div className="mt-2">
-                        <Badge variant={result.user.secureSystemActivated ? "default" : "secondary"}>
-                          Secure System: {result.user.secureSystemActivated ? "Active" : "Inactive"}
+                        <Badge
+                          variant={
+                            result.user.secureSystemActivated
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          Secure System:{" "}
+                          {result.user.secureSystemActivated
+                            ? "Active"
+                            : "Inactive"}
                         </Badge>
                       </div>
                     </div>
@@ -207,14 +233,33 @@ export default function RegistrationTest() {
                     <div className="bg-white p-4 rounded border">
                       <h4 className="font-semibold mb-2">Security Features:</h4>
                       <div className="flex gap-2 flex-wrap">
-                        <Badge variant={result.securityFeatures.splitKeySystem ? "default" : "secondary"}>
-                          Split Key System: {result.securityFeatures.splitKeySystem ? "Yes" : "No"}
+                        <Badge
+                          variant={
+                            result.securityFeatures.splitKeySystem
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          Split Key System:{" "}
+                          {result.securityFeatures.splitKeySystem
+                            ? "Yes"
+                            : "No"}
                         </Badge>
-                        <Badge variant={result.securityFeatures.blockchainStorage ? "default" : "secondary"}>
-                          Blockchain Storage: {result.securityFeatures.blockchainStorage ? "Yes" : "No"}
+                        <Badge
+                          variant={
+                            result.securityFeatures.blockchainStorage
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          Blockchain Storage:{" "}
+                          {result.securityFeatures.blockchainStorage
+                            ? "Yes"
+                            : "No"}
                         </Badge>
                         <Badge variant="outline">
-                          Encryption Layers: {result.securityFeatures.encryptionLayers}
+                          Encryption Layers:{" "}
+                          {result.securityFeatures.encryptionLayers}
                         </Badge>
                       </div>
                     </div>
@@ -229,7 +274,9 @@ export default function RegistrationTest() {
               <CardHeader>
                 <div className="flex items-center space-x-2">
                   <AlertCircle className="h-6 w-6 text-red-600" />
-                  <CardTitle className="text-red-800">Registration Failed</CardTitle>
+                  <CardTitle className="text-red-800">
+                    Registration Failed
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -248,8 +295,14 @@ export default function RegistrationTest() {
                 <li>Fill in the registration form with test data</li>
                 <li>Click "Register User" to test the registration endpoint</li>
                 <li>Check the response for success or error messages</li>
-                <li>Note that the system will work with in-memory storage if database is unavailable</li>
-                <li>Security features may be limited if external services are unavailable</li>
+                <li>
+                  Note that the system will work with in-memory storage if
+                  database is unavailable
+                </li>
+                <li>
+                  Security features may be limited if external services are
+                  unavailable
+                </li>
               </ol>
             </CardContent>
           </Card>
