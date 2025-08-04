@@ -1,8 +1,10 @@
 # Crypto Fixes Applied
 
-## Issue Resolved
+## Issues Resolved ✅
 
-Fixed `crypto2.createCipherGCM` compatibility issues across the healthcare blockchain application.
+- ✅ Fixed `crypto2.createCipherGCM` compatibility issues
+- ✅ Fixed `crypto2.createCipher is not a function` errors
+- ✅ Updated to modern Node.js crypto API (`createCipheriv`/`createDecipheriv`)
 
 ## Changes Made
 
