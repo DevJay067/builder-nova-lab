@@ -339,5 +339,45 @@ export function createServer() {
     }
   });
 
+  // Global error handling middleware (must be last)
+  app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(`❌ Express error handler caught:`, error);
+
+    // Don't send error if response already sent
+    if (res.headersSent) {
+      return next(error);
+    }
+
+    // Determine error status and message
+    const status = error.status || error.statusCode || 500;
+    const message = error.message || 'Internal server error';
+
+    res.status(status).json({
+      success: false,
+      message: status === 500 ? 'Internal server error' : message,
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    });
+  });
+
+  // Handle 404 for API routes
+  app.use('/api/*', (req: express.Request, res: express.Response) => {
+    res.status(404).json({
+      success: false,
+      message: `API endpoint not found: ${req.method} ${req.path}`
+    });
+  });
+
+  // Health check endpoint for monitoring
+  app.get('/health', (req: express.Request, res: express.Response) => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.version
+    });
+  });
+
+  console.log("✅ Express server configured with enhanced stability");
   return app;
 }
