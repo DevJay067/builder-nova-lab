@@ -51,6 +51,7 @@ import {
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import { testNeonConnection, getDatabaseConfig } from "./routes/neonTest";
 
 export function createServer() {
   // Initialize secure database on server startup
@@ -229,6 +230,10 @@ export function createServer() {
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
+
+  // Database Testing Routes
+  app.get("/api/neon/test", testNeonConnection);
+  app.get("/api/neon/config", getDatabaseConfig);
 
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {

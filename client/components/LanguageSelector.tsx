@@ -4,10 +4,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Languages, Check, Globe } from "lucide-react";
+import { Languages, Check, Globe, Zap } from "lucide-react";
 import {
   useLanguage,
   SUPPORTED_LANGUAGES,
@@ -25,8 +26,14 @@ export default function LanguageSelector({
   showFlag = true,
   className = "",
 }: LanguageSelectorProps) {
-  const { currentLanguage, changeLanguage, getCurrentLanguageInfo, t } =
-    useLanguage();
+  const {
+    currentLanguage,
+    changeLanguage,
+    getCurrentLanguageInfo,
+    t,
+    useGoogleTranslate,
+    toggleGoogleTranslate,
+  } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
   const currentLang = getCurrentLanguageInfo();
@@ -36,10 +43,18 @@ export default function LanguageSelector({
     setIsOpen(false);
 
     // Optional: Show a brief notification
+    const selectedLang = SUPPORTED_LANGUAGES.find(
+      (l) => l.code === languageCode,
+    );
     const notification = document.createElement("div");
     notification.className =
       "fixed top-4 right-4 bg-green-100 border border-green-200 text-green-800 px-4 py-2 rounded-lg shadow-lg z-50 fade-in";
-    notification.textContent = `${t("language.current")}: ${SUPPORTED_LANGUAGES.find((l) => l.code === languageCode)?.nativeName}`;
+    notification.innerHTML = `
+      <div class="font-medium">${t("language.current")}: ${selectedLang?.nativeName}</div>
+      <div class="text-sm opacity-75">
+        ${useGoogleTranslate ? "🌐 Google Translate: Active" : "📄 Static translations only"}
+      </div>
+    `;
     document.body.appendChild(notification);
 
     setTimeout(() => {
@@ -192,6 +207,30 @@ export default function LanguageSelector({
               </div>
             </DropdownMenuItem>
           ))}
+        </div>
+
+        <DropdownMenuSeparator />
+
+        <div className="px-3 py-2 bg-gray-50">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <Zap className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium">Google Translate</span>
+            </div>
+            <Button
+              variant={useGoogleTranslate ? "default" : "outline"}
+              size="sm"
+              onClick={toggleGoogleTranslate}
+              className="h-6 px-2 text-xs"
+            >
+              {useGoogleTranslate ? "On" : "Off"}
+            </Button>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {useGoogleTranslate
+              ? "Dynamic translation enabled"
+              : "Using static translations"}
+          </div>
         </div>
 
         <div className="px-3 py-2 border-t bg-gray-50">

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import googleTranslateService from "../services/googleTranslate";
 
 export type SupportedLanguage = "en" | "es" | "fr" | "hi" | "de" | "ja";
 
@@ -23,8 +24,14 @@ interface LanguageContextType {
   currentLanguage: SupportedLanguage;
   changeLanguage: (language: SupportedLanguage) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
+  translateText: (
+    text: string,
+    targetLang?: SupportedLanguage,
+  ) => Promise<string>;
   isLoading: boolean;
   getCurrentLanguageInfo: () => LanguageOption;
+  useGoogleTranslate: boolean;
+  toggleGoogleTranslate: () => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -40,6 +47,9 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     useState<SupportedLanguage>("en");
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [useGoogleTranslate, setUseGoogleTranslate] = useState(() => {
+    return localStorage.getItem("healthchain_use_google_translate") === "true";
+  });
 
   // Load translations for a specific language
   const loadTranslations = async (language: SupportedLanguage) => {
@@ -119,6 +129,23 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     setTimeout(() => document.body.removeChild(announcer), 1000);
   };
 
+  const translateText = async (
+    text: string,
+    targetLang?: SupportedLanguage,
+  ): Promise<string> => {
+    const target = targetLang || currentLanguage;
+    if (target === "en" || !useGoogleTranslate) {
+      return text;
+    }
+
+    try {
+      return await googleTranslateService.translateText(text, target, "en");
+    } catch (error) {
+      console.warn("Google Translate failed:", error);
+      return text;
+    }
+  };
+
   const t = (key: string, params?: Record<string, string | number>): string => {
     let translation = translations[key] || key;
 
@@ -132,7 +159,32 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       });
     }
 
+    // If Google Translate is enabled and we're not using English,
+    // we'll handle translation in the component level for dynamic content
     return translation;
+  };
+
+  const toggleGoogleTranslate = () => {
+    const newValue = !useGoogleTranslate;
+    setUseGoogleTranslate(newValue);
+    localStorage.setItem(
+      "healthchain_use_google_translate",
+      newValue.toString(),
+    );
+
+    // Show notification
+    const notification = document.createElement("div");
+    notification.className =
+      "fixed top-4 right-4 bg-blue-100 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg shadow-lg z-50";
+    notification.textContent = newValue
+      ? "Google Translate enabled - Dynamic translation active"
+      : "Google Translate disabled - Using static translations";
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        notification.remove();
+      }
+    }, 3000);
   };
 
   const getCurrentLanguageInfo = (): LanguageOption => {
@@ -148,8 +200,11 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         currentLanguage,
         changeLanguage,
         t,
+        translateText,
         isLoading,
         getCurrentLanguageInfo,
+        useGoogleTranslate,
+        toggleGoogleTranslate,
       }}
     >
       {children}

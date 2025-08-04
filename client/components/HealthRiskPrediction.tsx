@@ -534,9 +534,24 @@ export default function HealthRiskPrediction() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={mlPredictions}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="timestamp" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="opacity-30"
+                    horizontal={true}
+                    vertical={true}
+                  />
+                  <XAxis
+                    dataKey="timestamp"
+                    tick={{ fontSize: 11 }}
+                    axisLine={true}
+                    tickLine={true}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fontSize: 11 }}
+                    axisLine={true}
+                    tickLine={true}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",

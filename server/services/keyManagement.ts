@@ -346,33 +346,27 @@ export class KeyManagementService {
    * Encrypt system key for storage
    */
   private static encryptSystemKey(systemKey: string): string {
-    const algorithm = "aes-256-gcm";
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
 
     let encrypted = cipher.update(systemKey, "utf8", "hex");
     encrypted += cipher.final("hex");
 
-    const authTag = cipher.getAuthTag();
-
-    return iv.toString("hex") + ":" + authTag.toString("hex") + ":" + encrypted;
+    return iv.toString("hex") + ":" + encrypted;
   }
 
   /**
    * Decrypt system key from storage
    */
   private static decryptSystemKey(encryptedSystemKey: string): string {
-    const algorithm = "aes-256-gcm";
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
 
     const parts = encryptedSystemKey.split(":");
     const iv = Buffer.from(parts[0], "hex");
-    const authTag = Buffer.from(parts[1], "hex");
-    const encrypted = parts[2];
+    const encrypted = parts[1];
 
-    const decipher = crypto.createDecipherGCM(algorithm, key, iv);
-    decipher.setAuthTag(authTag);
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
 
     let decrypted = decipher.update(encrypted, "hex", "utf8");
     decrypted += decipher.final("utf8");

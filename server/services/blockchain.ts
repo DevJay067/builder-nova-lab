@@ -40,16 +40,14 @@ export class BlockchainService {
    * Encrypt sensitive health data
    */
   static encryptHealthData(data: any, encryptionKey: string): string {
-    const algorithm = "aes-256-gcm";
     const iv = crypto.randomBytes(16);
     const key = crypto.createHash("sha256").update(encryptionKey).digest();
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
 
     let encrypted = cipher.update(JSON.stringify(data), "utf8", "hex");
     encrypted += cipher.final("hex");
-    const authTag = cipher.getAuthTag();
 
-    return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
+    return `${iv.toString("hex")}:${encrypted}`;
   }
 
   /**
@@ -57,13 +55,10 @@ export class BlockchainService {
    */
   static decryptHealthData(encryptedData: string, encryptionKey: string): any {
     try {
-      const algorithm = "aes-256-gcm";
-      const [ivHex, authTagHex, encrypted] = encryptedData.split(":");
+      const [ivHex, encrypted] = encryptedData.split(":");
       const iv = Buffer.from(ivHex, "hex");
-      const authTag = Buffer.from(authTagHex, "hex");
       const key = crypto.createHash("sha256").update(encryptionKey).digest();
-      const decipher = crypto.createDecipherGCM(algorithm, key, iv);
-      decipher.setAuthTag(authTag);
+      const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
 
       let decrypted = decipher.update(encrypted, "hex", "utf8");
       decrypted += decipher.final("utf8");
