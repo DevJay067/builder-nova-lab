@@ -168,6 +168,11 @@ export class NeonDatabaseService {
    * Store encrypted health record in Neon database
    */
   static async storeSecureRecord(record: SecureDataRecord): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, cannot store secure record");
+      return;
+    }
+
     try {
       await sql`
         INSERT INTO secure_data_records (
@@ -196,6 +201,11 @@ export class NeonDatabaseService {
   static async getSecureRecord(
     recordId: string,
   ): Promise<SecureDataRecord | null> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, cannot get secure record");
+      return null;
+    }
+
     try {
       const result = await sql`
         SELECT * FROM secure_data_records WHERE id = ${recordId}
@@ -585,6 +595,17 @@ export class NeonDatabaseService {
    * Get database statistics
    */
   static async getDatabaseStats(): Promise<any> {
+    if (!sql) {
+      return {
+        secureRecords: 0,
+        activeKeys: 0,
+        auditLogs: 0,
+        scheduledRotations: 0,
+        lastUpdated: new Date().toISOString(),
+        status: "database_disabled"
+      };
+    }
+
     try {
       const [secureRecords] =
         await sql`SELECT COUNT(*) as count FROM secure_data_records`;
