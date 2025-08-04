@@ -469,6 +469,8 @@ export default function RealTimeMonitoring() {
                           <CartesianGrid
                             strokeDasharray="3 3"
                             className="opacity-30"
+                            horizontal={true}
+                            vertical={true}
                           />
                           <XAxis
                             dataKey="time"
