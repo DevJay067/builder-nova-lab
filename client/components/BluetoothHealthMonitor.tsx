@@ -236,7 +236,13 @@ export default function BluetoothHealthMonitor() {
 
   // Scan for Bluetooth health devices
   const scanForDevices = async () => {
-    if (!bluetoothSupported || !bluetoothEnabled) {
+    if (!bluetoothSupported) {
+      alert("Bluetooth is not supported in this browser. Please use Chrome or Edge.");
+      return;
+    }
+
+    if (!bluetoothEnabled) {
+      alert("Bluetooth is not enabled. Please enable Bluetooth and try again.");
       return;
     }
 
@@ -252,6 +258,7 @@ export default function BluetoothHealthMonitor() {
           { namePrefix: "Fitbit" },
           { namePrefix: "Samsung" },
           { namePrefix: "Garmin" },
+          { namePrefix: "Huawei" },
         ],
         optionalServices: [
           "heart_rate",
@@ -260,14 +267,25 @@ export default function BluetoothHealthMonitor() {
           "pulse_oximeter",
           "fitness_machine",
           "user_data",
+          "device_information",
+          "battery_service",
         ],
       });
 
       if (device) {
+        console.log(`📱 Found device: ${device.name || "Unknown"}`);
         await connectToDevice(device);
       }
-    } catch (error) {
-      console.error("Device scan failed:", error);
+    } catch (error: any) {
+      if (error.name === 'NotFoundError') {
+        console.log("No device selected or no devices found");
+      } else if (error.name === 'SecurityError') {
+        console.error("Bluetooth access denied or not available");
+        alert("Bluetooth access was denied. Please allow Bluetooth access and try again.");
+      } else {
+        console.error("Device scan failed:", error);
+        alert("Failed to scan for devices. Please try again.");
+      }
     } finally {
       setIsScanning(false);
     }
