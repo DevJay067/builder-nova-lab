@@ -29,6 +29,7 @@ import {
   Sparkles,
   Stethoscope,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Login() {
   const navigate = useNavigate();
