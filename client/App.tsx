@@ -20,7 +20,6 @@ import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
-import AuthTest from "./pages/AuthTest";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
