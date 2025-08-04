@@ -1,6 +1,5 @@
 [build]
-  command = "npm install && npm run build:client"
-  functions = "netlify/functions"
+  command = "npm install && npx vite build --mode production"
   publish = "dist/spa"
 
 [build.environment]
