@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { SecureDataAccessService } from "./secureDataAccess";
 import { ProductionBlockchainService } from "./productionBlockchain";
