@@ -324,6 +324,20 @@
     color: hsl(var(--foreground));
   }
 
+  /* Dark mode glass effect */
+  .dark .glass {
+    background: linear-gradient(
+      135deg,
+      rgba(15, 23, 42, 0.95) 0%,
+      rgba(30, 41, 59, 0.90) 100%
+    );
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    border-bottom: 2px solid rgba(148, 163, 184, 0.15);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.25),
+      0 2px 8px rgba(59, 130, 246, 0.15);
+  }
+
   .glass-dark {
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
