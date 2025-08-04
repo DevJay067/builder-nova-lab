@@ -348,7 +348,7 @@ export class KeyManagementService {
   private static encryptSystemKey(systemKey: string): string {
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher("aes-256-cbc", key);
+    const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
 
     let encrypted = cipher.update(systemKey, "utf8", "hex");
     encrypted += cipher.final("hex");
