@@ -51,6 +51,10 @@ import {
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import {
+  testNeonConnection,
+  getDatabaseConfig,
+} from "./routes/neonTest";
 
 export function createServer() {
   // Initialize secure database on server startup
