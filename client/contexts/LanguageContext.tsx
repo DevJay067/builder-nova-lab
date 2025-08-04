@@ -44,6 +44,9 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     useState<SupportedLanguage>("en");
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [useGoogleTranslate, setUseGoogleTranslate] = useState(() => {
+    return localStorage.getItem("healthchain_use_google_translate") === "true";
+  });
 
   // Load translations for a specific language
   const loadTranslations = async (language: SupportedLanguage) => {
