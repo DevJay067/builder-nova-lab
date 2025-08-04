@@ -422,126 +422,214 @@ export default function RealTimeMonitoring() {
           </Card>
         </div>
 
-        {/* Charts and Device Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Vital Signs Chart */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-colored border-border/50 fade-in fade-in-delay-4">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
-                  Live Vital Signs Trends
-                </CardTitle>
-                <CardDescription>
-                  Real-time data from connected IoT health devices
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={vitalsHistory}>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        className="opacity-30"
-                      />
-                      <XAxis dataKey="time" className="text-xs" />
-                      <YAxis className="text-xs" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255, 255, 255, 0.95)",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="heartRate"
-                        stroke="#ef4444"
-                        strokeWidth={2}
-                        dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
-                        name="Heart Rate (BPM)"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="oxygenSat"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-                        name="Oxygen Saturation (%)"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="systolic"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-                        name="Systolic BP (mmHg)"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Enhanced Monitoring Tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsTrigger value="overview" className="flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="bluetooth" className="flex items-center space-x-2">
+              <Bluetooth className="h-4 w-4" />
+              <span>Bluetooth</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+              <Brain className="h-4 w-4" />
+              <span>Analytics</span>
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Connected Devices */}
-          <div>
-            <Card className="shadow-colored border-border/50 fade-in fade-in-delay-5">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Smartphone className="w-5 h-5 mr-2 text-green-600" />
-                  Connected Devices
-                </CardTitle>
-                <CardDescription>IoT health monitoring devices</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {connectedDevices.map((device) => {
-                  const IconComponent = device.icon;
-                  return (
-                    <div
-                      key={device.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`p-2 rounded-lg ${
-                            device.status === "connected"
-                              ? "bg-green-100 text-green-600"
-                              : device.status === "syncing"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          <IconComponent className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{device.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {device.lastSync}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="text-xs text-muted-foreground">
-                          {device.battery}%
-                        </div>
-                        <Progress value={device.battery} className="w-12 h-2" />
-                        {device.status === "connected" ? (
-                          <Wifi className="w-4 h-4 text-green-600" />
-                        ) : device.status === "syncing" ? (
-                          <Zap className="w-4 h-4 text-yellow-600 animate-pulse" />
-                        ) : (
-                          <WifiOff className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Vital Signs Chart */}
+              <div className="lg:col-span-2">
+                <Card className="shadow-colored border-border/50 fade-in fade-in-delay-4">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+                      Live Vital Signs Trends
+                    </CardTitle>
+                    <CardDescription>
+                      Real-time data from connected IoT health devices
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={vitalsHistory}>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className="opacity-30"
+                          />
+                          <XAxis dataKey="time" className="text-xs" />
+                          <YAxis className="text-xs" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(255, 255, 255, 0.95)",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="heartRate"
+                            stroke="#ef4444"
+                            strokeWidth={2}
+                            dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
+                            name="Heart Rate (BPM)"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="oxygenSat"
+                            stroke="#3b82f6"
+                            strokeWidth={2}
+                            dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
+                            name="Oxygen Saturation (%)"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="systolic"
+                            stroke="#10b981"
+                            strokeWidth={2}
+                            dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                            name="Systolic BP (mmHg)"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Connected Devices */}
+              <div>
+                <Card className="shadow-colored border-border/50 fade-in fade-in-delay-5">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Smartphone className="w-5 h-5 mr-2 text-green-600" />
+                      Connected Devices
+                    </CardTitle>
+                    <CardDescription>IoT health monitoring devices</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {connectedDevices.map((device) => {
+                      const IconComponent = device.icon;
+                      return (
+                        <div
+                          key={device.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`p-2 rounded-lg ${
+                                device.status === "connected"
+                                  ? "bg-green-100 text-green-600"
+                                  : device.status === "syncing"
+                                    ? "bg-yellow-100 text-yellow-600"
+                                    : "bg-red-100 text-red-600"
+                              }`}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{device.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {device.lastSync}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="text-xs text-muted-foreground">
+                              {device.battery}%
+                            </div>
+                            <Progress value={device.battery} className="w-12 h-2" />
+                            {device.status === "connected" ? (
+                              <Wifi className="w-4 h-4 text-green-600" />
+                            ) : device.status === "syncing" ? (
+                              <Zap className="w-4 h-4 text-yellow-600 animate-pulse" />
+                            ) : (
+                              <WifiOff className="w-4 h-4 text-red-600" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Bluetooth Tab */}
+          <TabsContent value="bluetooth">
+            <BluetoothHealthMonitor />
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Brain className="w-5 h-5 mr-2 text-purple-600" />
+                    AI Health Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Alert className="border-blue-200 bg-blue-50">
+                      <CheckCircle className="h-4 w-4 text-blue-600" />
+                      <AlertDescription>
+                        <strong>Heart Rate Pattern:</strong> Your heart rate shows a healthy circadian rhythm with good variability during exercise.
+                      </AlertDescription>
+                    </Alert>
+                    <Alert className="border-green-200 bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription>
+                        <strong>Recovery Score:</strong> Excellent recovery patterns detected. Your body is adapting well to current activity levels.
+                      </AlertDescription>
+                    </Alert>
+                    <Alert className="border-yellow-200 bg-yellow-50">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <AlertDescription>
+                        <strong>Sleep Quality:</strong> Consider improving sleep consistency. Irregular sleep patterns detected in the last week.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Health Score Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {[
+                      { metric: "Cardiovascular", score: 87, color: "bg-red-500" },
+                      { metric: "Sleep Quality", score: 73, color: "bg-blue-500" },
+                      { metric: "Activity Level", score: 92, color: "bg-green-500" },
+                      { metric: "Stress Management", score: 68, color: "bg-yellow-500" }
+                    ].map((item, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>{item.metric}</span>
+                          <span className="font-semibold">{item.score}%</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                          <Progress value={item.score} className="flex-1 h-2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
