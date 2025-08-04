@@ -679,6 +679,7 @@ class UserAuthenticationService {
       console.log(`✅ Data access record created for user: ${username}`);
     } catch (error) {
       console.error("❌ Failed to create data access record:", error);
+      // Don't throw the error - this is not critical for basic registration
     }
   }
 
