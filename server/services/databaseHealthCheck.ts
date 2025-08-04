@@ -93,6 +93,11 @@ export class DatabaseHealthService {
    * Test database connection before operations
    */
   static async ensureConnection(): Promise<boolean> {
+    // If database is disabled, return false immediately
+    if (this.databaseDisabled || !process.env.DATABASE_URL) {
+      return false;
+    }
+
     const currentHealth = this.getCurrentHealth();
 
     if (currentHealth.needsCheck || !currentHealth.isHealthy) {
