@@ -1,15 +1,11 @@
 [build]
-  command = "npm run build:client"
+  command = "npm install && npm run build:client"
   functions = "netlify/functions"
   publish = "dist/spa"
 
 [build.environment]
   NODE_VERSION = "18"
-
-[functions]
-  external_node_modules = ["express", "bcryptjs", "@neondatabase/serverless", "serverless-http"]
-  node_bundler = "esbuild"
-  included_files = ["server/**/*"]
+  NPM_FLAGS = "--legacy-peer-deps"
   
 [[redirects]]
   force = true
