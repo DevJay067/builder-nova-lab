@@ -10,7 +10,7 @@
 
 ### 1. **ProductionBlockchain Service** (`server/services/productionBlockchain.ts`)
 
-- ✅ Replaced `crypto.createCipherGCM()` with `crypto.createCipher("aes-256-cbc")`
+- ✅ Replaced `crypto.createCipherGCM()` with `crypto.createCipheriv("aes-256-cbc")`
 - ✅ Simplified 3-layer encryption/decryption system
 - ✅ Updated both encryption and decryption methods
 - ✅ Removed GCM auth tags and AAD dependencies
