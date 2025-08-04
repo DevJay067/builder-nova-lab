@@ -52,11 +52,23 @@ import {
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
 
+// Global initialization flag to prevent multiple initializations
+let isSystemInitialized = false;
+let isInitializing = false;
+
 export function createServer() {
-  // Initialize secure database on server startup
+  // Initialize secure database on server startup (only once)
   const initializeSecureSystem = async () => {
+    // Prevent multiple simultaneous initializations
+    if (isSystemInitialized || isInitializing) {
+      console.log("ℹ️ System already initialized or initializing, skipping...");
+      return;
+    }
+
+    isInitializing = true;
+
     try {
-      console.log("🚀 Attempting to initialize secure healthcare system...");
+      console.log("🚀 Initializing secure healthcare system...");
 
       // Initialize production blockchain system
       try {
@@ -93,7 +105,7 @@ export function createServer() {
         console.log("✅ User authentication system initialized successfully");
       } catch (authError) {
         console.log(
-          "⚠️  User authentication system not available, continuing without it",
+          "⚠️ User authentication system not available, continuing without it",
         );
         console.log("   The system will work in demo mode");
       }
@@ -105,7 +117,7 @@ export function createServer() {
         console.log("✅ Secure healthcare database initialized successfully");
       } catch (dbError) {
         console.log(
-          "⚠️  Secure database not available, trying simple initialization...",
+          "⚠️ Secure database not available, trying simple initialization...",
         );
 
         // Try to create at least the essential medical_history table
@@ -116,19 +128,29 @@ export function createServer() {
           await SimpleDatabaseInit.initializeMedicalHistoryTable();
           console.log("✅ Essential medical history table created");
         } catch (simpleError) {
-          console.log("⚠️  System will work with in-memory storage only");
+          console.log("⚠️ System will work with in-memory storage only");
         }
       }
+
+      isSystemInitialized = true;
+      console.log("✅ System initialization completed successfully");
     } catch (error) {
       console.log(
-        "⚠️  Secure system initialization completed with some limitations",
+        "⚠️ System initialization completed with some limitations",
       );
       console.log("   The application will continue to work in demo mode");
+    } finally {
+      isInitializing = false;
     }
   };
 
-  // Run initialization (don't await to avoid blocking server start)
-  initializeSecureSystem();
+  // Run initialization only if not already done
+  if (!isSystemInitialized && !isInitializing) {
+    initializeSecureSystem().catch((error) => {
+      console.error("❌ Critical error during system initialization:", error);
+      isInitializing = false;
+    });
+  }
 
   const app = express();
 
