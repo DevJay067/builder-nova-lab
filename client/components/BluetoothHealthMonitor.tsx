@@ -743,7 +743,7 @@ export default function BluetoothHealthMonitor() {
                             ? "Connected"
                             : "Disconnected"}
                       </Badge>
-                      {device.connected && (
+                      {device.connected ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -751,7 +751,16 @@ export default function BluetoothHealthMonitor() {
                         >
                           Disconnect
                         </Button>
-                      )}
+                      ) : !device.connecting ? (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => connectDemoDevice(device.id)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Connect
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
                 );
