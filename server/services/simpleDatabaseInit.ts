@@ -22,8 +22,10 @@ export class SimpleDatabaseInit {
     try {
       console.log("🏥 Creating medical_history table...");
 
+      const sqlConnection = getSqlConnection();
+
       // Create medical_history table for health records
-      await sql`
+      await sqlConnection`
         CREATE TABLE IF NOT EXISTS medical_history (
           id VARCHAR(255) PRIMARY KEY,
           patient_id VARCHAR(255) NOT NULL,
