@@ -329,6 +329,16 @@ export function createServer() {
   app.post("/api/images/upload", uploadImages, handleImageUpload);
   app.post("/api/images/analyze", analyzeImages);
 
+  // Cloud Storage API Routes
+  app.post("/api/cloud/store", storeCloudHealthRecord);
+  app.get("/api/cloud/records", getCloudHealthRecords);
+  app.post("/api/cloud/sync", syncToCloud);
+  app.get("/api/cloud/stats", getCloudStorageStats);
+  app.delete("/api/cloud/records/:recordId", deleteCloudHealthRecord);
+  app.get("/api/cloud/status", getCloudServiceStatus);
+  app.get("/api/cloud/health", cloudHealthCheck);
+  app.post("/api/cloud/setup", setupUserCloudStorage);
+
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
