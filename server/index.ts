@@ -57,6 +57,17 @@ import {
   handleImageUpload,
   analyzeImages,
 } from "./routes/imageUpload";
+import {
+  storeCloudHealthRecord,
+  getCloudHealthRecords,
+  syncToCloud,
+  getCloudStorageStats,
+  deleteCloudHealthRecord,
+  getCloudServiceStatus,
+  cloudHealthCheck,
+  setupUserCloudStorage,
+  requireCloudAuth,
+} from "./routes/cloudStorage";
 
 export function createServer() {
   // Setup environment first
@@ -117,7 +128,7 @@ export function createServer() {
           await UserAuthenticationService.initialize();
           console.log("✅ Fallback authentication system initialized");
         } catch (fallbackError) {
-          console.log("���️  All authentication systems failed, continuing in demo mode");
+          console.log("⚠️  All authentication systems failed, continuing in demo mode");
         }
       }
 
