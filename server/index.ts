@@ -254,7 +254,7 @@ export function createServer() {
   app.get("/api/demo/keys/info", getDemoKeysInfo);
   app.post("/api/demo/initialize", initializeDemoData);
 
-  // Simple test auth endpoint
+  // Auth health check endpoint
   app.get("/api/auth/test", (req, res) => {
     res.json({
       success: true,
@@ -262,6 +262,8 @@ export function createServer() {
       timestamp: new Date().toISOString(),
     });
   });
+
+  app.get("/api/auth/health", healthCheck);
 
   // Authentication API Routes
   app.post("/api/auth/register", registerUser);
