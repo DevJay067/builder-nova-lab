@@ -754,10 +754,10 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
             </div>
             <CardDescription className="text-sm leading-relaxed">
               {isLoadingContext
-                ? "Loading your medical context..."
+                ? "Loading your medical context from health records..."
                 : personalizedContext?.hasData
-                  ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
-                  : "AI is ready to help with general health questions. Add medical history for personalized recommendations."}
+                  ? `AI is personalized with your complete health history: ${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications${personalizedContext.recentSymptoms?.length ? `, ${personalizedContext.recentSymptoms.length} recent symptoms` : ''}. Your health records are analyzed for personalized recommendations.`
+                  : "AI is ready to help with general health questions. Add health records in Health History for personalized recommendations."}
             </CardDescription>
           </CardHeader>
 
