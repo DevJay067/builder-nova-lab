@@ -5,7 +5,19 @@ import { neon } from "@neondatabase/serverless";
  * Monitors database connectivity and provides fallback mechanisms
  */
 
-const sql = neon(process.env.DATABASE_URL || "");
+// Lazy initialization of database connection to handle missing env vars
+let sql: any = null;
+
+function getSqlConnection() {
+  if (!sql) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl || dbUrl.includes('dummy') || dbUrl === '') {
+      throw new Error('No valid database connection available');
+    }
+    sql = neon(dbUrl);
+  }
+  return sql;
+}
 
 export class DatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
