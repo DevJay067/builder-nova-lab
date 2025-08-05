@@ -51,6 +51,11 @@ import {
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import {
+  uploadImages,
+  handleImageUpload,
+  analyzeImages,
+} from "./routes/imageUpload";
 
 export function createServer() {
   // Initialize secure database on server startup
