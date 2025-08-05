@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { margin: 10px; padding: 10px; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .error { background: #ffeeee; border: 1px solid red; }
+        .success { background: #eeffee; border: 1px solid green; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    
+    <h2>Test Registration</h2>
+    <button onclick="testRegister()">Test Register</button>
+    <div id="registerResult" class="result"></div>
+    
+    <h2>Test Login</h2>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="loginResult" class="result"></div>
+    
+    <h2>Test Ping</h2>
+    <button onclick="testPing()">Test Ping</button>
+    <div id="pingResult" class="result"></div>
+
+    <script>
+        async function testPing() {
+            const resultDiv = document.getElementById('pingResult');
+            try {
+                const response = await fetch('/api/ping');
+                const result = await response.json();
+                resultDiv.innerHTML = `<strong>Ping Result:</strong><br><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>Ping Error:</strong><br>${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testRegister() {
+            const resultDiv = document.getElementById('registerResult');
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'testuser123',
+                        password: 'testpass123',
+                        email: 'test@example.com',
+                        firstName: 'Test',
+                        lastName: 'User'
+                    })
+                });
+                
+                const result = await response.json();
+                resultDiv.innerHTML = `<strong>Register Result (${response.status}):</strong><br><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                resultDiv.className = result.success ? 'result success' : 'result error';
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>Register Error:</strong><br>${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'testuser123',
+                        password: 'testpass123'
+                    })
+                });
+                
+                const result = await response.json();
+                resultDiv.innerHTML = `<strong>Login Result (${response.status}):</strong><br><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                resultDiv.className = result.success ? 'result success' : 'result error';
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>Login Error:</strong><br>${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>
