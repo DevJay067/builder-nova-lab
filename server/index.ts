@@ -71,13 +71,18 @@ import {
 
 export function createServer() {
   // Setup environment first
-  try {
-    const { EnvironmentSetup } = await import("./setup-env");
-    EnvironmentSetup.setup();
-  } catch (setupError) {
-    console.warn("⚠️ Environment setup failed:", setupError);
-    // Continue without environment setup
-  }
+  const setupEnvironment = async () => {
+    try {
+      const { EnvironmentSetup } = await import("./setup-env");
+      EnvironmentSetup.setup();
+    } catch (setupError) {
+      console.warn("⚠️ Environment setup failed:", setupError);
+      // Continue without environment setup
+    }
+  };
+
+  // Run environment setup without blocking
+  setupEnvironment();
 
   // Initialize secure database on server startup
   const initializeSecureSystem = async () => {
