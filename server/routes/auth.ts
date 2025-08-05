@@ -9,6 +9,7 @@ export const registerUser: RequestHandler = async (req, res) => {
     console.log("🔍 Registration request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
     const { username, password, email, firstName, lastName } = req.body;
