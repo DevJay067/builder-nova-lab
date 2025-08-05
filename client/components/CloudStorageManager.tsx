@@ -329,7 +329,7 @@ export default function CloudStorageManager() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Sync className="h-5 w-5 mr-2" />
+                <RefreshCw className="h-5 w-5 mr-2" />
                 Cloud Synchronization
               </CardTitle>
               <CardDescription>
