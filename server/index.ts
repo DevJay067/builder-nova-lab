@@ -171,25 +171,44 @@ export function createServer() {
   // Debug endpoint to check auth system status
   app.get("/api/debug/auth-status", async (req, res) => {
     try {
-      const { UserAuthenticationService } = await import(
-        "./services/userAuthentication"
+      const { EnhancedUserAuthenticationService } = await import(
+        "./services/enhancedUserAuthentication"
       );
 
-      const stats = UserAuthenticationService.getSystemStats();
+      const stats = EnhancedUserAuthenticationService.getSystemStats();
 
       res.json({
         success: true,
-        authSystemStatus: "initialized",
+        authSystemStatus: "enhanced-initialized",
+        systemType: "SQLite + Enhanced Authentication",
         systemStats: stats,
         timestamp: new Date().toISOString(),
       });
-    } catch (error) {
-      res.json({
-        success: false,
-        authSystemStatus: "error",
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      });
+    } catch (enhancedError) {
+      // Fallback to basic auth
+      try {
+        const { UserAuthenticationService } = await import(
+          "./services/userAuthentication"
+        );
+
+        const stats = UserAuthenticationService.getSystemStats();
+
+        res.json({
+          success: true,
+          authSystemStatus: "basic-initialized",
+          systemType: "Basic Authentication (Fallback)",
+          systemStats: stats,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (basicError) {
+        res.json({
+          success: false,
+          authSystemStatus: "error",
+          error: basicError instanceof Error ? basicError.message : "Unknown error",
+          enhancedError: enhancedError instanceof Error ? enhancedError.message : "Enhanced auth failed",
+          timestamp: new Date().toISOString(),
+        });
+      }
     }
   });
 
