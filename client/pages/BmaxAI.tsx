@@ -878,7 +878,7 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
                       "I'm feeling dizzy"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Gets diabetes-specific advice
+                      Gets diabetes-specific advice from your records
                     </div>
                   </div>
                 )}
@@ -890,17 +890,27 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
                       "I have a headache"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Considers blood pressure
+                      Considers your blood pressure history
                     </div>
                   </div>
                 )}
                 {personalizedContext.currentMedications.length > 0 && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
-                      "Can I take [medication]?"
+                      "Can I take ibuprofen?"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Checks interactions
+                      Checks against your {personalizedContext.currentMedications.length} medications
+                    </div>
+                  </div>
+                )}
+                {personalizedContext.recentSymptoms && personalizedContext.recentSymptoms.length > 0 && (
+                  <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
+                    <div className="font-medium text-primary mb-1">
+                      "Why am I having {personalizedContext.recentSymptoms[0]}?"
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      References your recent symptom history
                     </div>
                   </div>
                 )}
@@ -909,7 +919,15 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
                     "What should I monitor?"
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Personalized recommendations
+                    Based on your {personalizedContext.summary.totalConditions} conditions
+                  </div>
+                </div>
+                <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
+                  <div className="font-medium text-primary mb-1">
+                    "Review my recent visits"
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Analyzes patterns in your health records
                   </div>
                 </div>
               </div>
