@@ -301,31 +301,56 @@ export default function HealthHistory() {
         return;
       }
 
-      const response = await fetch("/api/auth/data-access", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
-          "x-session-token": sessionToken,
-        },
-        body: JSON.stringify({
-          type: newRecord.type,
-          data: {
-            title: newRecord.title,
-            description: newRecord.description,
-            date: newRecord.date,
-            doctor: newRecord.doctor,
-            metadata: newRecord.metadata,
+      // Try cloud storage first, fallback to local
+      let response;
+      try {
+        response = await fetch("/api/cloud/store", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionToken}`,
+            "x-session-token": sessionToken,
           },
-        }),
-      });
+          body: JSON.stringify({
+            type: newRecord.type,
+            data: {
+              title: newRecord.title,
+              description: newRecord.description,
+              date: newRecord.date,
+              doctor: newRecord.doctor,
+              metadata: newRecord.metadata,
+            },
+          }),
+        });
+      } catch (cloudError) {
+        console.log("Cloud storage failed, using local storage");
+        response = await fetch("/api/auth/data-access", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionToken}`,
+            "x-session-token": sessionToken,
+          },
+          body: JSON.stringify({
+            type: newRecord.type,
+            data: {
+              title: newRecord.title,
+              description: newRecord.description,
+              date: newRecord.date,
+              doctor: newRecord.doctor,
+              metadata: newRecord.metadata,
+            },
+          }),
+        });
+      }
 
       const result = await response.json();
 
       if (result.success) {
+        const storageType = result.cloudInfo?.cloudStored ? "encrypted cloud storage" : "secure local storage";
         setMessage({
           type: "success",
-          text: "Health record saved securely to blockchain!",
+          text: `Health record saved to ${storageType}!`,
         });
         setIsDialogOpen(false);
         setNewRecord({
