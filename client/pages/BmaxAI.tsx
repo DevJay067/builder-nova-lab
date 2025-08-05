@@ -145,17 +145,54 @@ export default function BmaxAI() {
 
   const loadPersonalizedContext = async (sessionToken: string) => {
     try {
-      const response = await fetch("/api/medical-context/personalized", {
+      // First try to get data from the medical context API
+      const contextResponse = await fetch("/api/medical-context/personalized", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setPersonalizedContext(data);
+      let contextData = null;
+      if (contextResponse.ok) {
+        contextData = await contextResponse.json();
       }
+
+      // Also get real health records from cloud/local storage for more comprehensive personalization
+      const healthRecordsResponse = await fetch("/api/cloud/records", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      let healthRecords = [];
+      if (healthRecordsResponse.ok) {
+        const healthData = await healthRecordsResponse.json();
+        if (healthData.success && healthData.records) {
+          healthRecords = healthData.records;
+        }
+      } else {
+        // Fallback to local health records if cloud is not available
+        const localResponse = await fetch("/api/auth/data-access/records", {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            "x-session-token": sessionToken,
+          },
+        });
+
+        if (localResponse.ok) {
+          const localData = await localResponse.json();
+          if (localData.success && localData.records) {
+            healthRecords = localData.records;
+          }
+        }
+      }
+
+      // Enhance personalized context with real health records
+      const enhancedContext = await createEnhancedPersonalizedContext(contextData, healthRecords);
+      setPersonalizedContext(enhancedContext);
+
     } catch (error) {
       console.error("Error loading personalized context:", error);
     }
