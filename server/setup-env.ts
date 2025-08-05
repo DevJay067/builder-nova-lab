@@ -83,7 +83,6 @@ export class EnvironmentSetup {
   }
 
   private static generateSecureSecret(): string {
-    const crypto = require('crypto');
     return crypto.randomBytes(32).toString('hex');
   }
 
