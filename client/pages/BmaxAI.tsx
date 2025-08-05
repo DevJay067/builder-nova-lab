@@ -198,6 +198,168 @@ export default function BmaxAI() {
     }
   };
 
+  const createEnhancedPersonalizedContext = async (contextData: any, healthRecords: any[]): Promise<PersonalizedContext> => {
+    // Extract medical information from health records
+    const extractedConditions: MedicalCondition[] = [];
+    const extractedMedications: string[] = [];
+    const extractedSymptoms: string[] = [];
+    const recentRecords: string[] = [];
+
+    // Analyze health records to extract medical data
+    healthRecords.forEach(record => {
+      if (record.recordType) {
+        // Extract diagnoses from descriptions
+        const description = record.description?.toLowerCase() || '';
+        const title = record.title?.toLowerCase() || '';
+
+        // Common medical conditions detection
+        const conditions = [
+          { name: 'Diabetes', keywords: ['diabetes', 'diabetic', 'blood sugar', 'glucose'] },
+          { name: 'Hypertension', keywords: ['hypertension', 'high blood pressure', 'bp'] },
+          { name: 'Asthma', keywords: ['asthma', 'inhaler', 'breathing difficulty'] },
+          { name: 'Heart Disease', keywords: ['heart disease', 'cardiac', 'chest pain'] },
+          { name: 'Arthritis', keywords: ['arthritis', 'joint pain', 'rheumatic'] },
+          { name: 'Depression', keywords: ['depression', 'anxiety', 'mental health'] },
+          { name: 'Allergies', keywords: ['allergy', 'allergic reaction', 'allergen'] }
+        ];
+
+        conditions.forEach(condition => {
+          if (condition.keywords.some(keyword =>
+            description.includes(keyword) || title.includes(keyword)
+          )) {
+            if (!extractedConditions.find(c => c.name === condition.name)) {
+              extractedConditions.push({
+                name: condition.name,
+                type: ['diabetes', 'hypertension', 'heart disease'].includes(condition.name.toLowerCase()) ? 'chronic' : 'condition',
+                severity: 'moderate',
+                lastUpdated: record.date || record.createdAt
+              });
+            }
+          }
+        });
+
+        // Extract medications
+        const medications = [
+          'metformin', 'insulin', 'lisinopril', 'amlodipine', 'atorvastatin',
+          'metoprolol', 'omeprazole', 'aspirin', 'ibuprofen', 'acetaminophen'
+        ];
+
+        medications.forEach(med => {
+          if ((description.includes(med) || title.includes(med)) &&
+              !extractedMedications.includes(med)) {
+            extractedMedications.push(med);
+          }
+        });
+
+        // Extract recent symptoms and issues
+        const symptoms = [
+          'headache', 'dizziness', 'fatigue', 'chest pain', 'shortness of breath',
+          'nausea', 'fever', 'cough', 'abdominal pain', 'back pain'
+        ];
+
+        symptoms.forEach(symptom => {
+          if ((description.includes(symptom) || title.includes(symptom)) &&
+              !extractedSymptoms.includes(symptom)) {
+            extractedSymptoms.push(symptom);
+          }
+        });
+
+        // Add recent record titles for context
+        const recordDate = new Date(record.date || record.createdAt);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        if (recordDate > thirtyDaysAgo) {
+          recentRecords.push(record.title);
+        }
+      }
+    });
+
+    // Create enhanced context
+    const enhancedContext: PersonalizedContext = {
+      success: true,
+      hasData: healthRecords.length > 0 || extractedConditions.length > 0,
+      patientId: "enhanced_user_profile",
+      context: `Enhanced medical context from ${healthRecords.length} health records`,
+      summary: {
+        totalConditions: extractedConditions.length,
+        chronicConditions: extractedConditions.filter(c => c.type === 'chronic').length,
+        currentMedications: extractedMedications.length,
+        knownAllergies: extractedConditions.filter(c => c.name === 'Allergies').length,
+        recentSymptoms: extractedSymptoms.length,
+        lastUpdate: healthRecords.length > 0 ?
+          Math.max(...healthRecords.map(r => new Date(r.date || r.createdAt).getTime())).toString() :
+          new Date().toISOString()
+      },
+      medicalConditions: extractedConditions,
+      currentMedications: extractedMedications,
+      allergies: extractedConditions.filter(c => c.name === 'Allergies').map(c => c.name),
+      recentSymptoms: extractedSymptoms,
+      searchEnhancers: [
+        ...extractedConditions.map(c => c.name),
+        ...extractedMedications,
+        ...extractedSymptoms
+      ],
+      aiInstructions: {
+        personalizationEnabled: true,
+        considerConditions: extractedConditions.map(c => c.name),
+        medicationInteractions: extractedMedications,
+        allergyWarnings: extractedConditions.filter(c => c.name === 'Allergies').map(c => c.name),
+        contextualPrompt: createContextualPromptFromRecords(extractedConditions, extractedMedications, extractedSymptoms, recentRecords)
+      }
+    };
+
+    // Merge with existing context data if available
+    if (contextData?.hasData) {
+      enhancedContext.medicalConditions = [
+        ...enhancedContext.medicalConditions,
+        ...(contextData.medicalConditions || [])
+      ];
+      enhancedContext.currentMedications = [
+        ...new Set([...enhancedContext.currentMedications, ...(contextData.currentMedications || [])])
+      ];
+      enhancedContext.allergies = [
+        ...new Set([...enhancedContext.allergies, ...(contextData.allergies || [])])
+      ];
+    }
+
+    return enhancedContext;
+  };
+
+  const createContextualPromptFromRecords = (
+    conditions: MedicalCondition[],
+    medications: string[],
+    symptoms: string[],
+    recentRecords: string[]
+  ): string => {
+    const conditionsText = conditions.map(c => c.name).join(", ");
+    const medicationsText = medications.join(", ");
+    const symptomsText = symptoms.join(", ");
+    const recentText = recentRecords.slice(0, 5).join(", ");
+
+    return `COMPREHENSIVE PATIENT MEDICAL PROFILE:
+
+CURRENT CONDITIONS: ${conditionsText || "None documented"}
+CURRENT MEDICATIONS: ${medicationsText || "None documented"}
+RECENT SYMPTOMS: ${symptomsText || "None documented"}
+RECENT MEDICAL VISITS: ${recentText || "None recent"}
+
+PERSONALIZATION INSTRUCTIONS:
+- Always reference the patient's specific conditions when providing advice
+- Consider medication interactions with current prescriptions: ${medicationsText}
+- Be specific about how recommendations relate to their documented conditions
+- Reference their recent medical history when relevant
+- Provide condition-specific monitoring and care recommendations
+- Alert about symptoms that may indicate complications of their existing conditions
+
+EXAMPLES OF PERSONALIZED RESPONSES:
+- If patient asks about dizziness and has diabetes: Address diabetic-related causes (blood sugar, neuropathy, medication side effects)
+- If patient has hypertension and asks about headaches: Consider blood pressure spikes, medication timing
+- If patient takes multiple medications: Always check for interactions with any new recommendations
+
+Provide targeted, condition-specific advice rather than general health information.`;
+  };
+
   const loadHealthInsights = async (sessionToken: string) => {
     try {
       const response = await fetch("/api/medical-context/insights", {
