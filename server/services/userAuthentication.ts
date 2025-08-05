@@ -208,8 +208,13 @@ class UserAuthenticationService {
    */
   private static async updateUserLastLogin(username: string): Promise<void> {
     try {
+      const dbUrl = process.env.DATABASE_URL;
+      if (!dbUrl || dbUrl.includes('dummy') || dbUrl === '') {
+        throw new Error('No valid database connection available');
+      }
+
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(dbUrl);
 
       await sql`
         UPDATE users
