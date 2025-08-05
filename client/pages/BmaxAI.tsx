@@ -145,20 +145,296 @@ export default function BmaxAI() {
 
   const loadPersonalizedContext = async (sessionToken: string) => {
     try {
-      const response = await fetch("/api/medical-context/personalized", {
+      // First try to get data from the medical context API
+      const contextResponse = await fetch("/api/medical-context/personalized", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setPersonalizedContext(data);
+      let contextData = null;
+      if (contextResponse.ok) {
+        contextData = await contextResponse.json();
       }
+
+      // Also get real health records from cloud/local storage for more comprehensive personalization
+      const healthRecordsResponse = await fetch("/api/cloud/records", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      let healthRecords = [];
+      if (healthRecordsResponse.ok) {
+        const healthData = await healthRecordsResponse.json();
+        if (healthData.success && healthData.records) {
+          healthRecords = healthData.records;
+        }
+      } else {
+        // Fallback to local health records if cloud is not available
+        const localResponse = await fetch("/api/auth/data-access/records", {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            "x-session-token": sessionToken,
+          },
+        });
+
+        if (localResponse.ok) {
+          const localData = await localResponse.json();
+          if (localData.success && localData.records) {
+            healthRecords = localData.records;
+          }
+        }
+      }
+
+      // Enhance personalized context with real health records
+      const enhancedContext = await createEnhancedPersonalizedContext(
+        contextData,
+        healthRecords,
+      );
+      setPersonalizedContext(enhancedContext);
     } catch (error) {
       console.error("Error loading personalized context:", error);
     }
+  };
+
+  const createEnhancedPersonalizedContext = async (
+    contextData: any,
+    healthRecords: any[],
+  ): Promise<PersonalizedContext> => {
+    // Extract medical information from health records
+    const extractedConditions: MedicalCondition[] = [];
+    const extractedMedications: string[] = [];
+    const extractedSymptoms: string[] = [];
+    const recentRecords: string[] = [];
+
+    // Analyze health records to extract medical data
+    healthRecords.forEach((record) => {
+      if (record.recordType) {
+        // Extract diagnoses from descriptions
+        const description = record.description?.toLowerCase() || "";
+        const title = record.title?.toLowerCase() || "";
+
+        // Common medical conditions detection
+        const conditions = [
+          {
+            name: "Diabetes",
+            keywords: ["diabetes", "diabetic", "blood sugar", "glucose"],
+          },
+          {
+            name: "Hypertension",
+            keywords: ["hypertension", "high blood pressure", "bp"],
+          },
+          {
+            name: "Asthma",
+            keywords: ["asthma", "inhaler", "breathing difficulty"],
+          },
+          {
+            name: "Heart Disease",
+            keywords: ["heart disease", "cardiac", "chest pain"],
+          },
+          {
+            name: "Arthritis",
+            keywords: ["arthritis", "joint pain", "rheumatic"],
+          },
+          {
+            name: "Depression",
+            keywords: ["depression", "anxiety", "mental health"],
+          },
+          {
+            name: "Allergies",
+            keywords: ["allergy", "allergic reaction", "allergen"],
+          },
+        ];
+
+        conditions.forEach((condition) => {
+          if (
+            condition.keywords.some(
+              (keyword) =>
+                description.includes(keyword) || title.includes(keyword),
+            )
+          ) {
+            if (!extractedConditions.find((c) => c.name === condition.name)) {
+              extractedConditions.push({
+                name: condition.name,
+                type: ["diabetes", "hypertension", "heart disease"].includes(
+                  condition.name.toLowerCase(),
+                )
+                  ? "chronic"
+                  : "condition",
+                severity: "moderate",
+                lastUpdated: record.date || record.createdAt,
+              });
+            }
+          }
+        });
+
+        // Extract medications
+        const medications = [
+          "metformin",
+          "insulin",
+          "lisinopril",
+          "amlodipine",
+          "atorvastatin",
+          "metoprolol",
+          "omeprazole",
+          "aspirin",
+          "ibuprofen",
+          "acetaminophen",
+        ];
+
+        medications.forEach((med) => {
+          if (
+            (description.includes(med) || title.includes(med)) &&
+            !extractedMedications.includes(med)
+          ) {
+            extractedMedications.push(med);
+          }
+        });
+
+        // Extract recent symptoms and issues
+        const symptoms = [
+          "headache",
+          "dizziness",
+          "fatigue",
+          "chest pain",
+          "shortness of breath",
+          "nausea",
+          "fever",
+          "cough",
+          "abdominal pain",
+          "back pain",
+        ];
+
+        symptoms.forEach((symptom) => {
+          if (
+            (description.includes(symptom) || title.includes(symptom)) &&
+            !extractedSymptoms.includes(symptom)
+          ) {
+            extractedSymptoms.push(symptom);
+          }
+        });
+
+        // Add recent record titles for context
+        const recordDate = new Date(record.date || record.createdAt);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        if (recordDate > thirtyDaysAgo) {
+          recentRecords.push(record.title);
+        }
+      }
+    });
+
+    // Create enhanced context
+    const enhancedContext: PersonalizedContext = {
+      success: true,
+      hasData: healthRecords.length > 0 || extractedConditions.length > 0,
+      patientId: "enhanced_user_profile",
+      context: `Enhanced medical context from ${healthRecords.length} health records`,
+      summary: {
+        totalConditions: extractedConditions.length,
+        chronicConditions: extractedConditions.filter(
+          (c) => c.type === "chronic",
+        ).length,
+        currentMedications: extractedMedications.length,
+        knownAllergies: extractedConditions.filter(
+          (c) => c.name === "Allergies",
+        ).length,
+        recentSymptoms: extractedSymptoms.length,
+        lastUpdate:
+          healthRecords.length > 0
+            ? Math.max(
+                ...healthRecords.map((r) =>
+                  new Date(r.date || r.createdAt).getTime(),
+                ),
+              ).toString()
+            : new Date().toISOString(),
+      },
+      medicalConditions: extractedConditions,
+      currentMedications: extractedMedications,
+      allergies: extractedConditions
+        .filter((c) => c.name === "Allergies")
+        .map((c) => c.name),
+      recentSymptoms: extractedSymptoms,
+      searchEnhancers: [
+        ...extractedConditions.map((c) => c.name),
+        ...extractedMedications,
+        ...extractedSymptoms,
+      ],
+      aiInstructions: {
+        personalizationEnabled: true,
+        considerConditions: extractedConditions.map((c) => c.name),
+        medicationInteractions: extractedMedications,
+        allergyWarnings: extractedConditions
+          .filter((c) => c.name === "Allergies")
+          .map((c) => c.name),
+        contextualPrompt: createContextualPromptFromRecords(
+          extractedConditions,
+          extractedMedications,
+          extractedSymptoms,
+          recentRecords,
+        ),
+      },
+    };
+
+    // Merge with existing context data if available
+    if (contextData?.hasData) {
+      enhancedContext.medicalConditions = [
+        ...enhancedContext.medicalConditions,
+        ...(contextData.medicalConditions || []),
+      ];
+      enhancedContext.currentMedications = [
+        ...new Set([
+          ...enhancedContext.currentMedications,
+          ...(contextData.currentMedications || []),
+        ]),
+      ];
+      enhancedContext.allergies = [
+        ...new Set([
+          ...enhancedContext.allergies,
+          ...(contextData.allergies || []),
+        ]),
+      ];
+    }
+
+    return enhancedContext;
+  };
+
+  const createContextualPromptFromRecords = (
+    conditions: MedicalCondition[],
+    medications: string[],
+    symptoms: string[],
+    recentRecords: string[],
+  ): string => {
+    const conditionsText = conditions.map((c) => c.name).join(", ");
+    const medicationsText = medications.join(", ");
+    const symptomsText = symptoms.join(", ");
+    const recentText = recentRecords.slice(0, 5).join(", ");
+
+    return `COMPREHENSIVE PATIENT MEDICAL PROFILE:
+
+CURRENT CONDITIONS: ${conditionsText || "None documented"}
+CURRENT MEDICATIONS: ${medicationsText || "None documented"}
+RECENT SYMPTOMS: ${symptomsText || "None documented"}
+RECENT MEDICAL VISITS: ${recentText || "None recent"}
+
+PERSONALIZATION INSTRUCTIONS:
+- Always reference the patient's specific conditions when providing advice
+- Consider medication interactions with current prescriptions: ${medicationsText}
+- Be specific about how recommendations relate to their documented conditions
+- Reference their recent medical history when relevant
+- Provide condition-specific monitoring and care recommendations
+- Alert about symptoms that may indicate complications of their existing conditions
+
+EXAMPLES OF PERSONALIZED RESPONSES:
+- If patient asks about dizziness and has diabetes: Address diabetic-related causes (blood sugar, neuropathy, medication side effects)
+- If patient has hypertension and asks about headaches: Consider blood pressure spikes, medication timing
+- If patient takes multiple medications: Always check for interactions with any new recommendations
+
+Provide targeted, condition-specific advice rather than general health information.`;
   };
 
   const loadHealthInsights = async (sessionToken: string) => {
@@ -286,29 +562,41 @@ export default function BmaxAI() {
       return "https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1";
     }
 
+    // Use the enhanced contextual prompt if available
+    const contextPrompt =
+      personalizedContext.aiInstructions?.contextualPrompt ||
+      createBasicContextPrompt();
+
+    return `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(contextPrompt)}`;
+  };
+
+  const createBasicContextPrompt = () => {
+    if (!personalizedContext) return "";
+
     const medicalConditionsText = personalizedContext.medicalConditions
       .map((condition) => condition.name)
       .join(", ");
 
     const medicationsText = personalizedContext.currentMedications.join(", ");
     const allergiesText = personalizedContext.allergies.join(", ");
+    const symptomsText = personalizedContext.recentSymptoms?.join(", ") || "";
 
-    const contextPrompt = `PERSONALIZED MEDICAL CONTEXT:
+    return `PERSONALIZED MEDICAL CONTEXT FROM HEALTH RECORDS:
 Medical Conditions: ${medicalConditionsText || "None reported"}
 Current Medications: ${medicationsText || "None reported"}
 Known Allergies: ${allergiesText || "None reported"}
+Recent Symptoms: ${symptomsText || "None reported"}
 
-IMPORTANT INSTRUCTIONS:
-- Always consider the patient's medical conditions when providing advice
-- Be specific about how recommendations relate to their conditions
-- Warn about potential medication interactions
-- Consider allergy precautions in all recommendations
-- For example: If patient asks about dizziness and has diabetes, specifically address diabetic-related causes of dizziness
-- Provide condition-specific advice rather than general health information
+PERSONALIZATION INSTRUCTIONS:
+- This patient has ${personalizedContext.summary.totalConditions} documented medical conditions
+- They are currently taking ${personalizedContext.summary.currentMedications} medications
+- Always consider their specific medical history when providing advice
+- Be specific about how recommendations relate to their documented conditions
+- Warn about potential medication interactions with: ${medicationsText}
+- Consider allergy precautions for: ${allergiesText}
+- Reference their recent symptoms when relevant: ${symptomsText}
 
-When the patient mentions symptoms like "feeling dizzy", immediately consider their medical history (diabetes, hypertension, etc.) and provide targeted advice.`;
-
-    return `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(contextPrompt)}`;
+IMPORTANT: When the patient mentions symptoms, immediately consider their documented medical history and provide targeted, personalized advice rather than general health information.`;
   };
 
   if (!isAuthenticated) {
@@ -544,10 +832,10 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
             </div>
             <CardDescription className="text-sm leading-relaxed">
               {isLoadingContext
-                ? "Loading your medical context..."
+                ? "Loading your medical context from health records..."
                 : personalizedContext?.hasData
-                  ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
-                  : "AI is ready to help with general health questions. Add medical history for personalized recommendations."}
+                  ? `AI is personalized with your complete health history: ${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications${personalizedContext.recentSymptoms?.length ? `, ${personalizedContext.recentSymptoms.length} recent symptoms` : ""}. Your health records are analyzed for personalized recommendations.`
+                  : "AI is ready to help with general health questions. Add health records in Health History for personalized recommendations."}
             </CardDescription>
           </CardHeader>
 
@@ -611,14 +899,54 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
           </CardContent>
         </Card>
 
+        {/* Health Records Integration Info */}
+        {!personalizedContext?.hasData && (
+          <Card className="mt-4 shadow-colored border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50/50 fade-in fade-in-delay-3">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Activity className="h-4 w-4 mr-2 text-blue-600" />
+                Get Personalized AI Recommendations
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 mr-4">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add your health records to get personalized medical advice
+                    based on your conditions, medications, and symptoms.
+                  </p>
+                  <p className="text-xs text-blue-600 font-medium">
+                    Your health data will enhance AI responses with
+                    condition-specific recommendations.
+                  </p>
+                </div>
+                <Link to="/history">
+                  <Button size="sm" className="btn-smooth">
+                    <Stethoscope className="h-4 w-4 mr-2" />
+                    Add Health Records
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Example Queries for Personalized Context */}
         {personalizedContext?.hasData && (
           <Card className="mt-4 shadow-colored border-primary/20 bg-gradient-to-r from-primary/5 to-primary/5 fade-in fade-in-delay-3">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center">
-                <Zap className="h-4 w-4 mr-2 text-primary" />
-                Try asking B-max about:
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <Zap className="h-4 w-4 mr-2 text-primary" />
+                  Try asking B-max about:
+                </CardTitle>
+                <Link to="/history">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    <Activity className="h-3 w-3 mr-1" />
+                    Add More Records
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -630,7 +958,7 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
                       "I'm feeling dizzy"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Gets diabetes-specific advice
+                      Gets diabetes-specific advice from your records
                     </div>
                   </div>
                 )}
@@ -642,26 +970,49 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
                       "I have a headache"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Considers blood pressure
+                      Considers your blood pressure history
                     </div>
                   </div>
                 )}
                 {personalizedContext.currentMedications.length > 0 && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
-                      "Can I take [medication]?"
+                      "Can I take ibuprofen?"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Checks interactions
+                      Checks against your{" "}
+                      {personalizedContext.currentMedications.length}{" "}
+                      medications
                     </div>
                   </div>
                 )}
+                {personalizedContext.recentSymptoms &&
+                  personalizedContext.recentSymptoms.length > 0 && (
+                    <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
+                      <div className="font-medium text-primary mb-1">
+                        "Why am I having {personalizedContext.recentSymptoms[0]}
+                        ?"
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        References your recent symptom history
+                      </div>
+                    </div>
+                  )}
                 <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                   <div className="font-medium text-primary mb-1">
                     "What should I monitor?"
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Personalized recommendations
+                    Based on your {personalizedContext.summary.totalConditions}{" "}
+                    conditions
+                  </div>
+                </div>
+                <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
+                  <div className="font-medium text-primary mb-1">
+                    "Review my recent visits"
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Analyzes patterns in your health records
                   </div>
                 </div>
               </div>

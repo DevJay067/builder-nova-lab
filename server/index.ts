@@ -45,14 +45,45 @@ import {
   verifyDataAccess,
   getAuthStats,
   authenticateUser,
-} from "./routes/auth";
+  healthCheck,
+} from "./routes/enhancedAuth";
 import {
   getPersonalizedMedicalContext,
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import {
+  uploadImages,
+  handleImageUpload,
+  analyzeImages,
+} from "./routes/imageUpload";
+import {
+  storeCloudHealthRecord,
+  getCloudHealthRecords,
+  syncToCloud,
+  getCloudStorageStats,
+  deleteCloudHealthRecord,
+  getCloudServiceStatus,
+  cloudHealthCheck,
+  setupUserCloudStorage,
+  requireCloudAuth,
+} from "./routes/cloudStorage";
 
 export function createServer() {
+  // Setup environment first
+  const setupEnvironment = async () => {
+    try {
+      const { EnvironmentSetup } = await import("./setup-env");
+      EnvironmentSetup.setup();
+    } catch (setupError) {
+      console.warn("⚠️ Environment setup failed:", setupError);
+      // Continue without environment setup
+    }
+  };
+
+  // Run environment setup without blocking
+  setupEnvironment();
+
   // Initialize secure database on server startup
   const initializeSecureSystem = async () => {
     try {
@@ -84,18 +115,43 @@ export function createServer() {
         );
       }
 
-      // Try to initialize user authentication system with production features
+      // Initialize cloud authentication system
       try {
-        const { UserAuthenticationService } = await import(
-          "./services/userAuthentication"
+        const { CloudAuthenticationService } = await import(
+          "./services/cloudAuthenticationService"
         );
-        await UserAuthenticationService.initialize();
-        console.log("✅ User authentication system initialized successfully");
-      } catch (authError) {
+        await CloudAuthenticationService.initialize();
+        console.log("✅ Cloud authentication system initialized successfully");
+      } catch (cloudAuthError) {
         console.log(
-          "⚠️  User authentication system not available, continuing without it",
+          "⚠️  Cloud authentication initialization failed:",
+          cloudAuthError,
         );
-        console.log("   The system will work in demo mode");
+        console.log("   Attempting fallback to enhanced authentication...");
+
+        try {
+          const { EnhancedUserAuthenticationService } = await import(
+            "./services/enhancedUserAuthentication"
+          );
+          await EnhancedUserAuthenticationService.initialize();
+          console.log("✅ Enhanced authentication system initialized");
+        } catch (enhancedError) {
+          console.log(
+            "⚠️  Enhanced authentication failed, trying basic authentication...",
+          );
+
+          try {
+            const { UserAuthenticationService } = await import(
+              "./services/userAuthentication"
+            );
+            await UserAuthenticationService.initialize();
+            console.log("✅ Basic authentication system initialized");
+          } catch (basicError) {
+            console.log(
+              "⚠️  All authentication systems failed, continuing in demo mode",
+            );
+          }
+        }
       }
 
       // Try to initialize the main database system
@@ -116,7 +172,7 @@ export function createServer() {
           await SimpleDatabaseInit.initializeMedicalHistoryTable();
           console.log("✅ Essential medical history table created");
         } catch (simpleError) {
-          console.log("⚠️  System will work with in-memory storage only");
+          console.log("⚠��  System will work with in-memory storage only");
         }
       }
     } catch (error) {
@@ -152,6 +208,54 @@ export function createServer() {
       received: req.body,
       timestamp: new Date().toISOString(),
     });
+  });
+
+  // Debug endpoint to check auth system status
+  app.get("/api/debug/auth-status", async (req, res) => {
+    try {
+      const { EnhancedUserAuthenticationService } = await import(
+        "./services/enhancedUserAuthentication"
+      );
+
+      const stats = EnhancedUserAuthenticationService.getSystemStats();
+
+      res.json({
+        success: true,
+        authSystemStatus: "enhanced-initialized",
+        systemType: "SQLite + Enhanced Authentication",
+        systemStats: stats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (enhancedError) {
+      // Fallback to basic auth
+      try {
+        const { UserAuthenticationService } = await import(
+          "./services/userAuthentication"
+        );
+
+        const stats = UserAuthenticationService.getSystemStats();
+
+        res.json({
+          success: true,
+          authSystemStatus: "basic-initialized",
+          systemType: "Basic Authentication (Fallback)",
+          systemStats: stats,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (basicError) {
+        res.json({
+          success: false,
+          authSystemStatus: "error",
+          error:
+            basicError instanceof Error ? basicError.message : "Unknown error",
+          enhancedError:
+            enhancedError instanceof Error
+              ? enhancedError.message
+              : "Enhanced auth failed",
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
   });
 
   // Debug endpoint to check user existence
@@ -215,6 +319,17 @@ export function createServer() {
   app.get("/api/demo/keys/info", getDemoKeysInfo);
   app.post("/api/demo/initialize", initializeDemoData);
 
+  // Auth health check endpoint
+  app.get("/api/auth/test", (req, res) => {
+    res.json({
+      success: true,
+      message: "Auth endpoints are accessible",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.get("/api/auth/health", healthCheck);
+
   // Authentication API Routes
   app.post("/api/auth/register", registerUser);
   app.post("/api/auth/login", loginUser);
@@ -222,29 +337,82 @@ export function createServer() {
   app.post("/api/auth/logout", logoutUser);
   app.get("/api/auth/profile", getUserProfile);
   app.post("/api/auth/data-access", createDataAccess);
+  app.get("/api/auth/data-access/records", verifyDataAccess);
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
+
+  // Image Upload Routes for Medical Scans
+  app.post("/api/images/upload", uploadImages, handleImageUpload);
+  app.post("/api/images/analyze", analyzeImages);
+
+  // Cloud Storage API Routes
+  app.post("/api/cloud/store", storeCloudHealthRecord);
+  app.get("/api/cloud/records", getCloudHealthRecords);
+  app.post("/api/cloud/sync", syncToCloud);
+  app.get("/api/cloud/stats", getCloudStorageStats);
+  app.delete("/api/cloud/records/:recordId", deleteCloudHealthRecord);
+  app.get("/api/cloud/status", getCloudServiceStatus);
+  app.get("/api/cloud/health", cloudHealthCheck);
+  app.post("/api/cloud/setup", setupUserCloudStorage);
 
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
 
-  // Database Health Check Endpoint
+  // Enhanced Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
     try {
-      const { DatabaseHealthService } = await import(
-        "./services/databaseHealthCheck"
+      const { EnhancedDatabaseHealthService } = await import(
+        "./services/enhancedDatabaseHealth"
       );
-      const health = await DatabaseHealthService.checkHealth();
+      const systemStatus =
+        await EnhancedDatabaseHealthService.getSystemStatus();
       res.json({
         success: true,
-        database: health,
-        server: {
-          uptime: process.uptime(),
-          memory: process.memoryUsage(),
+        ...systemStatus,
+      });
+    } catch (enhancedError) {
+      // Fallback to basic health check
+      try {
+        const { DatabaseHealthService } = await import(
+          "./services/databaseHealthCheck"
+        );
+        const health = await DatabaseHealthService.checkHealth();
+        res.json({
+          success: true,
+          database: health,
+          server: {
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            timestamp: new Date().toISOString(),
+          },
+          fallback: true,
+        });
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+          enhancedError:
+            enhancedError instanceof Error
+              ? enhancedError.message
+              : "Enhanced health check failed",
           timestamp: new Date().toISOString(),
-        },
+        });
+      }
+    }
+  });
+
+  // Enhanced system status endpoint
+  app.get("/api/health/system", async (req, res) => {
+    try {
+      const { EnhancedDatabaseHealthService } = await import(
+        "./services/enhancedDatabaseHealth"
+      );
+      const metrics = EnhancedDatabaseHealthService.getHealthMetrics();
+      res.json({
+        success: true,
+        metrics,
       });
     } catch (error) {
       res.status(500).json({

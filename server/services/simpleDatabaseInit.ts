@@ -1,6 +1,18 @@
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL || "");
+// Lazy initialization of database connection to handle missing env vars gracefully
+let sql: any = null;
+
+function getSqlConnection() {
+  if (!sql) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl || dbUrl.includes('dummy') || dbUrl === '') {
+      throw new Error('No valid database connection available');
+    }
+    sql = neon(dbUrl);
+  }
+  return sql;
+}
 
 export class SimpleDatabaseInit {
   /**
@@ -10,8 +22,10 @@ export class SimpleDatabaseInit {
     try {
       console.log("🏥 Creating medical_history table...");
 
+      const sqlConnection = getSqlConnection();
+
       // Create medical_history table for health records
-      await sql`
+      await sqlConnection`
         CREATE TABLE IF NOT EXISTS medical_history (
           id VARCHAR(255) PRIMARY KEY,
           patient_id VARCHAR(255) NOT NULL,
@@ -28,9 +42,9 @@ export class SimpleDatabaseInit {
       `;
 
       // Create essential indexes
-      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_patient_id ON medical_history(patient_id)`;
-      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
-      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
+      await sqlConnection`CREATE INDEX IF NOT EXISTS idx_medical_history_patient_id ON medical_history(patient_id)`;
+      await sqlConnection`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
+      await sqlConnection`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
 
       console.log("✅ Medical history table created successfully");
     } catch (error) {
@@ -44,7 +58,8 @@ export class SimpleDatabaseInit {
    */
   static async testConnection(): Promise<boolean> {
     try {
-      await sql`SELECT 1 as test`;
+      const sqlConnection = getSqlConnection();
+      await sqlConnection`SELECT 1 as test`;
       return true;
     } catch (error) {
       console.error("Database connection test failed:", error);

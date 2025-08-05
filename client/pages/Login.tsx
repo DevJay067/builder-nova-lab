@@ -135,7 +135,12 @@ export default function Login() {
         }),
       });
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        throw new Error(`Invalid server response (Status: ${response.status})`);
+      }
 
       if (result.success) {
         const userData = {
@@ -176,9 +181,17 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
+      let errorMessage = "Network error. Please check your connection and try again.";
+
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = "Unable to connect to the server. Please ensure the server is running and try again.";
+      } else if (error instanceof Error) {
+        errorMessage = `Connection error: ${error.message}`;
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -208,7 +221,12 @@ export default function Login() {
         }),
       });
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        throw new Error(`Invalid server response (Status: ${response.status})`);
+      }
 
       if (result.success) {
         setMessage({
@@ -246,9 +264,17 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Registration error:", error);
+      let errorMessage = "Network error. Please check your connection and try again.";
+
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = "Unable to connect to the server. Please ensure the server is running and try again.";
+      } else if (error instanceof Error) {
+        errorMessage = `Connection error: ${error.message}`;
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);

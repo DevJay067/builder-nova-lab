@@ -20,6 +20,8 @@ import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
+import MedicalScan from "./pages/MedicalScan";
+import CloudStorageManager from "./components/CloudStorageManager";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -65,7 +67,7 @@ const App = () => {
               />
               <Route path="/first-aid" element={<FirstAid />} />
               <Route
-                path="/analytics"
+                path="/health-analytics"
                 element={
                   <ProtectedRoute requireAuth={true}>
                     <HealthAnalytics />
@@ -88,6 +90,22 @@ const App = () => {
                 element={
                   <ProtectedRoute requireAuth={true}>
                     <RealTimeMonitoring />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/scan"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <MedicalScan />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cloud-storage"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <CloudStorageManager />
                   </ProtectedRoute>
                 }
               />

@@ -1,8 +1,12 @@
 import { RequestHandler } from "express";
-import { UserAuthenticationService } from "../services/userAuthentication";
+import { EnhancedUserAuthenticationService } from "../services/enhancedUserAuthentication";
 
 /**
- * Register a new user with production blockchain system
+ * Enhanced Authentication Routes with SQLite Backend
+ */
+
+/**
+ * Register a new user
  */
 export const registerUser: RequestHandler = async (req, res) => {
   try {
@@ -12,7 +16,15 @@ export const registerUser: RequestHandler = async (req, res) => {
       bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
-    const { username, password, email, firstName, lastName } = req.body;
+    const {
+      username,
+      password,
+      email,
+      firstName,
+      lastName,
+      dateOfBirth,
+      phone,
+    } = req.body;
 
     // Validate required fields
     if (!username || !password) {
@@ -22,35 +34,72 @@ export const registerUser: RequestHandler = async (req, res) => {
       });
     }
 
-    // Use the new authentication service
-    const result = await UserAuthenticationService.registerUser(
+    // Get IP address for logging
+    const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
+
+    // Use the enhanced authentication service
+    const result = await EnhancedUserAuthenticationService.registerUser(
       username,
       password,
       email,
       {
         firstName,
         lastName,
+        dateOfBirth,
+        phone,
       },
     );
 
-    console.log("🔍 Registration result:", { success: result.success, message: result.message });
+    console.log("🔍 Registration result:", {
+      success: result.success,
+      message: result.message,
+      hasSessionToken: !!result.user?.sessionToken,
+    });
 
-    if (result.success) {
-      return res.status(201).json(result);
+    if (result.success && result.user?.sessionToken) {
+      // Set session cookie
+      res.cookie("healthchain_session", result.user.sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: result.message,
+        user: {
+          id: result.user.id,
+          username: result.user.username,
+          userHash: result.user.userHash,
+          sessionToken: result.user.sessionToken,
+          secureSystemActivated: result.user.secureSystemActivated,
+        },
+        securityFeatures: result.securityFeatures,
+      });
     } else {
-      return res.status(400).json(result);
+      return res.status(400).json({
+        success: false,
+        message: result.message || "Registration failed",
+      });
     }
   } catch (error) {
-    console.error("Error registering user:", error);
+    console.error("❌ Error registering user:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during registration",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
 
 /**
- * Login user with secure data access system
+ * Login user
  */
 export const loginUser: RequestHandler = async (req, res) => {
   try {
@@ -70,16 +119,26 @@ export const loginUser: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await UserAuthenticationService.authenticateUser(
+    // Get client info for logging
+    const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
+    const userAgent = req.headers["user-agent"] || "unknown";
+
+    const result = await EnhancedUserAuthenticationService.authenticateUser(
       username,
       password,
+      ipAddress,
+      userAgent,
     );
 
-    console.log("🔍 Login result:", { success: result.success, message: result.message });
+    console.log("🔍 Login result:", {
+      success: result.success,
+      message: result.message,
+      hasSessionToken: !!result.user?.sessionToken,
+    });
 
-    if (result.success) {
+    if (result.success && result.user?.sessionToken) {
       // Set session cookie
-      res.cookie("healthchain_session", result.user!.sessionToken, {
+      res.cookie("healthchain_session", result.user.sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -89,20 +148,32 @@ export const loginUser: RequestHandler = async (req, res) => {
       res.json({
         success: true,
         message: result.message,
-        user: result.user,
+        user: {
+          id: result.user.id,
+          username: result.user.username,
+          userHash: result.user.userHash,
+          sessionToken: result.user.sessionToken,
+          secureSystemActivated: result.user.secureSystemActivated,
+        },
         securityFeatures: result.securityFeatures,
       });
     } else {
       res.status(401).json({
         success: false,
-        message: result.message,
+        message: result.message || "Authentication failed",
       });
     }
   } catch (error) {
-    console.error("Error logging in user:", error);
+    console.error("❌ Error logging in user:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during login",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -124,24 +195,34 @@ export const verifySession: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = UserAuthenticationService.verifySession(sessionToken);
+    const result =
+      await EnhancedUserAuthenticationService.verifySession(sessionToken);
 
-    if (result.valid) {
+    if (result.valid && result.user) {
       res.json({
         success: true,
         user: result.user,
+        valid: true,
       });
     } else {
       res.status(401).json({
         success: false,
         message: "Invalid session token",
+        valid: false,
       });
     }
   } catch (error) {
-    console.error("Error verifying session:", error);
+    console.error("❌ Error verifying session:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during session verification",
+      valid: false,
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -157,7 +238,7 @@ export const logoutUser: RequestHandler = async (req, res) => {
       (req.headers["x-session-token"] as string);
 
     if (sessionToken) {
-      UserAuthenticationService.logout(sessionToken);
+      await EnhancedUserAuthenticationService.logout(sessionToken);
     }
 
     // Clear session cookie
@@ -168,10 +249,16 @@ export const logoutUser: RequestHandler = async (req, res) => {
       message: "Logged out successfully",
     });
   } catch (error) {
-    console.error("Error logging out user:", error);
+    console.error("❌ Error logging out user:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during logout",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -193,9 +280,10 @@ export const getUserProfile: RequestHandler = async (req, res) => {
       });
     }
 
-    const sessionResult = UserAuthenticationService.verifySession(sessionToken);
+    const sessionResult =
+      await EnhancedUserAuthenticationService.verifySession(sessionToken);
 
-    if (!sessionResult.valid) {
+    if (!sessionResult.valid || !sessionResult.user) {
       return res.status(401).json({
         success: false,
         message: "Invalid session",
@@ -207,10 +295,16 @@ export const getUserProfile: RequestHandler = async (req, res) => {
       user: sessionResult.user,
     });
   } catch (error) {
-    console.error("Error getting user profile:", error);
+    console.error("❌ Error getting user profile:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -241,7 +335,7 @@ export const createDataAccess: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await UserAuthenticationService.storeHealthRecord(
+    const result = await EnhancedUserAuthenticationService.storeHealthRecord(
       sessionToken,
       { type, data },
     );
@@ -259,10 +353,16 @@ export const createDataAccess: RequestHandler = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error storing health record:", error);
+    console.error("❌ Error storing health record:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -285,7 +385,7 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
     }
 
     const result =
-      await UserAuthenticationService.getHealthRecords(sessionToken);
+      await EnhancedUserAuthenticationService.getHealthRecords(sessionToken);
 
     if (result.success) {
       res.json({
@@ -300,10 +400,16 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error retrieving health records:", error);
+    console.error("❌ Error retrieving health records:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -313,17 +419,24 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
  */
 export const getAuthStats: RequestHandler = async (req, res) => {
   try {
-    const stats = UserAuthenticationService.getSystemStats();
+    const stats = EnhancedUserAuthenticationService.getSystemStats();
 
     res.json({
       success: true,
       stats,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Error getting auth stats:", error);
+    console.error("❌ Error getting auth stats:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -345,9 +458,10 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
       });
     }
 
-    const result = UserAuthenticationService.verifySession(sessionToken);
+    const result =
+      await EnhancedUserAuthenticationService.verifySession(sessionToken);
 
-    if (result.valid) {
+    if (result.valid && result.user) {
       // Add user to request object
       (req as any).user = result.user;
       next();
@@ -358,10 +472,42 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.error("Error in auth middleware:", error);
+    console.error("❌ Error in auth middleware:", error);
     return res.status(500).json({
       success: false,
       message: "Authentication error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
+    });
+  }
+};
+
+/**
+ * Health check endpoint for authentication system
+ */
+export const healthCheck: RequestHandler = async (req, res) => {
+  try {
+    const stats = EnhancedUserAuthenticationService.getSystemStats();
+
+    res.json({
+      success: true,
+      status: "healthy",
+      service: "Enhanced Authentication Service",
+      database: "SQLite",
+      stats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Auth health check failed:", error);
+    res.status(500).json({
+      success: false,
+      status: "unhealthy",
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
     });
   }
 };
