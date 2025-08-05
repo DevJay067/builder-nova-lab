@@ -49,6 +49,7 @@ import {
   Weight,
   Ruler,
   Heart,
+  Cloud,
   CheckCircle,
   AlertTriangle,
   Loader2,
