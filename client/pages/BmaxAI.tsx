@@ -821,14 +821,52 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
           </CardContent>
         </Card>
 
+        {/* Health Records Integration Info */}
+        {!personalizedContext?.hasData && (
+          <Card className="mt-4 shadow-colored border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50/50 fade-in fade-in-delay-3">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Activity className="h-4 w-4 mr-2 text-blue-600" />
+                Get Personalized AI Recommendations
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 mr-4">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Add your health records to get personalized medical advice based on your conditions, medications, and symptoms.
+                  </p>
+                  <p className="text-xs text-blue-600 font-medium">
+                    Your health data will enhance AI responses with condition-specific recommendations.
+                  </p>
+                </div>
+                <Link to="/history">
+                  <Button size="sm" className="btn-smooth">
+                    <Stethoscope className="h-4 w-4 mr-2" />
+                    Add Health Records
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Example Queries for Personalized Context */}
         {personalizedContext?.hasData && (
           <Card className="mt-4 shadow-colored border-primary/20 bg-gradient-to-r from-primary/5 to-primary/5 fade-in fade-in-delay-3">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center">
-                <Zap className="h-4 w-4 mr-2 text-primary" />
-                Try asking B-max about:
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <Zap className="h-4 w-4 mr-2 text-primary" />
+                  Try asking B-max about:
+                </CardTitle>
+                <Link to="/history">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    <Activity className="h-3 w-3 mr-1" />
+                    Add More Records
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
