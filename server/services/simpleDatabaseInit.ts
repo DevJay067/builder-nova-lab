@@ -1,6 +1,18 @@
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL || "");
+// Lazy initialization of database connection to handle missing env vars gracefully
+let sql: any = null;
+
+function getSqlConnection() {
+  if (!sql) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl || dbUrl.includes('dummy') || dbUrl === '') {
+      throw new Error('No valid database connection available');
+    }
+    sql = neon(dbUrl);
+  }
+  return sql;
+}
 
 export class SimpleDatabaseInit {
   /**
