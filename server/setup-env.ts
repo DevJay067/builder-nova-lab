@@ -116,5 +116,4 @@ export class EnvironmentSetup {
   }
 }
 
-// Export setup function
-export { EnvironmentSetup };
+// EnvironmentSetup class is already exported above
