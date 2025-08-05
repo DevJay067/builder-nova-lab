@@ -59,6 +59,14 @@ import {
 } from "./routes/imageUpload";
 
 export function createServer() {
+  // Setup environment first
+  try {
+    const { EnvironmentSetup } = require("./setup-env");
+    EnvironmentSetup.setup();
+  } catch (setupError) {
+    console.warn("⚠️ Environment setup failed:", setupError);
+  }
+
   // Initialize secure database on server startup
   const initializeSecureSystem = async () => {
     try {
