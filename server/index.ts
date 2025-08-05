@@ -240,6 +240,15 @@ export function createServer() {
   app.get("/api/demo/keys/info", getDemoKeysInfo);
   app.post("/api/demo/initialize", initializeDemoData);
 
+  // Simple test auth endpoint
+  app.get("/api/auth/test", (req, res) => {
+    res.json({
+      success: true,
+      message: "Auth endpoints are accessible",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // Authentication API Routes
   app.post("/api/auth/register", registerUser);
   app.post("/api/auth/login", loginUser);
