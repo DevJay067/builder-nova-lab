@@ -5,17 +5,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Cloud, 
-  Shield, 
-  RefreshCw, 
-  Database, 
-  Lock, 
-  CheckCircle, 
+import {
+  Cloud,
+  Shield,
+  RefreshCw,
+  Database,
+  Lock,
+  CheckCircle,
   AlertTriangle,
   Upload,
   Download,
-  Sync,
   HardDrive,
   Activity,
   Users,
