@@ -9,9 +9,21 @@ export const registerUser: RequestHandler = async (req, res) => {
     console.log("🔍 Registration request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      data: req.body ? Object.keys(req.body) : "no data",
     });
 
     const { username, password, email, firstName, lastName } = req.body;
+
+    // Validate required fields
+    if (!username || !password) {
+      console.log("❌ Missing required fields:", { username: !!username, password: !!password });
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required",
+      });
+    }
+
+    console.log("✅ Calling UserAuthenticationService.registerUser...");
 
     // Use the new authentication service
     const result = await UserAuthenticationService.registerUser(
@@ -24,16 +36,20 @@ export const registerUser: RequestHandler = async (req, res) => {
       },
     );
 
+    console.log("📤 Registration result:", { success: result.success, message: result.message });
+
     if (result.success) {
       return res.status(201).json(result);
     } else {
       return res.status(400).json(result);
     }
   } catch (error) {
-    console.error("Error registering user:", error);
+    console.error("❌ Error registering user:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
     res.status(500).json({
       success: false,
       message: "Internal server error during registration",
+      error: process.env.NODE_ENV === "development" ? error instanceof Error ? error.message : "Unknown error" : undefined,
     });
   }
 };
