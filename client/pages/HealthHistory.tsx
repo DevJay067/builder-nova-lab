@@ -99,6 +99,8 @@ export default function HealthHistory() {
     totalRecords: 0,
     secureRecords: 0,
     lastUpdate: null as string | null,
+    cloudRecords: 0,
+    isCloudAvailable: false,
   });
 
   const [newRecord, setNewRecord] = useState({
