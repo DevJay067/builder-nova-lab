@@ -406,67 +406,150 @@ export default function Index() {
           {/* Enhanced Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {features.map((feature, index) => (
-              <Link
+              <div
                 key={feature.id}
-                to={feature.route}
-                className={`block group fade-in-up`}
+                className={`group fade-in-up`}
                 style={{ animationDelay: `${index * 0.1 + 0.2}s` }}
               >
-                <Card
-                  className={`h-full card-hover shadow-colored transition-all duration-300 border-border/50 ${
-                    feature.highlight
-                      ? "ring-2 ring-primary/20 bg-primary/5"
-                      : ""
-                  } ${
-                    feature.urgent ? "ring-2 ring-red-200 bg-red-50" : ""
-                  } hover:shadow-lg hover:border-border group-hover:shadow-xl`}
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div
-                        className={`flex items-center justify-center w-12 h-12 rounded-xl ${feature.color} text-white shadow-lg shadow-${feature.color.split("-")[1]}-500/25 group-hover:scale-110 transition-transform`}
+                {feature.submenu ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Card
+                        className={`h-full card-hover shadow-colored transition-all duration-300 border-border/50 cursor-pointer ${
+                          feature.highlight
+                            ? "ring-2 ring-primary/20 bg-primary/5"
+                            : ""
+                        } ${
+                          feature.urgent ? "ring-2 ring-red-200 bg-red-50" : ""
+                        } hover:shadow-lg hover:border-border group-hover:shadow-xl`}
                       >
-                        <feature.icon className="w-6 h-6" />
-                      </div>
-                      {feature.highlight && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-primary/10 text-primary border-primary/20"
-                        >
-                          <Star className="w-3 h-3 mr-1" />
-                          Popular
-                        </Badge>
-                      )}
-                      {feature.urgent && (
-                        <Badge
-                          variant="destructive"
-                          className="bg-red-100 text-red-700 border-red-200"
-                        >
-                          <Zap className="w-3 h-3 mr-1" />
-                          Emergency
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {feature.title}
-                    </CardTitle>
-                    <CardDescription className="text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 pulse-slow"></div>
-                        <span className="text-sm font-medium text-muted-foreground">
-                          {feature.stats}
-                        </span>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div
+                              className={`flex items-center justify-center w-12 h-12 rounded-xl ${feature.color} text-white shadow-lg shadow-${feature.color.split("-")[1]}-500/25 group-hover:scale-110 transition-transform`}
+                            >
+                              <feature.icon className="w-6 h-6" />
+                            </div>
+                            {feature.highlight && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-primary/10 text-primary border-primary/20"
+                              >
+                                <Star className="w-3 h-3 mr-1" />
+                                Popular
+                              </Badge>
+                            )}
+                            {feature.urgent && (
+                              <Badge
+                                variant="destructive"
+                                className="bg-red-100 text-red-700 border-red-200"
+                              >
+                                <Zap className="w-3 h-3 mr-1" />
+                                Emergency
+                              </Badge>
+                            )}
+                          </div>
+                          <CardTitle className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                            {feature.title}
+                          </CardTitle>
+                          <CardDescription className="text-muted-foreground leading-relaxed">
+                            {feature.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-green-500 pulse-slow"></div>
+                              <span className="text-sm font-medium text-muted-foreground">
+                                {feature.stats}
+                              </span>
+                            </div>
+                            <ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-all" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-80 p-2">
+                      {feature.submenu.map((item) => (
+                        <Link key={item.id} to={item.route}>
+                          <DropdownMenuItem className="p-3 cursor-pointer hover:bg-accent rounded-md">
+                            <div className="flex items-center space-x-3 w-full">
+                              <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${feature.color} text-white shadow-md`}>
+                                <item.icon className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-foreground">{item.title}</div>
+                                <div className="text-sm text-muted-foreground">{item.description}</div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                          </DropdownMenuItem>
+                        </Link>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Link
+                    to={feature.route}
+                    className="block group"
+                  >
+                    <Card
+                      className={`h-full card-hover shadow-colored transition-all duration-300 border-border/50 ${
+                        feature.highlight
+                          ? "ring-2 ring-primary/20 bg-primary/5"
+                          : ""
+                      } ${
+                        feature.urgent ? "ring-2 ring-red-200 bg-red-50" : ""
+                      } hover:shadow-lg hover:border-border group-hover:shadow-xl`}
+                    >
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div
+                            className={`flex items-center justify-center w-12 h-12 rounded-xl ${feature.color} text-white shadow-lg shadow-${feature.color.split("-")[1]}-500/25 group-hover:scale-110 transition-transform`}
+                          >
+                            <feature.icon className="w-6 h-6" />
+                          </div>
+                          {feature.highlight && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-primary/10 text-primary border-primary/20"
+                            >
+                              <Star className="w-3 h-3 mr-1" />
+                              Popular
+                            </Badge>
+                          )}
+                          {feature.urgent && (
+                            <Badge
+                              variant="destructive"
+                              className="bg-red-100 text-red-700 border-red-200"
+                            >
+                              <Zap className="w-3 h-3 mr-1" />
+                              Emergency
+                            </Badge>
+                          )}
+                        </div>
+                        <CardTitle className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {feature.title}
+                        </CardTitle>
+                        <CardDescription className="text-muted-foreground leading-relaxed">
+                          {feature.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 pulse-slow"></div>
+                            <span className="text-sm font-medium text-muted-foreground">
+                              {feature.stats}
+                            </span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         </div>
