@@ -116,7 +116,5 @@ export class EnvironmentSetup {
   }
 }
 
-// Run setup if this file is executed directly
-if (require.main === module) {
-  EnvironmentSetup.setup();
-}
+// Export setup function
+export { EnvironmentSetup };
