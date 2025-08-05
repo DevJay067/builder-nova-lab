@@ -135,11 +135,12 @@ export default function Login() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`);
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        throw new Error(`Invalid server response (Status: ${response.status})`);
       }
-
-      const result = await response.json();
 
       if (result.success) {
         const userData = {
