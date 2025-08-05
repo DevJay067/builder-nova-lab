@@ -43,7 +43,7 @@ export class BlockchainService {
     const algorithm = "aes-256-gcm";
     const iv = crypto.randomBytes(16);
     const key = crypto.createHash("sha256").update(encryptionKey).digest();
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
 
     let encrypted = cipher.update(JSON.stringify(data), "utf8", "hex");
     encrypted += cipher.final("hex");
