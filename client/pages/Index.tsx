@@ -112,25 +112,30 @@ export default function Index() {
     },
     {
       id: "history",
-      title: "Health History",
+      title: "Health Records & Imaging",
       description:
-        "Comprehensive health records and AI search history securely stored on blockchain.",
+        "Comprehensive health records, medical scans, and AI search history securely stored on blockchain.",
       icon: History,
       color: "bg-green-500",
       route: "/history",
       stats: "Secure & Private",
       gradient: "from-green-500/20 to-emerald-500/20",
-    },
-    {
-      id: "scan",
-      title: "Medical Scan & Imaging",
-      description:
-        "Upload and securely store medical scans with AI-powered analysis and HIPAA-compliant encryption.",
-      icon: Scan,
-      color: "bg-purple-500",
-      route: "/scan",
-      stats: "AI Analysis",
-      gradient: "from-purple-500/20 to-violet-500/20",
+      submenu: [
+        {
+          id: "records",
+          title: "Health Records",
+          description: "View and manage your health history",
+          icon: History,
+          route: "/history",
+        },
+        {
+          id: "scans",
+          title: "Medical Scans",
+          description: "Upload and manage medical images",
+          icon: Scan,
+          route: "/scan",
+        },
+      ],
     },
     {
       id: "monitoring",
