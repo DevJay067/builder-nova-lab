@@ -215,14 +215,32 @@ export default function HealthHistory() {
   const loadHealthRecords = async (sessionToken: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/auth/data-access/records", {
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-          "x-session-token": sessionToken,
-        },
-      });
 
-      if (response.ok) {
+      // Try to load from cloud storage first
+      let cloudResponse;
+      try {
+        cloudResponse = await fetch("/api/cloud/records", {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            "x-session-token": sessionToken,
+          },
+        });
+      } catch (cloudError) {
+        console.log("Cloud storage not available, falling back to local");
+      }
+
+      // Fallback to local storage if cloud fails
+      let response = cloudResponse;
+      if (!cloudResponse || !cloudResponse.ok) {
+        response = await fetch("/api/auth/data-access/records", {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            "x-session-token": sessionToken,
+          },
+        });
+      }
+
+      if (response && response.ok) {
         const data = await response.json();
         if (data.success && data.records) {
           const transformedRecords = data.records.map((record: any) => ({
@@ -232,18 +250,29 @@ export default function HealthHistory() {
             description: record.description,
             date: record.date,
             doctor: record.doctor,
-            isSecure: !!record.secureRecordId,
+            isSecure: !!record.secureRecordId || !!record.cloudSynced,
             blockchainHash: record.secureRecordId,
             metadata: record.metadata,
+            source: record.source || 'local',
+            cloudSynced: record.cloudSynced || false,
           }));
 
           setRecords(transformedRecords);
           setStats({
             totalRecords: transformedRecords.length,
-            secureRecords: transformedRecords.filter((r: any) => r.isSecure)
-              .length,
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
             lastUpdate: new Date().toISOString(),
+            cloudRecords: transformedRecords.filter((r: any) => r.source === 'cloud').length,
+            isCloudAvailable: !!data.cloudInfo?.cloudAvailable,
           });
+
+          // Show cloud status message
+          if (data.cloudInfo) {
+            const cloudMsg = data.cloudInfo.cloudAvailable
+              ? `Loaded ${data.cloudInfo.cloudRecords || 0} records from cloud, ${data.cloudInfo.localRecords || 0} from local storage`
+              : "Cloud storage unavailable - showing local records only";
+            setMessage({ type: "success", text: cloudMsg });
+          }
         }
       }
     } catch (error) {
