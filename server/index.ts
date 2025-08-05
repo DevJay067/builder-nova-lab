@@ -61,10 +61,11 @@ import {
 export function createServer() {
   // Setup environment first
   try {
-    const { EnvironmentSetup } = require("./setup-env");
+    const { EnvironmentSetup } = await import("./setup-env");
     EnvironmentSetup.setup();
   } catch (setupError) {
     console.warn("⚠️ Environment setup failed:", setupError);
+    // Continue without environment setup
   }
 
   // Initialize secure database on server startup
@@ -116,7 +117,7 @@ export function createServer() {
           await UserAuthenticationService.initialize();
           console.log("✅ Fallback authentication system initialized");
         } catch (fallbackError) {
-          console.log("⚠️  All authentication systems failed, continuing in demo mode");
+          console.log("���️  All authentication systems failed, continuing in demo mode");
         }
       }
 
