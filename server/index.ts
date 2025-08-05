@@ -110,25 +110,35 @@ export function createServer() {
         );
       }
 
-      // Initialize enhanced user authentication system
+      // Initialize cloud authentication system
       try {
-        const { EnhancedUserAuthenticationService } = await import(
-          "./services/enhancedUserAuthentication"
+        const { CloudAuthenticationService } = await import(
+          "./services/cloudAuthenticationService"
         );
-        await EnhancedUserAuthenticationService.initialize();
-        console.log("✅ Enhanced user authentication system initialized successfully");
-      } catch (authError) {
-        console.log("⚠️  Enhanced authentication initialization failed:", authError);
-        console.log("   Attempting fallback to basic authentication...");
+        await CloudAuthenticationService.initialize();
+        console.log("✅ Cloud authentication system initialized successfully");
+      } catch (cloudAuthError) {
+        console.log("⚠️  Cloud authentication initialization failed:", cloudAuthError);
+        console.log("   Attempting fallback to enhanced authentication...");
 
         try {
-          const { UserAuthenticationService } = await import(
-            "./services/userAuthentication"
+          const { EnhancedUserAuthenticationService } = await import(
+            "./services/enhancedUserAuthentication"
           );
-          await UserAuthenticationService.initialize();
-          console.log("✅ Fallback authentication system initialized");
-        } catch (fallbackError) {
-          console.log("⚠️  All authentication systems failed, continuing in demo mode");
+          await EnhancedUserAuthenticationService.initialize();
+          console.log("✅ Enhanced authentication system initialized");
+        } catch (enhancedError) {
+          console.log("⚠️  Enhanced authentication failed, trying basic authentication...");
+
+          try {
+            const { UserAuthenticationService } = await import(
+              "./services/userAuthentication"
+            );
+            await UserAuthenticationService.initialize();
+            console.log("✅ Basic authentication system initialized");
+          } catch (basicError) {
+            console.log("⚠️  All authentication systems failed, continuing in demo mode");
+          }
         }
       }
 
