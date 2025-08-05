@@ -312,21 +312,55 @@ export function createServer() {
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
 
-  // Database Health Check Endpoint
+  // Enhanced Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
     try {
-      const { DatabaseHealthService } = await import(
-        "./services/databaseHealthCheck"
+      const { EnhancedDatabaseHealthService } = await import(
+        "./services/enhancedDatabaseHealth"
       );
-      const health = await DatabaseHealthService.checkHealth();
+      const systemStatus = await EnhancedDatabaseHealthService.getSystemStatus();
       res.json({
         success: true,
-        database: health,
-        server: {
-          uptime: process.uptime(),
-          memory: process.memoryUsage(),
+        ...systemStatus,
+      });
+    } catch (enhancedError) {
+      // Fallback to basic health check
+      try {
+        const { DatabaseHealthService } = await import(
+          "./services/databaseHealthCheck"
+        );
+        const health = await DatabaseHealthService.checkHealth();
+        res.json({
+          success: true,
+          database: health,
+          server: {
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            timestamp: new Date().toISOString(),
+          },
+          fallback: true,
+        });
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+          enhancedError: enhancedError instanceof Error ? enhancedError.message : "Enhanced health check failed",
           timestamp: new Date().toISOString(),
-        },
+        });
+      }
+    }
+  });
+
+  // Enhanced system status endpoint
+  app.get("/api/health/system", async (req, res) => {
+    try {
+      const { EnhancedDatabaseHealthService } = await import(
+        "./services/enhancedDatabaseHealth"
+      );
+      const metrics = EnhancedDatabaseHealthService.getHealthMetrics();
+      res.json({
+        success: true,
+        metrics,
       });
     } catch (error) {
       res.status(500).json({
