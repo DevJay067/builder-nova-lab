@@ -163,8 +163,13 @@ class UserAuthenticationService {
     username: string,
   ): Promise<User | null> {
     try {
+      const dbUrl = process.env.DATABASE_URL;
+      if (!dbUrl || dbUrl.includes('dummy') || dbUrl === '') {
+        throw new Error('No valid database connection available');
+      }
+
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(dbUrl);
 
       const result = await sql`
         SELECT * FROM users WHERE username = ${username}
