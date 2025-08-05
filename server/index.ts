@@ -256,6 +256,7 @@ export function createServer() {
   app.post("/api/auth/logout", logoutUser);
   app.get("/api/auth/profile", getUserProfile);
   app.post("/api/auth/data-access", createDataAccess);
+  app.get("/api/auth/data-access/records", verifyDataAccess);
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
 
