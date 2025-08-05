@@ -47,6 +47,7 @@ export const loginUser: RequestHandler = async (req, res) => {
     console.log("🔍 Login request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
     const { username, password } = req.body;
