@@ -176,9 +176,17 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
+      let errorMessage = "Network error. Please check your connection and try again.";
+
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = "Unable to connect to the server. Please ensure the server is running and try again.";
+      } else if (error instanceof Error) {
+        errorMessage = `Connection error: ${error.message}`;
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
