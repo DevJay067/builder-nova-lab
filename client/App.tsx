@@ -67,7 +67,7 @@ const App = () => {
               />
               <Route path="/first-aid" element={<FirstAid />} />
               <Route
-                path="/analytics"
+                path="/health-analytics"
                 element={
                   <ProtectedRoute requireAuth={true}>
                     <HealthAnalytics />
