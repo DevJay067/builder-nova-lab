@@ -309,7 +309,7 @@ class ProductionBlockchainService {
       const dataIv = Buffer.from(dataIvHex, "hex");
       const dataAuthTag = Buffer.from(dataAuthTagHex, "hex");
 
-      const dataDecipher = crypto.createDecipherGCM(
+      const dataDecipher = crypto.createDecipheriv(
         "aes-256-gcm",
         dataLayerKey,
         dataIv,
