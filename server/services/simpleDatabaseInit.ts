@@ -1,12 +1,17 @@
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL || "");
+const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 
 export class SimpleDatabaseInit {
   /**
    * Initialize only the essential medical_history table
    */
   static async initializeMedicalHistoryTable(): Promise<void> {
+    if (!sql || !process.env.DATABASE_URL) {
+      console.log("ℹ️ Database not configured, skipping table creation");
+      return;
+    }
+
     try {
       console.log("🏥 Creating medical_history table...");
 
@@ -43,6 +48,11 @@ export class SimpleDatabaseInit {
    * Test database connectivity
    */
   static async testConnection(): Promise<boolean> {
+    if (!sql || !process.env.DATABASE_URL) {
+      console.log("ℹ️ Database not configured");
+      return false;
+    }
+
     try {
       await sql`SELECT 1 as test`;
       return true;

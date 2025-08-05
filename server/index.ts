@@ -2,6 +2,28 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+
+// Add global error handlers to prevent server crashes
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Don't exit in development to maintain server stability
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit in development to maintain server stability
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n🛑 Received SIGINT, performing graceful shutdown...');
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Received SIGTERM, performing graceful shutdown...');
+  process.exit(0);
+});
 import { handleDemo } from "./routes/demo";
 import {
   createHealthRecord,
@@ -52,11 +74,23 @@ import {
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
 
+// Global initialization flag to prevent multiple initializations
+let isSystemInitialized = false;
+let isInitializing = false;
+
 export function createServer() {
-  // Initialize secure database on server startup
+  // Initialize secure database on server startup (only once)
   const initializeSecureSystem = async () => {
+    // Prevent multiple simultaneous initializations
+    if (isSystemInitialized || isInitializing) {
+      console.log("ℹ️ System already initialized or initializing, skipping...");
+      return;
+    }
+
+    isInitializing = true;
+
     try {
-      console.log("🚀 Attempting to initialize secure healthcare system...");
+      console.log("🚀 Initializing secure healthcare system...");
 
       // Initialize production blockchain system
       try {
@@ -93,7 +127,7 @@ export function createServer() {
         console.log("✅ User authentication system initialized successfully");
       } catch (authError) {
         console.log(
-          "⚠️  User authentication system not available, continuing without it",
+          "⚠️ User authentication system not available, continuing without it",
         );
         console.log("   The system will work in demo mode");
       }
@@ -105,7 +139,7 @@ export function createServer() {
         console.log("✅ Secure healthcare database initialized successfully");
       } catch (dbError) {
         console.log(
-          "⚠️  Secure database not available, trying simple initialization...",
+          "⚠️ Secure database not available, trying simple initialization...",
         );
 
         // Try to create at least the essential medical_history table
@@ -116,27 +150,77 @@ export function createServer() {
           await SimpleDatabaseInit.initializeMedicalHistoryTable();
           console.log("✅ Essential medical history table created");
         } catch (simpleError) {
-          console.log("⚠️  System will work with in-memory storage only");
+          console.log("⚠️ System will work with in-memory storage only");
         }
       }
+
+      isSystemInitialized = true;
+      console.log("✅ System initialization completed successfully");
     } catch (error) {
       console.log(
-        "⚠️  Secure system initialization completed with some limitations",
+        "⚠️ System initialization completed with some limitations",
       );
       console.log("   The application will continue to work in demo mode");
+    } finally {
+      isInitializing = false;
     }
   };
 
-  // Run initialization (don't await to avoid blocking server start)
-  initializeSecureSystem();
+  // Run initialization only if not already done
+  if (!isSystemInitialized && !isInitializing) {
+    initializeSecureSystem().catch((error) => {
+      console.error("❌ Critical error during system initialization:", error);
+      isInitializing = false;
+    });
+  }
 
   const app = express();
 
-  // Middleware
-  app.use(cors());
+  // Enhanced middleware with error handling and limits
+  app.use(cors({
+    credentials: true,
+    origin: true
+  }));
+
   app.use(cookieParser());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+
+  // Add request size limits and timeout protection
+  app.use(express.json({
+    limit: '10mb',
+    type: 'application/json'
+  }));
+
+  app.use(express.urlencoded({
+    extended: true,
+    limit: '10mb',
+    parameterLimit: 1000
+  }));
+
+  // Request timeout middleware
+  app.use((req, res, next) => {
+    req.setTimeout(30000, () => { // 30 second timeout
+      console.warn(`⚠️ Request timeout for ${req.method} ${req.url}`);
+      if (!res.headersSent) {
+        res.status(408).json({
+          success: false,
+          message: 'Request timeout'
+        });
+      }
+    });
+    next();
+  });
+
+  // Request logging middleware
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      if (duration > 1000) { // Log slow requests
+        console.log(`🐌 Slow request: ${req.method} ${req.url} took ${duration}ms`);
+      }
+    });
+    next();
+  });
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {
@@ -255,5 +339,45 @@ export function createServer() {
     }
   });
 
+  // Global error handling middleware (must be last)
+  app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(`❌ Express error handler caught:`, error);
+
+    // Don't send error if response already sent
+    if (res.headersSent) {
+      return next(error);
+    }
+
+    // Determine error status and message
+    const status = error.status || error.statusCode || 500;
+    const message = error.message || 'Internal server error';
+
+    res.status(status).json({
+      success: false,
+      message: status === 500 ? 'Internal server error' : message,
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    });
+  });
+
+  // Handle 404 for API routes
+  app.use('/api/*', (req: express.Request, res: express.Response) => {
+    res.status(404).json({
+      success: false,
+      message: `API endpoint not found: ${req.method} ${req.path}`
+    });
+  });
+
+  // Health check endpoint for monitoring
+  app.get('/health', (req: express.Request, res: express.Response) => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.version
+    });
+  });
+
+  console.log("✅ Express server configured with enhanced stability");
   return app;
 }

@@ -5,12 +5,13 @@ import { neon } from "@neondatabase/serverless";
  * Monitors database connectivity and provides fallback mechanisms
  */
 
-const sql = neon(process.env.DATABASE_URL || "");
+const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 
 export class DatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
   private static isHealthy = false;
   private static connectionPool: any = null;
+  private static databaseDisabled = false;
 
   /**
    * Check database health
@@ -23,7 +24,25 @@ export class DatabaseHealthService {
   }> {
     const startTime = Date.now();
 
+    // If no DATABASE_URL is set, skip database checks
+    if (!process.env.DATABASE_URL) {
+      console.log("ℹ️ No DATABASE_URL configured, using in-memory storage only");
+      this.databaseDisabled = true;
+      this.isHealthy = false;
+      this.lastHealthCheck = new Date();
+
+      return {
+        isHealthy: false,
+        lastChecked: this.lastHealthCheck,
+        connectionStatus: "disabled: no DATABASE_URL configured",
+      };
+    }
+
     try {
+      if (!sql) {
+        throw new Error("Database connection not initialized");
+      }
+
       console.log("🔍 Checking database health...");
 
       // Simple connectivity test
@@ -78,6 +97,11 @@ export class DatabaseHealthService {
    * Test database connection before operations
    */
   static async ensureConnection(): Promise<boolean> {
+    // If database is disabled, return false immediately
+    if (this.databaseDisabled || !process.env.DATABASE_URL) {
+      return false;
+    }
+
     const currentHealth = this.getCurrentHealth();
 
     if (currentHealth.needsCheck || !currentHealth.isHealthy) {
@@ -94,16 +118,22 @@ export class DatabaseHealthService {
   static async withFallback<T>(
     operation: () => Promise<T>,
     fallback: () => T,
-    maxRetries: number = 3,
+    maxRetries: number = 1,
   ): Promise<T> {
+    // If database is disabled, use fallback immediately
+    if (this.databaseDisabled || !process.env.DATABASE_URL) {
+      console.log("⚠️ Using fallback: database disabled or not configured");
+      return fallback();
+    }
+
     let lastError: Error | null = null;
 
     for (let i = 0; i < maxRetries; i++) {
       try {
         const isConnected = await this.ensureConnection();
-        if (!isConnected && i === 0) {
-          console.log("Database not connected, retrying...");
-          continue;
+        if (!isConnected) {
+          console.log("⚠️ Database not connected, using fallback");
+          return fallback();
         }
 
         return await operation();
@@ -114,6 +144,13 @@ export class DatabaseHealthService {
           error,
         );
 
+        // For auth errors, immediately use fallback
+        if (error instanceof Error && error.message.includes('password authentication failed')) {
+          console.log("⚠️ Authentication failed, using fallback mode");
+          this.databaseDisabled = true;
+          return fallback();
+        }
+
         if (i < maxRetries - 1) {
           // Wait before retry
           await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
@@ -121,7 +158,7 @@ export class DatabaseHealthService {
       }
     }
 
-    console.log("All database retries failed, using fallback");
+    console.log("⚠️ Using fallback: database retries failed");
     return fallback();
   }
 

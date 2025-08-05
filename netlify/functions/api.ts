@@ -26,7 +26,16 @@ export const handler: Handler = async (event, context) => {
     // Set longer timeout for initialization
     context.callbackWaitsForEmptyEventLoop = false;
 
+    // Map Netlify environment variables to expected names
+    if (process.env.NETLIFY_DATABASE_URL && !process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = process.env.NETLIFY_DATABASE_URL;
+    }
+    if (process.env.NETLIFY_DATABASE_URL_UNPOOLED && !process.env.DATABASE_URL_UNPOOLED) {
+      process.env.DATABASE_URL_UNPOOLED = process.env.NETLIFY_DATABASE_URL_UNPOOLED;
+    }
+
     console.log("Netlify function called:", event.path);
+    console.log("Database URL available:", !!process.env.DATABASE_URL);
 
     const serverHandler = await getServerHandler();
     return await serverHandler(event, context);

@@ -29,6 +29,7 @@ import {
   Sparkles,
   Stethoscope,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -295,6 +296,7 @@ export default function Login() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <ThemeToggle />
               <div className="flex items-center space-x-1 text-sm text-slate-700">
                 <Shield className="w-4 h-4 text-green-600" />
                 <span className="hidden sm:inline font-medium">

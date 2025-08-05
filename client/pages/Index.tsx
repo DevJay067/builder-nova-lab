@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import LanguageSelector from "@/components/LanguageSelector";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Index() {
   const { t } = useTranslation();
@@ -233,6 +234,7 @@ export default function Index() {
 
             {/* Enhanced Auth Section */}
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
+              <ThemeToggle />
               <LanguageSelector variant="compact" className="mr-2" />
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">

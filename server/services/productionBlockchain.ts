@@ -201,7 +201,7 @@ class ProductionBlockchainService {
     // Layer 1: Encrypt with user hash (user-specific encryption)
     const userLayerKey = crypto.createHash("sha256").update(userHash).digest();
     const userIv = crypto.randomBytes(16);
-    const userCipher = crypto.createCipherGCM(
+    const userCipher = crypto.createCipheriv(
       "aes-256-gcm",
       userLayerKey,
       userIv,
@@ -220,7 +220,7 @@ class ProductionBlockchainService {
     // Layer 2: Encrypt with data hash (data-specific encryption)
     const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
     const dataIv = crypto.randomBytes(16);
-    const dataCipher = crypto.createCipherGCM(
+    const dataCipher = crypto.createCipheriv(
       "aes-256-gcm",
       dataLayerKey,
       dataIv,
@@ -238,7 +238,7 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipherGCM(
+    const blockchainCipher = crypto.createCipheriv(
       "aes-256-gcm",
       blockchainLayerKey,
       blockchainIv,
@@ -284,7 +284,7 @@ class ProductionBlockchainService {
       const blockchainIv = Buffer.from(blockchainIvHex, "hex");
       const blockchainAuthTag = Buffer.from(blockchainAuthTagHex, "hex");
 
-      const blockchainDecipher = crypto.createDecipherGCM(
+      const blockchainDecipher = crypto.createDecipheriv(
         "aes-256-gcm",
         blockchainLayerKey,
         blockchainIv,
@@ -309,7 +309,7 @@ class ProductionBlockchainService {
       const dataIv = Buffer.from(dataIvHex, "hex");
       const dataAuthTag = Buffer.from(dataAuthTagHex, "hex");
 
-      const dataDecipher = crypto.createDecipherGCM(
+      const dataDecipher = crypto.createDecipheriv(
         "aes-256-gcm",
         dataLayerKey,
         dataIv,
@@ -330,7 +330,7 @@ class ProductionBlockchainService {
       const userIv = Buffer.from(userIvHex, "hex");
       const userAuthTag = Buffer.from(userAuthTagHex, "hex");
 
-      const userDecipher = crypto.createDecipherGCM(
+      const userDecipher = crypto.createDecipheriv(
         "aes-256-gcm",
         userLayerKey,
         userIv,

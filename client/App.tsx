@@ -20,9 +20,12 @@ import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
+import ServerTest from "./pages/ServerTest";
+import ThemeDemo from "./pages/ThemeDemo";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +48,8 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
+      <ThemeProvider defaultTheme="system" storageKey="healthchain-theme">
+        <LanguageProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -83,6 +87,8 @@ const App = () => {
               />
               <Route path="/login" element={<Login />} />
               <Route path="/why-login" element={<WhyLogin />} />
+              <Route path="/server-test" element={<ServerTest />} />
+              <Route path="/theme-demo" element={<ThemeDemo />} />
               <Route
                 path="/monitoring"
                 element={
@@ -96,7 +102,8 @@ const App = () => {
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </LanguageProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

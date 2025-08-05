@@ -31,6 +31,7 @@ import {
   Video,
 } from "lucide-react";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface MedicalCondition {
   name: string;
@@ -416,6 +417,7 @@ When the patient mentions symptoms like "feeling dizzy", immediately consider th
               </div>
             </div>
             <div className="flex items-center space-x-2 fade-in fade-in-delay-1">
+              <ThemeToggle />
               {personalizedContext?.hasData && (
                 <Badge
                   variant="default"
