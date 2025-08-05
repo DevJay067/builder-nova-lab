@@ -238,7 +238,7 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipherGCM(
+    const blockchainCipher = crypto.createCipheriv(
       "aes-256-gcm",
       blockchainLayerKey,
       blockchainIv,
