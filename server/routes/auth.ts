@@ -62,22 +62,28 @@ export const loginUser: RequestHandler = async (req, res) => {
     console.log("🔍 Login request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      data: req.body ? Object.keys(req.body) : "no data",
     });
 
     const { username, password } = req.body;
 
     // Validate required fields
     if (!username || !password) {
+      console.log("❌ Missing required fields:", { username: !!username, password: !!password });
       return res.status(400).json({
         success: false,
         message: "Username and password are required",
       });
     }
 
+    console.log("✅ Calling UserAuthenticationService.authenticateUser...");
+
     const result = await UserAuthenticationService.authenticateUser(
       username,
       password,
     );
+
+    console.log("📤 Login result:", { success: result.success, message: result.message });
 
     if (result.success) {
       // Set session cookie
@@ -101,10 +107,12 @@ export const loginUser: RequestHandler = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error logging in user:", error);
+    console.error("❌ Error logging in user:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
     res.status(500).json({
       success: false,
       message: "Internal server error during login",
+      error: process.env.NODE_ENV === "development" ? error instanceof Error ? error.message : "Unknown error" : undefined,
     });
   }
 };
