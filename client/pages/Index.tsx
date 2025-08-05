@@ -18,6 +18,7 @@ import {
   Stethoscope,
   Plus,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Clock,
   Users,
