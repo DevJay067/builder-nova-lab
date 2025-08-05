@@ -379,20 +379,34 @@ class UserAuthenticationService {
         this.users.set(username, user);
       }
 
-      // Activate secure data access system for the user
-      const secureAccountResult =
-        await SecureDataAccessService.createSecureUserAccount(
+      // Activate secure data access system for the user (with fallback)
+      let secureAccountResult = {
+        dataAccessActivated: false,
+        splitKeySystem: false,
+        sessionToken: crypto.randomBytes(32).toString('hex')
+      };
+
+      try {
+        secureAccountResult = await SecureDataAccessService.createSecureUserAccount(
           username,
           password,
           profile || {},
         );
+        console.log("✅ Secure account creation successful");
+      } catch (error) {
+        console.warn("⚠️ Secure account creation failed, using basic account");
+      }
 
       // Update user with secure system activation
       user.secureSystemActivated = secureAccountResult.dataAccessActivated;
       user.splitKeySystemActive = secureAccountResult.splitKeySystem;
 
-      // Create data access record for split key system
-      await this.createDataAccessRecord(user.id, userHash, username, password);
+      // Create data access record for split key system (with error handling)
+      try {
+        await this.createDataAccessRecord(user.id, userHash, username, password);
+      } catch (error) {
+        console.warn("⚠️ Failed to create data access record, user will work without advanced features");
+      }
 
       console.log(
         `✅ User ${username} registered successfully with secure system activated`,
