@@ -951,7 +951,7 @@ export default function MedicalScan() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
-                <getScanIcon(selectedRecord.type) className="w-5 h-5 text-primary" />
+                {React.createElement(getScanIcon(selectedRecord.type), { className: "w-5 h-5 text-primary" })}
                 <span>{selectedRecord.title}</span>
               </DialogTitle>
               <DialogDescription>
