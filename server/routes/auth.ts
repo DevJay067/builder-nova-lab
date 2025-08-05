@@ -75,6 +75,8 @@ export const loginUser: RequestHandler = async (req, res) => {
       password,
     );
 
+    console.log("🔍 Login result:", { success: result.success, message: result.message });
+
     if (result.success) {
       // Set session cookie
       res.cookie("healthchain_session", result.user!.sessionToken, {
