@@ -16,7 +16,10 @@ export const registerUser: RequestHandler = async (req, res) => {
 
     // Validate required fields
     if (!username || !password) {
-      console.log("❌ Missing required fields:", { username: !!username, password: !!password });
+      console.log("❌ Missing required fields:", {
+        username: !!username,
+        password: !!password,
+      });
       return res.status(400).json({
         success: false,
         message: "Username and password are required",
@@ -36,7 +39,10 @@ export const registerUser: RequestHandler = async (req, res) => {
       },
     );
 
-    console.log("📤 Registration result:", { success: result.success, message: result.message });
+    console.log("📤 Registration result:", {
+      success: result.success,
+      message: result.message,
+    });
 
     if (result.success) {
       return res.status(201).json(result);
@@ -45,11 +51,19 @@ export const registerUser: RequestHandler = async (req, res) => {
     }
   } catch (error) {
     console.error("❌ Error registering user:", error);
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
     res.status(500).json({
       success: false,
       message: "Internal server error during registration",
-      error: process.env.NODE_ENV === "development" ? error instanceof Error ? error.message : "Unknown error" : undefined,
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -69,7 +83,10 @@ export const loginUser: RequestHandler = async (req, res) => {
 
     // Validate required fields
     if (!username || !password) {
-      console.log("❌ Missing required fields:", { username: !!username, password: !!password });
+      console.log("❌ Missing required fields:", {
+        username: !!username,
+        password: !!password,
+      });
       return res.status(400).json({
         success: false,
         message: "Username and password are required",
@@ -83,7 +100,10 @@ export const loginUser: RequestHandler = async (req, res) => {
       password,
     );
 
-    console.log("📤 Login result:", { success: result.success, message: result.message });
+    console.log("📤 Login result:", {
+      success: result.success,
+      message: result.message,
+    });
 
     if (result.success) {
       // Set session cookie
@@ -108,11 +128,19 @@ export const loginUser: RequestHandler = async (req, res) => {
     }
   } catch (error) {
     console.error("❌ Error logging in user:", error);
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
     res.status(500).json({
       success: false,
       message: "Internal server error during login",
-      error: process.env.NODE_ENV === "development" ? error instanceof Error ? error.message : "Unknown error" : undefined,
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
