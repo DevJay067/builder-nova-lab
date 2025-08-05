@@ -482,12 +482,18 @@ export default function Index() {
                         <Link key={item.id} to={item.route}>
                           <DropdownMenuItem className="p-3 cursor-pointer hover:bg-accent rounded-md">
                             <div className="flex items-center space-x-3 w-full">
-                              <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${feature.color} text-white shadow-md`}>
+                              <div
+                                className={`flex items-center justify-center w-10 h-10 rounded-lg ${feature.color} text-white shadow-md`}
+                              >
                                 <item.icon className="w-5 h-5" />
                               </div>
                               <div className="flex-1">
-                                <div className="font-medium text-foreground">{item.title}</div>
-                                <div className="text-sm text-muted-foreground">{item.description}</div>
+                                <div className="font-medium text-foreground">
+                                  {item.title}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {item.description}
+                                </div>
                               </div>
                               <ChevronRight className="w-4 h-4 text-muted-foreground" />
                             </div>
@@ -497,10 +503,7 @@ export default function Index() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Link
-                    to={feature.route}
-                    className="block group"
-                  >
+                  <Link to={feature.route} className="block group">
                     <Card
                       className={`h-full card-hover shadow-colored transition-all duration-300 border-border/50 ${
                         feature.highlight

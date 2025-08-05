@@ -20,7 +20,7 @@ export class EnhancedDatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
   private static isHealthy = false;
   private static fallbackActive = false;
-  private static currentDatabase = 'sqlite';
+  private static currentDatabase = "sqlite";
 
   /**
    * Comprehensive health check
@@ -34,29 +34,29 @@ export class EnhancedDatabaseHealthService {
 
       // Test SQLite database
       const sqliteHealthy = this.testSQLiteConnection();
-      
+
       if (sqliteHealthy) {
         const latency = Date.now() - startTime;
         const stats = SQLiteDatabaseService.getStats();
-        
+
         this.isHealthy = true;
         this.fallbackActive = false;
         this.lastHealthCheck = now;
-        this.currentDatabase = 'sqlite';
+        this.currentDatabase = "sqlite";
 
         console.log(`✅ SQLite database is healthy (${latency}ms)`);
 
         return {
           isHealthy: true,
-          database: 'sqlite',
+          database: "sqlite",
           latency,
           lastChecked: now,
-          connectionStatus: 'connected',
+          connectionStatus: "connected",
           fallbackActive: false,
-          stats
+          stats,
         };
       } else {
-        throw new Error('SQLite connection failed');
+        throw new Error("SQLite connection failed");
       }
     } catch (error) {
       console.error("❌ Database health check failed:", error);
@@ -67,11 +67,11 @@ export class EnhancedDatabaseHealthService {
 
       return {
         isHealthy: false,
-        database: 'none',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        database: "none",
+        error: error instanceof Error ? error.message : "Unknown error",
         lastChecked: now,
-        connectionStatus: 'disconnected',
-        fallbackActive: true
+        connectionStatus: "disconnected",
+        fallbackActive: true,
       };
     }
   }
@@ -107,7 +107,7 @@ export class EnhancedDatabaseHealthService {
       database: this.currentDatabase,
       lastChecked: this.lastHealthCheck,
       needsCheck,
-      fallbackActive: this.fallbackActive
+      fallbackActive: this.fallbackActive,
     };
   }
 
@@ -131,7 +131,7 @@ export class EnhancedDatabaseHealthService {
   static async withFallback<T>(
     operation: () => Promise<T>,
     fallback: () => T,
-    maxRetries: number = 2
+    maxRetries: number = 2,
   ): Promise<T> {
     let lastError: Error | null = null;
 
@@ -141,7 +141,9 @@ export class EnhancedDatabaseHealthService {
         if (attempt === 1) {
           const isConnected = await this.ensureConnection();
           if (!isConnected) {
-            console.log(`⚠️ Database not connected on attempt ${attempt}, retrying...`);
+            console.log(
+              `⚠️ Database not connected on attempt ${attempt}, retrying...`,
+            );
             continue;
           }
         }
@@ -149,13 +151,16 @@ export class EnhancedDatabaseHealthService {
         return await operation();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error("Unknown error");
-        console.error(`❌ Database operation failed (attempt ${attempt}/${maxRetries}):`, error);
+        console.error(
+          `❌ Database operation failed (attempt ${attempt}/${maxRetries}):`,
+          error,
+        );
 
         if (attempt < maxRetries) {
           // Wait before retry with exponential backoff
           const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
           console.log(`⏳ Waiting ${waitTime}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
     }
@@ -179,16 +184,20 @@ export class EnhancedDatabaseHealthService {
 
       // Run initial health check
       const health = await this.checkHealth();
-      
+
       if (health.isHealthy) {
-        console.log("✅ Database initialized successfully with health monitoring");
-        
+        console.log(
+          "✅ Database initialized successfully with health monitoring",
+        );
+
         // Schedule periodic health checks
         this.schedulePeriodicHealthChecks();
-        
+
         return true;
       } else {
-        console.warn("⚠️ Database initialization completed but health check failed");
+        console.warn(
+          "⚠️ Database initialization completed but health check failed",
+        );
         return false;
       }
     } catch (error) {
@@ -203,37 +212,48 @@ export class EnhancedDatabaseHealthService {
    */
   private static schedulePeriodicHealthChecks(): void {
     // Health check every 5 minutes
-    setInterval(async () => {
-      try {
-        await this.checkHealth();
-      } catch (error) {
-        console.error("❌ Periodic health check failed:", error);
-      }
-    }, 5 * 60 * 1000);
+    setInterval(
+      async () => {
+        try {
+          await this.checkHealth();
+        } catch (error) {
+          console.error("❌ Periodic health check failed:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
 
     // Session cleanup every hour
-    setInterval(() => {
-      try {
-        if (this.isHealthy && !this.fallbackActive) {
-          const { EnhancedUserAuthenticationService } = require("./enhancedUserAuthentication");
-          EnhancedUserAuthenticationService.cleanupExpiredSessions();
+    setInterval(
+      () => {
+        try {
+          if (this.isHealthy && !this.fallbackActive) {
+            const {
+              EnhancedUserAuthenticationService,
+            } = require("./enhancedUserAuthentication");
+            EnhancedUserAuthenticationService.cleanupExpiredSessions();
+          }
+        } catch (error) {
+          console.error("❌ Session cleanup failed:", error);
         }
-      } catch (error) {
-        console.error("❌ Session cleanup failed:", error);
-      }
-    }, 60 * 60 * 1000);
+      },
+      60 * 60 * 1000,
+    );
 
     // Database optimization daily
-    setInterval(() => {
-      try {
-        if (this.isHealthy && !this.fallbackActive) {
-          SQLiteDatabaseService.optimize();
-          console.log("🔧 Database optimized");
+    setInterval(
+      () => {
+        try {
+          if (this.isHealthy && !this.fallbackActive) {
+            SQLiteDatabaseService.optimize();
+            console.log("🔧 Database optimized");
+          }
+        } catch (error) {
+          console.error("❌ Database optimization failed:", error);
         }
-      } catch (error) {
-        console.error("❌ Database optimization failed:", error);
-      }
-    }, 24 * 60 * 60 * 1000);
+      },
+      24 * 60 * 60 * 1000,
+    );
 
     console.log("⏰ Scheduled periodic health checks and maintenance");
   }
@@ -244,7 +264,7 @@ export class EnhancedDatabaseHealthService {
   static async getSystemStatus(): Promise<any> {
     const health = await this.checkHealth();
     const currentHealth = this.getCurrentHealth();
-    
+
     return {
       database: {
         type: this.currentDatabase,
@@ -253,22 +273,22 @@ export class EnhancedDatabaseHealthService {
         connectionStatus: health.connectionStatus,
         fallbackActive: health.fallbackActive,
         lastChecked: health.lastChecked,
-        stats: health.stats
+        stats: health.stats,
       },
       system: {
         uptime: process.uptime(),
         memory: process.memoryUsage(),
         nodeVersion: process.version,
         platform: process.platform,
-        environment: process.env.NODE_ENV
+        environment: process.env.NODE_ENV,
       },
       services: {
         authentication: true,
         healthRecords: true,
         imageUpload: true,
-        secureDataAccess: !this.fallbackActive
+        secureDataAccess: !this.fallbackActive,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -277,12 +297,12 @@ export class EnhancedDatabaseHealthService {
    */
   static async forceReconnect(): Promise<boolean> {
     console.log("🔄 Forcing database reconnection...");
-    
+
     try {
       // Reset health status
       this.isHealthy = false;
       this.lastHealthCheck = null;
-      
+
       // Re-initialize database
       return await this.initializeWithHealth();
     } catch (error) {
@@ -319,7 +339,7 @@ export class EnhancedDatabaseHealthService {
       lastHealthCheck: this.lastHealthCheck,
       uptime: process.uptime(),
       memoryUsage: process.memoryUsage(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

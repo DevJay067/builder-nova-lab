@@ -1,7 +1,13 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import crypto from 'crypto';
-import forge from 'node-forge';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import crypto from "crypto";
+import forge from "node-forge";
 
 /**
  * Secure Cloud Storage Service
@@ -9,7 +15,7 @@ import forge from 'node-forge';
  */
 
 export interface CloudStorageConfig {
-  provider: 'aws' | 'google' | 'azure' | 'local';
+  provider: "aws" | "google" | "azure" | "local";
   accessKeyId?: string;
   secretAccessKey?: string;
   region?: string;
@@ -41,11 +47,11 @@ export interface CloudSyncStatus {
 export class SecureCloudStorageService {
   private static s3Client: S3Client | null = null;
   private static config: CloudStorageConfig = {
-    provider: 'aws',
-    region: process.env.AWS_REGION || 'us-east-1',
-    bucketName: process.env.CLOUD_STORAGE_BUCKET || 'healthchain-secure-data',
+    provider: "aws",
+    region: process.env.AWS_REGION || "us-east-1",
+    bucketName: process.env.CLOUD_STORAGE_BUCKET || "healthchain-secure-data",
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   };
   private static encryptionKey: Buffer;
   private static isInitialized = false;
@@ -59,7 +65,7 @@ export class SecureCloudStorageService {
     }
 
     try {
-      console.log('🌥️ Initializing secure cloud storage service...');
+      console.log("🌥️ Initializing secure cloud storage service...");
 
       // Merge configuration
       this.config = { ...this.config, ...config };
@@ -71,11 +77,11 @@ export class SecureCloudStorageService {
       await this.initializeCloudClient();
 
       this.isInitialized = true;
-      console.log('✅ Secure cloud storage service initialized successfully');
+      console.log("✅ Secure cloud storage service initialized successfully");
     } catch (error) {
-      console.error('❌ Failed to initialize cloud storage:', error);
+      console.error("❌ Failed to initialize cloud storage:", error);
       // Continue without cloud storage - fallback to local only
-      console.log('⚠️ Continuing with local storage only');
+      console.log("⚠️ Continuing with local storage only");
     }
   }
 
@@ -83,22 +89,27 @@ export class SecureCloudStorageService {
    * Initialize encryption key
    */
   private static initializeEncryption(): void {
-    const encryptionSecret = process.env.HEALTH_DATA_ENCRYPTION_KEY || 
-                            process.env.ENCRYPTION_KEY || 
-                            crypto.randomBytes(32).toString('hex');
-    
-    this.encryptionKey = crypto.scryptSync(encryptionSecret, 'healthchain-salt', 32);
-    console.log('🔐 Encryption system initialized');
+    const encryptionSecret =
+      process.env.HEALTH_DATA_ENCRYPTION_KEY ||
+      process.env.ENCRYPTION_KEY ||
+      crypto.randomBytes(32).toString("hex");
+
+    this.encryptionKey = crypto.scryptSync(
+      encryptionSecret,
+      "healthchain-salt",
+      32,
+    );
+    console.log("🔐 Encryption system initialized");
   }
 
   /**
    * Initialize cloud storage client
    */
   private static async initializeCloudClient(): Promise<void> {
-    if (this.config.provider === 'aws') {
+    if (this.config.provider === "aws") {
       // Check if AWS credentials are available
       if (!this.config.accessKeyId || !this.config.secretAccessKey) {
-        console.log('⚠️ AWS credentials not found, using local storage only');
+        console.log("⚠️ AWS credentials not found, using local storage only");
         return;
       }
 
@@ -106,17 +117,17 @@ export class SecureCloudStorageService {
         region: this.config.region,
         credentials: {
           accessKeyId: this.config.accessKeyId,
-          secretAccessKey: this.config.secretAccessKey
+          secretAccessKey: this.config.secretAccessKey,
         },
-        endpoint: this.config.endpoint
+        endpoint: this.config.endpoint,
       });
 
       // Test connection
       try {
         await this.testCloudConnection();
-        console.log('✅ AWS S3 connection verified');
+        console.log("✅ AWS S3 connection verified");
       } catch (error) {
-        console.warn('⚠️ AWS S3 connection failed, using local storage only');
+        console.warn("⚠️ AWS S3 connection failed, using local storage only");
         this.s3Client = null;
       }
     }
@@ -133,13 +144,13 @@ export class SecureCloudStorageService {
     try {
       const listCommand = new ListObjectsV2Command({
         Bucket: this.config.bucketName,
-        MaxKeys: 1
+        MaxKeys: 1,
       });
-      
+
       await this.s3Client.send(listCommand);
       return true;
     } catch (error) {
-      console.error('Cloud connection test failed:', error);
+      console.error("Cloud connection test failed:", error);
       return false;
     }
   }
@@ -147,79 +158,93 @@ export class SecureCloudStorageService {
   /**
    * Encrypt health record data
    */
-  private static encryptHealthData(data: any, userId: string): {
+  private static encryptHealthData(
+    data: any,
+    userId: string,
+  ): {
     encryptedData: string;
     checksum: string;
   } {
     try {
       // Create a user-specific encryption key
       const userKey = crypto.scryptSync(this.encryptionKey, userId, 32);
-      
+
       // Generate random IV
       const iv = crypto.randomBytes(16);
-      
+
       // Create cipher
-      const cipher = crypto.createCipher('aes-256-gcm', userKey);
+      const cipher = crypto.createCipher("aes-256-gcm", userKey);
       cipher.setAAD(Buffer.from(userId));
-      
+
       // Encrypt data
       const jsonData = JSON.stringify(data);
-      let encrypted = cipher.update(jsonData, 'utf8', 'hex');
-      encrypted += cipher.final('hex');
-      
+      let encrypted = cipher.update(jsonData, "utf8", "hex");
+      encrypted += cipher.final("hex");
+
       // Get authentication tag
       const authTag = cipher.getAuthTag();
-      
+
       // Combine IV, auth tag, and encrypted data
-      const encryptedData = iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
-      
+      const encryptedData =
+        iv.toString("hex") + ":" + authTag.toString("hex") + ":" + encrypted;
+
       // Generate checksum
-      const checksum = crypto.createHash('sha256').update(encryptedData).digest('hex');
-      
+      const checksum = crypto
+        .createHash("sha256")
+        .update(encryptedData)
+        .digest("hex");
+
       return { encryptedData, checksum };
     } catch (error) {
-      console.error('❌ Encryption failed:', error);
-      throw new Error('Failed to encrypt health data');
+      console.error("❌ Encryption failed:", error);
+      throw new Error("Failed to encrypt health data");
     }
   }
 
   /**
    * Decrypt health record data
    */
-  private static decryptHealthData(encryptedData: string, userId: string, expectedChecksum: string): any {
+  private static decryptHealthData(
+    encryptedData: string,
+    userId: string,
+    expectedChecksum: string,
+  ): any {
     try {
       // Verify checksum
-      const actualChecksum = crypto.createHash('sha256').update(encryptedData).digest('hex');
+      const actualChecksum = crypto
+        .createHash("sha256")
+        .update(encryptedData)
+        .digest("hex");
       if (actualChecksum !== expectedChecksum) {
-        throw new Error('Data integrity check failed');
+        throw new Error("Data integrity check failed");
       }
 
       // Split encrypted data
-      const parts = encryptedData.split(':');
+      const parts = encryptedData.split(":");
       if (parts.length !== 3) {
-        throw new Error('Invalid encrypted data format');
+        throw new Error("Invalid encrypted data format");
       }
 
-      const iv = Buffer.from(parts[0], 'hex');
-      const authTag = Buffer.from(parts[1], 'hex');
+      const iv = Buffer.from(parts[0], "hex");
+      const authTag = Buffer.from(parts[1], "hex");
       const encrypted = parts[2];
 
       // Create user-specific decryption key
       const userKey = crypto.scryptSync(this.encryptionKey, userId, 32);
-      
+
       // Create decipher
-      const decipher = crypto.createDecipher('aes-256-gcm', userKey);
+      const decipher = crypto.createDecipher("aes-256-gcm", userKey);
       decipher.setAuthTag(authTag);
       decipher.setAAD(Buffer.from(userId));
-      
+
       // Decrypt data
-      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
-      
+      let decrypted = decipher.update(encrypted, "hex", "utf8");
+      decrypted += decipher.final("utf8");
+
       return JSON.parse(decrypted);
     } catch (error) {
-      console.error('❌ Decryption failed:', error);
-      throw new Error('Failed to decrypt health data');
+      console.error("❌ Decryption failed:", error);
+      throw new Error("Failed to decrypt health data");
     }
   }
 
@@ -227,28 +252,31 @@ export class SecureCloudStorageService {
    * Store health record in cloud with encryption
    */
   static async storeHealthRecord(
-    userId: string, 
-    recordId: string, 
-    healthData: any
+    userId: string,
+    recordId: string,
+    healthData: any,
   ): Promise<{ success: boolean; cloudPath?: string; message?: string }> {
     try {
       console.log(`🌥️ Storing health record for user ${userId} in cloud...`);
 
       // Encrypt the health data
-      const { encryptedData, checksum } = this.encryptHealthData(healthData, userId);
-      
+      const { encryptedData, checksum } = this.encryptHealthData(
+        healthData,
+        userId,
+      );
+
       // Create encrypted record
       const encryptedRecord: EncryptedHealthRecord = {
         id: recordId,
         userId: userId,
         encryptedData: encryptedData,
         metadata: {
-          recordType: healthData.recordType || 'unknown',
+          recordType: healthData.recordType || "unknown",
           timestamp: new Date().toISOString(),
           checksum: checksum,
-          encryptionVersion: '1.0'
+          encryptionVersion: "1.0",
         },
-        cloudPath: `users/${userId}/health-records/${recordId}.encrypted`
+        cloudPath: `users/${userId}/health-records/${recordId}.encrypted`,
       };
 
       // Store in cloud if available
@@ -258,50 +286,52 @@ export class SecureCloudStorageService {
             Bucket: this.config.bucketName,
             Key: encryptedRecord.cloudPath,
             Body: JSON.stringify(encryptedRecord),
-            ContentType: 'application/json',
+            ContentType: "application/json",
             Metadata: {
               userId: userId,
               recordId: recordId,
-              recordType: healthData.recordType || 'unknown',
-              encrypted: 'true',
-              timestamp: encryptedRecord.metadata.timestamp
+              recordType: healthData.recordType || "unknown",
+              encrypted: "true",
+              timestamp: encryptedRecord.metadata.timestamp,
             },
-            ServerSideEncryption: 'AES256' // Additional server-side encryption
+            ServerSideEncryption: "AES256", // Additional server-side encryption
           });
 
           await this.s3Client.send(putCommand);
-          console.log(`✅ Health record stored in cloud: ${encryptedRecord.cloudPath}`);
-          
+          console.log(
+            `✅ Health record stored in cloud: ${encryptedRecord.cloudPath}`,
+          );
+
           return {
             success: true,
             cloudPath: encryptedRecord.cloudPath,
-            message: 'Health record stored securely in cloud'
+            message: "Health record stored securely in cloud",
           };
         } catch (cloudError) {
-          console.error('❌ Cloud storage failed:', cloudError);
-          
+          console.error("❌ Cloud storage failed:", cloudError);
+
           // Store locally as fallback
           await this.storeLocalBackup(encryptedRecord);
-          
+
           return {
             success: true,
-            message: 'Health record stored locally (cloud unavailable)'
+            message: "Health record stored locally (cloud unavailable)",
           };
         }
       } else {
         // Store locally when cloud is not available
         await this.storeLocalBackup(encryptedRecord);
-        
+
         return {
           success: true,
-          message: 'Health record stored locally'
+          message: "Health record stored locally",
         };
       }
     } catch (error) {
-      console.error('❌ Failed to store health record:', error);
+      console.error("❌ Failed to store health record:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Storage failed'
+        message: error instanceof Error ? error.message : "Storage failed",
       };
     }
   }
@@ -327,16 +357,18 @@ export class SecureCloudStorageService {
           cloudRecords = await this.getCloudRecords(userId);
           console.log(`✅ Retrieved ${cloudRecords.length} records from cloud`);
         } catch (cloudError) {
-          console.warn('⚠️ Failed to retrieve from cloud:', cloudError);
+          console.warn("⚠️ Failed to retrieve from cloud:", cloudError);
         }
       }
 
       // Get local backup records
       try {
         localRecords = await this.getLocalBackupRecords(userId);
-        console.log(`✅ Retrieved ${localRecords.length} records from local backup`);
+        console.log(
+          `✅ Retrieved ${localRecords.length} records from local backup`,
+        );
       } catch (localError) {
-        console.warn('⚠️ Failed to retrieve local backup:', localError);
+        console.warn("⚠️ Failed to retrieve local backup:", localError);
       }
 
       // Merge and deduplicate records
@@ -345,14 +377,14 @@ export class SecureCloudStorageService {
       return {
         success: true,
         records: allRecords,
-        source: cloudRecords.length > 0 ? 'cloud+local' : 'local',
-        message: `Retrieved ${allRecords.length} health records`
+        source: cloudRecords.length > 0 ? "cloud+local" : "local",
+        message: `Retrieved ${allRecords.length} health records`,
       };
     } catch (error) {
-      console.error('❌ Failed to retrieve health records:', error);
+      console.error("❌ Failed to retrieve health records:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Retrieval failed'
+        message: error instanceof Error ? error.message : "Retrieval failed",
       };
     }
   }
@@ -371,28 +403,30 @@ export class SecureCloudStorageService {
     try {
       const listCommand = new ListObjectsV2Command({
         Bucket: this.config.bucketName,
-        Prefix: prefix
+        Prefix: prefix,
       });
 
       const response = await this.s3Client.send(listCommand);
-      
+
       if (response.Contents) {
         for (const object of response.Contents) {
           if (object.Key) {
             try {
               const getCommand = new GetObjectCommand({
                 Bucket: this.config.bucketName,
-                Key: object.Key
+                Key: object.Key,
               });
 
               const result = await this.s3Client.send(getCommand);
-              const encryptedRecord = JSON.parse(await result.Body?.transformToString() || '{}');
-              
+              const encryptedRecord = JSON.parse(
+                (await result.Body?.transformToString()) || "{}",
+              );
+
               // Decrypt the record
               const decryptedData = this.decryptHealthData(
                 encryptedRecord.encryptedData,
                 userId,
-                encryptedRecord.metadata.checksum
+                encryptedRecord.metadata.checksum,
               );
 
               records.push({
@@ -400,10 +434,13 @@ export class SecureCloudStorageService {
                 id: encryptedRecord.id,
                 cloudPath: encryptedRecord.cloudPath,
                 lastModified: object.LastModified,
-                source: 'cloud'
+                source: "cloud",
               });
             } catch (recordError) {
-              console.error(`❌ Failed to process record ${object.Key}:`, recordError);
+              console.error(
+                `❌ Failed to process record ${object.Key}:`,
+                recordError,
+              );
             }
           }
         }
@@ -411,7 +448,7 @@ export class SecureCloudStorageService {
 
       return records;
     } catch (error) {
-      console.error('❌ Failed to get cloud records:', error);
+      console.error("❌ Failed to get cloud records:", error);
       return [];
     }
   }
@@ -419,22 +456,29 @@ export class SecureCloudStorageService {
   /**
    * Store local backup
    */
-  private static async storeLocalBackup(encryptedRecord: EncryptedHealthRecord): Promise<void> {
+  private static async storeLocalBackup(
+    encryptedRecord: EncryptedHealthRecord,
+  ): Promise<void> {
     try {
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      
-      const backupDir = path.join(process.cwd(), 'data', 'cloud-backup', encryptedRecord.userId);
-      
+      const fs = await import("fs/promises");
+      const path = await import("path");
+
+      const backupDir = path.join(
+        process.cwd(),
+        "data",
+        "cloud-backup",
+        encryptedRecord.userId,
+      );
+
       // Ensure directory exists
       await fs.mkdir(backupDir, { recursive: true });
-      
+
       const backupPath = path.join(backupDir, `${encryptedRecord.id}.json`);
       await fs.writeFile(backupPath, JSON.stringify(encryptedRecord, null, 2));
-      
+
       console.log(`💾 Local backup stored: ${backupPath}`);
     } catch (error) {
-      console.error('❌ Failed to store local backup:', error);
+      console.error("❌ Failed to store local backup:", error);
     }
   }
 
@@ -443,47 +487,55 @@ export class SecureCloudStorageService {
    */
   private static async getLocalBackupRecords(userId: string): Promise<any[]> {
     try {
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      
-      const backupDir = path.join(process.cwd(), 'data', 'cloud-backup', userId);
-      
+      const fs = await import("fs/promises");
+      const path = await import("path");
+
+      const backupDir = path.join(
+        process.cwd(),
+        "data",
+        "cloud-backup",
+        userId,
+      );
+
       try {
         const files = await fs.readdir(backupDir);
         const records: any[] = [];
-        
+
         for (const file of files) {
-          if (file.endsWith('.json')) {
+          if (file.endsWith(".json")) {
             try {
               const filePath = path.join(backupDir, file);
-              const content = await fs.readFile(filePath, 'utf-8');
+              const content = await fs.readFile(filePath, "utf-8");
               const encryptedRecord = JSON.parse(content);
-              
+
               // Decrypt the record
               const decryptedData = this.decryptHealthData(
                 encryptedRecord.encryptedData,
                 userId,
-                encryptedRecord.metadata.checksum
+                encryptedRecord.metadata.checksum,
               );
-              
+
               records.push({
                 ...decryptedData,
                 id: encryptedRecord.id,
-                source: 'local-backup'
+                source: "local-backup",
               });
             } catch (fileError) {
-              console.error(`❌ Failed to process backup file ${file}:`, fileError);
+              console.error(
+                `❌ Failed to process backup file ${file}:`,
+                fileError,
+              );
             }
           }
         }
-        
+
         return records;
       } catch (dirError) {
         // Directory doesn't exist
         return [];
       }
     } catch (error) {
-      console.error('❌ Failed to get local backup records:', error);
+      console.error("❌ Failed to get local backup records:", error);
       return [];
     }
   }
@@ -493,19 +545,19 @@ export class SecureCloudStorageService {
    */
   private static mergeRecords(cloudRecords: any[], localRecords: any[]): any[] {
     const recordMap = new Map();
-    
+
     // Add cloud records first (they take priority)
-    cloudRecords.forEach(record => {
+    cloudRecords.forEach((record) => {
       recordMap.set(record.id, record);
     });
-    
+
     // Add local records only if not already present
-    localRecords.forEach(record => {
+    localRecords.forEach((record) => {
       if (!recordMap.has(record.id)) {
         recordMap.set(record.id, record);
       }
     });
-    
+
     return Array.from(recordMap.values()).sort((a, b) => {
       const dateA = new Date(a.date || a.createdAt || 0);
       const dateB = new Date(b.date || b.createdAt || 0);
@@ -522,12 +574,12 @@ export class SecureCloudStorageService {
       pendingUploads: 0,
       syncErrors: [],
       totalCloudRecords: 0,
-      storageUsed: 0
+      storageUsed: 0,
     };
 
     try {
       if (!this.s3Client || !this.isInitialized) {
-        syncStatus.syncErrors.push('Cloud storage not available');
+        syncStatus.syncErrors.push("Cloud storage not available");
         return syncStatus;
       }
 
@@ -536,36 +588,53 @@ export class SecureCloudStorageService {
       // Get local records that need syncing
       const localRecords = await this.getLocalBackupRecords(userId);
       const cloudRecords = await this.getCloudRecords(userId);
-      
+
       // Find records that exist locally but not in cloud
-      const cloudRecordIds = new Set(cloudRecords.map(r => r.id));
-      const recordsToSync = localRecords.filter(r => !cloudRecordIds.has(r.id));
-      
+      const cloudRecordIds = new Set(cloudRecords.map((r) => r.id));
+      const recordsToSync = localRecords.filter(
+        (r) => !cloudRecordIds.has(r.id),
+      );
+
       syncStatus.pendingUploads = recordsToSync.length;
-      
+
       // Upload missing records
       for (const record of recordsToSync) {
         try {
-          const result = await this.storeHealthRecord(userId, record.id, record);
+          const result = await this.storeHealthRecord(
+            userId,
+            record.id,
+            record,
+          );
           if (!result.success) {
-            syncStatus.syncErrors.push(`Failed to sync record ${record.id}: ${result.message}`);
+            syncStatus.syncErrors.push(
+              `Failed to sync record ${record.id}: ${result.message}`,
+            );
           }
         } catch (error) {
-          syncStatus.syncErrors.push(`Sync error for record ${record.id}: ${error}`);
+          syncStatus.syncErrors.push(
+            `Sync error for record ${record.id}: ${error}`,
+          );
         }
       }
-      
+
       // Update stats
       const finalCloudRecords = await this.getCloudRecords(userId);
       syncStatus.totalCloudRecords = finalCloudRecords.length;
-      syncStatus.pendingUploads = Math.max(0, syncStatus.pendingUploads - (finalCloudRecords.length - cloudRecords.length));
-      
-      console.log(`✅ Sync completed: ${finalCloudRecords.length} total cloud records`);
+      syncStatus.pendingUploads = Math.max(
+        0,
+        syncStatus.pendingUploads -
+          (finalCloudRecords.length - cloudRecords.length),
+      );
+
+      console.log(
+        `✅ Sync completed: ${finalCloudRecords.length} total cloud records`,
+      );
       return syncStatus;
-      
     } catch (error) {
-      console.error('❌ Sync failed:', error);
-      syncStatus.syncErrors.push(error instanceof Error ? error.message : 'Unknown sync error');
+      console.error("❌ Sync failed:", error);
+      syncStatus.syncErrors.push(
+        error instanceof Error ? error.message : "Unknown sync error",
+      );
       return syncStatus;
     }
   }
@@ -573,7 +642,10 @@ export class SecureCloudStorageService {
   /**
    * Delete health record from cloud
    */
-  static async deleteHealthRecord(userId: string, recordId: string): Promise<{
+  static async deleteHealthRecord(
+    userId: string,
+    recordId: string,
+  ): Promise<{
     success: boolean;
     message?: string;
   }> {
@@ -587,39 +659,47 @@ export class SecureCloudStorageService {
           const cloudPath = `users/${userId}/health-records/${recordId}.encrypted`;
           const deleteCommand = new DeleteObjectCommand({
             Bucket: this.config.bucketName,
-            Key: cloudPath
+            Key: cloudPath,
           });
 
           await this.s3Client.send(deleteCommand);
           cloudDeleted = true;
           console.log(`✅ Deleted from cloud: ${cloudPath}`);
         } catch (cloudError) {
-          console.error('❌ Failed to delete from cloud:', cloudError);
+          console.error("❌ Failed to delete from cloud:", cloudError);
         }
       }
 
       // Delete local backup
       try {
-        const fs = await import('fs/promises');
-        const path = await import('path');
-        
-        const backupPath = path.join(process.cwd(), 'data', 'cloud-backup', userId, `${recordId}.json`);
+        const fs = await import("fs/promises");
+        const path = await import("path");
+
+        const backupPath = path.join(
+          process.cwd(),
+          "data",
+          "cloud-backup",
+          userId,
+          `${recordId}.json`,
+        );
         await fs.unlink(backupPath);
         localDeleted = true;
         console.log(`✅ Deleted local backup: ${backupPath}`);
       } catch (localError) {
-        console.error('❌ Failed to delete local backup:', localError);
+        console.error("❌ Failed to delete local backup:", localError);
       }
 
       return {
         success: cloudDeleted || localDeleted,
-        message: cloudDeleted ? 'Record deleted from cloud and local backup' : 'Record deleted from local backup only'
+        message: cloudDeleted
+          ? "Record deleted from cloud and local backup"
+          : "Record deleted from local backup only",
       };
     } catch (error) {
-      console.error('❌ Failed to delete health record:', error);
+      console.error("❌ Failed to delete health record:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Deletion failed'
+        message: error instanceof Error ? error.message : "Deletion failed",
       };
     }
   }
@@ -639,7 +719,7 @@ export class SecureCloudStorageService {
         cloudRecords: 0,
         localBackups: 0,
         storageUsed: 0,
-        isCloudAvailable: !!(this.s3Client && this.isInitialized)
+        isCloudAvailable: !!(this.s3Client && this.isInitialized),
       };
 
       // Count cloud records
@@ -648,7 +728,7 @@ export class SecureCloudStorageService {
           const cloudRecords = await this.getCloudRecords(userId);
           stats.cloudRecords = cloudRecords.length;
         } catch (error) {
-          console.error('Failed to get cloud stats:', error);
+          console.error("Failed to get cloud stats:", error);
         }
       }
 
@@ -657,17 +737,17 @@ export class SecureCloudStorageService {
         const localRecords = await this.getLocalBackupRecords(userId);
         stats.localBackups = localRecords.length;
       } catch (error) {
-        console.error('Failed to get local stats:', error);
+        console.error("Failed to get local stats:", error);
       }
 
       return stats;
     } catch (error) {
-      console.error('❌ Failed to get storage stats:', error);
+      console.error("❌ Failed to get storage stats:", error);
       return {
         cloudRecords: 0,
         localBackups: 0,
         storageUsed: 0,
-        isCloudAvailable: false
+        isCloudAvailable: false,
       };
     }
   }
@@ -690,8 +770,8 @@ export class SecureCloudStorageService {
       config: {
         provider: this.config.provider,
         region: this.config.region,
-        bucketName: this.config.bucketName
-      }
+        bucketName: this.config.bucketName,
+      },
     };
   }
 }

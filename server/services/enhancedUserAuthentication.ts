@@ -77,7 +77,9 @@ export class EnhancedUserAuthenticationService {
         SQLiteDatabaseService.runMigrations();
         console.log("✅ SQLite database initialized successfully");
       } catch (dbError) {
-        console.warn("⚠️ SQLite initialization failed, using in-memory fallback");
+        console.warn(
+          "⚠️ SQLite initialization failed, using in-memory fallback",
+        );
       }
 
       // Initialize secure data access system
@@ -111,7 +113,7 @@ export class EnhancedUserAuthenticationService {
       lastName?: string;
       dateOfBirth?: string;
       phone?: string;
-    }
+    },
   ): Promise<AuthResult> {
     try {
       console.log(`👤 Registering user: ${username}`);
@@ -143,9 +145,15 @@ export class EnhancedUserAuthenticationService {
       // Generate user hash for blockchain
       let userHash: string;
       try {
-        userHash = ProductionBlockchainService.generateUserHash(username, password);
+        userHash = ProductionBlockchainService.generateUserHash(
+          username,
+          password,
+        );
       } catch (error) {
-        userHash = crypto.createHash('sha256').update(username + password + Date.now()).digest('hex');
+        userHash = crypto
+          .createHash("sha256")
+          .update(username + password + Date.now())
+          .digest("hex");
       }
 
       // Create user object
@@ -162,7 +170,7 @@ export class EnhancedUserAuthenticationService {
         createdAt: new Date().toISOString(),
         secureSystemActivated: false,
         splitKeySystemActive: false,
-        isActive: true
+        isActive: true,
       };
 
       // Store user in database
@@ -177,14 +185,17 @@ export class EnhancedUserAuthenticationService {
       // Activate secure system
       let secureActivated = false;
       try {
-        const secureResult = await SecureDataAccessService.createSecureUserAccount(
-          username,
-          password,
-          profile || {}
-        );
+        const secureResult =
+          await SecureDataAccessService.createSecureUserAccount(
+            username,
+            password,
+            profile || {},
+          );
         secureActivated = secureResult.dataAccessActivated;
       } catch (error) {
-        console.warn("⚠️ Secure account creation failed, continuing with basic account");
+        console.warn(
+          "⚠️ Secure account creation failed, continuing with basic account",
+        );
       }
 
       // Update user with secure system status
@@ -199,20 +210,20 @@ export class EnhancedUserAuthenticationService {
           username: user.username,
           userHash: user.userHash,
           sessionToken,
-          secureSystemActivated: secureActivated
+          secureSystemActivated: secureActivated,
         },
         message: "Registration successful",
         securityFeatures: {
           splitKeySystem: secureActivated,
           blockchainStorage: true,
-          encryptionLayers: secureActivated ? 3 : 1
-        }
+          encryptionLayers: secureActivated ? 3 : 1,
+        },
       };
     } catch (error) {
       console.error("❌ Registration failed:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Registration failed"
+        message: error instanceof Error ? error.message : "Registration failed",
       };
     }
   }
@@ -224,7 +235,7 @@ export class EnhancedUserAuthenticationService {
     username: string,
     password: string,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
   ): Promise<AuthResult> {
     try {
       console.log(`🔐 Authenticating user: ${username}`);
@@ -238,12 +249,24 @@ export class EnhancedUserAuthenticationService {
       // Verify password
       const passwordValid = await bcrypt.compare(password, user.passwordHash);
       if (!passwordValid) {
-        await this.logDataAccess(user.id, "login_failed", "authentication", null, ipAddress, false, "Invalid password");
+        await this.logDataAccess(
+          user.id,
+          "login_failed",
+          "authentication",
+          null,
+          ipAddress,
+          false,
+          "Invalid password",
+        );
         return { success: false, message: "Invalid username or password" };
       }
 
       // Create session
-      const sessionToken = await this.createSession(user.id, ipAddress, userAgent);
+      const sessionToken = await this.createSession(
+        user.id,
+        ipAddress,
+        userAgent,
+      );
 
       // Update last login
       await this.updateLastLogin(user.id);
@@ -251,14 +274,24 @@ export class EnhancedUserAuthenticationService {
       // Authenticate with secure system
       let secureAuth = false;
       try {
-        const secureResult = await SecureDataAccessService.authenticateUser(username, password);
+        const secureResult = await SecureDataAccessService.authenticateUser(
+          username,
+          password,
+        );
         secureAuth = secureResult.authenticated;
       } catch (error) {
         console.warn("⚠️ Secure authentication failed, using basic session");
       }
 
       // Log successful access
-      await this.logDataAccess(user.id, "login_success", "authentication", null, ipAddress, true);
+      await this.logDataAccess(
+        user.id,
+        "login_success",
+        "authentication",
+        null,
+        ipAddress,
+        true,
+      );
 
       console.log(`✅ User ${username} authenticated successfully`);
 
@@ -269,14 +302,14 @@ export class EnhancedUserAuthenticationService {
           username: user.username,
           userHash: user.userHash,
           sessionToken,
-          secureSystemActivated: user.secureSystemActivated
+          secureSystemActivated: user.secureSystemActivated,
         },
         message: "Authentication successful",
         securityFeatures: {
           splitKeySystem: secureAuth,
           blockchainStorage: true,
-          encryptionLayers: user.secureSystemActivated ? 3 : 1
-        }
+          encryptionLayers: user.secureSystemActivated ? 3 : 1,
+        },
       };
     } catch (error) {
       console.error("❌ Authentication failed:", error);
@@ -287,7 +320,9 @@ export class EnhancedUserAuthenticationService {
   /**
    * Verify session token
    */
-  static async verifySession(sessionToken: string): Promise<{ valid: boolean; user?: any }> {
+  static async verifySession(
+    sessionToken: string,
+  ): Promise<{ valid: boolean; user?: any }> {
     try {
       const session = await this.getActiveSession(sessionToken);
       if (!session) {
@@ -308,8 +343,8 @@ export class EnhancedUserAuthenticationService {
           id: user.id,
           username: user.username,
           userHash: user.userHash,
-          email: user.email
-        }
+          email: user.email,
+        },
       };
     } catch (error) {
       console.error("❌ Session verification failed:", error);
@@ -339,7 +374,7 @@ export class EnhancedUserAuthenticationService {
       type: string;
       data: any;
       timestamp?: string;
-    }
+    },
   ): Promise<{ success: boolean; recordId?: string; message?: string }> {
     try {
       const session = await this.verifySession(sessionToken);
@@ -352,9 +387,12 @@ export class EnhancedUserAuthenticationService {
         id: recordId,
         patientId: session.user.username,
         recordType: healthRecord.type,
-        title: healthRecord.data.title || `${healthRecord.type} - ${new Date().toLocaleDateString()}`,
-        description: healthRecord.data.description || JSON.stringify(healthRecord.data),
-        date: healthRecord.data.date || new Date().toISOString().split('T')[0],
+        title:
+          healthRecord.data.title ||
+          `${healthRecord.type} - ${new Date().toLocaleDateString()}`,
+        description:
+          healthRecord.data.description || JSON.stringify(healthRecord.data),
+        date: healthRecord.data.date || new Date().toISOString().split("T")[0],
         doctor: healthRecord.data.doctor || null,
         facility: healthRecord.data.facility || null,
         diagnosis: healthRecord.data.diagnosis || null,
@@ -363,13 +401,24 @@ export class EnhancedUserAuthenticationService {
         notes: healthRecord.data.notes || null,
         metadata: JSON.stringify(healthRecord.data.metadata || {}),
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       const stored = await this.storeMedicalRecord(record);
       if (stored) {
-        await this.logDataAccess(session.user.id, "store_health_record", "medical_record", recordId, null, true);
-        return { success: true, recordId, message: "Health record stored successfully" };
+        await this.logDataAccess(
+          session.user.id,
+          "store_health_record",
+          "medical_record",
+          recordId,
+          null,
+          true,
+        );
+        return {
+          success: true,
+          recordId,
+          message: "Health record stored successfully",
+        };
       } else {
         return { success: false, message: "Failed to store health record" };
       }
@@ -394,12 +443,19 @@ export class EnhancedUserAuthenticationService {
       }
 
       const records = await this.getMedicalRecords(session.user.username);
-      await this.logDataAccess(session.user.id, "get_health_records", "medical_record", null, null, true);
+      await this.logDataAccess(
+        session.user.id,
+        "get_health_records",
+        "medical_record",
+        null,
+        null,
+        true,
+      );
 
       return {
         success: true,
         records,
-        message: `Retrieved ${records.length} health records`
+        message: `Retrieved ${records.length} health records`,
       };
     } catch (error) {
       console.error("❌ Failed to get health records:", error);
@@ -409,7 +465,11 @@ export class EnhancedUserAuthenticationService {
 
   // Private helper methods
 
-  private static validateUserInput(username: string, password: string, email?: string): { valid: boolean; message?: string } {
+  private static validateUserInput(
+    username: string,
+    password: string,
+    email?: string,
+  ): { valid: boolean; message?: string } {
     if (!username || !password) {
       return { valid: false, message: "Username and password are required" };
     }
@@ -419,11 +479,17 @@ export class EnhancedUserAuthenticationService {
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return { valid: false, message: "Username can only contain letters, numbers, and underscores" };
+      return {
+        valid: false,
+        message: "Username can only contain letters, numbers, and underscores",
+      };
     }
 
     if (password.length < 6) {
-      return { valid: false, message: "Password must be at least 6 characters" };
+      return {
+        valid: false,
+        message: "Password must be at least 6 characters",
+      };
     }
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -445,10 +511,19 @@ export class EnhancedUserAuthenticationService {
       `);
 
       stmt.run(
-        user.id, user.username, user.passwordHash, user.userHash, user.email,
-        user.firstName, user.lastName, user.dateOfBirth, user.phone,
-        user.createdAt, user.secureSystemActivated ? 1 : 0,
-        user.splitKeySystemActive ? 1 : 0, user.isActive ? 1 : 0
+        user.id,
+        user.username,
+        user.passwordHash,
+        user.userHash,
+        user.email,
+        user.firstName,
+        user.lastName,
+        user.dateOfBirth,
+        user.phone,
+        user.createdAt,
+        user.secureSystemActivated ? 1 : 0,
+        user.splitKeySystemActive ? 1 : 0,
+        user.isActive ? 1 : 0,
       );
 
       return true;
@@ -460,10 +535,14 @@ export class EnhancedUserAuthenticationService {
     }
   }
 
-  private static async getUserByUsername(username: string): Promise<User | null> {
+  private static async getUserByUsername(
+    username: string,
+  ): Promise<User | null> {
     try {
       const db = SQLiteDatabaseService.getInstance();
-      const stmt = db.prepare('SELECT * FROM users WHERE username = ? AND is_active = 1');
+      const stmt = db.prepare(
+        "SELECT * FROM users WHERE username = ? AND is_active = 1",
+      );
       const row = stmt.get(username);
 
       if (row) {
@@ -481,7 +560,9 @@ export class EnhancedUserAuthenticationService {
   private static async getUserByEmail(email: string): Promise<User | null> {
     try {
       const db = SQLiteDatabaseService.getInstance();
-      const stmt = db.prepare('SELECT * FROM users WHERE email = ? AND is_active = 1');
+      const stmt = db.prepare(
+        "SELECT * FROM users WHERE email = ? AND is_active = 1",
+      );
       const row = stmt.get(email);
 
       if (row) {
@@ -504,7 +585,9 @@ export class EnhancedUserAuthenticationService {
   private static async getUserById(id: string): Promise<User | null> {
     try {
       const db = SQLiteDatabaseService.getInstance();
-      const stmt = db.prepare('SELECT * FROM users WHERE id = ? AND is_active = 1');
+      const stmt = db.prepare(
+        "SELECT * FROM users WHERE id = ? AND is_active = 1",
+      );
       const row = stmt.get(id);
 
       if (row) {
@@ -539,12 +622,16 @@ export class EnhancedUserAuthenticationService {
       lastLogin: row.last_login,
       secureSystemActivated: Boolean(row.secure_system_activated),
       splitKeySystemActive: Boolean(row.split_key_system_active),
-      isActive: Boolean(row.is_active)
+      isActive: Boolean(row.is_active),
     };
   }
 
-  private static async createSession(userId: string, ipAddress?: string, userAgent?: string): Promise<string> {
-    const sessionToken = crypto.randomBytes(32).toString('hex');
+  private static async createSession(
+    userId: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<string> {
+    const sessionToken = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     try {
@@ -560,7 +647,7 @@ export class EnhancedUserAuthenticationService {
         sessionToken,
         expiresAt.toISOString(),
         ipAddress,
-        userAgent
+        userAgent,
       );
     } catch (error) {
       console.error("❌ Error creating session:", error);
@@ -569,7 +656,9 @@ export class EnhancedUserAuthenticationService {
     return sessionToken;
   }
 
-  private static async getActiveSession(sessionToken: string): Promise<UserSession | null> {
+  private static async getActiveSession(
+    sessionToken: string,
+  ): Promise<UserSession | null> {
     try {
       const db = SQLiteDatabaseService.getInstance();
       const stmt = db.prepare(`
@@ -588,7 +677,7 @@ export class EnhancedUserAuthenticationService {
           lastAccessed: new Date(row.last_accessed),
           ipAddress: row.ip_address,
           userAgent: row.user_agent,
-          isActive: Boolean(row.is_active)
+          isActive: Boolean(row.is_active),
         };
       }
       return null;
@@ -634,7 +723,10 @@ export class EnhancedUserAuthenticationService {
     }
   }
 
-  private static async updateUserSecureStatus(userId: string, activated: boolean): Promise<void> {
+  private static async updateUserSecureStatus(
+    userId: string,
+    activated: boolean,
+  ): Promise<void> {
     try {
       const db = SQLiteDatabaseService.getInstance();
       const stmt = db.prepare(`
@@ -657,10 +749,21 @@ export class EnhancedUserAuthenticationService {
       `);
 
       stmt.run(
-        record.id, record.patientId, record.recordType, record.title,
-        record.description, record.date, record.doctor, record.facility,
-        record.diagnosis, record.treatment, record.medications, record.notes,
-        record.metadata, record.createdAt, record.updatedAt
+        record.id,
+        record.patientId,
+        record.recordType,
+        record.title,
+        record.description,
+        record.date,
+        record.doctor,
+        record.facility,
+        record.diagnosis,
+        record.treatment,
+        record.medications,
+        record.notes,
+        record.metadata,
+        record.createdAt,
+        record.updatedAt,
       );
 
       return true;
@@ -678,7 +781,7 @@ export class EnhancedUserAuthenticationService {
       `);
       const rows = stmt.all(patientId);
 
-      return rows.map(row => ({
+      return rows.map((row) => ({
         id: row.id,
         patientId: row.patient_id,
         recordType: row.record_type,
@@ -693,7 +796,7 @@ export class EnhancedUserAuthenticationService {
         notes: row.notes,
         metadata: row.metadata ? JSON.parse(row.metadata) : {},
         createdAt: row.created_at,
-        updatedAt: row.updated_at
+        updatedAt: row.updated_at,
       }));
     } catch (error) {
       console.error("❌ Error getting medical records:", error);
@@ -708,7 +811,7 @@ export class EnhancedUserAuthenticationService {
     resourceId?: string | null,
     ipAddress?: string | null,
     success: boolean = true,
-    errorMessage?: string | null
+    errorMessage?: string | null,
   ): Promise<void> {
     try {
       const db = SQLiteDatabaseService.getInstance();
@@ -725,7 +828,7 @@ export class EnhancedUserAuthenticationService {
         resourceId,
         ipAddress,
         success ? 1 : 0,
-        errorMessage
+        errorMessage,
       );
     } catch (error) {
       console.error("❌ Error logging data access:", error);
@@ -751,7 +854,7 @@ export class EnhancedUserAuthenticationService {
     } catch (error) {
       return {
         totalUsers: this.fallbackUsers.size,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }

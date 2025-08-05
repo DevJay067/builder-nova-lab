@@ -11,8 +11,8 @@ export interface UserDataAccess {
   userId: string;
   username: string;
   hasCloudAccess: boolean;
-  encryptionLevel: 'basic' | 'enhanced' | 'enterprise';
-  dataLocation: 'local' | 'cloud' | 'hybrid';
+  encryptionLevel: "basic" | "enhanced" | "enterprise";
+  dataLocation: "local" | "cloud" | "hybrid";
   permissions: string[];
 }
 
@@ -45,11 +45,12 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
 
       // Initialize cloud storage
       await SecureCloudStorageService.initialize({
-        provider: 'aws',
-        region: process.env.AWS_REGION || 'us-east-1',
-        bucketName: process.env.CLOUD_STORAGE_BUCKET || 'healthchain-secure-data',
+        provider: "aws",
+        region: process.env.AWS_REGION || "us-east-1",
+        bucketName:
+          process.env.CLOUD_STORAGE_BUCKET || "healthchain-secure-data",
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       });
 
       this.cloudInitialized = true;
@@ -72,24 +73,29 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
       lastName?: string;
       dateOfBirth?: string;
       phone?: string;
-    }
+    },
   ): Promise<any> {
     try {
       // Perform standard registration
-      const result = await super.registerUser(username, password, email, profile);
-      
+      const result = await super.registerUser(
+        username,
+        password,
+        email,
+        profile,
+      );
+
       if (result.success && result.user) {
         // Set up user's cloud storage space
         await this.setupUserCloudSpace(result.user.id, username);
-        
+
         // Log the cloud setup
         await this.logDataAccess(
-          result.user.id, 
-          'cloud_setup', 
-          'user_registration', 
-          null, 
-          null, 
-          true
+          result.user.id,
+          "cloud_setup",
+          "user_registration",
+          null,
+          null,
+          true,
         );
 
         // Enhanced result with cloud information
@@ -99,8 +105,8 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
             enabled: this.cloudInitialized,
             encrypted: true,
             userIsolated: true,
-            provider: 'aws-s3'
-          }
+            provider: "aws-s3",
+          },
         };
       }
 
@@ -118,16 +124,21 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
     username: string,
     password: string,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
   ): Promise<any> {
     try {
       // Perform standard authentication
-      const result = await super.authenticateUser(username, password, ipAddress, userAgent);
-      
+      const result = await super.authenticateUser(
+        username,
+        password,
+        ipAddress,
+        userAgent,
+      );
+
       if (result.success && result.user) {
         // Get user's cloud access information
         const cloudAccess = await this.getUserCloudAccess(result.user.id);
-        
+
         // Enhanced result with cloud access info
         return {
           ...result,
@@ -135,15 +146,20 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
             hasCloudStorage: this.cloudInitialized,
             dataLocation: cloudAccess.dataLocation,
             encryptionLevel: cloudAccess.encryptionLevel,
-            permissions: cloudAccess.permissions
-          }
+            permissions: cloudAccess.permissions,
+          },
         };
       }
 
       return result;
     } catch (error) {
       console.error("❌ Cloud authentication failed:", error);
-      return await super.authenticateUser(username, password, ipAddress, userAgent);
+      return await super.authenticateUser(
+        username,
+        password,
+        ipAddress,
+        userAgent,
+      );
     }
   }
 
@@ -156,8 +172,13 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
       type: string;
       data: any;
       timestamp?: string;
-    }
-  ): Promise<{ success: boolean; recordId?: string; message?: string; cloudInfo?: any }> {
+    },
+  ): Promise<{
+    success: boolean;
+    recordId?: string;
+    message?: string;
+    cloudInfo?: any;
+  }> {
     try {
       const session = await this.verifySession(sessionToken);
       if (!session.valid || !session.user) {
@@ -175,9 +196,9 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
         patientId: username,
         ...healthRecord.data,
         timestamp: healthRecord.timestamp || new Date().toISOString(),
-        encryptionLevel: 'enterprise',
+        encryptionLevel: "enterprise",
         userIsolated: true,
-        cloudEnabled: this.cloudInitialized
+        cloudEnabled: this.cloudInitialized,
       };
 
       let cloudResult = null;
@@ -189,7 +210,7 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
           cloudResult = await SecureCloudStorageService.storeHealthRecord(
             userId,
             recordId,
-            enhancedRecord
+            enhancedRecord,
           );
           console.log(`✅ Health record stored in cloud for user ${username}`);
         } catch (cloudError) {
@@ -199,7 +220,11 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
 
       // Also store locally (as backup and for offline access)
       try {
-        localResult = await this.storeLocalHealthRecord(userId, recordId, enhancedRecord);
+        localResult = await this.storeLocalHealthRecord(
+          userId,
+          recordId,
+          enhancedRecord,
+        );
       } catch (localError) {
         console.error("❌ Local storage failed:", localError);
       }
@@ -207,19 +232,19 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
       // Log the data access
       await this.logDataAccess(
         userId,
-        'store_health_record',
-        'medical_record',
+        "store_health_record",
+        "medical_record",
         recordId,
         null,
-        cloudResult?.success || localResult
+        cloudResult?.success || localResult,
       );
 
       const success = cloudResult?.success || localResult;
-      const message = cloudResult?.success 
+      const message = cloudResult?.success
         ? "Health record stored securely in encrypted cloud storage"
-        : localResult 
-        ? "Health record stored locally (cloud unavailable)"
-        : "Failed to store health record";
+        : localResult
+          ? "Health record stored locally (cloud unavailable)"
+          : "Failed to store health record";
 
       return {
         success,
@@ -230,14 +255,14 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
           localBackup: localResult,
           encrypted: true,
           userIsolated: true,
-          cloudPath: cloudResult?.cloudPath
-        }
+          cloudPath: cloudResult?.cloudPath,
+        },
       };
     } catch (error) {
       console.error("❌ Failed to store health record:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Storage failed"
+        message: error instanceof Error ? error.message : "Storage failed",
       };
     }
   }
@@ -266,17 +291,24 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
         cloudAvailable: this.cloudInitialized,
         cloudRecords: 0,
         localRecords: 0,
-        syncStatus: 'unknown' as 'synced' | 'partial' | 'local-only' | 'unknown'
+        syncStatus: "unknown" as
+          | "synced"
+          | "partial"
+          | "local-only"
+          | "unknown",
       };
 
       // Get records from cloud storage (user-isolated and encrypted)
       if (this.cloudInitialized) {
         try {
-          const cloudResult = await SecureCloudStorageService.getHealthRecords(userId);
+          const cloudResult =
+            await SecureCloudStorageService.getHealthRecords(userId);
           if (cloudResult.success && cloudResult.records) {
             cloudRecords = cloudResult.records;
             cloudInfo.cloudRecords = cloudRecords.length;
-            console.log(`✅ Retrieved ${cloudRecords.length} encrypted records from cloud for user ${username}`);
+            console.log(
+              `✅ Retrieved ${cloudRecords.length} encrypted records from cloud for user ${username}`,
+            );
           }
         } catch (cloudError) {
           console.error("❌ Failed to retrieve from cloud:", cloudError);
@@ -299,34 +331,37 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
 
       // Determine sync status
       if (cloudInfo.cloudRecords > 0 && cloudInfo.localRecords > 0) {
-        cloudInfo.syncStatus = cloudInfo.cloudRecords === cloudInfo.localRecords ? 'synced' : 'partial';
+        cloudInfo.syncStatus =
+          cloudInfo.cloudRecords === cloudInfo.localRecords
+            ? "synced"
+            : "partial";
       } else if (cloudInfo.cloudRecords > 0) {
-        cloudInfo.syncStatus = 'synced';
+        cloudInfo.syncStatus = "synced";
       } else {
-        cloudInfo.syncStatus = 'local-only';
+        cloudInfo.syncStatus = "local-only";
       }
 
       // Log data access
       await this.logDataAccess(
         userId,
-        'get_health_records',
-        'medical_record',
+        "get_health_records",
+        "medical_record",
         null,
         null,
-        true
+        true,
       );
 
       return {
         success: true,
         records: allRecords,
         message: `Retrieved ${allRecords.length} health records (${cloudInfo.cloudRecords} from cloud, ${cloudInfo.localRecords} local)`,
-        cloudInfo
+        cloudInfo,
       };
     } catch (error) {
       console.error("❌ Failed to retrieve health records:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Retrieval failed"
+        message: error instanceof Error ? error.message : "Retrieval failed",
       };
     }
   }
@@ -359,11 +394,11 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
       // Log sync operation
       await this.logDataAccess(
         userId,
-        'cloud_sync',
-        'data_sync',
+        "cloud_sync",
+        "data_sync",
         null,
         null,
-        syncResult.syncErrors.length === 0
+        syncResult.syncErrors.length === 0,
       );
 
       return {
@@ -372,17 +407,18 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
           lastSync: syncResult.lastSync,
           totalCloudRecords: syncResult.totalCloudRecords,
           pendingUploads: syncResult.pendingUploads,
-          errors: syncResult.syncErrors
+          errors: syncResult.syncErrors,
         },
-        message: syncResult.syncErrors.length === 0 
-          ? `Successfully synced ${syncResult.totalCloudRecords} records to cloud`
-          : `Sync completed with ${syncResult.syncErrors.length} errors`
+        message:
+          syncResult.syncErrors.length === 0
+            ? `Successfully synced ${syncResult.totalCloudRecords} records to cloud`
+            : `Sync completed with ${syncResult.syncErrors.length} errors`,
       };
     } catch (error) {
       console.error("❌ Cloud sync failed:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Sync failed"
+        message: error instanceof Error ? error.message : "Sync failed",
       };
     }
   }
@@ -408,24 +444,28 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
         success: true,
         stats: {
           ...stats,
-          encryption: 'AES-256-GCM',
+          encryption: "AES-256-GCM",
           userIsolated: true,
-          dataLocation: stats.isCloudAvailable ? 'cloud+local' : 'local-only'
+          dataLocation: stats.isCloudAvailable ? "cloud+local" : "local-only",
         },
-        message: "Storage statistics retrieved successfully"
+        message: "Storage statistics retrieved successfully",
       };
     } catch (error) {
       console.error("❌ Failed to get cloud stats:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Stats retrieval failed"
+        message:
+          error instanceof Error ? error.message : "Stats retrieval failed",
       };
     }
   }
 
   // Private helper methods
 
-  private static async setupUserCloudSpace(userId: string, username: string): Promise<void> {
+  private static async setupUserCloudSpace(
+    userId: string,
+    username: string,
+  ): Promise<void> {
     try {
       if (!this.cloudInitialized) {
         console.log(`⚠️ Cloud not available for user ${username} setup`);
@@ -434,66 +474,71 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
 
       // Create user's cloud directory structure by storing a welcome record
       const welcomeRecord = {
-        recordType: 'system',
-        title: 'Welcome to HealthChain',
-        description: 'Your secure, encrypted health data storage is now ready',
-        date: new Date().toISOString().split('T')[0],
+        recordType: "system",
+        title: "Welcome to HealthChain",
+        description: "Your secure, encrypted health data storage is now ready",
+        date: new Date().toISOString().split("T")[0],
         metadata: {
           isWelcomeRecord: true,
           userSetup: true,
-          encryptionEnabled: true
-        }
+          encryptionEnabled: true,
+        },
       };
 
       await SecureCloudStorageService.storeHealthRecord(
         userId,
         `welcome-${Date.now()}`,
-        welcomeRecord
+        welcomeRecord,
       );
 
       console.log(`✅ Cloud space set up for user ${username}`);
     } catch (error) {
-      console.error(`❌ Failed to set up cloud space for user ${username}:`, error);
+      console.error(
+        `❌ Failed to set up cloud space for user ${username}:`,
+        error,
+      );
     }
   }
 
-  private static async getUserCloudAccess(userId: string): Promise<UserDataAccess> {
+  private static async getUserCloudAccess(
+    userId: string,
+  ): Promise<UserDataAccess> {
     try {
       const user = await this.getUserById(userId);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       return {
         userId: user.id,
         username: user.username,
         hasCloudAccess: this.cloudInitialized,
-        encryptionLevel: 'enterprise',
-        dataLocation: this.cloudInitialized ? 'hybrid' : 'local',
+        encryptionLevel: "enterprise",
+        dataLocation: this.cloudInitialized ? "hybrid" : "local",
         permissions: [
-          'read:own_data',
-          'write:own_data',
-          'delete:own_data',
-          'sync:cloud_storage'
-        ]
+          "read:own_data",
+          "write:own_data",
+          "delete:own_data",
+          "sync:cloud_storage",
+        ],
       };
     } catch (error) {
-      console.error('❌ Failed to get user cloud access:', error);
+      console.error("❌ Failed to get user cloud access:", error);
       return {
         userId,
-        username: 'unknown',
+        username: "unknown",
         hasCloudAccess: false,
-        encryptionLevel: 'basic',
-        dataLocation: 'local',
-        permissions: ['read:own_data']
+        encryptionLevel: "basic",
+        dataLocation: "local",
+        permissions: ["read:own_data"],
       };
     }
   }
 
   private static async storeLocalHealthRecord(
-    userId: string, 
-    recordId: string, 
-    record: any
+    userId: string,
+    recordId: string,
+    record: any,
   ): Promise<boolean> {
     try {
       // Store in SQLite database (existing functionality)
@@ -501,9 +546,11 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
         id: recordId,
         patientId: record.patientId,
         recordType: record.recordType,
-        title: record.title || `${record.recordType} - ${new Date().toLocaleDateString()}`,
+        title:
+          record.title ||
+          `${record.recordType} - ${new Date().toLocaleDateString()}`,
         description: record.description || JSON.stringify(record),
-        date: record.date || new Date().toISOString().split('T')[0],
+        date: record.date || new Date().toISOString().split("T")[0],
         doctor: record.doctor || null,
         facility: record.facility || null,
         diagnosis: record.diagnosis || null,
@@ -513,15 +560,15 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
         metadata: JSON.stringify({
           ...record.metadata,
           cloudEnabled: this.cloudInitialized,
-          encryptionLevel: 'enterprise'
+          encryptionLevel: "enterprise",
         }),
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       });
 
       return success;
     } catch (error) {
-      console.error('❌ Failed to store local health record:', error);
+      console.error("❌ Failed to store local health record:", error);
       return false;
     }
   }
@@ -534,40 +581,43 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
       const records = await this.getMedicalRecords(patientId);
       return {
         success: true,
-        records: records.map(record => ({
+        records: records.map((record) => ({
           ...record,
-          source: 'local'
-        }))
+          source: "local",
+        })),
       };
     } catch (error) {
-      console.error('❌ Failed to get local health records:', error);
+      console.error("❌ Failed to get local health records:", error);
       return { success: false };
     }
   }
 
-  private static mergeHealthRecords(cloudRecords: any[], localRecords: any[]): any[] {
+  private static mergeHealthRecords(
+    cloudRecords: any[],
+    localRecords: any[],
+  ): any[] {
     const recordMap = new Map();
-    
+
     // Cloud records take priority
-    cloudRecords.forEach(record => {
+    cloudRecords.forEach((record) => {
       recordMap.set(record.id, {
         ...record,
-        source: 'cloud',
-        cloudSynced: true
+        source: "cloud",
+        cloudSynced: true,
       });
     });
-    
+
     // Add local records if not in cloud
-    localRecords.forEach(record => {
+    localRecords.forEach((record) => {
       if (!recordMap.has(record.id)) {
         recordMap.set(record.id, {
           ...record,
-          source: 'local',
-          cloudSynced: false
+          source: "local",
+          cloudSynced: false,
         });
       }
     });
-    
+
     return Array.from(recordMap.values()).sort((a, b) => {
       const dateA = new Date(a.date || a.createdAt || 0);
       const dateB = new Date(b.date || b.createdAt || 0);
@@ -588,7 +638,7 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
         ...cloudStatus,
         userDataIsolation: true,
         encryptionAtRest: true,
-        encryptionInTransit: true
+        encryptionInTransit: true,
       },
       features: {
         localStorage: true,
@@ -596,8 +646,8 @@ export class CloudAuthenticationService extends EnhancedUserAuthenticationServic
         encryption: true,
         userIsolation: true,
         auditLogging: true,
-        automaticSync: cloudStatus.isCloudAvailable
-      }
+        automaticSync: cloudStatus.isCloudAvailable,
+      },
     };
   }
 }

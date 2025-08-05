@@ -190,15 +190,20 @@ export default function BmaxAI() {
       }
 
       // Enhance personalized context with real health records
-      const enhancedContext = await createEnhancedPersonalizedContext(contextData, healthRecords);
+      const enhancedContext = await createEnhancedPersonalizedContext(
+        contextData,
+        healthRecords,
+      );
       setPersonalizedContext(enhancedContext);
-
     } catch (error) {
       console.error("Error loading personalized context:", error);
     }
   };
 
-  const createEnhancedPersonalizedContext = async (contextData: any, healthRecords: any[]): Promise<PersonalizedContext> => {
+  const createEnhancedPersonalizedContext = async (
+    contextData: any,
+    healthRecords: any[],
+  ): Promise<PersonalizedContext> => {
     // Extract medical information from health records
     const extractedConditions: MedicalCondition[] = [];
     const extractedMedications: string[] = [];
@@ -206,33 +211,61 @@ export default function BmaxAI() {
     const recentRecords: string[] = [];
 
     // Analyze health records to extract medical data
-    healthRecords.forEach(record => {
+    healthRecords.forEach((record) => {
       if (record.recordType) {
         // Extract diagnoses from descriptions
-        const description = record.description?.toLowerCase() || '';
-        const title = record.title?.toLowerCase() || '';
+        const description = record.description?.toLowerCase() || "";
+        const title = record.title?.toLowerCase() || "";
 
         // Common medical conditions detection
         const conditions = [
-          { name: 'Diabetes', keywords: ['diabetes', 'diabetic', 'blood sugar', 'glucose'] },
-          { name: 'Hypertension', keywords: ['hypertension', 'high blood pressure', 'bp'] },
-          { name: 'Asthma', keywords: ['asthma', 'inhaler', 'breathing difficulty'] },
-          { name: 'Heart Disease', keywords: ['heart disease', 'cardiac', 'chest pain'] },
-          { name: 'Arthritis', keywords: ['arthritis', 'joint pain', 'rheumatic'] },
-          { name: 'Depression', keywords: ['depression', 'anxiety', 'mental health'] },
-          { name: 'Allergies', keywords: ['allergy', 'allergic reaction', 'allergen'] }
+          {
+            name: "Diabetes",
+            keywords: ["diabetes", "diabetic", "blood sugar", "glucose"],
+          },
+          {
+            name: "Hypertension",
+            keywords: ["hypertension", "high blood pressure", "bp"],
+          },
+          {
+            name: "Asthma",
+            keywords: ["asthma", "inhaler", "breathing difficulty"],
+          },
+          {
+            name: "Heart Disease",
+            keywords: ["heart disease", "cardiac", "chest pain"],
+          },
+          {
+            name: "Arthritis",
+            keywords: ["arthritis", "joint pain", "rheumatic"],
+          },
+          {
+            name: "Depression",
+            keywords: ["depression", "anxiety", "mental health"],
+          },
+          {
+            name: "Allergies",
+            keywords: ["allergy", "allergic reaction", "allergen"],
+          },
         ];
 
-        conditions.forEach(condition => {
-          if (condition.keywords.some(keyword =>
-            description.includes(keyword) || title.includes(keyword)
-          )) {
-            if (!extractedConditions.find(c => c.name === condition.name)) {
+        conditions.forEach((condition) => {
+          if (
+            condition.keywords.some(
+              (keyword) =>
+                description.includes(keyword) || title.includes(keyword),
+            )
+          ) {
+            if (!extractedConditions.find((c) => c.name === condition.name)) {
               extractedConditions.push({
                 name: condition.name,
-                type: ['diabetes', 'hypertension', 'heart disease'].includes(condition.name.toLowerCase()) ? 'chronic' : 'condition',
-                severity: 'moderate',
-                lastUpdated: record.date || record.createdAt
+                type: ["diabetes", "hypertension", "heart disease"].includes(
+                  condition.name.toLowerCase(),
+                )
+                  ? "chronic"
+                  : "condition",
+                severity: "moderate",
+                lastUpdated: record.date || record.createdAt,
               });
             }
           }
@@ -240,26 +273,46 @@ export default function BmaxAI() {
 
         // Extract medications
         const medications = [
-          'metformin', 'insulin', 'lisinopril', 'amlodipine', 'atorvastatin',
-          'metoprolol', 'omeprazole', 'aspirin', 'ibuprofen', 'acetaminophen'
+          "metformin",
+          "insulin",
+          "lisinopril",
+          "amlodipine",
+          "atorvastatin",
+          "metoprolol",
+          "omeprazole",
+          "aspirin",
+          "ibuprofen",
+          "acetaminophen",
         ];
 
-        medications.forEach(med => {
-          if ((description.includes(med) || title.includes(med)) &&
-              !extractedMedications.includes(med)) {
+        medications.forEach((med) => {
+          if (
+            (description.includes(med) || title.includes(med)) &&
+            !extractedMedications.includes(med)
+          ) {
             extractedMedications.push(med);
           }
         });
 
         // Extract recent symptoms and issues
         const symptoms = [
-          'headache', 'dizziness', 'fatigue', 'chest pain', 'shortness of breath',
-          'nausea', 'fever', 'cough', 'abdominal pain', 'back pain'
+          "headache",
+          "dizziness",
+          "fatigue",
+          "chest pain",
+          "shortness of breath",
+          "nausea",
+          "fever",
+          "cough",
+          "abdominal pain",
+          "back pain",
         ];
 
-        symptoms.forEach(symptom => {
-          if ((description.includes(symptom) || title.includes(symptom)) &&
-              !extractedSymptoms.includes(symptom)) {
+        symptoms.forEach((symptom) => {
+          if (
+            (description.includes(symptom) || title.includes(symptom)) &&
+            !extractedSymptoms.includes(symptom)
+          ) {
             extractedSymptoms.push(symptom);
           }
         });
@@ -283,43 +336,67 @@ export default function BmaxAI() {
       context: `Enhanced medical context from ${healthRecords.length} health records`,
       summary: {
         totalConditions: extractedConditions.length,
-        chronicConditions: extractedConditions.filter(c => c.type === 'chronic').length,
+        chronicConditions: extractedConditions.filter(
+          (c) => c.type === "chronic",
+        ).length,
         currentMedications: extractedMedications.length,
-        knownAllergies: extractedConditions.filter(c => c.name === 'Allergies').length,
+        knownAllergies: extractedConditions.filter(
+          (c) => c.name === "Allergies",
+        ).length,
         recentSymptoms: extractedSymptoms.length,
-        lastUpdate: healthRecords.length > 0 ?
-          Math.max(...healthRecords.map(r => new Date(r.date || r.createdAt).getTime())).toString() :
-          new Date().toISOString()
+        lastUpdate:
+          healthRecords.length > 0
+            ? Math.max(
+                ...healthRecords.map((r) =>
+                  new Date(r.date || r.createdAt).getTime(),
+                ),
+              ).toString()
+            : new Date().toISOString(),
       },
       medicalConditions: extractedConditions,
       currentMedications: extractedMedications,
-      allergies: extractedConditions.filter(c => c.name === 'Allergies').map(c => c.name),
+      allergies: extractedConditions
+        .filter((c) => c.name === "Allergies")
+        .map((c) => c.name),
       recentSymptoms: extractedSymptoms,
       searchEnhancers: [
-        ...extractedConditions.map(c => c.name),
+        ...extractedConditions.map((c) => c.name),
         ...extractedMedications,
-        ...extractedSymptoms
+        ...extractedSymptoms,
       ],
       aiInstructions: {
         personalizationEnabled: true,
-        considerConditions: extractedConditions.map(c => c.name),
+        considerConditions: extractedConditions.map((c) => c.name),
         medicationInteractions: extractedMedications,
-        allergyWarnings: extractedConditions.filter(c => c.name === 'Allergies').map(c => c.name),
-        contextualPrompt: createContextualPromptFromRecords(extractedConditions, extractedMedications, extractedSymptoms, recentRecords)
-      }
+        allergyWarnings: extractedConditions
+          .filter((c) => c.name === "Allergies")
+          .map((c) => c.name),
+        contextualPrompt: createContextualPromptFromRecords(
+          extractedConditions,
+          extractedMedications,
+          extractedSymptoms,
+          recentRecords,
+        ),
+      },
     };
 
     // Merge with existing context data if available
     if (contextData?.hasData) {
       enhancedContext.medicalConditions = [
         ...enhancedContext.medicalConditions,
-        ...(contextData.medicalConditions || [])
+        ...(contextData.medicalConditions || []),
       ];
       enhancedContext.currentMedications = [
-        ...new Set([...enhancedContext.currentMedications, ...(contextData.currentMedications || [])])
+        ...new Set([
+          ...enhancedContext.currentMedications,
+          ...(contextData.currentMedications || []),
+        ]),
       ];
       enhancedContext.allergies = [
-        ...new Set([...enhancedContext.allergies, ...(contextData.allergies || [])])
+        ...new Set([
+          ...enhancedContext.allergies,
+          ...(contextData.allergies || []),
+        ]),
       ];
     }
 
@@ -330,9 +407,9 @@ export default function BmaxAI() {
     conditions: MedicalCondition[],
     medications: string[],
     symptoms: string[],
-    recentRecords: string[]
+    recentRecords: string[],
   ): string => {
-    const conditionsText = conditions.map(c => c.name).join(", ");
+    const conditionsText = conditions.map((c) => c.name).join(", ");
     const medicationsText = medications.join(", ");
     const symptomsText = symptoms.join(", ");
     const recentText = recentRecords.slice(0, 5).join(", ");
@@ -486,7 +563,8 @@ Provide targeted, condition-specific advice rather than general health informati
     }
 
     // Use the enhanced contextual prompt if available
-    const contextPrompt = personalizedContext.aiInstructions?.contextualPrompt ||
+    const contextPrompt =
+      personalizedContext.aiInstructions?.contextualPrompt ||
       createBasicContextPrompt();
 
     return `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(contextPrompt)}`;
@@ -756,7 +834,7 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
               {isLoadingContext
                 ? "Loading your medical context from health records..."
                 : personalizedContext?.hasData
-                  ? `AI is personalized with your complete health history: ${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications${personalizedContext.recentSymptoms?.length ? `, ${personalizedContext.recentSymptoms.length} recent symptoms` : ''}. Your health records are analyzed for personalized recommendations.`
+                  ? `AI is personalized with your complete health history: ${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications${personalizedContext.recentSymptoms?.length ? `, ${personalizedContext.recentSymptoms.length} recent symptoms` : ""}. Your health records are analyzed for personalized recommendations.`
                   : "AI is ready to help with general health questions. Add health records in Health History for personalized recommendations."}
             </CardDescription>
           </CardHeader>
@@ -834,10 +912,12 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
               <div className="flex items-center justify-between">
                 <div className="flex-1 mr-4">
                   <p className="text-sm text-muted-foreground mb-2">
-                    Add your health records to get personalized medical advice based on your conditions, medications, and symptoms.
+                    Add your health records to get personalized medical advice
+                    based on your conditions, medications, and symptoms.
                   </p>
                   <p className="text-xs text-blue-600 font-medium">
-                    Your health data will enhance AI responses with condition-specific recommendations.
+                    Your health data will enhance AI responses with
+                    condition-specific recommendations.
                   </p>
                 </div>
                 <Link to="/history">
@@ -900,26 +980,31 @@ IMPORTANT: When the patient mentions symptoms, immediately consider their docume
                       "Can I take ibuprofen?"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Checks against your {personalizedContext.currentMedications.length} medications
+                      Checks against your{" "}
+                      {personalizedContext.currentMedications.length}{" "}
+                      medications
                     </div>
                   </div>
                 )}
-                {personalizedContext.recentSymptoms && personalizedContext.recentSymptoms.length > 0 && (
-                  <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
-                    <div className="font-medium text-primary mb-1">
-                      "Why am I having {personalizedContext.recentSymptoms[0]}?"
+                {personalizedContext.recentSymptoms &&
+                  personalizedContext.recentSymptoms.length > 0 && (
+                    <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
+                      <div className="font-medium text-primary mb-1">
+                        "Why am I having {personalizedContext.recentSymptoms[0]}
+                        ?"
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        References your recent symptom history
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      References your recent symptom history
-                    </div>
-                  </div>
-                )}
+                  )}
                 <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                   <div className="font-medium text-primary mb-1">
                     "What should I monitor?"
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Based on your {personalizedContext.summary.totalConditions} conditions
+                    Based on your {personalizedContext.summary.totalConditions}{" "}
+                    conditions
                   </div>
                 </div>
                 <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">

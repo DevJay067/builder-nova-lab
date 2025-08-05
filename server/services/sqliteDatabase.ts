@@ -1,6 +1,6 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import Database from "better-sqlite3";
+import path from "path";
+import fs from "fs";
 
 /**
  * SQLite Database Service
@@ -18,10 +18,10 @@ export class SQLiteDatabaseService {
   private static instance: Database.Database | null = null;
   private static isInitialized = false;
   private static config: DatabaseConfig = {
-    databasePath: 'data/healthchain.db',
+    databasePath: "data/healthchain.db",
     enableWAL: true,
     enableSync: true,
-    maxConnections: 10
+    maxConnections: 10,
   };
 
   /**
@@ -34,7 +34,7 @@ export class SQLiteDatabaseService {
 
     try {
       this.config = { ...this.config, ...config };
-      
+
       // Ensure data directory exists
       const dataDir = path.dirname(this.config.databasePath!);
       if (!fs.existsSync(dataDir)) {
@@ -44,28 +44,31 @@ export class SQLiteDatabaseService {
 
       // Initialize SQLite database
       this.instance = new Database(this.config.databasePath!, {
-        verbose: process.env.NODE_ENV === 'development' ? console.log : undefined
+        verbose:
+          process.env.NODE_ENV === "development" ? console.log : undefined,
       });
 
       // Enable WAL mode for better concurrency
       if (this.config.enableWAL) {
-        this.instance.pragma('journal_mode = WAL');
+        this.instance.pragma("journal_mode = WAL");
       }
 
       // Enable foreign key constraints
-      this.instance.pragma('foreign_keys = ON');
+      this.instance.pragma("foreign_keys = ON");
 
       // Optimize for better performance
-      this.instance.pragma('synchronous = NORMAL');
-      this.instance.pragma('cache_size = 1000');
-      this.instance.pragma('temp_store = memory');
+      this.instance.pragma("synchronous = NORMAL");
+      this.instance.pragma("cache_size = 1000");
+      this.instance.pragma("temp_store = memory");
 
-      console.log(`✅ SQLite database initialized: ${this.config.databasePath}`);
+      console.log(
+        `✅ SQLite database initialized: ${this.config.databasePath}`,
+      );
       this.isInitialized = true;
-      
+
       return this.instance;
     } catch (error) {
-      console.error('❌ Failed to initialize SQLite database:', error);
+      console.error("❌ Failed to initialize SQLite database:", error);
       throw error;
     }
   }
@@ -213,9 +216,9 @@ export class SQLiteDatabaseService {
         )
       `);
 
-      console.log('✅ All database tables created successfully');
+      console.log("✅ All database tables created successfully");
     } catch (error) {
-      console.error('❌ Error creating database tables:', error);
+      console.error("❌ Error creating database tables:", error);
       throw error;
     }
   }
@@ -225,13 +228,17 @@ export class SQLiteDatabaseService {
    */
   static runMigrations(): void {
     const db = this.getInstance();
-    
+
     try {
       // Check if migrations table exists
-      const migrationExists = db.prepare(`
+      const migrationExists = db
+        .prepare(
+          `
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='migrations'
-      `).get();
+      `,
+        )
+        .get();
 
       if (!migrationExists) {
         db.exec(`
@@ -244,35 +251,46 @@ export class SQLiteDatabaseService {
       }
 
       // Add new columns if they don't exist
-      const addColumnIfNotExists = (table: string, column: string, definition: string) => {
+      const addColumnIfNotExists = (
+        table: string,
+        column: string,
+        definition: string,
+      ) => {
         try {
           db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
           console.log(`✅ Added column ${column} to ${table}`);
         } catch (error: any) {
-          if (error.message.includes('duplicate column name')) {
+          if (error.message.includes("duplicate column name")) {
             // Column already exists, ignore
           } else {
-            console.warn(`⚠️ Could not add column ${column} to ${table}:`, error.message);
+            console.warn(
+              `⚠️ Could not add column ${column} to ${table}:`,
+              error.message,
+            );
           }
         }
       };
 
       // Migration: Add missing columns to users table
-      addColumnIfNotExists('users', 'phone', 'TEXT');
-      addColumnIfNotExists('users', 'date_of_birth', 'TEXT');
-      addColumnIfNotExists('users', 'is_active', 'BOOLEAN DEFAULT 1');
+      addColumnIfNotExists("users", "phone", "TEXT");
+      addColumnIfNotExists("users", "date_of_birth", "TEXT");
+      addColumnIfNotExists("users", "is_active", "BOOLEAN DEFAULT 1");
 
       // Migration: Add missing columns to medical_records table
-      addColumnIfNotExists('medical_records', 'facility', 'TEXT');
-      addColumnIfNotExists('medical_records', 'diagnosis', 'TEXT');
-      addColumnIfNotExists('medical_records', 'treatment', 'TEXT');
-      addColumnIfNotExists('medical_records', 'medications', 'TEXT');
-      addColumnIfNotExists('medical_records', 'notes', 'TEXT');
-      addColumnIfNotExists('medical_records', 'updated_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP');
+      addColumnIfNotExists("medical_records", "facility", "TEXT");
+      addColumnIfNotExists("medical_records", "diagnosis", "TEXT");
+      addColumnIfNotExists("medical_records", "treatment", "TEXT");
+      addColumnIfNotExists("medical_records", "medications", "TEXT");
+      addColumnIfNotExists("medical_records", "notes", "TEXT");
+      addColumnIfNotExists(
+        "medical_records",
+        "updated_at",
+        "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      );
 
-      console.log('✅ Database migrations completed');
+      console.log("✅ Database migrations completed");
     } catch (error) {
-      console.error('❌ Error running migrations:', error);
+      console.error("❌ Error running migrations:", error);
     }
   }
 
@@ -282,11 +300,11 @@ export class SQLiteDatabaseService {
   static testConnection(): boolean {
     try {
       const db = this.getInstance();
-      const result = db.prepare('SELECT 1 as test').get();
-      console.log('✅ Database connection test successful');
+      const result = db.prepare("SELECT 1 as test").get();
+      console.log("✅ Database connection test successful");
       return true;
     } catch (error) {
-      console.error('❌ Database connection test failed:', error);
+      console.error("❌ Database connection test failed:", error);
       return false;
     }
   }
@@ -297,13 +315,19 @@ export class SQLiteDatabaseService {
   static getStats(): any {
     try {
       const db = this.getInstance();
-      
-      const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
-      const recordCount = db.prepare('SELECT COUNT(*) as count FROM medical_records').get();
-      const sessionCount = db.prepare('SELECT COUNT(*) as count FROM user_sessions WHERE is_active = 1').get();
-      
+
+      const userCount = db.prepare("SELECT COUNT(*) as count FROM users").get();
+      const recordCount = db
+        .prepare("SELECT COUNT(*) as count FROM medical_records")
+        .get();
+      const sessionCount = db
+        .prepare(
+          "SELECT COUNT(*) as count FROM user_sessions WHERE is_active = 1",
+        )
+        .get();
+
       const dbSize = fs.statSync(this.config.databasePath!).size;
-      
+
       return {
         users: userCount?.count || 0,
         medicalRecords: recordCount?.count || 0,
@@ -311,12 +335,12 @@ export class SQLiteDatabaseService {
         databaseSize: dbSize,
         databasePath: this.config.databasePath,
         isInitialized: this.isInitialized,
-        walMode: this.config.enableWAL
+        walMode: this.config.enableWAL,
       };
     } catch (error) {
-      console.error('❌ Error getting database stats:', error);
+      console.error("❌ Error getting database stats:", error);
       return {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -327,21 +351,21 @@ export class SQLiteDatabaseService {
   static backup(backupPath?: string): string {
     try {
       const db = this.getInstance();
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const defaultBackupPath = `data/backups/healthchain-backup-${timestamp}.db`;
       const finalBackupPath = backupPath || defaultBackupPath;
-      
+
       // Ensure backup directory exists
       const backupDir = path.dirname(finalBackupPath);
       if (!fs.existsSync(backupDir)) {
         fs.mkdirSync(backupDir, { recursive: true });
       }
-      
+
       db.backup(finalBackupPath);
       console.log(`✅ Database backed up to: ${finalBackupPath}`);
       return finalBackupPath;
     } catch (error) {
-      console.error('❌ Error backing up database:', error);
+      console.error("❌ Error backing up database:", error);
       throw error;
     }
   }
@@ -355,9 +379,9 @@ export class SQLiteDatabaseService {
         this.instance.close();
         this.instance = null;
         this.isInitialized = false;
-        console.log('✅ Database connection closed');
+        console.log("✅ Database connection closed");
       } catch (error) {
-        console.error('❌ Error closing database:', error);
+        console.error("❌ Error closing database:", error);
       }
     }
   }
@@ -377,14 +401,18 @@ export class SQLiteDatabaseService {
   static cleanupSessions(): void {
     try {
       const db = this.getInstance();
-      const result = db.prepare(`
+      const result = db
+        .prepare(
+          `
         DELETE FROM user_sessions 
         WHERE expires_at < datetime('now') OR is_active = 0
-      `).run();
-      
+      `,
+        )
+        .run();
+
       console.log(`🧹 Cleaned up ${result.changes} expired sessions`);
     } catch (error) {
-      console.error('❌ Error cleaning up sessions:', error);
+      console.error("❌ Error cleaning up sessions:", error);
     }
   }
 
@@ -394,11 +422,11 @@ export class SQLiteDatabaseService {
   static optimize(): void {
     try {
       const db = this.getInstance();
-      db.exec('VACUUM;');
-      db.exec('ANALYZE;');
-      console.log('✅ Database optimized');
+      db.exec("VACUUM;");
+      db.exec("ANALYZE;");
+      console.log("✅ Database optimized");
     } catch (error) {
-      console.error('❌ Error optimizing database:', error);
+      console.error("❌ Error optimizing database:", error);
     }
   }
 }

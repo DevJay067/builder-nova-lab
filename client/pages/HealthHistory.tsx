@@ -253,16 +253,19 @@ export default function HealthHistory() {
             isSecure: !!record.secureRecordId || !!record.cloudSynced,
             blockchainHash: record.secureRecordId,
             metadata: record.metadata,
-            source: record.source || 'local',
+            source: record.source || "local",
             cloudSynced: record.cloudSynced || false,
           }));
 
           setRecords(transformedRecords);
           setStats({
             totalRecords: transformedRecords.length,
-            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure)
+              .length,
             lastUpdate: new Date().toISOString(),
-            cloudRecords: transformedRecords.filter((r: any) => r.source === 'cloud').length,
+            cloudRecords: transformedRecords.filter(
+              (r: any) => r.source === "cloud",
+            ).length,
             isCloudAvailable: !!data.cloudInfo?.cloudAvailable,
           });
 
@@ -347,7 +350,9 @@ export default function HealthHistory() {
       const result = await response.json();
 
       if (result.success) {
-        const storageType = result.cloudInfo?.cloudStored ? "encrypted cloud storage" : "secure local storage";
+        const storageType = result.cloudInfo?.cloudStored
+          ? "encrypted cloud storage"
+          : "secure local storage";
         setMessage({
           type: "success",
           text: `Health record saved to ${storageType}!`,
@@ -436,13 +441,16 @@ export default function HealthHistory() {
       if (result.success) {
         setMessage({
           type: "success",
-          text: result.message || "Data synced to cloud successfully"
+          text: result.message || "Data synced to cloud successfully",
         });
 
         // Reload records to show updated cloud status
         await loadHealthRecords(sessionToken);
       } else {
-        setMessage({ type: "error", text: result.message || "Failed to sync to cloud" });
+        setMessage({
+          type: "error",
+          text: result.message || "Failed to sync to cloud",
+        });
       }
     } catch (error) {
       console.error("Error syncing to cloud:", error);
@@ -538,13 +546,16 @@ export default function HealthHistory() {
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
               <Badge
                 variant={stats.isCloudAvailable ? "default" : "secondary"}
-                className={stats.isCloudAvailable
-                  ? "bg-blue-50 text-blue-700 border-blue-200"
-                  : "bg-gray-50 text-gray-700 border-gray-200"
+                className={
+                  stats.isCloudAvailable
+                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                    : "bg-gray-50 text-gray-700 border-gray-200"
                 }
               >
                 <Cloud className="w-3 h-3 mr-1" />
-                {stats.isCloudAvailable ? `Cloud: ${stats.cloudRecords}` : "Local Only"}
+                {stats.isCloudAvailable
+                  ? `Cloud: ${stats.cloudRecords}`
+                  : "Local Only"}
               </Badge>
               <Badge
                 variant="secondary"
@@ -870,10 +881,7 @@ export default function HealthHistory() {
               <FileText className="w-4 h-4" />
               <span>Records</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="scans"
-              className="flex items-center space-x-2"
-            >
+            <TabsTrigger value="scans" className="flex items-center space-x-2">
               <Brain className="w-4 h-4" />
               <span>Medical Scans</span>
             </TabsTrigger>
@@ -1194,16 +1202,15 @@ export default function HealthHistory() {
               <CardContent className="space-y-6">
                 {/* Quick upload section */}
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link
-                    to="/scan"
-                    className="flex-1"
-                  >
+                  <Link to="/scan" className="flex-1">
                     <Card className="cursor-pointer hover:shadow-lg transition-all border-dashed border-2 border-primary/30 hover:border-primary/50 bg-primary/5 hover:bg-primary/10">
                       <CardContent className="flex flex-col items-center justify-center py-8">
                         <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
                           <Plus className="w-6 h-6 text-primary" />
                         </div>
-                        <h3 className="font-semibold text-foreground mb-1">Upload New Scan</h3>
+                        <h3 className="font-semibold text-foreground mb-1">
+                          Upload New Scan
+                        </h3>
                         <p className="text-sm text-muted-foreground text-center">
                           Add medical images with AI analysis
                         </p>
@@ -1211,16 +1218,15 @@ export default function HealthHistory() {
                     </Card>
                   </Link>
 
-                  <Link
-                    to="/scan"
-                    className="flex-1"
-                  >
+                  <Link to="/scan" className="flex-1">
                     <Card className="cursor-pointer hover:shadow-lg transition-all border-dashed border-2 border-green-300 hover:border-green-400 bg-green-50 hover:bg-green-100">
                       <CardContent className="flex flex-col items-center justify-center py-8">
                         <div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center mb-3">
                           <Brain className="w-6 h-6 text-green-600" />
                         </div>
-                        <h3 className="font-semibold text-foreground mb-1">AI Analysis</h3>
+                        <h3 className="font-semibold text-foreground mb-1">
+                          AI Analysis
+                        </h3>
                         <p className="text-sm text-muted-foreground text-center">
                           Get instant AI insights
                         </p>
@@ -1235,31 +1241,47 @@ export default function HealthHistory() {
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
                       <FileImage className="w-5 h-5 text-blue-600" />
                     </div>
-                    <h4 className="font-medium text-foreground mb-1">Secure Storage</h4>
-                    <p className="text-sm text-muted-foreground">HIPAA-compliant encryption</p>
+                    <h4 className="font-medium text-foreground mb-1">
+                      Secure Storage
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      HIPAA-compliant encryption
+                    </p>
                   </div>
                   <div className="text-center p-4">
                     <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-2">
                       <Zap className="w-5 h-5 text-purple-600" />
                     </div>
-                    <h4 className="font-medium text-foreground mb-1">AI Analysis</h4>
-                    <p className="text-sm text-muted-foreground">Automated image insights</p>
+                    <h4 className="font-medium text-foreground mb-1">
+                      AI Analysis
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Automated image insights
+                    </p>
                   </div>
                   <div className="text-center p-4">
                     <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
                       <Share className="w-5 h-5 text-green-600" />
                     </div>
-                    <h4 className="font-medium text-foreground mb-1">Easy Sharing</h4>
-                    <p className="text-sm text-muted-foreground">Share with healthcare providers</p>
+                    <h4 className="font-medium text-foreground mb-1">
+                      Easy Sharing
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Share with healthcare providers
+                    </p>
                   </div>
                 </div>
 
                 {/* Recent scans placeholder */}
                 <div className="border-t border-border/40 pt-6">
-                  <h4 className="font-medium text-foreground mb-4">Recent Medical Scans</h4>
+                  <h4 className="font-medium text-foreground mb-4">
+                    Recent Medical Scans
+                  </h4>
                   <div className="text-center py-8">
                     <Camera className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground mb-4">No medical scans uploaded yet</p>
+                    <p className="text-muted-foreground mb-4">
+                      No medical scans uploaded yet
+                    </p>
                     <Link to="/scan">
                       <Button className="btn-smooth shadow-colored">
                         <Plus className="w-4 h-4 mr-2" />

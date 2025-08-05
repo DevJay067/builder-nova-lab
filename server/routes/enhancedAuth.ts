@@ -16,7 +16,15 @@ export const registerUser: RequestHandler = async (req, res) => {
       bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
-    const { username, password, email, firstName, lastName, dateOfBirth, phone } = req.body;
+    const {
+      username,
+      password,
+      email,
+      firstName,
+      lastName,
+      dateOfBirth,
+      phone,
+    } = req.body;
 
     // Validate required fields
     if (!username || !password) {
@@ -27,7 +35,7 @@ export const registerUser: RequestHandler = async (req, res) => {
     }
 
     // Get IP address for logging
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
 
     // Use the enhanced authentication service
     const result = await EnhancedUserAuthenticationService.registerUser(
@@ -39,13 +47,13 @@ export const registerUser: RequestHandler = async (req, res) => {
         lastName,
         dateOfBirth,
         phone,
-      }
+      },
     );
 
-    console.log("🔍 Registration result:", { 
-      success: result.success, 
+    console.log("🔍 Registration result:", {
+      success: result.success,
       message: result.message,
-      hasSessionToken: !!result.user?.sessionToken 
+      hasSessionToken: !!result.user?.sessionToken,
     });
 
     if (result.success && result.user?.sessionToken) {
@@ -80,7 +88,12 @@ export const registerUser: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during registration",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -107,20 +120,20 @@ export const loginUser: RequestHandler = async (req, res) => {
     }
 
     // Get client info for logging
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
-    const userAgent = req.headers['user-agent'] || 'unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
+    const userAgent = req.headers["user-agent"] || "unknown";
 
     const result = await EnhancedUserAuthenticationService.authenticateUser(
       username,
       password,
       ipAddress,
-      userAgent
+      userAgent,
     );
 
-    console.log("🔍 Login result:", { 
-      success: result.success, 
+    console.log("🔍 Login result:", {
+      success: result.success,
       message: result.message,
-      hasSessionToken: !!result.user?.sessionToken 
+      hasSessionToken: !!result.user?.sessionToken,
     });
 
     if (result.success && result.user?.sessionToken) {
@@ -155,7 +168,12 @@ export const loginUser: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during login",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -177,7 +195,8 @@ export const verifySession: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await EnhancedUserAuthenticationService.verifySession(sessionToken);
+    const result =
+      await EnhancedUserAuthenticationService.verifySession(sessionToken);
 
     if (result.valid && result.user) {
       res.json({
@@ -198,7 +217,12 @@ export const verifySession: RequestHandler = async (req, res) => {
       success: false,
       message: "Internal server error during session verification",
       valid: false,
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -229,7 +253,12 @@ export const logoutUser: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during logout",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -251,7 +280,8 @@ export const getUserProfile: RequestHandler = async (req, res) => {
       });
     }
 
-    const sessionResult = await EnhancedUserAuthenticationService.verifySession(sessionToken);
+    const sessionResult =
+      await EnhancedUserAuthenticationService.verifySession(sessionToken);
 
     if (!sessionResult.valid || !sessionResult.user) {
       return res.status(401).json({
@@ -269,7 +299,12 @@ export const getUserProfile: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -302,7 +337,7 @@ export const createDataAccess: RequestHandler = async (req, res) => {
 
     const result = await EnhancedUserAuthenticationService.storeHealthRecord(
       sessionToken,
-      { type, data }
+      { type, data },
     );
 
     if (result.success) {
@@ -322,7 +357,12 @@ export const createDataAccess: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -344,7 +384,8 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await EnhancedUserAuthenticationService.getHealthRecords(sessionToken);
+    const result =
+      await EnhancedUserAuthenticationService.getHealthRecords(sessionToken);
 
     if (result.success) {
       res.json({
@@ -363,7 +404,12 @@ export const verifyDataAccess: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -385,7 +431,12 @@ export const getAuthStats: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -407,7 +458,8 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
       });
     }
 
-    const result = await EnhancedUserAuthenticationService.verifySession(sessionToken);
+    const result =
+      await EnhancedUserAuthenticationService.verifySession(sessionToken);
 
     if (result.valid && result.user) {
       // Add user to request object
@@ -424,7 +476,12 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
     return res.status(500).json({
       success: false,
       message: "Authentication error",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -435,7 +492,7 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
 export const healthCheck: RequestHandler = async (req, res) => {
   try {
     const stats = EnhancedUserAuthenticationService.getSystemStats();
-    
+
     res.json({
       success: true,
       status: "healthy",

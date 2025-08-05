@@ -11,8 +11,8 @@ let sql: any = null;
 function getSqlConnection() {
   if (!sql) {
     const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl || dbUrl.includes('dummy') || dbUrl === '') {
-      throw new Error('No valid database connection available');
+    if (!dbUrl || dbUrl.includes("dummy") || dbUrl === "") {
+      throw new Error("No valid database connection available");
     }
     sql = neon(dbUrl);
   }

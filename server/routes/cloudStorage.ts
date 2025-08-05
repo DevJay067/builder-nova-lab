@@ -35,17 +35,17 @@ export const storeCloudHealthRecord: RequestHandler = async (req, res) => {
 
     const result = await CloudAuthenticationService.storeHealthRecord(
       sessionToken,
-      { 
-        type, 
+      {
+        type,
         data: {
           ...data,
           metadata: {
             ...metadata,
             apiVersion: "1.0",
-            clientTimestamp: new Date().toISOString()
-          }
-        }
-      }
+            clientTimestamp: new Date().toISOString(),
+          },
+        },
+      },
     );
 
     if (result.success) {
@@ -57,8 +57,8 @@ export const storeCloudHealthRecord: RequestHandler = async (req, res) => {
         security: {
           encrypted: true,
           userIsolated: true,
-          cloudStored: result.cloudInfo?.cloudStored || false
-        }
+          cloudStored: result.cloudInfo?.cloudStored || false,
+        },
       });
     } else {
       res.status(500).json({
@@ -71,7 +71,12 @@ export const storeCloudHealthRecord: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during cloud storage",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -93,7 +98,8 @@ export const getCloudHealthRecords: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await CloudAuthenticationService.getHealthRecords(sessionToken);
+    const result =
+      await CloudAuthenticationService.getHealthRecords(sessionToken);
 
     if (result.success) {
       res.json({
@@ -104,8 +110,8 @@ export const getCloudHealthRecords: RequestHandler = async (req, res) => {
         security: {
           encrypted: true,
           userIsolated: true,
-          dataSource: result.cloudInfo?.syncStatus || 'unknown'
-        }
+          dataSource: result.cloudInfo?.syncStatus || "unknown",
+        },
       });
     } else {
       res.status(500).json({
@@ -118,7 +124,12 @@ export const getCloudHealthRecords: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during cloud retrieval",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -140,14 +151,15 @@ export const syncToCloud: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await CloudAuthenticationService.syncUserDataToCloud(sessionToken);
+    const result =
+      await CloudAuthenticationService.syncUserDataToCloud(sessionToken);
 
     if (result.success) {
       res.json({
         success: true,
         message: result.message,
         syncInfo: result.syncInfo,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } else {
       res.status(500).json({
@@ -160,7 +172,12 @@ export const syncToCloud: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during cloud sync",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -182,14 +199,15 @@ export const getCloudStorageStats: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await CloudAuthenticationService.getUserCloudStats(sessionToken);
+    const result =
+      await CloudAuthenticationService.getUserCloudStats(sessionToken);
 
     if (result.success) {
       res.json({
         success: true,
         stats: result.stats,
         message: result.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } else {
       res.status(500).json({
@@ -202,7 +220,12 @@ export const getCloudStorageStats: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during stats retrieval",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -234,7 +257,8 @@ export const deleteCloudHealthRecord: RequestHandler = async (req, res) => {
     }
 
     // Verify session and get user info
-    const session = await CloudAuthenticationService.verifySession(sessionToken);
+    const session =
+      await CloudAuthenticationService.verifySession(sessionToken);
     if (!session.valid || !session.user) {
       return res.status(401).json({
         success: false,
@@ -244,7 +268,7 @@ export const deleteCloudHealthRecord: RequestHandler = async (req, res) => {
 
     const result = await SecureCloudStorageService.deleteHealthRecord(
       session.user.id,
-      recordId
+      recordId,
     );
 
     if (result.success) {
@@ -252,7 +276,7 @@ export const deleteCloudHealthRecord: RequestHandler = async (req, res) => {
         success: true,
         message: result.message,
         recordId: recordId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } else {
       res.status(500).json({
@@ -265,7 +289,12 @@ export const deleteCloudHealthRecord: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during cloud deletion",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -288,17 +317,22 @@ export const getCloudServiceStatus: RequestHandler = async (req, res) => {
           encryptionAtRest: true,
           encryptionInTransit: true,
           userDataIsolation: true,
-          auditLogging: true
-        }
+          auditLogging: true,
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error("❌ Error getting cloud service status:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during status check",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -309,7 +343,7 @@ export const getCloudServiceStatus: RequestHandler = async (req, res) => {
 export const cloudHealthCheck: RequestHandler = async (req, res) => {
   try {
     const serviceStatus = SecureCloudStorageService.getServiceStatus();
-    
+
     const healthStatus = {
       service: "Cloud Storage Service",
       status: serviceStatus.isCloudAvailable ? "healthy" : "degraded",
@@ -317,17 +351,17 @@ export const cloudHealthCheck: RequestHandler = async (req, res) => {
         encryption: serviceStatus.encryptionEnabled,
         cloudStorage: serviceStatus.isCloudAvailable,
         userIsolation: true,
-        localBackup: true
+        localBackup: true,
       },
       provider: serviceStatus.cloudProvider,
       region: serviceStatus.config.region,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     const httpStatus = serviceStatus.isCloudAvailable ? 200 : 206; // 206 = Partial Content
     res.status(httpStatus).json({
       success: true,
-      health: healthStatus
+      health: healthStatus,
     });
   } catch (error) {
     console.error("❌ Cloud health check failed:", error);
@@ -358,7 +392,8 @@ export const setupUserCloudStorage: RequestHandler = async (req, res) => {
     }
 
     // Verify session
-    const session = await CloudAuthenticationService.verifySession(sessionToken);
+    const session =
+      await CloudAuthenticationService.verifySession(sessionToken);
     if (!session.valid || !session.user) {
       return res.status(401).json({
         success: false,
@@ -367,20 +402,21 @@ export const setupUserCloudStorage: RequestHandler = async (req, res) => {
     }
 
     // Get current cloud stats to check if already set up
-    const statsResult = await CloudAuthenticationService.getUserCloudStats(sessionToken);
-    
+    const statsResult =
+      await CloudAuthenticationService.getUserCloudStats(sessionToken);
+
     if (statsResult.success && statsResult.stats?.isCloudAvailable) {
       res.json({
         success: true,
         message: "Cloud storage already configured for this user",
         stats: statsResult.stats,
-        alreadySetup: true
+        alreadySetup: true,
       });
     } else {
       res.json({
         success: false,
         message: "Cloud storage not available. Please check configuration.",
-        cloudAvailable: false
+        cloudAvailable: false,
       });
     }
   } catch (error) {
@@ -388,7 +424,12 @@ export const setupUserCloudStorage: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error during cloud setup",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };
@@ -428,7 +469,12 @@ export const requireCloudAuth: RequestHandler = async (req, res, next) => {
     return res.status(500).json({
       success: false,
       message: "Authentication error for cloud access",
-      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
+      error:
+        process.env.NODE_ENV === "development"
+          ? error instanceof Error
+            ? error.message
+            : "Unknown error"
+          : undefined,
     });
   }
 };

@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -19,7 +25,7 @@ import {
   Activity,
   Users,
   Eye,
-  EyeOff
+  EyeOff,
 } from "lucide-react";
 
 interface CloudStorageStats {
@@ -57,9 +63,12 @@ export default function CloudStorageManager() {
     try {
       setIsLoading(true);
       const sessionToken = localStorage.getItem("sessionToken");
-      
+
       if (!sessionToken) {
-        setMessage({ type: "error", text: "Please log in to access cloud storage" });
+        setMessage({
+          type: "error",
+          text: "Please log in to access cloud storage",
+        });
         return;
       }
 
@@ -70,19 +79,25 @@ export default function CloudStorageManager() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setStats(result.stats);
-        setMessage({ 
-          type: "info", 
-          text: `Cloud storage ${result.stats.isCloudAvailable ? 'connected' : 'unavailable'} - Data is ${result.stats.dataLocation}` 
+        setMessage({
+          type: "info",
+          text: `Cloud storage ${result.stats.isCloudAvailable ? "connected" : "unavailable"} - Data is ${result.stats.dataLocation}`,
         });
       } else {
-        setMessage({ type: "error", text: result.message || "Failed to load cloud statistics" });
+        setMessage({
+          type: "error",
+          text: result.message || "Failed to load cloud statistics",
+        });
       }
     } catch (error) {
       console.error("Error loading cloud stats:", error);
-      setMessage({ type: "error", text: "Network error while loading cloud statistics" });
+      setMessage({
+        type: "error",
+        text: "Network error while loading cloud statistics",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -92,9 +107,9 @@ export default function CloudStorageManager() {
     try {
       setIsLoading(true);
       setMessage({ type: "info", text: "Syncing data to cloud..." });
-      
+
       const sessionToken = localStorage.getItem("sessionToken");
-      
+
       if (!sessionToken) {
         setMessage({ type: "error", text: "Please log in to sync data" });
         return;
@@ -108,18 +123,21 @@ export default function CloudStorageManager() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setSyncInfo(result.syncInfo);
-        setMessage({ 
-          type: "success", 
-          text: result.message || "Data synced successfully to cloud" 
+        setMessage({
+          type: "success",
+          text: result.message || "Data synced successfully to cloud",
         });
-        
+
         // Reload stats after sync
         setTimeout(() => loadCloudStats(), 1000);
       } else {
-        setMessage({ type: "error", text: result.message || "Failed to sync data to cloud" });
+        setMessage({
+          type: "error",
+          text: result.message || "Failed to sync data to cloud",
+        });
       }
     } catch (error) {
       console.error("Error syncing to cloud:", error);
@@ -134,11 +152,11 @@ export default function CloudStorageManager() {
       setIsLoading(true);
       const response = await fetch("/api/cloud/health");
       const result = await response.json();
-      
+
       if (result.success) {
-        setMessage({ 
-          type: "success", 
-          text: `Cloud service is ${result.health.status}. Provider: ${result.health.provider}` 
+        setMessage({
+          type: "success",
+          text: `Cloud service is ${result.health.status}. Provider: ${result.health.provider}`,
         });
       } else {
         setMessage({ type: "error", text: "Cloud health check failed" });
@@ -152,11 +170,11 @@ export default function CloudStorageManager() {
   };
 
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const getStorageProgress = () => {
@@ -173,8 +191,12 @@ export default function CloudStorageManager() {
             <Cloud className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Cloud Storage Manager</h1>
-            <p className="text-slate-600">Secure, encrypted health data in the cloud</p>
+            <h1 className="text-2xl font-bold text-slate-800">
+              Cloud Storage Manager
+            </h1>
+            <p className="text-slate-600">
+              Secure, encrypted health data in the cloud
+            </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -184,7 +206,9 @@ export default function CloudStorageManager() {
             onClick={loadCloudStats}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
           <Button
@@ -192,20 +216,26 @@ export default function CloudStorageManager() {
             size="sm"
             onClick={() => setShowDetails(!showDetails)}
           >
-            {showDetails ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-            {showDetails ? 'Hide Details' : 'Show Details'}
+            {showDetails ? (
+              <EyeOff className="h-4 w-4 mr-2" />
+            ) : (
+              <Eye className="h-4 w-4 mr-2" />
+            )}
+            {showDetails ? "Hide Details" : "Show Details"}
           </Button>
         </div>
       </div>
 
       {message && (
-        <Alert className={`${
-          message.type === "success" 
-            ? "border-green-200 bg-green-50 text-green-800" 
-            : message.type === "error"
-            ? "border-red-200 bg-red-50 text-red-800"
-            : "border-blue-200 bg-blue-50 text-blue-800"
-        }`}>
+        <Alert
+          className={`${
+            message.type === "success"
+              ? "border-green-200 bg-green-50 text-green-800"
+              : message.type === "error"
+                ? "border-red-200 bg-red-50 text-red-800"
+                : "border-blue-200 bg-blue-50 text-blue-800"
+          }`}
+        >
           {message.type === "success" ? (
             <CheckCircle className="h-4 w-4" />
           ) : message.type === "error" ? (
@@ -236,7 +266,9 @@ export default function CloudStorageManager() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats?.cloudRecords || 0}</div>
+                <div className="text-2xl font-bold">
+                  {stats?.cloudRecords || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Securely stored in cloud
                 </p>
@@ -251,7 +283,9 @@ export default function CloudStorageManager() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats?.localBackups || 0}</div>
+                <div className="text-2xl font-bold">
+                  {stats?.localBackups || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Local backup copies
                 </p>
@@ -266,7 +300,9 @@ export default function CloudStorageManager() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatBytes(stats?.storageUsed || 0)}</div>
+                <div className="text-2xl font-bold">
+                  {formatBytes(stats?.storageUsed || 0)}
+                </div>
                 <Progress value={getStorageProgress()} className="mt-2" />
               </CardContent>
             </Card>
@@ -280,7 +316,9 @@ export default function CloudStorageManager() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
-                  <Badge variant={stats?.isCloudAvailable ? "default" : "secondary"}>
+                  <Badge
+                    variant={stats?.isCloudAvailable ? "default" : "secondary"}
+                  >
                     {stats?.isCloudAvailable ? "Connected" : "Local Only"}
                   </Badge>
                 </div>
@@ -304,9 +342,14 @@ export default function CloudStorageManager() {
                   <div>
                     <h4 className="font-medium mb-2">Storage Details</h4>
                     <ul className="text-sm space-y-1">
-                      <li>Cloud Available: {stats.isCloudAvailable ? "✅ Yes" : "❌ No"}</li>
+                      <li>
+                        Cloud Available:{" "}
+                        {stats.isCloudAvailable ? "✅ Yes" : "❌ No"}
+                      </li>
                       <li>Encryption: {stats.encryption || "AES-256-GCM"}</li>
-                      <li>User Isolated: {stats.userIsolated ? "✅ Yes" : "❌ No"}</li>
+                      <li>
+                        User Isolated: {stats.userIsolated ? "✅ Yes" : "❌ No"}
+                      </li>
                       <li>Data Location: {stats.dataLocation}</li>
                     </ul>
                   </div>
@@ -474,10 +517,14 @@ export default function CloudStorageManager() {
                 <div className="flex items-start">
                   <Shield className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-blue-800">Data Protection Guarantee</h4>
+                    <h4 className="font-medium text-blue-800">
+                      Data Protection Guarantee
+                    </h4>
                     <p className="text-sm text-blue-700 mt-1">
-                      Your health data is encrypted with your unique user key before being uploaded to cloud storage. 
-                      Only you can decrypt and access your data. Even we cannot read your health records.
+                      Your health data is encrypted with your unique user key
+                      before being uploaded to cloud storage. Only you can
+                      decrypt and access your data. Even we cannot read your
+                      health records.
                     </p>
                   </div>
                 </div>
@@ -487,10 +534,13 @@ export default function CloudStorageManager() {
                 <div className="flex items-start">
                   <Lock className="h-5 w-5 text-green-600 mr-3 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-green-800">User Isolation</h4>
+                    <h4 className="font-medium text-green-800">
+                      User Isolation
+                    </h4>
                     <p className="text-sm text-green-700 mt-1">
-                      Each user has their own isolated storage space in the cloud. Your data is completely 
-                      separate from other users, with dedicated encryption keys and access controls.
+                      Each user has their own isolated storage space in the
+                      cloud. Your data is completely separate from other users,
+                      with dedicated encryption keys and access controls.
                     </p>
                   </div>
                 </div>

@@ -123,7 +123,10 @@ export function createServer() {
         await CloudAuthenticationService.initialize();
         console.log("✅ Cloud authentication system initialized successfully");
       } catch (cloudAuthError) {
-        console.log("⚠️  Cloud authentication initialization failed:", cloudAuthError);
+        console.log(
+          "⚠️  Cloud authentication initialization failed:",
+          cloudAuthError,
+        );
         console.log("   Attempting fallback to enhanced authentication...");
 
         try {
@@ -133,7 +136,9 @@ export function createServer() {
           await EnhancedUserAuthenticationService.initialize();
           console.log("✅ Enhanced authentication system initialized");
         } catch (enhancedError) {
-          console.log("⚠️  Enhanced authentication failed, trying basic authentication...");
+          console.log(
+            "⚠️  Enhanced authentication failed, trying basic authentication...",
+          );
 
           try {
             const { UserAuthenticationService } = await import(
@@ -142,7 +147,9 @@ export function createServer() {
             await UserAuthenticationService.initialize();
             console.log("✅ Basic authentication system initialized");
           } catch (basicError) {
-            console.log("⚠️  All authentication systems failed, continuing in demo mode");
+            console.log(
+              "⚠️  All authentication systems failed, continuing in demo mode",
+            );
           }
         }
       }
@@ -239,8 +246,12 @@ export function createServer() {
         res.json({
           success: false,
           authSystemStatus: "error",
-          error: basicError instanceof Error ? basicError.message : "Unknown error",
-          enhancedError: enhancedError instanceof Error ? enhancedError.message : "Enhanced auth failed",
+          error:
+            basicError instanceof Error ? basicError.message : "Unknown error",
+          enhancedError:
+            enhancedError instanceof Error
+              ? enhancedError.message
+              : "Enhanced auth failed",
           timestamp: new Date().toISOString(),
         });
       }
@@ -355,7 +366,8 @@ export function createServer() {
       const { EnhancedDatabaseHealthService } = await import(
         "./services/enhancedDatabaseHealth"
       );
-      const systemStatus = await EnhancedDatabaseHealthService.getSystemStatus();
+      const systemStatus =
+        await EnhancedDatabaseHealthService.getSystemStatus();
       res.json({
         success: true,
         ...systemStatus,
@@ -381,7 +393,10 @@ export function createServer() {
         res.status(500).json({
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",
-          enhancedError: enhancedError instanceof Error ? enhancedError.message : "Enhanced health check failed",
+          enhancedError:
+            enhancedError instanceof Error
+              ? enhancedError.message
+              : "Enhanced health check failed",
           timestamp: new Date().toISOString(),
         });
       }
