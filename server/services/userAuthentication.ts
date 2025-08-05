@@ -248,7 +248,12 @@ class UserAuthenticationService {
       }
 
       // Initialize secure data access system
-      await SecureDataAccessService.initialize();
+      try {
+        await SecureDataAccessService.initialize();
+        console.log("✅ Secure data access system initialized");
+      } catch (secureError) {
+        console.warn("⚠️ Secure data access system failed to initialize, using basic auth");
+      }
 
       // Initialize database connections with fallback
       await DatabaseHealthService.withFallback(
