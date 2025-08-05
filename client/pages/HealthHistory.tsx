@@ -64,6 +64,8 @@ import {
   Share,
   Globe,
   Database,
+  Camera,
+  FileImage,
 } from "lucide-react";
 
 interface HealthRecord {
