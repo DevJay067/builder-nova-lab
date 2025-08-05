@@ -394,8 +394,8 @@ export default function HealthHistory() {
               </div>
               <CardTitle className="text-xl">Authentication Required</CardTitle>
               <CardDescription>
-                Please log in to access your secure health history and medical
-                records.
+                Please log in to access your secure health history, medical
+                records, and imaging scans.
               </CardDescription>
             </CardHeader>
             <CardContent>
