@@ -143,6 +143,13 @@ export default function Index() {
           icon: Scan,
           route: "/scan",
         },
+        {
+          id: "cloud-storage",
+          title: "Cloud Storage",
+          description: "Secure cloud sync and data management",
+          icon: Cloud,
+          route: "/cloud-storage",
+        },
       ],
     },
     {
