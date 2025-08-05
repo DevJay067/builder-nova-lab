@@ -42,9 +42,9 @@ export class SimpleDatabaseInit {
       `;
 
       // Create essential indexes
-      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_patient_id ON medical_history(patient_id)`;
-      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
-      await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
+      await sqlConnection`CREATE INDEX IF NOT EXISTS idx_medical_history_patient_id ON medical_history(patient_id)`;
+      await sqlConnection`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
+      await sqlConnection`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
 
       console.log("✅ Medical history table created successfully");
     } catch (error) {
