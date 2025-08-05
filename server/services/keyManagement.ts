@@ -349,7 +349,7 @@ export class KeyManagementService {
     const algorithm = "aes-256-gcm";
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
 
     let encrypted = cipher.update(systemKey, "utf8", "hex");
     encrypted += cipher.final("hex");
