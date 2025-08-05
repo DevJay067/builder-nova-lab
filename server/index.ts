@@ -45,7 +45,8 @@ import {
   verifyDataAccess,
   getAuthStats,
   authenticateUser,
-} from "./routes/auth";
+  healthCheck,
+} from "./routes/enhancedAuth";
 import {
   getPersonalizedMedicalContext,
   enhanceQueryWithContext,
