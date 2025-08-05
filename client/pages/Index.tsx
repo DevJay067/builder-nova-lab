@@ -121,6 +121,17 @@ export default function Index() {
       gradient: "from-green-500/20 to-emerald-500/20",
     },
     {
+      id: "scan",
+      title: "Medical Scan & Imaging",
+      description:
+        "Upload and securely store medical scans with AI-powered analysis and HIPAA-compliant encryption.",
+      icon: Scan,
+      color: "bg-purple-500",
+      route: "/scan",
+      stats: "AI Analysis",
+      gradient: "from-purple-500/20 to-violet-500/20",
+    },
+    {
       id: "monitoring",
       title: "Real-time Monitoring",
       description:
