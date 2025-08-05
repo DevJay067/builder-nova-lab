@@ -14,6 +14,14 @@ export const registerUser: RequestHandler = async (req, res) => {
 
     const { username, password, email, firstName, lastName } = req.body;
 
+    // Validate required fields
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required",
+      });
+    }
+
     // Use the new authentication service
     const result = await UserAuthenticationService.registerUser(
       username,
@@ -24,6 +32,8 @@ export const registerUser: RequestHandler = async (req, res) => {
         lastName,
       },
     );
+
+    console.log("🔍 Registration result:", { success: result.success, message: result.message });
 
     if (result.success) {
       return res.status(201).json(result);
