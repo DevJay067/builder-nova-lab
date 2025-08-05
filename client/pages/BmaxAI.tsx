@@ -485,29 +485,40 @@ Provide targeted, condition-specific advice rather than general health informati
       return "https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1";
     }
 
+    // Use the enhanced contextual prompt if available
+    const contextPrompt = personalizedContext.aiInstructions?.contextualPrompt ||
+      createBasicContextPrompt();
+
+    return `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(contextPrompt)}`;
+  };
+
+  const createBasicContextPrompt = () => {
+    if (!personalizedContext) return "";
+
     const medicalConditionsText = personalizedContext.medicalConditions
       .map((condition) => condition.name)
       .join(", ");
 
     const medicationsText = personalizedContext.currentMedications.join(", ");
     const allergiesText = personalizedContext.allergies.join(", ");
+    const symptomsText = personalizedContext.recentSymptoms?.join(", ") || "";
 
-    const contextPrompt = `PERSONALIZED MEDICAL CONTEXT:
+    return `PERSONALIZED MEDICAL CONTEXT FROM HEALTH RECORDS:
 Medical Conditions: ${medicalConditionsText || "None reported"}
 Current Medications: ${medicationsText || "None reported"}
 Known Allergies: ${allergiesText || "None reported"}
+Recent Symptoms: ${symptomsText || "None reported"}
 
-IMPORTANT INSTRUCTIONS:
-- Always consider the patient's medical conditions when providing advice
-- Be specific about how recommendations relate to their conditions
-- Warn about potential medication interactions
-- Consider allergy precautions in all recommendations
-- For example: If patient asks about dizziness and has diabetes, specifically address diabetic-related causes of dizziness
-- Provide condition-specific advice rather than general health information
+PERSONALIZATION INSTRUCTIONS:
+- This patient has ${personalizedContext.summary.totalConditions} documented medical conditions
+- They are currently taking ${personalizedContext.summary.currentMedications} medications
+- Always consider their specific medical history when providing advice
+- Be specific about how recommendations relate to their documented conditions
+- Warn about potential medication interactions with: ${medicationsText}
+- Consider allergy precautions for: ${allergiesText}
+- Reference their recent symptoms when relevant: ${symptomsText}
 
-When the patient mentions symptoms like "feeling dizzy", immediately consider their medical history (diabetes, hypertension, etc.) and provide targeted advice.`;
-
-    return `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(contextPrompt)}`;
+IMPORTANT: When the patient mentions symptoms, immediately consider their documented medical history and provide targeted, personalized advice rather than general health information.`;
   };
 
   if (!isAuthenticated) {
