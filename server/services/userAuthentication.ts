@@ -350,11 +350,14 @@ class UserAuthenticationService {
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
-      // Generate user hash for the blockchain system
-      const userHash = ProductionBlockchainService.generateUserHash(
-        username,
-        password,
-      );
+      // Generate user hash for the blockchain system (with fallback)
+      let userHash: string;
+      try {
+        userHash = ProductionBlockchainService.generateUserHash(username, password);
+      } catch (error) {
+        console.warn("⚠️ Blockchain service unavailable, using fallback user hash");
+        userHash = crypto.createHash('sha256').update(username + password).digest('hex');
+      }
 
       // Create user record
       const user: User = {
