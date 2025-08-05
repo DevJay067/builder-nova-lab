@@ -154,6 +154,31 @@ export function createServer() {
     });
   });
 
+  // Debug endpoint to check auth system status
+  app.get("/api/debug/auth-status", async (req, res) => {
+    try {
+      const { UserAuthenticationService } = await import(
+        "./services/userAuthentication"
+      );
+
+      const stats = UserAuthenticationService.getSystemStats();
+
+      res.json({
+        success: true,
+        authSystemStatus: "initialized",
+        systemStats: stats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        authSystemStatus: "error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
   // Debug endpoint to check user existence
   app.get("/api/debug/user/:username", async (req, res) => {
     try {
