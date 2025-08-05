@@ -431,10 +431,10 @@ export default function HealthHistory() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-slate-800">
-                    Health History
+                    Health Records & Imaging
                   </h1>
                   <p className="text-sm text-slate-600 font-medium">
-                    Secure Medical Records
+                    Secure Medical Records & Scans
                   </p>
                 </div>
               </div>
