@@ -238,6 +238,41 @@ export function createServer() {
     });
   });
 
+  // Debug endpoint to test authentication service
+  app.post("/api/debug/test-auth", async (req, res) => {
+    try {
+      console.log("🔍 Testing authentication service...");
+
+      // Test basic auth service availability
+      const { UserAuthenticationService } = await import("./services/userAuthentication");
+      const stats = UserAuthenticationService.getSystemStats();
+
+      console.log("📊 Auth service stats:", stats);
+
+      res.json({
+        success: true,
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          DATABASE_URL_EXISTS: !!process.env.DATABASE_URL,
+          NETLIFY_DATABASE_URL_EXISTS: !!process.env.NETLIFY_DATABASE_URL,
+        },
+        authService: {
+          initialized: true,
+          stats: stats,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("❌ Debug auth test failed:", error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : "No stack trace",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
   // Debug endpoint to check user existence
   app.get("/api/debug/user/:username", async (req, res) => {
     try {
