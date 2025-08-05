@@ -38,8 +38,11 @@ export class DatabaseHealthService {
     try {
       console.log("🔍 Checking database health...");
 
+      // Get database connection (may throw if no valid connection)
+      const sqlConnection = getSqlConnection();
+
       // Simple connectivity test
-      const result = await sql`SELECT 1 as health_check`;
+      const result = await sqlConnection`SELECT 1 as health_check`;
 
       const latency = Date.now() - startTime;
       this.isHealthy = true;
