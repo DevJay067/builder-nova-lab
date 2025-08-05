@@ -743,13 +743,20 @@ export default function HealthHistory() {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger
               value="records"
               className="flex items-center space-x-2"
             >
               <FileText className="w-4 h-4" />
               <span>Records</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="scans"
+              className="flex items-center space-x-2"
+            >
+              <Brain className="w-4 h-4" />
+              <span>Medical Scans</span>
             </TabsTrigger>
             <TabsTrigger
               value="analytics"
