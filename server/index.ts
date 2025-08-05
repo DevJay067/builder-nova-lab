@@ -90,18 +90,26 @@ export function createServer() {
         );
       }
 
-      // Try to initialize user authentication system with production features
+      // Initialize enhanced user authentication system
       try {
-        const { UserAuthenticationService } = await import(
-          "./services/userAuthentication"
+        const { EnhancedUserAuthenticationService } = await import(
+          "./services/enhancedUserAuthentication"
         );
-        await UserAuthenticationService.initialize();
-        console.log("✅ User authentication system initialized successfully");
+        await EnhancedUserAuthenticationService.initialize();
+        console.log("✅ Enhanced user authentication system initialized successfully");
       } catch (authError) {
-        console.log(
-          "⚠️  User authentication system not available, continuing without it",
-        );
-        console.log("   The system will work in demo mode");
+        console.log("⚠️  Enhanced authentication initialization failed:", authError);
+        console.log("   Attempting fallback to basic authentication...");
+
+        try {
+          const { UserAuthenticationService } = await import(
+            "./services/userAuthentication"
+          );
+          await UserAuthenticationService.initialize();
+          console.log("✅ Fallback authentication system initialized");
+        } catch (fallbackError) {
+          console.log("⚠️  All authentication systems failed, continuing in demo mode");
+        }
       }
 
       // Try to initialize the main database system
