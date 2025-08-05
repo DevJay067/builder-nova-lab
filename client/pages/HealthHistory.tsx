@@ -1061,6 +1061,98 @@ export default function HealthHistory() {
             </div>
           </TabsContent>
 
+          <TabsContent value="scans" className="space-y-6">
+            <Card className="shadow-colored border-border/50 fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Brain className="w-5 h-5 text-primary" />
+                  <span>Medical Scans & Imaging</span>
+                </CardTitle>
+                <CardDescription>
+                  Upload and manage your medical scans with AI-powered analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Quick upload section */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link
+                    to="/scan"
+                    className="flex-1"
+                  >
+                    <Card className="cursor-pointer hover:shadow-lg transition-all border-dashed border-2 border-primary/30 hover:border-primary/50 bg-primary/5 hover:bg-primary/10">
+                      <CardContent className="flex flex-col items-center justify-center py-8">
+                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+                          <Plus className="w-6 h-6 text-primary" />
+                        </div>
+                        <h3 className="font-semibold text-foreground mb-1">Upload New Scan</h3>
+                        <p className="text-sm text-muted-foreground text-center">
+                          Add medical images with AI analysis
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  <Link
+                    to="/scan"
+                    className="flex-1"
+                  >
+                    <Card className="cursor-pointer hover:shadow-lg transition-all border-dashed border-2 border-green-300 hover:border-green-400 bg-green-50 hover:bg-green-100">
+                      <CardContent className="flex flex-col items-center justify-center py-8">
+                        <div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center mb-3">
+                          <Brain className="w-6 h-6 text-green-600" />
+                        </div>
+                        <h3 className="font-semibold text-foreground mb-1">AI Analysis</h3>
+                        <p className="text-sm text-muted-foreground text-center">
+                          Get instant AI insights
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+
+                {/* Features overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                      <FileImage className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h4 className="font-medium text-foreground mb-1">Secure Storage</h4>
+                    <p className="text-sm text-muted-foreground">HIPAA-compliant encryption</p>
+                  </div>
+                  <div className="text-center p-4">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-2">
+                      <Zap className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <h4 className="font-medium text-foreground mb-1">AI Analysis</h4>
+                    <p className="text-sm text-muted-foreground">Automated image insights</p>
+                  </div>
+                  <div className="text-center p-4">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+                      <Share className="w-5 h-5 text-green-600" />
+                    </div>
+                    <h4 className="font-medium text-foreground mb-1">Easy Sharing</h4>
+                    <p className="text-sm text-muted-foreground">Share with healthcare providers</p>
+                  </div>
+                </div>
+
+                {/* Recent scans placeholder */}
+                <div className="border-t border-border/40 pt-6">
+                  <h4 className="font-medium text-foreground mb-4">Recent Medical Scans</h4>
+                  <div className="text-center py-8">
+                    <Camera className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground mb-4">No medical scans uploaded yet</p>
+                    <Link to="/scan">
+                      <Button className="btn-smooth shadow-colored">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Upload Your First Scan
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="analytics" className="space-y-6">
             <Card className="shadow-colored border-border/50 fade-in">
               <CardHeader>
