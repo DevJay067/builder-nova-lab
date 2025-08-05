@@ -414,6 +414,44 @@ export default function HealthHistory() {
     return recordType ? recordType.color : "bg-gray-500";
   };
 
+  const syncToCloud = async () => {
+    try {
+      setIsLoading(true);
+      const sessionToken = localStorage.getItem("sessionToken");
+
+      if (!sessionToken) {
+        setMessage({ type: "error", text: "Please log in to sync to cloud" });
+        return;
+      }
+
+      const response = await fetch("/api/cloud/sync", {
+        method: "POST",
+        headers: {
+          "x-session-token": sessionToken,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setMessage({
+          type: "success",
+          text: result.message || "Data synced to cloud successfully"
+        });
+
+        // Reload records to show updated cloud status
+        await loadHealthRecords(sessionToken);
+      } else {
+        setMessage({ type: "error", text: result.message || "Failed to sync to cloud" });
+      }
+    } catch (error) {
+      console.error("Error syncing to cloud:", error);
+      setMessage({ type: "error", text: "Network error during cloud sync" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 page-transition">
