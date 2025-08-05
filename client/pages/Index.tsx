@@ -31,6 +31,7 @@ import {
   ArrowRight,
   Globe,
   Lock,
+  Scan,
 } from "lucide-react";
 import LanguageSelector from "@/components/LanguageSelector";
 import { useTranslation } from "@/contexts/LanguageContext";
