@@ -116,7 +116,7 @@ export function createServer() {
           await SimpleDatabaseInit.initializeMedicalHistoryTable();
           console.log("✅ Essential medical history table created");
         } catch (simpleError) {
-          console.log("⚠️  System will work with in-memory storage only");
+          console.log("⚠��  System will work with in-memory storage only");
         }
       }
     } catch (error) {
@@ -259,13 +259,6 @@ export function createServer() {
   app.get("/api/auth/data-access/records", verifyDataAccess);
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
-
-  // Image Upload Routes
-  const { uploadImages, handleImageUpload, analyzeImages } = await import(
-    "./routes/imageUpload"
-  );
-  app.post("/api/images/upload", uploadImages, handleImageUpload);
-  app.post("/api/images/analyze", analyzeImages);
 
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
