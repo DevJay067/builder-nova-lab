@@ -58,7 +58,8 @@ export class SimpleDatabaseInit {
    */
   static async testConnection(): Promise<boolean> {
     try {
-      await sql`SELECT 1 as test`;
+      const sqlConnection = getSqlConnection();
+      await sqlConnection`SELECT 1 as test`;
       return true;
     } catch (error) {
       console.error("Database connection test failed:", error);
