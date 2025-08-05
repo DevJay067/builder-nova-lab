@@ -537,12 +537,34 @@ export default function HealthHistory() {
 
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
               <Badge
+                variant={stats.isCloudAvailable ? "default" : "secondary"}
+                className={stats.isCloudAvailable
+                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                  : "bg-gray-50 text-gray-700 border-gray-200"
+                }
+              >
+                <Cloud className="w-3 h-3 mr-1" />
+                {stats.isCloudAvailable ? `Cloud: ${stats.cloudRecords}` : "Local Only"}
+              </Badge>
+              <Badge
                 variant="secondary"
                 className="bg-green-50 text-green-700 border-green-200"
               >
                 <Database className="w-3 h-3 mr-1" />
-                Blockchain Secured
+                Secure: {stats.secureRecords}
               </Badge>
+              {stats.isCloudAvailable && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={syncToCloud}
+                  disabled={isLoading}
+                  className="btn-smooth"
+                >
+                  <Cloud className="w-4 h-4 mr-2" />
+                  Sync
+                </Button>
+              )}
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="btn-smooth shadow-colored">
