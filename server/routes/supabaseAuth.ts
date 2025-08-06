@@ -171,13 +171,17 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
 
     const recordId = crypto.randomBytes(16).toString("hex");
     const timestamp = new Date().toISOString();
-    const patientId = healthData.sessionToken ? "authenticated-user" : "default-patient";
+    const patientId = healthData.sessionToken
+      ? "authenticated-user"
+      : "default-patient";
 
     // Prepare comprehensive health record for vault storage
     const vaultData = {
       recordId,
       type: healthData.type,
-      title: healthData.title || `${healthData.type} - ${new Date().toLocaleDateString()}`,
+      title:
+        healthData.title ||
+        `${healthData.type} - ${new Date().toLocaleDateString()}`,
       description: healthData.description || "",
       data: healthData.data,
       metadata: {
@@ -198,7 +202,7 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
     const vaultResult = await SupabaseService.storeInVault(
       patientId,
       vaultData,
-      `${healthData.type}-${recordId}-${Date.now()}.json`
+      `${healthData.type}-${recordId}-${Date.now()}.json`,
     );
 
     if (!vaultResult.success) {
@@ -227,14 +231,17 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
       storage_path: vaultResult.path,
     });
 
-    console.log(`✅ Health record stored in Supabase cloud vault: ${vaultResult.path}`);
+    console.log(
+      `✅ Health record stored in Supabase cloud vault: ${vaultResult.path}`,
+    );
 
     res.status(201).json({
       success: true,
       recordId,
       vaultPath: vaultResult.path,
       dbRecordId: dbResult.recordId,
-      message: "Health record stored successfully in Supabase cloud storage vault",
+      message:
+        "Health record stored successfully in Supabase cloud storage vault",
       storage: {
         type: "supabase-cloud-vault",
         path: vaultResult.path,
@@ -243,7 +250,6 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
         size: JSON.stringify(vaultData).length,
       },
     });
-
   } catch (error) {
     console.error("❌ Failed to store health record in cloud storage:", error);
     res.status(500).json({
@@ -263,7 +269,9 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
       req.headers.authorization?.replace("Bearer ", "") ||
       (req.query.sessionToken as string);
 
-    console.log("🔍 Retrieving health records from Supabase cloud storage vault");
+    console.log(
+      "🔍 Retrieving health records from Supabase cloud storage vault",
+    );
 
     const patientId = sessionToken ? "authenticated-user" : "default-patient";
 
@@ -283,8 +291,12 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
     for (const record of dbResult.records || []) {
       try {
         if (record.storage_path) {
-          console.log(`📦 Retrieving full data from vault: ${record.storage_path}`);
-          const vaultResult = await SupabaseService.retrieveFromVault(record.storage_path);
+          console.log(
+            `📦 Retrieving full data from vault: ${record.storage_path}`,
+          );
+          const vaultResult = await SupabaseService.retrieveFromVault(
+            record.storage_path,
+          );
 
           if (vaultResult.success) {
             enrichedRecords.push({
@@ -319,7 +331,10 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
           });
         }
       } catch (vaultError) {
-        console.warn(`⚠️ Failed to retrieve vault data for record ${record.id}:`, vaultError);
+        console.warn(
+          `⚠️ Failed to retrieve vault data for record ${record.id}:`,
+          vaultError,
+        );
         enrichedRecords.push({
           ...record,
           fullData: null,
@@ -327,13 +342,18 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
             type: "supabase-cloud-vault",
             path: record.storage_path,
             retrieved: false,
-            error: vaultError instanceof Error ? vaultError.message : "Unknown error",
+            error:
+              vaultError instanceof Error
+                ? vaultError.message
+                : "Unknown error",
           },
         });
       }
     }
 
-    console.log(`✅ Retrieved ${enrichedRecords.length} health records from Supabase cloud vault`);
+    console.log(
+      `✅ Retrieved ${enrichedRecords.length} health records from Supabase cloud vault`,
+    );
 
     res.json({
       success: true,

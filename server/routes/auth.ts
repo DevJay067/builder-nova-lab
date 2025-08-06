@@ -171,7 +171,10 @@ export const loginUser: RequestHandler = async (req, res) => {
 
       // Simple fallback authentication
       // Generate consistent user ID and check basic credentials
-      const userExists = credentials.username && credentials.password && credentials.password.length >= 6;
+      const userExists =
+        credentials.username &&
+        credentials.password &&
+        credentials.password.length >= 6;
 
       if (!userExists) {
         return res.status(401).json({
@@ -273,7 +276,9 @@ export const verifySession: RequestHandler = async (req, res) => {
     const result = UserAuthenticationService.verifySession(sessionToken);
 
     if (result.valid) {
-      console.log("✅ Session verification successful:", { username: result.user?.username });
+      console.log("✅ Session verification successful:", {
+        username: result.user?.username,
+      });
       res.json({
         success: true,
         user: result.user,

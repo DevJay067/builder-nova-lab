@@ -370,20 +370,29 @@ class UserAuthenticationService {
       // Try to activate secure data access system for the user
       let secureAccountResult;
       try {
-        secureAccountResult = await SecureDataAccessService.createSecureUserAccount(
-          username,
-          password,
-          profile || {},
-        );
+        secureAccountResult =
+          await SecureDataAccessService.createSecureUserAccount(
+            username,
+            password,
+            profile || {},
+          );
 
         // Update user with secure system activation
         user.secureSystemActivated = secureAccountResult.dataAccessActivated;
         user.splitKeySystemActive = secureAccountResult.splitKeySystem;
 
         // Create data access record for split key system
-        await this.createDataAccessRecord(user.id, userHash, username, password);
+        await this.createDataAccessRecord(
+          user.id,
+          userHash,
+          username,
+          password,
+        );
       } catch (secureError) {
-        console.warn("⚠️ Secure data access system not available, using basic mode:", secureError instanceof Error ? secureError.message : "Unknown error");
+        console.warn(
+          "⚠️ Secure data access system not available, using basic mode:",
+          secureError instanceof Error ? secureError.message : "Unknown error",
+        );
 
         // Fallback to basic user account
         const sessionToken = this.createSessionToken({
@@ -506,7 +515,10 @@ class UserAuthenticationService {
           });
         }
       } catch (secureError) {
-        console.warn("⚠️ Secure authentication system not available, using fallback:", secureError instanceof Error ? secureError.message : "Unknown error");
+        console.warn(
+          "⚠️ Secure authentication system not available, using fallback:",
+          secureError instanceof Error ? secureError.message : "Unknown error",
+        );
 
         const sessionToken = this.createSessionToken({
           id: user.id,
@@ -741,14 +753,15 @@ class UserAuthenticationService {
   /**
    * In-memory session storage for fallback mode
    */
-  private static sessions: Map<string, { user: any; expires: number }> = new Map();
+  private static sessions: Map<string, { user: any; expires: number }> =
+    new Map();
 
   /**
    * Store session in fallback mode
    */
   static storeSession(sessionToken: string, user: any): void {
     // Session expires in 24 hours
-    const expires = Date.now() + (24 * 60 * 60 * 1000);
+    const expires = Date.now() + 24 * 60 * 60 * 1000;
     this.sessions.set(sessionToken, { user, expires });
     console.log(`📝 Stored session for user: ${user.username || user.id}`);
   }
@@ -761,25 +774,28 @@ class UserAuthenticationService {
       id: user.id,
       username: user.username,
       userHash: user.userHash,
-      exp: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+      exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     };
 
     // Simple base64 encoding (not secure, but persistent across restarts)
-    const token = Buffer.from(JSON.stringify(userData)).toString('base64');
+    const token = Buffer.from(JSON.stringify(userData)).toString("base64");
     return `session_${token}`;
   }
 
   /**
    * Validate and decode a self-validating session token
    */
-  static validateSessionToken(sessionToken: string): { valid: boolean; user?: any } {
+  static validateSessionToken(sessionToken: string): {
+    valid: boolean;
+    user?: any;
+  } {
     try {
-      if (!sessionToken.startsWith('session_')) {
+      if (!sessionToken.startsWith("session_")) {
         return { valid: false };
       }
 
-      const tokenData = sessionToken.replace('session_', '');
-      const userData = JSON.parse(Buffer.from(tokenData, 'base64').toString());
+      const tokenData = sessionToken.replace("session_", "");
+      const userData = JSON.parse(Buffer.from(tokenData, "base64").toString());
 
       // Check expiration
       if (Date.now() > userData.exp) {
@@ -792,7 +808,7 @@ class UserAuthenticationService {
           id: userData.id,
           username: userData.username,
           userHash: userData.userHash,
-        }
+        },
       };
     } catch (error) {
       return { valid: false };

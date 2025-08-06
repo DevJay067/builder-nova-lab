@@ -258,16 +258,16 @@ export function createServer() {
   app.post("/api/health-records/simple", (req, res) => {
     try {
       const { type, title, description, data } = req.body;
-      const recordId = crypto.randomBytes(16).toString('hex');
+      const recordId = crypto.randomBytes(16).toString("hex");
 
       const record = {
         id: recordId,
-        type: type || 'general',
-        title: title || 'Health Record',
-        description: description || '',
+        type: type || "general",
+        title: title || "Health Record",
+        description: description || "",
         data: data || {},
         timestamp: new Date().toISOString(),
-        patientId: 'default-patient',
+        patientId: "default-patient",
       };
 
       console.log("📝 Storing simple health record:", recordId);
@@ -383,7 +383,6 @@ export function createServer() {
       // Forward to cloud storage
       req.body = sampleHealthData;
       storeHealthRecordSupabase(req, res, () => {});
-
     } catch (error) {
       console.error("❌ Test cloud storage error:", error);
       res.status(500).json({

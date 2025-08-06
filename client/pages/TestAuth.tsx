@@ -37,7 +37,7 @@ export default function TestAuth() {
         localStorage.setItem("sessionToken", result.user.sessionToken);
         localStorage.setItem("healthchain_user", JSON.stringify(result.user));
         document.cookie = `healthchain_session=${result.user.sessionToken}; path=/; max-age=86400; samesite=strict`;
-        
+
         setMessage({
           type: "success",
           text: "Test user created and logged in successfully!",
@@ -82,7 +82,7 @@ export default function TestAuth() {
         localStorage.setItem("sessionToken", result.user.sessionToken);
         localStorage.setItem("healthchain_user", JSON.stringify(result.user));
         document.cookie = `healthchain_session=${result.user.sessionToken}; path=/; max-age=86400; samesite=strict`;
-        
+
         setMessage({
           type: "success",
           text: "Test user logged in successfully!",
@@ -110,7 +110,7 @@ export default function TestAuth() {
 
     try {
       const sessionToken = localStorage.getItem("sessionToken");
-      
+
       if (!sessionToken) {
         setMessage({
           type: "error",
@@ -154,8 +154,9 @@ export default function TestAuth() {
   const clearSession = () => {
     localStorage.removeItem("sessionToken");
     localStorage.removeItem("healthchain_user");
-    document.cookie = "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    
+    document.cookie =
+      "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
     setMessage({
       type: "success",
       text: "Session cleared successfully",
@@ -235,19 +236,27 @@ export default function TestAuth() {
             <div className="mt-6 p-4 bg-slate-50 rounded-lg">
               <h3 className="font-medium mb-2">Test Credentials:</h3>
               <p className="text-sm text-muted-foreground">
-                <strong>Username:</strong> testuser<br />
-                <strong>Password:</strong> password123<br />
+                <strong>Username:</strong> testuser
+                <br />
+                <strong>Password:</strong> password123
+                <br />
                 <strong>Email:</strong> test@example.com
               </p>
             </div>
 
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-medium mb-2 text-blue-800">Steps to fix authentication:</h3>
+              <h3 className="font-medium mb-2 text-blue-800">
+                Steps to fix authentication:
+              </h3>
               <ol className="text-sm text-blue-700 space-y-1">
                 <li>1. Click "Create Test User" to register a test account</li>
-                <li>2. Click "Check Session" to verify authentication is working</li>
+                <li>
+                  2. Click "Check Session" to verify authentication is working
+                </li>
                 <li>3. Navigate to /history to test protected routes</li>
-                <li>4. If issues persist, click "Clear Session" and try again</li>
+                <li>
+                  4. If issues persist, click "Clear Session" and try again
+                </li>
               </ol>
             </div>
           </CardContent>

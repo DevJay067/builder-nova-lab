@@ -88,7 +88,7 @@ export default function ProtectedRoute({
         const errorDetails = {
           status: response.status,
           statusText: response.statusText,
-          url: response.url
+          url: response.url,
         };
         console.error("❌ Session verification failed:", errorDetails);
 

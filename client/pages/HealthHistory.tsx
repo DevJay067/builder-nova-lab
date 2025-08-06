@@ -248,14 +248,18 @@ export default function HealthHistory() {
           setRecords(transformedRecords);
           setStats({
             totalRecords: transformedRecords.length,
-            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
-            cloudStorageRecords: transformedRecords.filter((r: any) =>
-              r.metadata?.cloudStorage?.type === "supabase-cloud-vault"
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure)
+              .length,
+            cloudStorageRecords: transformedRecords.filter(
+              (r: any) =>
+                r.metadata?.cloudStorage?.type === "supabase-cloud-vault",
             ).length,
             lastUpdate: new Date().toISOString(),
           });
 
-          console.log(`✅ Loaded ${transformedRecords.length} health records from Supabase cloud storage`);
+          console.log(
+            `✅ Loaded ${transformedRecords.length} health records from Supabase cloud storage`,
+          );
         }
       }
     } catch (error) {
@@ -394,13 +398,14 @@ export default function HealthHistory() {
         } else if (error.message.includes("HTTP error")) {
           errorMessage = "Server error. Please check your login and try again.";
         } else if (error.message.includes("Failed to fetch")) {
-          errorMessage = "Network connection error. Please check your internet connection.";
+          errorMessage =
+            "Network connection error. Please check your internet connection.";
         }
       }
 
       setMessage({
         type: "error",
-        text: errorMessage
+        text: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
