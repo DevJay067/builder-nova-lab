@@ -349,7 +349,8 @@ export class KeyManagementService {
     const algorithm = "aes-256-gcm";
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipherGCM(algorithm, key);
+    cipher.setIV(iv);
 
     let encrypted = cipher.update(systemKey, "utf8", "hex");
     encrypted += cipher.final("hex");
@@ -371,7 +372,8 @@ export class KeyManagementService {
     const authTag = Buffer.from(parts[1], "hex");
     const encrypted = parts[2];
 
-    const decipher = crypto.createDecipherGCM(algorithm, key, iv);
+    const decipher = crypto.createDecipherGCM(algorithm, key);
+    decipher.setIV(iv);
     decipher.setAuthTag(authTag);
 
     let decrypted = decipher.update(encrypted, "hex", "utf8");

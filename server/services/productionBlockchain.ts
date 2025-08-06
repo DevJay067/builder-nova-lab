@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { HealthRecord, BlockchainTransaction } from "@shared/api";
+import { CryptoHelper } from "./cryptoHelper";
 
 /**
  * Production-Level Blockchain Service with Split Key Cryptography
@@ -201,11 +202,8 @@ class ProductionBlockchainService {
     // Layer 1: Encrypt with user hash (user-specific encryption)
     const userLayerKey = crypto.createHash("sha256").update(userHash).digest();
     const userIv = crypto.randomBytes(16);
-    const userCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      userLayerKey,
-      userIv,
-    );
+    const userCipher = crypto.createCipherGCM("aes-256-gcm", userLayerKey);
+    userCipher.setIV(userIv);
     userCipher.setAAD(Buffer.from("user-layer"));
 
     let userEncrypted = userCipher.update(
@@ -220,11 +218,8 @@ class ProductionBlockchainService {
     // Layer 2: Encrypt with data hash (data-specific encryption)
     const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
     const dataIv = crypto.randomBytes(16);
-    const dataCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      dataLayerKey,
-      dataIv,
-    );
+    const dataCipher = crypto.createCipherGCM("aes-256-gcm", dataLayerKey);
+    dataCipher.setIV(dataIv);
     dataCipher.setAAD(Buffer.from("data-layer"));
 
     let dataEncrypted = dataCipher.update(userLayerData, "utf8", "hex");
@@ -238,11 +233,8 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      blockchainLayerKey,
-      blockchainIv,
-    );
+    const blockchainCipher = crypto.createCipherGCM("aes-256-gcm", blockchainLayerKey);
+    blockchainCipher.setIV(blockchainIv);
     blockchainCipher.setAAD(Buffer.from("blockchain-layer"));
 
     let blockchainEncrypted = blockchainCipher.update(
@@ -284,11 +276,8 @@ class ProductionBlockchainService {
       const blockchainIv = Buffer.from(blockchainIvHex, "hex");
       const blockchainAuthTag = Buffer.from(blockchainAuthTagHex, "hex");
 
-      const blockchainDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        blockchainLayerKey,
-        blockchainIv,
-      );
+      const blockchainDecipher = crypto.createDecipherGCM("aes-256-gcm", blockchainLayerKey);
+      blockchainDecipher.setIV(blockchainIv);
       blockchainDecipher.setAAD(Buffer.from("blockchain-layer"));
       blockchainDecipher.setAuthTag(blockchainAuthTag);
 
@@ -309,11 +298,8 @@ class ProductionBlockchainService {
       const dataIv = Buffer.from(dataIvHex, "hex");
       const dataAuthTag = Buffer.from(dataAuthTagHex, "hex");
 
-      const dataDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        dataLayerKey,
-        dataIv,
-      );
+      const dataDecipher = crypto.createDecipherGCM("aes-256-gcm", dataLayerKey);
+      dataDecipher.setIV(dataIv);
       dataDecipher.setAAD(Buffer.from("data-layer"));
       dataDecipher.setAuthTag(dataAuthTag);
 
@@ -330,11 +316,8 @@ class ProductionBlockchainService {
       const userIv = Buffer.from(userIvHex, "hex");
       const userAuthTag = Buffer.from(userAuthTagHex, "hex");
 
-      const userDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        userLayerKey,
-        userIv,
-      );
+      const userDecipher = crypto.createDecipherGCM("aes-256-gcm", userLayerKey);
+      userDecipher.setIV(userIv);
       userDecipher.setAAD(Buffer.from("user-layer"));
       userDecipher.setAuthTag(userAuthTag);
 
@@ -530,7 +513,7 @@ class ProductionBlockchainService {
 
     this.blockchain.push(newBlock);
     console.log(
-      `⛏️  Successfully mined block #${blockNumber} with ${transactions.length} transactions`,
+      `��️  Successfully mined block #${blockNumber} with ${transactions.length} transactions`,
     );
 
     return newBlock;

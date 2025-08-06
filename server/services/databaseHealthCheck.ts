@@ -5,7 +5,18 @@ import { neon } from "@neondatabase/serverless";
  * Monitors database connectivity and provides fallback mechanisms
  */
 
-const sql = neon(process.env.DATABASE_URL || "");
+let sql: ReturnType<typeof neon> | null = null;
+
+function getDatabase() {
+  if (!sql) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      throw new Error("DATABASE_URL environment variable is not set");
+    }
+    sql = neon(dbUrl);
+  }
+  return sql;
+}
 
 export class DatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
@@ -25,6 +36,8 @@ export class DatabaseHealthService {
 
     try {
       console.log("🔍 Checking database health...");
+
+      const sql = getDatabase();
 
       // Simple connectivity test
       const result = await sql`SELECT 1 as health_check`;

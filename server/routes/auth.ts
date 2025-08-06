@@ -9,9 +9,26 @@ export const registerUser: RequestHandler = async (req, res) => {
     console.log("🔍 Registration request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      fields: Object.keys(req.body || {}),
     });
 
     const { username, password, email, firstName, lastName } = req.body;
+
+    // Validate required fields
+    if (!username || !password || !email || !firstName || !lastName) {
+      console.log("❌ Missing required fields:", {
+        username: !!username,
+        password: !!password,
+        email: !!email,
+        firstName: !!firstName,
+        lastName: !!lastName,
+      });
+      return res.status(400).json({
+        success: false,
+        message:
+          "All fields are required: username, password, email, firstName, lastName",
+      });
+    }
 
     // Use the new authentication service
     const result = await UserAuthenticationService.registerUser(
@@ -24,13 +41,19 @@ export const registerUser: RequestHandler = async (req, res) => {
       },
     );
 
+    console.log("📝 Registration result:", {
+      success: result.success,
+      message: result.message,
+      hasUser: !!result.user,
+    });
+
     if (result.success) {
       return res.status(201).json(result);
     } else {
       return res.status(400).json(result);
     }
   } catch (error) {
-    console.error("Error registering user:", error);
+    console.error("❌ Error registering user:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during registration",
@@ -103,7 +126,17 @@ export const verifySession: RequestHandler = async (req, res) => {
       req.cookies.healthchain_session ||
       (req.headers["x-session-token"] as string);
 
+    console.log("🔍 Session verification request:", {
+      hasAuthHeader: !!req.headers.authorization,
+      hasCookie: !!req.cookies.healthchain_session,
+      hasXSessionHeader: !!req.headers["x-session-token"],
+      sessionToken: sessionToken
+        ? `${sessionToken.substring(0, 20)}...`
+        : "none",
+    });
+
     if (!sessionToken) {
+      console.log("❌ No session token provided");
       return res.status(401).json({
         success: false,
         message: "No session token provided",
@@ -111,6 +144,10 @@ export const verifySession: RequestHandler = async (req, res) => {
     }
 
     const result = UserAuthenticationService.verifySession(sessionToken);
+    console.log("🔐 Session verification result:", {
+      valid: result.valid,
+      hasUser: !!result.user,
+    });
 
     if (result.valid) {
       res.json({
@@ -118,6 +155,7 @@ export const verifySession: RequestHandler = async (req, res) => {
         user: result.user,
       });
     } else {
+      console.log("❌ Invalid session token");
       res.status(401).json({
         success: false,
         message: "Invalid session token",
@@ -310,6 +348,32 @@ export const getAuthStats: RequestHandler = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+/**
+ * Health check for auth system
+ */
+export const getAuthHealth: RequestHandler = async (req, res) => {
+  try {
+    const stats = UserAuthenticationService.getSystemStats();
+
+    res.json({
+      success: true,
+      status: "healthy",
+      initialized: true,
+      inMemoryMode: true,
+      systemStats: stats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error checking auth health:", error);
+    res.status(500).json({
+      success: false,
+      status: "unhealthy",
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
     });
   }
 };

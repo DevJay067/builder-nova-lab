@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Registration Now</title>
+</head>
+<body>
+    <h1>Test Registration</h1>
+    <button onclick="testNow()">Test Registration Now</button>
+    <div id="result"></div>
+
+    <script>
+        async function testNow() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing registration...';
+
+            const testData = {
+                username: 'testuser' + Date.now(),
+                password: 'password123',
+                email: 'test' + Date.now() + '@example.com',
+                firstName: 'Test',
+                lastName: 'User'
+            };
+
+            try {
+                console.log('📤 Sending registration request:', testData);
+
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                console.log('📥 Response status:', response.status);
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (jsonError) {
+                    result = { error: 'Could not parse JSON response' };
+                }
+
+                console.log('📋 Response data:', result);
+
+                resultDiv.innerHTML = `
+                    <h3>Status: ${response.status} ${response.ok ? '✅' : '❌'}</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+
+                if (response.ok && result.success) {
+                    resultDiv.innerHTML += '<p style="color: green;"><strong>🎉 Registration Successful!</strong></p>';
+                } else {
+                    resultDiv.innerHTML += `<p style="color: red;"><strong>❌ Registration Failed: ${result.message || 'Unknown error'}</strong></p>`;
+                }
+
+            } catch (error) {
+                console.error('💥 Registration error:', error);
+                resultDiv.innerHTML = `<h3>❌ Network Error:</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = () => {
+            setTimeout(testNow, 1000);
+        };
+    </script>
+</body>
+</html>

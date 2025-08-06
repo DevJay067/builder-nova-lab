@@ -44,6 +44,7 @@ import {
   createDataAccess,
   verifyDataAccess,
   getAuthStats,
+  getAuthHealth,
   authenticateUser,
 } from "./routes/auth";
 import {
@@ -224,6 +225,7 @@ export function createServer() {
   app.post("/api/auth/data-access", createDataAccess);
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
+  app.get("/api/auth/health", getAuthHealth);
 
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);

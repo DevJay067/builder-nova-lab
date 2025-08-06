@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Test API</h1>
+    <button onclick="testPing()">Test Ping</button>
+    <button onclick="testAuthHealth()">Test Auth Health</button>
+    <button onclick="testRegistration()">Test Registration</button>
+    <div id="result"></div>
+
+    <script>
+        async function testPing() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing ping...';
+
+            try {
+                const response = await fetch('/api/ping');
+                const result = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>Ping Response (Status: ${response.status}):</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<h3>Ping Error:</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        async function testAuthHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing auth health...';
+
+            try {
+                const response = await fetch('/api/auth/health');
+                const result = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>Auth Health Response (Status: ${response.status}):</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<h3>Auth Health Error:</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        async function testRegistration() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing registration...';
+
+            try {
+                const testData = {
+                    username: 'testuser' + Date.now(),
+                    password: 'password123',
+                    email: 'test' + Date.now() + '@example.com',
+                    firstName: 'Test',
+                    lastName: 'User'
+                };
+
+                console.log('Sending registration request:', testData);
+
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers));
+
+                let result;
+                let responseText;
+
+                try {
+                    result = await response.json();
+                    responseText = JSON.stringify(result, null, 2);
+                } catch (jsonError) {
+                    console.warn('Failed to parse as JSON, trying text:', jsonError);
+                    try {
+                        responseText = await response.text();
+                        result = { rawResponse: responseText };
+                    } catch (textError) {
+                        console.warn('Failed to read as text:', textError);
+                        result = { error: 'Could not read response body' };
+                        responseText = 'Failed to read response';
+                    }
+                }
+
+                console.log('Response body:', result);
+
+                resultDiv.innerHTML = `
+                    <h3>Registration Response (Status: ${response.status}):</h3>
+                    <h4>Success: ${response.ok ? 'YES' : 'NO'}</h4>
+                    <pre>${responseText}</pre>
+                `;
+            } catch (error) {
+                console.error('Registration error:', error);
+                resultDiv.innerHTML = `<h3>Registration Error:</h3><pre>${error.message}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>
