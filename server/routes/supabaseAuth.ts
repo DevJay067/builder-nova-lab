@@ -205,7 +205,7 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
     console.log("💾 Storing metadata in database...");
     const dbResult = await SupabaseService.storeHealthRecord({
       patient_id: patientId,
-      record_type: type,
+      record_type: healthData.type,
       title: vaultData.title,
       description: vaultData.description,
       date: timestamp.split("T")[0],
