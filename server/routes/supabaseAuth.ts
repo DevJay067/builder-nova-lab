@@ -293,11 +293,18 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
       }
     }
 
-    if (result.success) {
-      res.json(result);
-    } else {
-      res.status(400).json(result);
-    }
+    console.log(`✅ Retrieved ${enrichedRecords.length} health records from Supabase cloud vault`);
+
+    res.json({
+      success: true,
+      records: enrichedRecords,
+      totalRecords: enrichedRecords.length,
+      cloudStorage: {
+        type: "supabase-vault",
+        retrievedAt: new Date().toISOString(),
+      },
+      message: "Health records retrieved successfully from cloud storage vault",
+    });
   } catch (error) {
     console.error("❌ Get health records error:", error);
     res.status(500).json({
