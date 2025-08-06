@@ -51,11 +51,14 @@ export class SimpleDatabaseInit {
    * Test database connectivity
    */
   static async testConnection(): Promise<boolean> {
+    if (!sql) {
+      return false;
+    }
+
     try {
       await sql`SELECT 1 as test`;
       return true;
     } catch (error) {
-      console.error("Database connection test failed:", error);
       return false;
     }
   }
