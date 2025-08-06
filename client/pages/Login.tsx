@@ -82,12 +82,35 @@ export default function Login() {
   // Page load animation and initialization
   useEffect(() => {
     // Use requestAnimationFrame for better performance
-    const initializeComponent = () => {
+    const initializeComponent = async () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
 
+      // Get server information
+      const hostname = window.location.hostname;
+      const port = window.location.port;
+
       // Update document title with server info
-      const serverInfo = window.location.hostname;
-      document.title = `HealthChain Login - ${serverInfo}`;
+      document.title = `HealthChain Login - ${hostname}${port ? ':' + port : ''}`;
+
+      // Check server connectivity
+      try {
+        const response = await fetch('/api/health', {
+          method: 'GET',
+          cache: 'no-cache',
+          timeout: 5000
+        });
+        setServerStatus({
+          hostname,
+          port,
+          connected: response.ok,
+        });
+      } catch (error) {
+        setServerStatus({
+          hostname,
+          port,
+          connected: false,
+        });
+      }
 
       setIsInitialized(true);
     };
