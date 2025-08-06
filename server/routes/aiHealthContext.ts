@@ -284,8 +284,18 @@ export const searchHealthRecordsForAI: RequestHandler = async (req, res) => {
     console.log(`🔍 AI health search: "${query}"`);
 
     // Get all health records
-    const allRecords = await SupabaseService.getHealthRecords("authenticated-user");
-    
+    const allRecordsResult = await SupabaseService.getHealthRecords("authenticated-user");
+
+    if (!allRecordsResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch health records for search",
+        error: allRecordsResult.error,
+      });
+    }
+
+    const allRecords = allRecordsResult.records || [];
+
     // Simple search implementation
     const searchResults = allRecords.filter(record => {
       const searchText = `${record.title} ${record.description} ${record.record_type}`.toLowerCase();
