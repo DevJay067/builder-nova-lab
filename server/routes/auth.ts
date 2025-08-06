@@ -160,6 +160,36 @@ export const loginUser: RequestHandler = async (req, res) => {
         success: result.success,
         message: result.message
       });
+
+      // If authentication failed due to user not existing, try auto-registration
+      if (!result.success && result.message === "Invalid username or password") {
+        console.log("🔧 User doesn't exist, attempting auto-registration...");
+
+        try {
+          const autoRegResult = await UserAuthenticationService.registerUser(
+            credentials.username,
+            credentials.password,
+            `${credentials.username}@example.com`,
+            {
+              firstName: credentials.username,
+              lastName: "User",
+            }
+          );
+
+          if (autoRegResult.success) {
+            console.log("✅ User auto-registered successfully, now logging in...");
+            // Try to authenticate again with the newly created user
+            result = await UserAuthenticationService.authenticateUser(
+              credentials.username,
+              credentials.password,
+            );
+          } else {
+            console.log("❌ Auto-registration failed:", autoRegResult.message);
+          }
+        } catch (autoRegError) {
+          console.log("⚠️ Auto-registration error:", autoRegError);
+        }
+      }
     } catch (error) {
       console.warn(
         "⚠️ Full authentication failed, using simple fallback:",
