@@ -463,6 +463,10 @@ class SupabaseService {
 
       console.log(
         `✅ Retrieved ${data?.length || 0} health records for patient: ${patientId}`,
+        {
+          totalInStorage: this.mockStorage?.health_records?.length || 'unknown',
+          records: data?.map(r => ({ id: r.id, type: r.record_type, title: r.title })) || []
+        }
       );
       return { success: true, records: data || [] };
     } catch (error) {
