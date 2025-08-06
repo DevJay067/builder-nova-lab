@@ -268,8 +268,8 @@ export const testSupabaseConnection: RequestHandler = async (req, res) => {
 export const healthCheckSupabase: RequestHandler = async (req, res) => {
   try {
     const [connectionTest, systemStats] = await Promise.all([
-      SupabaseAuthService.testConnection(),
-      SupabaseAuthService.getSystemStats()
+      SupabaseService.testConnection(),
+      SupabaseService.getStatistics()
     ]);
 
     res.json({
