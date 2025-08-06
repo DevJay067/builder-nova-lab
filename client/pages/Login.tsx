@@ -210,7 +210,7 @@ export default function Login() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(requestBody),
       });
@@ -265,7 +265,8 @@ export default function Login() {
     } catch (error) {
       console.error("Registration error:", error);
 
-      let errorMessage = "Network error. Please check your connection and try again.";
+      let errorMessage =
+        "Network error. Please check your connection and try again.";
 
       if (error instanceof Error) {
         if (error.message.includes("body stream")) {
@@ -273,7 +274,8 @@ export default function Login() {
         } else if (error.message.includes("HTTP error")) {
           errorMessage = "Server error. Please try again in a moment.";
         } else if (error.message.includes("Failed to fetch")) {
-          errorMessage = "Network connection error. Please check your internet connection.";
+          errorMessage =
+            "Network connection error. Please check your internet connection.";
         }
       }
 

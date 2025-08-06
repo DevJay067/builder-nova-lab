@@ -29,7 +29,6 @@ export const registerUserSupabase: RequestHandler = async (req, res) => {
     } else {
       res.status(400).json(result);
     }
-
   } catch (error) {
     console.error("❌ Registration error:", error);
     res.status(500).json({
@@ -62,7 +61,6 @@ export const loginUserSupabase: RequestHandler = async (req, res) => {
     } else {
       res.status(401).json(result);
     }
-
   } catch (error) {
     console.error("❌ Authentication error:", error);
     res.status(500).json({
@@ -84,7 +82,6 @@ export const getCurrentUserSupabase: RequestHandler = async (req, res) => {
     } else {
       res.status(401).json(result);
     }
-
   } catch (error) {
     console.error("❌ Get current user error:", error);
     res.status(500).json({
@@ -106,7 +103,6 @@ export const signOutSupabase: RequestHandler = async (req, res) => {
     } else {
       res.status(400).json(result);
     }
-
   } catch (error) {
     console.error("❌ Sign out error:", error);
     res.status(500).json({
@@ -147,7 +143,7 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
       record_type: healthRecord.type,
       title: `${healthRecord.type} - ${new Date().toLocaleDateString()}`,
       description: JSON.stringify(healthRecord.data),
-      date: (healthRecord.timestamp || new Date().toISOString()).split('T')[0],
+      date: (healthRecord.timestamp || new Date().toISOString()).split("T")[0],
       metadata: { sessionToken, secureStorage: true },
     });
 
@@ -156,7 +152,6 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
     } else {
       res.status(400).json(result);
     }
-
   } catch (error) {
     console.error("❌ Store health record error:", error);
     res.status(500).json({
@@ -171,8 +166,9 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
  */
 export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
   try {
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
-                          req.query.sessionToken as string;
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      (req.query.sessionToken as string);
 
     if (!sessionToken) {
       return res.status(401).json({
@@ -200,7 +196,6 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
     } else {
       res.status(400).json(result);
     }
-
   } catch (error) {
     console.error("❌ Get health records error:", error);
     res.status(500).json({
@@ -224,7 +219,6 @@ export const getSystemStatsSupabase: RequestHandler = async (req, res) => {
       stats,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error("❌ Get system stats error:", error);
     res.status(500).json({
@@ -247,10 +241,11 @@ export const testSupabaseConnection: RequestHandler = async (req, res) => {
     res.json({
       success: true,
       connected: isConnected,
-      message: isConnected ? "Supabase connection successful" : "Supabase connection failed",
+      message: isConnected
+        ? "Supabase connection successful"
+        : "Supabase connection failed",
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error("❌ Test connection error:", error);
     res.status(500).json({
@@ -269,7 +264,7 @@ export const healthCheckSupabase: RequestHandler = async (req, res) => {
   try {
     const [connectionTest, systemStats] = await Promise.all([
       SupabaseService.testConnection(),
-      SupabaseService.getStatistics()
+      SupabaseService.getStatistics(),
     ]);
 
     res.json({
@@ -283,12 +278,11 @@ export const healthCheckSupabase: RequestHandler = async (req, res) => {
           blockchain: true,
           encryption: true,
           vault: true,
-        }
+        },
       },
       stats: systemStats,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error("❌ Health check error:", error);
     res.status(200).json({
@@ -302,7 +296,7 @@ export const healthCheckSupabase: RequestHandler = async (req, res) => {
           blockchain: true,
           encryption: true,
           vault: false,
-        }
+        },
       },
       message: "Running in degraded mode",
       timestamp: new Date().toISOString(),

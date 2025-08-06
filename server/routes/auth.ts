@@ -14,7 +14,7 @@ export const registerUser: RequestHandler = async (req, res) => {
     });
 
     // Ensure we have a body to work with
-    if (!req.body || typeof req.body !== 'object') {
+    if (!req.body || typeof req.body !== "object") {
       console.error("❌ Invalid or missing request body");
       return res.status(400).json({
         success: false,
@@ -58,16 +58,22 @@ export const registerUser: RequestHandler = async (req, res) => {
         },
       );
     } catch (error) {
-      console.warn("⚠️ Full registration failed, using simple fallback:", error instanceof Error ? error.message : "Unknown error");
+      console.warn(
+        "⚠️ Full registration failed, using simple fallback:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
 
       // Simple fallback registration without complex blockchain system
       result = {
         success: true,
         user: {
-          id: crypto.randomBytes(16).toString('hex'),
+          id: crypto.randomBytes(16).toString("hex"),
           username: userData.username,
-          userHash: crypto.createHash('sha256').update(userData.username + userData.password).digest('hex'),
-          sessionToken: crypto.randomBytes(32).toString('hex'),
+          userHash: crypto
+            .createHash("sha256")
+            .update(userData.username + userData.password)
+            .digest("hex"),
+          sessionToken: crypto.randomBytes(32).toString("hex"),
           secureSystemActivated: false,
         },
         message: "Registration successful (simplified mode)",
@@ -131,17 +137,27 @@ export const loginUser: RequestHandler = async (req, res) => {
         password,
       );
     } catch (error) {
-      console.warn("⚠️ Full authentication failed, using simple fallback:", error instanceof Error ? error.message : "Unknown error");
+      console.warn(
+        "⚠️ Full authentication failed, using simple fallback:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
 
       // Simple fallback authentication (just basic password check)
       // In a real app, you'd check against a simple user store
       result = {
         success: true,
         user: {
-          id: crypto.createHash('sha256').update(username).digest('hex').substring(0, 16),
+          id: crypto
+            .createHash("sha256")
+            .update(username)
+            .digest("hex")
+            .substring(0, 16),
           username: username,
-          userHash: crypto.createHash('sha256').update(username + password).digest('hex'),
-          sessionToken: crypto.randomBytes(32).toString('hex'),
+          userHash: crypto
+            .createHash("sha256")
+            .update(username + password)
+            .digest("hex"),
+          sessionToken: crypto.randomBytes(32).toString("hex"),
           secureSystemActivated: false,
         },
         message: "Authentication successful (simplified mode)",

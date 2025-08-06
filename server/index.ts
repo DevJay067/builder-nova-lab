@@ -110,7 +110,9 @@ export function createServer() {
         const { SupabaseService } = await import("./services/supabaseService");
         await SupabaseService.initializeDatabase();
         await SupabaseService.initializeStorage();
-        console.log("✅ Supabase database and storage initialized successfully");
+        console.log(
+          "✅ Supabase database and storage initialized successfully",
+        );
       } catch (dbError) {
         console.log(
           "⚠️  Supabase database not configured, system will work with mock data",
@@ -135,18 +137,18 @@ export function createServer() {
 
   // Add request logging middleware
   app.use((req, res, next) => {
-    if (req.path.includes('/auth/')) {
+    if (req.path.includes("/auth/")) {
       console.log(`📥 ${req.method} ${req.path}`, {
-        contentType: req.headers['content-type'],
-        contentLength: req.headers['content-length'],
+        contentType: req.headers["content-type"],
+        contentLength: req.headers["content-length"],
         hasBody: !!req.body,
       });
     }
     next();
   });
 
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {
@@ -185,7 +187,11 @@ export function createServer() {
     try {
       const { username, password, email } = req.body;
 
-      console.log("🧪 Test registration:", { username, hasPassword: !!password, email });
+      console.log("🧪 Test registration:", {
+        username,
+        hasPassword: !!password,
+        email,
+      });
 
       if (!username || !password) {
         return res.status(400).json({
