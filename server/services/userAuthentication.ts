@@ -257,7 +257,7 @@ class UserAuthenticationService {
         () => {
           console.warn("⚠️ Using fallback database initialization");
           this.useDatabase = false;
-          SimpleDatabaseInit.createMedicalHistoryTable().catch(() => {
+          SimpleDatabaseInit.initializeMedicalHistoryTable().catch(() => {
             console.warn(
               "⚠️ Fallback initialization also failed, using in-memory only",
             );
