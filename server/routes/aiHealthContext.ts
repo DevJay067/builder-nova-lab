@@ -33,10 +33,14 @@ export const getHealthDataForAI: RequestHandler = async (req, res) => {
     console.log("🔍 Fetching health records for AI context...");
 
     // Get health records from Supabase
-    const healthRecordsResult = await SupabaseService.getHealthRecords("authenticated-user");
+    const healthRecordsResult =
+      await SupabaseService.getHealthRecords("authenticated-user");
 
     if (!healthRecordsResult.success) {
-      console.error("❌ Failed to fetch health records:", healthRecordsResult.error);
+      console.error(
+        "❌ Failed to fetch health records:",
+        healthRecordsResult.error,
+      );
       return res.status(500).json({
         success: false,
         message: "Failed to fetch health records",
@@ -45,19 +49,22 @@ export const getHealthDataForAI: RequestHandler = async (req, res) => {
     }
 
     const healthRecords = healthRecordsResult.records || [];
-    console.log(`📊 Found ${healthRecords.length} health records for AI processing`);
+    console.log(
+      `📊 Found ${healthRecords.length} health records for AI processing`,
+    );
 
     // Process and format health data for AI consumption
     const aiHealthContext = formatHealthDataForAI(healthRecords);
 
-    console.log(`✅ AI health context prepared with ${aiHealthContext.totalRecords} records`);
+    console.log(
+      `✅ AI health context prepared with ${aiHealthContext.totalRecords} records`,
+    );
 
     res.json({
       success: true,
       context: aiHealthContext,
       lastUpdated: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error("❌ Error fetching health data for AI:", error);
     res.status(500).json({
@@ -72,16 +79,31 @@ export const getHealthDataForAI: RequestHandler = async (req, res) => {
  * Format health records for AI consumption
  */
 function formatHealthDataForAI(healthRecords: any[]) {
-  console.log(`🔄 Processing ${healthRecords.length} health records for AI context`);
+  console.log(
+    `🔄 Processing ${healthRecords.length} health records for AI context`,
+  );
 
   if (!Array.isArray(healthRecords)) {
     console.error("❌ healthRecords is not an array:", typeof healthRecords);
     return {
       totalRecords: 0,
       lastRecordDate: null,
-      medicalProfile: { conditions: [], currentMedications: [], recentSymptoms: [], chronicConditions: [] },
+      medicalProfile: {
+        conditions: [],
+        currentMedications: [],
+        recentSymptoms: [],
+        chronicConditions: [],
+      },
       recentActivity: { records: [], vitalSigns: [], labResults: [] },
-      aiPromptContext: { medicalHistory: { conditions: 'No records', medications: 'No records', recentSymptoms: 'No records' }, recentActivity: 'No records', instructions: 'No health records available' },
+      aiPromptContext: {
+        medicalHistory: {
+          conditions: "No records",
+          medications: "No records",
+          recentSymptoms: "No records",
+        },
+        recentActivity: "No records",
+        instructions: "No health records available",
+      },
       searchEnhancers: [],
     };
   }
@@ -98,49 +120,67 @@ function formatHealthDataForAI(healthRecords: any[]) {
     try {
       // Parse cloud vault data if available
       let recordData = record.data || {};
-      if (typeof recordData === 'string') {
+      if (typeof recordData === "string") {
         recordData = JSON.parse(recordData);
       }
 
       // Extract conditions and diagnoses
-      if (record.record_type === 'diagnosis' || record.record_type === 'condition') {
+      if (
+        record.record_type === "diagnosis" ||
+        record.record_type === "condition"
+      ) {
         if (record.title && !conditions.includes(record.title)) {
           conditions.push(record.title);
         }
-        if (recordData.diagnosis && !conditions.includes(recordData.diagnosis)) {
+        if (
+          recordData.diagnosis &&
+          !conditions.includes(recordData.diagnosis)
+        ) {
           conditions.push(recordData.diagnosis);
         }
       }
 
       // Extract medications
-      if (record.record_type === 'medication' || record.record_type === 'prescription') {
+      if (
+        record.record_type === "medication" ||
+        record.record_type === "prescription"
+      ) {
         if (record.title && !medications.includes(record.title)) {
           medications.push(record.title);
         }
-        if (recordData.medication && !medications.includes(recordData.medication)) {
+        if (
+          recordData.medication &&
+          !medications.includes(recordData.medication)
+        ) {
           medications.push(recordData.medication);
         }
       }
 
       // Extract symptoms
-      if (record.record_type === 'symptom' || record.record_type === 'consultation') {
+      if (
+        record.record_type === "symptom" ||
+        record.record_type === "consultation"
+      ) {
         if (recordData.symptoms) {
-          const symptomList = Array.isArray(recordData.symptoms) 
-            ? recordData.symptoms 
-            : recordData.symptoms.split(',').map((s: string) => s.trim());
+          const symptomList = Array.isArray(recordData.symptoms)
+            ? recordData.symptoms
+            : recordData.symptoms.split(",").map((s: string) => s.trim());
           symptomList.forEach((symptom: string) => {
             if (symptom && !symptoms.includes(symptom)) {
               symptoms.push(symptom);
             }
           });
         }
-        if (record.description && record.description.toLowerCase().includes('pain')) {
+        if (
+          record.description &&
+          record.description.toLowerCase().includes("pain")
+        ) {
           symptoms.push(`${record.title} - ${record.description}`);
         }
       }
 
       // Extract vital signs
-      if (record.record_type === 'vitals' || record.record_type === 'checkup') {
+      if (record.record_type === "vitals" || record.record_type === "checkup") {
         vitalSigns.push({
           date: record.date || record.created_at,
           type: record.title,
@@ -149,7 +189,7 @@ function formatHealthDataForAI(healthRecords: any[]) {
       }
 
       // Extract lab results
-      if (record.record_type === 'lab' || record.record_type === 'test') {
+      if (record.record_type === "lab" || record.record_type === "test") {
         labResults.push({
           date: record.date || record.created_at,
           test: record.title,
@@ -161,7 +201,7 @@ function formatHealthDataForAI(healthRecords: any[]) {
       const recordDate = new Date(record.date || record.created_at);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       if (recordDate > thirtyDaysAgo) {
         recentRecords.push({
           date: record.date || record.created_at,
@@ -170,7 +210,6 @@ function formatHealthDataForAI(healthRecords: any[]) {
           description: record.description,
         });
       }
-
     } catch (parseError) {
       console.warn("⚠️ Could not parse health record:", parseError);
     }
@@ -179,20 +218,26 @@ function formatHealthDataForAI(healthRecords: any[]) {
   // Create comprehensive AI context
   const aiContext = {
     totalRecords: healthRecords.length,
-    lastRecordDate: healthRecords.length > 0 
-      ? healthRecords.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-      : null,
-    
+    lastRecordDate:
+      healthRecords.length > 0
+        ? healthRecords.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )[0].created_at
+        : null,
+
     // Medical profile
     medicalProfile: {
       conditions: conditions.slice(0, 10), // Limit to most relevant
       currentMedications: medications.slice(0, 10),
       recentSymptoms: symptoms.slice(0, 10),
-      chronicConditions: conditions.filter(c => 
-        c.toLowerCase().includes('diabetes') || 
-        c.toLowerCase().includes('hypertension') ||
-        c.toLowerCase().includes('chronic') ||
-        c.toLowerCase().includes('asthma')
+      chronicConditions: conditions.filter(
+        (c) =>
+          c.toLowerCase().includes("diabetes") ||
+          c.toLowerCase().includes("hypertension") ||
+          c.toLowerCase().includes("chronic") ||
+          c.toLowerCase().includes("asthma"),
       ),
     },
 
@@ -204,13 +249,18 @@ function formatHealthDataForAI(healthRecords: any[]) {
     },
 
     // AI-specific formatting
-    aiPromptContext: generateAIPromptContext(conditions, medications, symptoms, recentRecords),
-    
+    aiPromptContext: generateAIPromptContext(
+      conditions,
+      medications,
+      symptoms,
+      recentRecords,
+    ),
+
     // Search enhancers for better AI responses
     searchEnhancers: [
-      ...conditions.map(c => `condition:${c}`),
-      ...medications.map(m => `medication:${m}`),
-      ...symptoms.map(s => `symptom:${s}`),
+      ...conditions.map((c) => `condition:${c}`),
+      ...medications.map((m) => `medication:${m}`),
+      ...symptoms.map((s) => `symptom:${s}`),
     ].slice(0, 20),
   };
 
@@ -220,28 +270,43 @@ function formatHealthDataForAI(healthRecords: any[]) {
 /**
  * Generate AI prompt context based on health data
  */
-function generateAIPromptContext(conditions: string[], medications: string[], symptoms: string[], recentRecords: any[]) {
+function generateAIPromptContext(
+  conditions: string[],
+  medications: string[],
+  symptoms: string[],
+  recentRecords: any[],
+) {
   const context = {
     medicalHistory: {
-      conditions: conditions.length > 0 ? conditions.join(', ') : 'No known conditions',
-      medications: medications.length > 0 ? medications.join(', ') : 'No current medications',
-      recentSymptoms: symptoms.length > 0 ? symptoms.slice(0, 5).join(', ') : 'No recent symptoms reported',
+      conditions:
+        conditions.length > 0 ? conditions.join(", ") : "No known conditions",
+      medications:
+        medications.length > 0
+          ? medications.join(", ")
+          : "No current medications",
+      recentSymptoms:
+        symptoms.length > 0
+          ? symptoms.slice(0, 5).join(", ")
+          : "No recent symptoms reported",
     },
-    
-    recentActivity: recentRecords.length > 0 
-      ? recentRecords.map(r => `${r.date}: ${r.title} (${r.type})`).join('; ')
-      : 'No recent health records',
-    
+
+    recentActivity:
+      recentRecords.length > 0
+        ? recentRecords
+            .map((r) => `${r.date}: ${r.title} (${r.type})`)
+            .join("; ")
+        : "No recent health records",
+
     instructions: `
 PERSONALIZED MEDICAL CONTEXT FROM HEALTH RECORDS:
-- Patient has ${conditions.length} documented condition(s): ${conditions.slice(0, 5).join(', ')}
-- Currently taking ${medications.length} medication(s): ${medications.slice(0, 5).join(', ')}
-- Recent symptoms/concerns: ${symptoms.slice(0, 3).join(', ')}
-- Last health activity: ${recentRecords.length > 0 ? recentRecords[0].date : 'No recent records'}
+- Patient has ${conditions.length} documented condition(s): ${conditions.slice(0, 5).join(", ")}
+- Currently taking ${medications.length} medication(s): ${medications.slice(0, 5).join(", ")}
+- Recent symptoms/concerns: ${symptoms.slice(0, 3).join(", ")}
+- Last health activity: ${recentRecords.length > 0 ? recentRecords[0].date : "No recent records"}
 
 CRITICAL AI INSTRUCTIONS:
 1. Always reference the patient's documented conditions when providing advice
-2. Consider medication interactions with current prescriptions: ${medications.join(', ')}
+2. Consider medication interactions with current prescriptions: ${medications.join(", ")}
 3. Be specific about how recommendations relate to documented health history
 4. Prioritize safety - recommend medical consultation for concerning symptoms
 5. Provide evidence-based advice considering the patient's specific medical profile
@@ -259,7 +324,7 @@ When patient asks about symptoms, immediately correlate with their documented co
 export const searchHealthRecordsForAI: RequestHandler = async (req, res) => {
   try {
     const { query, limit = 10 } = req.body;
-    
+
     const sessionToken =
       req.headers.authorization?.replace("Bearer ", "") ||
       req.cookies.healthchain_session ||
@@ -284,7 +349,8 @@ export const searchHealthRecordsForAI: RequestHandler = async (req, res) => {
     console.log(`🔍 AI health search: "${query}"`);
 
     // Get all health records
-    const allRecordsResult = await SupabaseService.getHealthRecords("authenticated-user");
+    const allRecordsResult =
+      await SupabaseService.getHealthRecords("authenticated-user");
 
     if (!allRecordsResult.success) {
       return res.status(500).json({
@@ -297,12 +363,15 @@ export const searchHealthRecordsForAI: RequestHandler = async (req, res) => {
     const allRecords = allRecordsResult.records || [];
 
     // Simple search implementation
-    const searchResults = allRecords.filter(record => {
-      const searchText = `${record.title} ${record.description} ${record.record_type}`.toLowerCase();
-      return searchText.includes(query.toLowerCase());
-    }).slice(0, limit);
+    const searchResults = allRecords
+      .filter((record) => {
+        const searchText =
+          `${record.title} ${record.description} ${record.record_type}`.toLowerCase();
+        return searchText.includes(query.toLowerCase());
+      })
+      .slice(0, limit);
 
-    const formattedResults = searchResults.map(record => ({
+    const formattedResults = searchResults.map((record) => ({
       id: record.id,
       type: record.record_type,
       title: record.title,
@@ -317,7 +386,6 @@ export const searchHealthRecordsForAI: RequestHandler = async (req, res) => {
       results: formattedResults,
       totalFound: searchResults.length,
     });
-
   } catch (error) {
     console.error("❌ Error searching health records for AI:", error);
     res.status(500).json({
@@ -332,12 +400,13 @@ export const searchHealthRecordsForAI: RequestHandler = async (req, res) => {
  * Calculate relevance score for search results
  */
 function calculateRelevance(record: any, query: string): number {
-  const queryWords = query.toLowerCase().split(' ');
+  const queryWords = query.toLowerCase().split(" ");
   let score = 0;
-  
-  const text = `${record.title} ${record.description} ${record.record_type}`.toLowerCase();
-  
-  queryWords.forEach(word => {
+
+  const text =
+    `${record.title} ${record.description} ${record.record_type}`.toLowerCase();
+
+  queryWords.forEach((word) => {
     if (text.includes(word)) {
       score += 1;
       // Boost score for title matches
@@ -346,6 +415,6 @@ function calculateRelevance(record: any, query: string): number {
       }
     }
   });
-  
+
   return score;
 }

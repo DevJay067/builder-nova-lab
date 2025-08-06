@@ -112,7 +112,8 @@ interface HealthInsight {
 export default function BmaxAI() {
   const [personalizedContext, setPersonalizedContext] =
     useState<PersonalizedContext | null>(null);
-  const [aiHealthContext, setAiHealthContext] = useState<AIHealthContext | null>(null);
+  const [aiHealthContext, setAiHealthContext] =
+    useState<AIHealthContext | null>(null);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -241,14 +242,26 @@ export default function BmaxAI() {
 
   const getMedicalContextSummary = () => {
     // Use AI health context if available, otherwise fall back to personalized context
-    const hasData = aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData;
+    const hasData =
+      aiHealthContext?.context?.totalRecords > 0 ||
+      personalizedContext?.hasData;
     if (!hasData) return null;
 
     const totalRecords = aiHealthContext?.context?.totalRecords || 0;
-    const conditions = aiHealthContext?.context?.medicalProfile?.conditions || personalizedContext?.medicalConditions?.map(c => c.name) || [];
-    const medications = aiHealthContext?.context?.medicalProfile?.currentMedications || personalizedContext?.currentMedications || [];
-    const symptoms = aiHealthContext?.context?.medicalProfile?.recentSymptoms || personalizedContext?.recentSymptoms || [];
-    const lastUpdate = aiHealthContext?.lastUpdated || personalizedContext?.summary?.lastUpdate;
+    const conditions =
+      aiHealthContext?.context?.medicalProfile?.conditions ||
+      personalizedContext?.medicalConditions?.map((c) => c.name) ||
+      [];
+    const medications =
+      aiHealthContext?.context?.medicalProfile?.currentMedications ||
+      personalizedContext?.currentMedications ||
+      [];
+    const symptoms =
+      aiHealthContext?.context?.medicalProfile?.recentSymptoms ||
+      personalizedContext?.recentSymptoms ||
+      [];
+    const lastUpdate =
+      aiHealthContext?.lastUpdated || personalizedContext?.summary?.lastUpdate;
 
     return (
       <Card className="mb-6 card-hover border-primary/20 bg-gradient-to-r from-primary/5 to-blue-50 fade-in">
@@ -380,24 +393,33 @@ export default function BmaxAI() {
                 <Clock className="h-4 w-4 mr-2" />
                 Recent Health Records
               </span>
-              {aiHealthContext.context.recentActivity.records.slice(0, 3).map((record, index) => (
-                <div key={index} className="p-3 bg-white/70 rounded-lg border border-primary/10 hover:bg-white/90 transition-all">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium text-sm">{record.title}</div>
-                      <div className="text-xs text-muted-foreground capitalize">{record.type}</div>
-                      {record.description && (
-                        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {record.description}
+              {aiHealthContext.context.recentActivity.records
+                .slice(0, 3)
+                .map((record, index) => (
+                  <div
+                    key={index}
+                    className="p-3 bg-white/70 rounded-lg border border-primary/10 hover:bg-white/90 transition-all"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium text-sm">
+                          {record.title}
                         </div>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(record.date).toLocaleDateString()}
+                        <div className="text-xs text-muted-foreground capitalize">
+                          {record.type}
+                        </div>
+                        {record.description && (
+                          <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {record.description}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(record.date).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </CardContent>
         )}
@@ -407,7 +429,9 @@ export default function BmaxAI() {
 
   const getContextualPrompt = () => {
     // Use AI health context if available, otherwise fall back to default
-    const hasHealthData = aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData;
+    const hasHealthData =
+      aiHealthContext?.context?.totalRecords > 0 ||
+      personalizedContext?.hasData;
 
     if (!hasHealthData) {
       return "https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1";
@@ -422,15 +446,15 @@ export default function BmaxAI() {
 ${aiContext.instructions}
 
 CURRENT HEALTH STATUS FROM RECORDS:
-${aiContext.medicalHistory.conditions ? `Medical Conditions: ${aiContext.medicalHistory.conditions}` : ''}
-${aiContext.medicalHistory.medications ? `Current Medications: ${aiContext.medicalHistory.medications}` : ''}
-${aiContext.medicalHistory.recentSymptoms ? `Recent Symptoms: ${aiContext.medicalHistory.recentSymptoms}` : ''}
+${aiContext.medicalHistory.conditions ? `Medical Conditions: ${aiContext.medicalHistory.conditions}` : ""}
+${aiContext.medicalHistory.medications ? `Current Medications: ${aiContext.medicalHistory.medications}` : ""}
+${aiContext.medicalHistory.recentSymptoms ? `Recent Symptoms: ${aiContext.medicalHistory.recentSymptoms}` : ""}
 
 RECENT HEALTH ACTIVITY:
-${aiContext.recentActivity || 'No recent health records'}
+${aiContext.recentActivity || "No recent health records"}
 
 TOTAL HEALTH RECORDS: ${aiHealthContext.context.totalRecords}
-LAST RECORD: ${aiHealthContext.context.lastRecordDate ? new Date(aiHealthContext.context.lastRecordDate).toLocaleDateString() : 'N/A'}
+LAST RECORD: ${aiHealthContext.context.lastRecordDate ? new Date(aiHealthContext.context.lastRecordDate).toLocaleDateString() : "N/A"}
 
 CRITICAL AI GUIDELINES:
 1. Reference specific health records when relevant
@@ -438,7 +462,6 @@ CRITICAL AI GUIDELINES:
 3. Provide personalized advice based on patient's actual conditions
 4. Prioritize safety and recommend professional consultation when appropriate
 5. Cross-reference symptoms with documented conditions and medications`;
-
     } else if (personalizedContext?.hasData) {
       // Fallback to legacy personalized context
       const medicalConditionsText = personalizedContext.medicalConditions
@@ -568,7 +591,8 @@ IMPORTANT INSTRUCTIONS:
               </div>
             </div>
             <div className="flex items-center space-x-2 fade-in fade-in-delay-1">
-              {(aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData) && (
+              {(aiHealthContext?.context?.totalRecords > 0 ||
+                personalizedContext?.hasData) && (
                 <Badge
                   variant="default"
                   className="text-xs bg-gradient-to-r from-primary to-primary/80 border-primary/20"
@@ -576,7 +600,7 @@ IMPORTANT INSTRUCTIONS:
                   <Activity className="h-3 w-3 mr-1" />
                   {aiHealthContext?.context?.totalRecords > 0
                     ? `${aiHealthContext.context.totalRecords} Records`
-                    : 'Personalized'}
+                    : "Personalized"}
                 </Badge>
               )}
               <Badge
@@ -622,35 +646,44 @@ IMPORTANT INSTRUCTIONS:
         {personalizedContext?.hasData && getMedicalContextSummary()}
 
         {/* No Records Message */}
-        {isAuthenticated && !isLoadingContext && (!aiHealthContext?.context?.totalRecords || aiHealthContext.context.totalRecords === 0) && (
-          <Card className="mb-6 card-hover border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50/50 fade-in">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center">
-                <Stethoscope className="h-4 w-4 mr-2 text-blue-600" />
-                No Health Records Found
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-sm text-muted-foreground mb-3">
-                B-max AI can provide much more personalized and accurate health advice when it has access to your health records.
-              </p>
-              <div className="flex space-x-2">
-                <Button asChild size="sm" className="btn-smooth">
-                  <Link to="/history">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Health Records
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="sm" className="btn-smooth">
-                  <Link to="/test-storage">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Test Storage
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {isAuthenticated &&
+          !isLoadingContext &&
+          (!aiHealthContext?.context?.totalRecords ||
+            aiHealthContext.context.totalRecords === 0) && (
+            <Card className="mb-6 card-hover border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50/50 fade-in">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <Stethoscope className="h-4 w-4 mr-2 text-blue-600" />
+                  No Health Records Found
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground mb-3">
+                  B-max AI can provide much more personalized and accurate
+                  health advice when it has access to your health records.
+                </p>
+                <div className="flex space-x-2">
+                  <Button asChild size="sm" className="btn-smooth">
+                    <Link to="/history">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Health Records
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="btn-smooth"
+                  >
+                    <Link to="/test-storage">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Test Storage
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         {/* Health Insights */}
         {healthInsights.length > 0 && (
@@ -707,7 +740,8 @@ IMPORTANT INSTRUCTIONS:
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                     Loading Context
                   </Badge>
-                ) : (aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData) ? (
+                ) : aiHealthContext?.context?.totalRecords > 0 ||
+                  personalizedContext?.hasData ? (
                   <Badge
                     variant="default"
                     className="text-xs bg-gradient-to-r from-green-500 to-green-600"
@@ -715,7 +749,7 @@ IMPORTANT INSTRUCTIONS:
                     <CheckCircle className="h-3 w-3 mr-1" />
                     {aiHealthContext?.context?.totalRecords > 0
                       ? `${aiHealthContext.context.totalRecords} Records Loaded`
-                      : 'Context Enabled'}
+                      : "Context Enabled"}
                   </Badge>
                 ) : (
                   <Badge variant="secondary" className="text-xs">
@@ -801,7 +835,8 @@ IMPORTANT INSTRUCTIONS:
         </Card>
 
         {/* Example Queries for Personalized Context */}
-        {(aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData) && (
+        {(aiHealthContext?.context?.totalRecords > 0 ||
+          personalizedContext?.hasData) && (
           <Card className="mt-4 shadow-colored border-primary/20 bg-gradient-to-r from-primary/5 to-primary/5 fade-in fade-in-delay-3">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center">
@@ -817,8 +852,8 @@ IMPORTANT INSTRUCTIONS:
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 {/* Dynamic examples based on actual health records */}
-                {aiHealthContext?.context?.medicalProfile?.conditions?.some((c) =>
-                  c.toLowerCase().includes("diabetes")
+                {aiHealthContext?.context?.medicalProfile?.conditions?.some(
+                  (c) => c.toLowerCase().includes("diabetes"),
                 ) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
@@ -830,8 +865,10 @@ IMPORTANT INSTRUCTIONS:
                   </div>
                 )}
 
-                {aiHealthContext?.context?.medicalProfile?.conditions?.some((c) =>
-                  c.toLowerCase().includes("hypertension") || c.toLowerCase().includes("blood pressure")
+                {aiHealthContext?.context?.medicalProfile?.conditions?.some(
+                  (c) =>
+                    c.toLowerCase().includes("hypertension") ||
+                    c.toLowerCase().includes("blood pressure"),
                 ) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
@@ -843,7 +880,9 @@ IMPORTANT INSTRUCTIONS:
                   </div>
                 )}
 
-                {(aiHealthContext?.context?.medicalProfile?.currentMedications?.length > 0 || personalizedContext?.currentMedications?.length > 0) && (
+                {(aiHealthContext?.context?.medicalProfile?.currentMedications
+                  ?.length > 0 ||
+                  personalizedContext?.currentMedications?.length > 0) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
                       "Can I take [medication]?"
@@ -854,10 +893,13 @@ IMPORTANT INSTRUCTIONS:
                   </div>
                 )}
 
-                {aiHealthContext?.context?.recentActivity?.records?.length > 0 && (
+                {aiHealthContext?.context?.recentActivity?.records?.length >
+                  0 && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
-                      "Explain my recent {aiHealthContext.context.recentActivity.records[0]?.type} record"
+                      "Explain my recent{" "}
+                      {aiHealthContext.context.recentActivity.records[0]?.type}{" "}
+                      record"
                     </div>
                     <div className="text-xs text-muted-foreground">
                       References your specific health records
@@ -874,7 +916,8 @@ IMPORTANT INSTRUCTIONS:
                   </div>
                 </div>
 
-                {aiHealthContext?.context?.medicalProfile?.conditions?.length > 0 && (
+                {aiHealthContext?.context?.medicalProfile?.conditions?.length >
+                  0 && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
                       "How do my conditions interact?"

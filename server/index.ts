@@ -413,8 +413,10 @@ export function createServer() {
       res.json({
         success: true,
         mockStorage: (SupabaseService as any).mockStorage,
-        totalHealthRecords: (SupabaseService as any).mockStorage?.health_records?.length || 0,
-        healthRecords: (SupabaseService as any).mockStorage?.health_records || [],
+        totalHealthRecords:
+          (SupabaseService as any).mockStorage?.health_records?.length || 0,
+        healthRecords:
+          (SupabaseService as any).mockStorage?.health_records || [],
       });
     } catch (error) {
       res.status(500).json({

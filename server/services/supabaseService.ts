@@ -91,7 +91,7 @@ class SupabaseService {
    */
   private static createMockClient(): any {
     const createMockQuery = (tableName: string) => {
-      let currentData = [...this.mockStorage[tableName] || []];
+      let currentData = [...(this.mockStorage[tableName] || [])];
       let filters: any = {};
       let orderBy: any = null;
       let limitValue: number | null = null;
@@ -104,10 +104,10 @@ class SupabaseService {
 
         insert: (data: any) => {
           const recordsToInsert = Array.isArray(data) ? data : [data];
-          recordsToInsert.forEach(record => {
+          recordsToInsert.forEach((record) => {
             const newRecord = {
               ...record,
-              id: record.id || crypto.randomBytes(16).toString('hex'),
+              id: record.id || crypto.randomBytes(16).toString("hex"),
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             };
@@ -117,7 +117,8 @@ class SupabaseService {
           return {
             data: recordsToInsert,
             error: null,
-            then: (callback: any) => callback({ data: recordsToInsert, error: null })
+            then: (callback: any) =>
+              callback({ data: recordsToInsert, error: null }),
           };
         },
 
@@ -140,18 +141,19 @@ class SupabaseService {
           let results = this.mockStorage[tableName] || [];
 
           // Apply filters
-          Object.keys(filters).forEach(key => {
-            results = results.filter(record => record[key] === filters[key]);
+          Object.keys(filters).forEach((key) => {
+            results = results.filter((record) => record[key] === filters[key]);
           });
 
           const singleResult = results[0] || null;
           return {
             data: singleResult,
-            error: singleResult ? null : { message: 'No data found' },
-            then: (callback: any) => callback({
-              data: singleResult,
-              error: singleResult ? null : { message: 'No data found' }
-            })
+            error: singleResult ? null : { message: "No data found" },
+            then: (callback: any) =>
+              callback({
+                data: singleResult,
+                error: singleResult ? null : { message: "No data found" },
+              }),
           };
         },
 
@@ -159,8 +161,8 @@ class SupabaseService {
           let results = this.mockStorage[tableName] || [];
 
           // Apply filters
-          Object.keys(filters).forEach(key => {
-            results = results.filter(record => record[key] === filters[key]);
+          Object.keys(filters).forEach((key) => {
+            results = results.filter((record) => record[key] === filters[key]);
           });
 
           // Apply ordering
@@ -199,28 +201,29 @@ class SupabaseService {
           upload: (path: string, file: any) => {
             this.mockStorageFiles[path] = file;
             return Promise.resolve({
-              data: { path, id: crypto.randomBytes(16).toString('hex') },
-              error: null
+              data: { path, id: crypto.randomBytes(16).toString("hex") },
+              error: null,
             });
           },
           download: (path: string) => {
             const file = this.mockStorageFiles[path];
             return Promise.resolve({
               data: file ? { toString: () => JSON.stringify(file) } : null,
-              error: file ? null : { message: 'File not found' }
+              error: file ? null : { message: "File not found" },
             });
           },
           list: () => {
-            const files = Object.keys(this.mockStorageFiles).map(path => ({
-              name: path.split('/').pop(),
-              id: crypto.randomBytes(16).toString('hex'),
+            const files = Object.keys(this.mockStorageFiles).map((path) => ({
+              name: path.split("/").pop(),
+              id: crypto.randomBytes(16).toString("hex"),
               created_at: new Date().toISOString(),
             }));
             return Promise.resolve({ data: files, error: null });
-          }
+          },
         }),
         createBucket: () => Promise.resolve({ data: null, error: null }),
-        getBucket: () => Promise.resolve({ data: { name: 'mock-bucket' }, error: null }),
+        getBucket: () =>
+          Promise.resolve({ data: { name: "mock-bucket" }, error: null }),
       },
       auth: {
         signUp: () => ({ data: { user: null }, error: null }),
@@ -349,7 +352,7 @@ class SupabaseService {
       console.log(`✅ Health record stored: ${recordId}`, {
         type: record.record_type,
         title: record.title,
-        totalRecords: this.mockStorage?.health_records?.length || 'unknown'
+        totalRecords: this.mockStorage?.health_records?.length || "unknown",
       });
       return { success: true, recordId };
     } catch (error) {
@@ -457,9 +460,14 @@ class SupabaseService {
       console.log(
         `✅ Retrieved ${data?.length || 0} health records for patient: ${patientId}`,
         {
-          totalInStorage: this.mockStorage?.health_records?.length || 'unknown',
-          records: data?.map(r => ({ id: r.id, type: r.record_type, title: r.title })) || []
-        }
+          totalInStorage: this.mockStorage?.health_records?.length || "unknown",
+          records:
+            data?.map((r) => ({
+              id: r.id,
+              type: r.record_type,
+              title: r.title,
+            })) || [],
+        },
       );
       return { success: true, records: data || [] };
     } catch (error) {
