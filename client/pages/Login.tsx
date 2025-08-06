@@ -323,7 +323,9 @@ export default function Login() {
       let errorMessage = "Registration failed. Please try again.";
 
       if (error instanceof Error) {
-        if (error.message.includes("HTTP error! status: 4")) {
+        if (error.name === "AbortError") {
+          errorMessage = "Registration was cancelled. Please try again.";
+        } else if (error.message.includes("HTTP error! status: 4")) {
           errorMessage = "Invalid registration data. Please check your inputs.";
         } else if (error.message.includes("HTTP error! status: 5")) {
           errorMessage = "Server error. Please try again in a moment.";
