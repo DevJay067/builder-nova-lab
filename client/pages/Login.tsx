@@ -248,13 +248,20 @@ export default function Login() {
         headers: Object.fromEntries(response.headers),
       });
 
+      let result;
+      const responseText = await response.text();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Registration failed with response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        console.error("❌ Registration failed with response:", responseText);
+        throw new Error(`HTTP error! status: ${response.status} - ${responseText}`);
       }
 
-      const result = await response.json();
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("❌ Failed to parse response as JSON:", responseText);
+        throw new Error("Invalid response format from server");
+      }
       console.log("✅ Registration result:", result);
 
       if (result.success) {
