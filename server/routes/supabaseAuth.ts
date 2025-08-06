@@ -315,13 +315,17 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
       });
     }
 
-    console.log(
-      "🔍 Retrieving health records from Supabase cloud storage vault",
-      { userId: sessionResult.user.username }
-    );
-
     // Use the actual user ID for patient isolation
     const patientId = `user_${sessionResult.user.userHash || sessionResult.user.username || sessionResult.user.id}`;
+
+    console.log(
+      "🔍 Retrieving health records from Supabase cloud storage vault",
+      {
+        userId: sessionResult.user.username,
+        patientId: patientId,
+        userHash: sessionResult.user.userHash?.substring(0, 8) + "..."
+      }
+    );
 
     // Get health records metadata from database
     const dbResult = await SupabaseService.getHealthRecords(patientId);
