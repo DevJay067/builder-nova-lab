@@ -221,25 +221,41 @@ export default function HealthHistory() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.records) {
-          const transformedRecords = data.records.map((record: any) => ({
-            id: record.id,
-            type: record.recordType || record.type,
-            title: record.title,
-            description: record.description,
-            date: record.date,
-            doctor: record.doctor,
-            isSecure: !!record.secureRecordId,
-            blockchainHash: record.secureRecordId,
-            metadata: record.metadata,
-          }));
+          const transformedRecords = data.records.map((record: any) => {
+            // Extract data from cloud storage vault if available
+            const fullData = record.fullData || {};
+            const storageInfo = record.storageInfo || {};
+
+            return {
+              id: record.id,
+              type: record.record_type || fullData.type || record.type,
+              title: record.title || fullData.title,
+              description: record.description || fullData.description,
+              date: record.date || fullData.date,
+              doctor: fullData.data?.doctor || record.doctor,
+              isSecure: storageInfo.type === "supabase-cloud-vault",
+              blockchainHash: record.storage_path,
+              metadata: {
+                ...record.metadata,
+                cloudStorage: storageInfo,
+                recordId: fullData.recordId,
+                storedAt: fullData.storedAt,
+              },
+              fullCloudData: fullData, // Include full cloud data
+            };
+          });
 
           setRecords(transformedRecords);
           setStats({
             totalRecords: transformedRecords.length,
-            secureRecords: transformedRecords.filter((r: any) => r.isSecure)
-              .length,
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
+            cloudStorageRecords: transformedRecords.filter((r: any) =>
+              r.metadata?.cloudStorage?.type === "supabase-cloud-vault"
+            ).length,
             lastUpdate: new Date().toISOString(),
           });
+
+          console.log(`✅ Loaded ${transformedRecords.length} health records from Supabase cloud storage`);
         }
       }
     } catch (error) {
