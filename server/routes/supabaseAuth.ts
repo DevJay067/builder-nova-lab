@@ -1,4 +1,5 @@
 import { RequestHandler } from "express";
+import crypto from "crypto";
 import { SupabaseService } from "../services/supabaseService";
 
 /**
