@@ -242,7 +242,7 @@ export const testSupabaseConnection: RequestHandler = async (req, res) => {
   try {
     console.log("🧪 Testing Supabase connection");
 
-    const isConnected = await SupabaseAuthService.testConnection();
+    const isConnected = await SupabaseService.testConnection();
 
     res.json({
       success: true,
