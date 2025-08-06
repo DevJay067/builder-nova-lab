@@ -284,18 +284,28 @@ export default function HealthHistory() {
         return;
       }
 
+      // Validate required fields
+      if (!newRecord.type) {
+        setMessage({ type: "error", text: "Please select a record type" });
+        return;
+      }
+      if (!newRecord.title) {
+        setMessage({ type: "error", text: "Please enter a title" });
+        return;
+      }
+
       console.log("💾 Saving health record to Supabase cloud storage...");
 
       const requestBody = {
         type: newRecord.type,
         title: newRecord.title,
-        description: newRecord.description,
+        description: newRecord.description || "",
         data: {
           title: newRecord.title,
-          description: newRecord.description,
+          description: newRecord.description || "",
           date: newRecord.date,
-          doctor: newRecord.doctor,
-          metadata: newRecord.metadata,
+          doctor: newRecord.doctor || "",
+          metadata: newRecord.metadata || {},
         },
         metadata: {
           category: newRecord.type,
