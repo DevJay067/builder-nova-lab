@@ -29,6 +29,7 @@ import {
   TrendingUp,
   Mic,
   Video,
+  Plus,
 } from "lucide-react";
 import VoiceAssistant from "@/components/VoiceAssistant";
 
