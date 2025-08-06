@@ -189,7 +189,7 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
     const vaultResult = await SupabaseService.storeInVault(
       patientId,
       vaultData,
-      `${type}-${recordId}-${Date.now()}.json`
+      `${healthData.type}-${recordId}-${Date.now()}.json`
     );
 
     if (!vaultResult.success) {
