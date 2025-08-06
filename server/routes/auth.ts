@@ -337,6 +337,32 @@ export const getAuthStats: RequestHandler = async (req, res) => {
 };
 
 /**
+ * Health check for auth system
+ */
+export const getAuthHealth: RequestHandler = async (req, res) => {
+  try {
+    const stats = UserAuthenticationService.getSystemStats();
+
+    res.json({
+      success: true,
+      status: "healthy",
+      initialized: true,
+      inMemoryMode: true,
+      systemStats: stats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error checking auth health:", error);
+    res.status(500).json({
+      success: false,
+      status: "unhealthy",
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+};
+
+/**
  * Middleware to authenticate requests
  */
 export const authenticateUser: RequestHandler = async (req, res, next) => {
