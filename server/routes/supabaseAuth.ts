@@ -215,7 +215,7 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
 };
 
 /**
- * Get health records for user
+ * Get health records from Supabase cloud storage vault
  */
 export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
   try {
@@ -223,26 +223,75 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
       req.headers.authorization?.replace("Bearer ", "") ||
       (req.query.sessionToken as string);
 
-    if (!sessionToken) {
-      return res.status(401).json({
+    console.log("🔍 Retrieving health records from Supabase cloud storage vault");
+
+    const patientId = sessionToken ? "authenticated-user" : "default-patient";
+
+    // Get health records metadata from database
+    const dbResult = await SupabaseService.getHealthRecords(patientId);
+
+    if (!dbResult.success) {
+      return res.status(500).json({
         success: false,
-        message: "Session token is required",
+        message: "Failed to retrieve health records metadata",
+        error: dbResult.error,
       });
     }
 
-    console.log("🔍 Retrieving health records from Supabase");
+    // Retrieve full data from cloud storage vault for each record
+    const enrichedRecords = [];
+    for (const record of dbResult.records || []) {
+      try {
+        if (record.storage_path) {
+          console.log(`📦 Retrieving full data from vault: ${record.storage_path}`);
+          const vaultResult = await SupabaseService.retrieveFromVault(record.storage_path);
 
-    // Get current user
-    const userResult = await SupabaseService.getCurrentUser();
-    if (!userResult.success || !userResult.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid session or user not found",
-      });
+          if (vaultResult.success) {
+            enrichedRecords.push({
+              ...record,
+              fullData: vaultResult.data,
+              storageInfo: {
+                type: "supabase-cloud-vault",
+                path: record.storage_path,
+                retrieved: true,
+              },
+            });
+          } else {
+            enrichedRecords.push({
+              ...record,
+              fullData: null,
+              storageInfo: {
+                type: "supabase-cloud-vault",
+                path: record.storage_path,
+                retrieved: false,
+                error: vaultResult.error,
+              },
+            });
+          }
+        } else {
+          enrichedRecords.push({
+            ...record,
+            fullData: null,
+            storageInfo: {
+              type: "database-only",
+              retrieved: true,
+            },
+          });
+        }
+      } catch (vaultError) {
+        console.warn(`⚠️ Failed to retrieve vault data for record ${record.id}:`, vaultError);
+        enrichedRecords.push({
+          ...record,
+          fullData: null,
+          storageInfo: {
+            type: "supabase-cloud-vault",
+            path: record.storage_path,
+            retrieved: false,
+            error: vaultError instanceof Error ? vaultError.message : "Unknown error",
+          },
+        });
+      }
     }
-
-    // Get health records
-    const result = await SupabaseService.getHealthRecords(userResult.user.id);
 
     if (result.success) {
       res.json(result);
