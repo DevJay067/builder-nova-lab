@@ -256,11 +256,22 @@ export default function Login() {
       });
 
       let result;
-      const responseText = await response.text();
+      let responseText = "";
+
+      try {
+        responseText = await response.text();
+      } catch (textError) {
+        console.error("❌ Failed to read response body:", textError);
+        throw new Error("Failed to read server response");
+      }
 
       if (!response.ok) {
         console.error("❌ Registration failed with response:", responseText);
         throw new Error(`HTTP error! status: ${response.status} - ${responseText}`);
+      }
+
+      if (!responseText || responseText.trim() === "") {
+        throw new Error("Empty response from server");
       }
 
       try {
