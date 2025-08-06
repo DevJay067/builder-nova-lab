@@ -84,16 +84,16 @@ export function createServer() {
         );
       }
 
-      // Try to initialize user authentication system with production features
+      // Initialize Supabase authentication system
       try {
-        const { UserAuthenticationService } = await import(
-          "./services/userAuthentication"
+        const { SupabaseAuthService } = await import(
+          "./services/supabaseAuthService"
         );
-        await UserAuthenticationService.initialize();
-        console.log("✅ User authentication system initialized successfully");
+        await SupabaseAuthService.initialize();
+        console.log("✅ Supabase authentication system initialized successfully");
       } catch (authError) {
         console.log(
-          "⚠️  User authentication system not available, continuing without it",
+          "⚠️  Supabase authentication system not configured, using fallback",
         );
         console.log("   The system will work in demo mode");
       }
