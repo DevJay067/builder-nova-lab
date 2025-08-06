@@ -183,9 +183,25 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
+
+      // Handle different types of errors
+      let errorMessage = "Login failed. Please try again.";
+
+      if (error instanceof Error) {
+        if (error.message.includes("HTTP error! status: 4")) {
+          errorMessage = "Invalid credentials. Please check your username and password.";
+        } else if (error.message.includes("HTTP error! status: 5")) {
+          errorMessage = "Server error. Please try again in a moment.";
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
