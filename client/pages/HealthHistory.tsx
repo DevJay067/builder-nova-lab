@@ -327,7 +327,17 @@ export default function HealthHistory() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get more details about the error
+        let errorDetails = `HTTP error! status: ${response.status}`;
+        try {
+          const errorText = await response.text();
+          console.error("❌ Health record save error details:", errorText);
+          const errorData = JSON.parse(errorText);
+          errorDetails = errorData.message || errorDetails;
+        } catch (parseError) {
+          console.error("❌ Could not parse error response:", parseError);
+        }
+        throw new Error(errorDetails);
       }
 
       const result = await response.json();
