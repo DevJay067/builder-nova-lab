@@ -699,10 +699,12 @@ IMPORTANT INSTRUCTIONS:
             </div>
             <CardDescription className="text-sm leading-relaxed">
               {isLoadingContext
-                ? "Loading your medical context..."
-                : personalizedContext?.hasData
-                  ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
-                  : "AI is ready to help with general health questions. Add medical history for personalized recommendations."}
+                ? "Loading your health records and medical context..."
+                : aiHealthContext?.context?.totalRecords > 0
+                  ? `AI is personalized with ${aiHealthContext.context.totalRecords} health records (${aiHealthContext.context.medicalProfile.conditions.length} conditions, ${aiHealthContext.context.medicalProfile.currentMedications.length} medications). Ask about symptoms and get targeted advice based on your actual medical history.`
+                  : personalizedContext?.hasData
+                    ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
+                    : "AI is ready to help with general health questions. Add medical history for personalized recommendations."}
             </CardDescription>
           </CardHeader>
 
