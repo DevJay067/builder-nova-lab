@@ -79,7 +79,7 @@ class SupabaseService {
   }
 
   // In-memory storage for mock client
-  private static mockStorage: { [table: string]: any[] } = {
+  public static mockStorage: { [table: string]: any[] } = {
     health_records: [],
     secure_data_records: [],
     users: [],
