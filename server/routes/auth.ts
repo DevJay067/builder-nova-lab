@@ -117,12 +117,31 @@ export const loginUser: RequestHandler = async (req, res) => {
     console.log("🔍 Login request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
-    const { username, password } = req.body;
+    // Validate request body exists
+    if (!req.body || typeof req.body !== "object") {
+      console.error("❌ Invalid or missing request body");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request format",
+      });
+    }
+
+    // Extract credentials with safer destructuring
+    const credentials = {
+      username: req.body.username,
+      password: req.body.password,
+    };
+
+    console.log("🔑 Credentials extracted:", {
+      username: credentials.username,
+      hasPassword: !!credentials.password,
+    });
 
     // Validate required fields
-    if (!username || !password) {
+    if (!credentials.username || !credentials.password) {
       return res.status(400).json({
         success: false,
         message: "Username and password are required",
