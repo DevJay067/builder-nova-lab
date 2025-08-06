@@ -394,6 +394,13 @@ class UserAuthenticationService {
 
         user.secureSystemActivated = false;
         user.splitKeySystemActive = false;
+
+        // Store session in fallback mode
+        this.storeSession(secureAccountResult.sessionToken, {
+          username: user.username,
+          userHash: user.userHash,
+          id: user.id,
+        });
       }
 
       console.log(
