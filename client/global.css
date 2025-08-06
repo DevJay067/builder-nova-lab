@@ -512,6 +512,44 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  /* Improve touch responsiveness */
+  button, .btn-smooth {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Optimize form inputs for mobile */
+  input, textarea, select {
+    font-size: 16px; /* Prevent zoom on iOS */
+    -webkit-appearance: none;
+    border-radius: 0.5rem;
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 640px) {
+  /* Reduce animations for better performance on mobile */
+  .fade-in, .fade-in-up {
+    animation-duration: 0.4s;
+  }
+
+  /* Optimize container spacing */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Reduce shadow complexity on mobile */
+  .shadow-colored, .shadow-colored-lg {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+  }
+
+  /* Simpler glass effect for mobile performance */
+  .glass {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
 /* Print styles */
