@@ -216,7 +216,7 @@ export function createServer() {
   app.get("/api/demo/keys/info", getDemoKeysInfo);
   app.post("/api/demo/initialize", initializeDemoData);
 
-  // Authentication API Routes
+  // Authentication API Routes (Legacy)
   app.post("/api/auth/register", registerUser);
   app.post("/api/auth/login", loginUser);
   app.get("/api/auth/verify", verifySession);
@@ -225,6 +225,17 @@ export function createServer() {
   app.post("/api/auth/data-access", createDataAccess);
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
+
+  // Supabase Authentication API Routes (New)
+  app.post("/api/supabase/auth/register", registerUserSupabase);
+  app.post("/api/supabase/auth/login", loginUserSupabase);
+  app.get("/api/supabase/auth/user", getCurrentUserSupabase);
+  app.post("/api/supabase/auth/signout", signOutSupabase);
+  app.post("/api/supabase/health-records", storeHealthRecordSupabase);
+  app.get("/api/supabase/health-records", getHealthRecordsSupabase);
+  app.get("/api/supabase/stats", getSystemStatsSupabase);
+  app.get("/api/supabase/test-connection", testSupabaseConnection);
+  app.get("/api/supabase/health", healthCheckSupabase);
 
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
