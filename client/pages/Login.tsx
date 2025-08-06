@@ -421,6 +421,11 @@ export default function Login() {
       });
     } finally {
       setIsLoading(false);
+      setActiveRequests(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(requestKey);
+        return newSet;
+      });
     }
   };
 
