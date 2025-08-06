@@ -779,7 +779,19 @@ class UserAuthenticationService {
    * Logout user and invalidate session
    */
   static logout(sessionToken: string): boolean {
-    return SecureDataAccessService.invalidateSession(sessionToken);
+    try {
+      // Try secure data access service first
+      const result = SecureDataAccessService.invalidateSession(sessionToken);
+      if (result) {
+        return true;
+      }
+    } catch (error) {
+      console.log("⚠️ SecureDataAccessService not available, using fallback");
+    }
+
+    // Fallback to in-memory session removal
+    const deleted = this.sessions.delete(sessionToken);
+    return deleted;
   }
 
   /**
