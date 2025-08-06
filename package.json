@@ -23,6 +23,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
     "@netlify/functions": "^2.8.1",
+    "@supabase/supabase-js": "^2.53.0",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.9",
