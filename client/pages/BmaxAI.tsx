@@ -567,13 +567,15 @@ IMPORTANT INSTRUCTIONS:
               </div>
             </div>
             <div className="flex items-center space-x-2 fade-in fade-in-delay-1">
-              {personalizedContext?.hasData && (
+              {(aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData) && (
                 <Badge
                   variant="default"
                   className="text-xs bg-gradient-to-r from-primary to-primary/80 border-primary/20"
                 >
                   <Activity className="h-3 w-3 mr-1" />
-                  Personalized
+                  {aiHealthContext?.context?.totalRecords > 0
+                    ? `${aiHealthContext.context.totalRecords} Records`
+                    : 'Personalized'}
                 </Badge>
               )}
               <Badge
