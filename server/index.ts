@@ -246,7 +246,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`
 🏥 HealthChain Secure Medical Records System Started
-━━━━━━━━━��━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🌐 Server: http://localhost:${PORT}
 🔗 Health Check: http://localhost:${PORT}/health
@@ -274,7 +274,7 @@ async function startServer() {
    • /api/cloud-storage/* - Cloud storage
    • /api/health-records/* - Health records
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━��━━━━━━━━
 Ready for secure medical record management! 🚀
       `);
     });
@@ -286,5 +286,10 @@ Ready for secure medical record management! 🚀
 
 // Start the application
 startServer();
+
+// Export for vite.config.ts
+export function createServer() {
+  return app;
+}
 
 export default app;
