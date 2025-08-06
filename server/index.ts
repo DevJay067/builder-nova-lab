@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import crypto from "crypto";
 import { handleDemo } from "./routes/demo";
 import {
   createHealthRecord,
