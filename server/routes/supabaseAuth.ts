@@ -125,6 +125,28 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
       bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
+    // Get session token for user identification
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies.healthchain_session ||
+      (req.headers["x-session-token"] as string);
+
+    if (!sessionToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    // Verify session and get user info
+    const sessionResult = UserAuthenticationService.verifySession(sessionToken);
+    if (!sessionResult.valid || !sessionResult.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid session",
+      });
+    }
+
     // Validate request body exists
     if (!req.body || typeof req.body !== "object") {
       console.error("❌ Invalid or missing request body");
