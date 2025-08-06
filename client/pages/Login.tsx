@@ -194,21 +194,39 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("🔄 Starting registration request");
+
+      const requestBody = {
+        username: registerForm.username,
+        email: registerForm.email,
+        password: registerForm.password,
+        firstName: registerForm.firstName,
+        lastName: registerForm.lastName,
+      };
+
+      console.log("📤 Request body prepared:", Object.keys(requestBody));
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
-        body: JSON.stringify({
-          username: registerForm.username,
-          email: registerForm.email,
-          password: registerForm.password,
-          firstName: registerForm.firstName,
-          lastName: registerForm.lastName,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("📥 Response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log("✅ Registration result:", { success: result.success });
 
       if (result.success) {
         setMessage({
