@@ -125,7 +125,15 @@ export const verifySession: RequestHandler = async (req, res) => {
       req.cookies.healthchain_session ||
       (req.headers["x-session-token"] as string);
 
+    console.log("🔍 Session verification request:", {
+      hasAuthHeader: !!req.headers.authorization,
+      hasCookie: !!req.cookies.healthchain_session,
+      hasXSessionHeader: !!req.headers["x-session-token"],
+      sessionToken: sessionToken ? `${sessionToken.substring(0, 20)}...` : "none",
+    });
+
     if (!sessionToken) {
+      console.log("❌ No session token provided");
       return res.status(401).json({
         success: false,
         message: "No session token provided",
@@ -133,6 +141,7 @@ export const verifySession: RequestHandler = async (req, res) => {
     }
 
     const result = UserAuthenticationService.verifySession(sessionToken);
+    console.log("🔐 Session verification result:", { valid: result.valid, hasUser: !!result.user });
 
     if (result.valid) {
       res.json({
@@ -140,6 +149,7 @@ export const verifySession: RequestHandler = async (req, res) => {
         user: result.user,
       });
     } else {
+      console.log("❌ Invalid session token");
       res.status(401).json({
         success: false,
         message: "Invalid session token",
