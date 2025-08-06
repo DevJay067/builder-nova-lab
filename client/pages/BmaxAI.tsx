@@ -405,18 +405,48 @@ export default function BmaxAI() {
   };
 
   const getContextualPrompt = () => {
-    if (!personalizedContext?.hasData) {
+    // Use AI health context if available, otherwise fall back to default
+    const hasHealthData = aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData;
+
+    if (!hasHealthData) {
       return "https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1";
     }
 
-    const medicalConditionsText = personalizedContext.medicalConditions
-      .map((condition) => condition.name)
-      .join(", ");
+    let contextPrompt = "";
 
-    const medicationsText = personalizedContext.currentMedications.join(", ");
-    const allergiesText = personalizedContext.allergies.join(", ");
+    if (aiHealthContext?.context?.aiPromptContext) {
+      // Use comprehensive AI health context from actual records
+      const aiContext = aiHealthContext.context.aiPromptContext;
+      contextPrompt = `COMPREHENSIVE HEALTH RECORDS CONTEXT:
+${aiContext.instructions}
 
-    const contextPrompt = `PERSONALIZED MEDICAL CONTEXT:
+CURRENT HEALTH STATUS FROM RECORDS:
+${aiContext.medicalHistory.conditions ? `Medical Conditions: ${aiContext.medicalHistory.conditions}` : ''}
+${aiContext.medicalHistory.medications ? `Current Medications: ${aiContext.medicalHistory.medications}` : ''}
+${aiContext.medicalHistory.recentSymptoms ? `Recent Symptoms: ${aiContext.medicalHistory.recentSymptoms}` : ''}
+
+RECENT HEALTH ACTIVITY:
+${aiContext.recentActivity || 'No recent health records'}
+
+TOTAL HEALTH RECORDS: ${aiHealthContext.context.totalRecords}
+LAST RECORD: ${aiHealthContext.context.lastRecordDate ? new Date(aiHealthContext.context.lastRecordDate).toLocaleDateString() : 'N/A'}
+
+CRITICAL AI GUIDELINES:
+1. Reference specific health records when relevant
+2. Consider documented medical history in all responses
+3. Provide personalized advice based on patient's actual conditions
+4. Prioritize safety and recommend professional consultation when appropriate
+5. Cross-reference symptoms with documented conditions and medications`;
+
+    } else if (personalizedContext?.hasData) {
+      // Fallback to legacy personalized context
+      const medicalConditionsText = personalizedContext.medicalConditions
+        .map((condition) => condition.name)
+        .join(", ");
+      const medicationsText = personalizedContext.currentMedications.join(", ");
+      const allergiesText = personalizedContext.allergies.join(", ");
+
+      contextPrompt = `PERSONALIZED MEDICAL CONTEXT:
 Medical Conditions: ${medicalConditionsText || "None reported"}
 Current Medications: ${medicationsText || "None reported"}
 Known Allergies: ${allergiesText || "None reported"}
@@ -426,10 +456,8 @@ IMPORTANT INSTRUCTIONS:
 - Be specific about how recommendations relate to their conditions
 - Warn about potential medication interactions
 - Consider allergy precautions in all recommendations
-- For example: If patient asks about dizziness and has diabetes, specifically address diabetic-related causes of dizziness
-- Provide condition-specific advice rather than general health information
-
-When the patient mentions symptoms like "feeling dizzy", immediately consider their medical history (diabetes, hypertension, etc.) and provide targeted advice.`;
+- Provide condition-specific advice rather than general health information`;
+    }
 
     return `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(contextPrompt)}`;
   };
