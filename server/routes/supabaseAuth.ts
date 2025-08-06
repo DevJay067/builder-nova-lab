@@ -132,7 +132,24 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
 
     console.log("🏥 Storing health record with Supabase + vault");
 
-    const result = await SupabaseAuthService.storeHealthRecord(sessionToken, healthRecord);
+    // Get current user
+    const userResult = await SupabaseService.getCurrentUser();
+    if (!userResult.success || !userResult.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid session or user not found",
+      });
+    }
+
+    // Store health record
+    const result = await SupabaseService.storeHealthRecord({
+      patient_id: userResult.user.id,
+      record_type: healthRecord.type,
+      title: `${healthRecord.type} - ${new Date().toLocaleDateString()}`,
+      description: JSON.stringify(healthRecord.data),
+      date: (healthRecord.timestamp || new Date().toISOString()).split('T')[0],
+      metadata: { sessionToken, secureStorage: true },
+    });
 
     if (result.success) {
       res.status(201).json(result);
