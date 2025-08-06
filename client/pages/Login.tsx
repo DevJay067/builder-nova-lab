@@ -273,6 +273,12 @@ export default function Login() {
       return;
     }
 
+    // Check if page is visible to prevent background requests
+    if (document.hidden) {
+      console.log("⚠️ Page is not visible, ignoring registration request");
+      return;
+    }
+
     setIsLoading(true);
     setActiveRequests(prev => new Set(prev).add(requestKey));
 
