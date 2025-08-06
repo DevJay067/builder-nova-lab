@@ -152,14 +152,22 @@ export const loginUser: RequestHandler = async (req, res) => {
     let result;
     try {
       result = await UserAuthenticationService.authenticateUser(
-        username,
-        password,
+        credentials.username,
+        credentials.password,
       );
     } catch (error) {
       console.warn(
         "⚠️ Full authentication failed, using simple fallback:",
         error instanceof Error ? error.message : "Unknown error",
       );
+
+      // Check if it's a body stream error
+      if (error instanceof Error && error.message.includes("body stream")) {
+        return res.status(400).json({
+          success: false,
+          message: "Request body format error. Please try again.",
+        });
+      }
 
       // Simple fallback authentication (just basic password check)
       // In a real app, you'd check against a simple user store
@@ -168,13 +176,13 @@ export const loginUser: RequestHandler = async (req, res) => {
         user: {
           id: crypto
             .createHash("sha256")
-            .update(username)
+            .update(credentials.username)
             .digest("hex")
             .substring(0, 16),
-          username: username,
+          username: credentials.username,
           userHash: crypto
             .createHash("sha256")
-            .update(username + password)
+            .update(credentials.username + credentials.password)
             .digest("hex"),
           sessionToken: crypto.randomBytes(32).toString("hex"),
           secureSystemActivated: false,
