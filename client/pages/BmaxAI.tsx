@@ -239,7 +239,15 @@ export default function BmaxAI() {
   };
 
   const getMedicalContextSummary = () => {
-    if (!personalizedContext?.hasData) return null;
+    // Use AI health context if available, otherwise fall back to personalized context
+    const hasData = aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData;
+    if (!hasData) return null;
+
+    const totalRecords = aiHealthContext?.context?.totalRecords || 0;
+    const conditions = aiHealthContext?.context?.medicalProfile?.conditions || personalizedContext?.medicalConditions?.map(c => c.name) || [];
+    const medications = aiHealthContext?.context?.medicalProfile?.currentMedications || personalizedContext?.currentMedications || [];
+    const symptoms = aiHealthContext?.context?.medicalProfile?.recentSymptoms || personalizedContext?.recentSymptoms || [];
+    const lastUpdate = aiHealthContext?.lastUpdated || personalizedContext?.summary?.lastUpdate;
 
     return (
       <Card className="mb-6 card-hover border-primary/20 bg-gradient-to-r from-primary/5 to-blue-50 fade-in">
@@ -247,34 +255,53 @@ export default function BmaxAI() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium flex items-center">
               <User className="h-4 w-4 mr-2 text-primary" />
-              Your Medical Profile
+              Your Health Records
               <Badge
                 variant="secondary"
                 className="ml-2 bg-primary/10 text-primary border-primary/20"
               >
-                <Star className="h-3 w-3 mr-1" />
-                Personalized
+                <Activity className="h-3 w-3 mr-1" />
+                {totalRecords} Records
               </Badge>
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMedicalSummary(!showMedicalSummary)}
-              className="btn-smooth text-primary hover:bg-primary/10"
-            >
-              {showMedicalSummary ? "Hide" : "Show"} Details
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHealthRecords(!showHealthRecords)}
+                className="btn-smooth text-primary hover:bg-primary/10"
+              >
+                {showHealthRecords ? "Hide" : "Show"} Health Data
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMedicalSummary(!showMedicalSummary)}
+                className="btn-smooth text-primary hover:bg-primary/10"
+              >
+                {showMedicalSummary ? "Hide" : "Show"} Summary
+              </Button>
+            </div>
           </div>
         </CardHeader>
+
         {showMedicalSummary && (
           <CardContent className="pt-0 space-y-4 fade-in-up">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="space-y-1">
                 <span className="font-medium text-muted-foreground">
+                  Total Records:
+                </span>
+                <div className="text-foreground font-semibold">
+                  {totalRecords}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="font-medium text-muted-foreground">
                   Conditions:
                 </span>
                 <div className="text-foreground font-semibold">
-                  {personalizedContext.summary.totalConditions}
+                  {conditions.length}
                 </div>
               </div>
               <div className="space-y-1">
@@ -282,56 +309,95 @@ export default function BmaxAI() {
                   Medications:
                 </span>
                 <div className="text-foreground font-semibold">
-                  {personalizedContext.summary.currentMedications}
+                  {medications.length}
                 </div>
               </div>
               <div className="space-y-1">
                 <span className="font-medium text-muted-foreground">
-                  Allergies:
+                  Symptoms:
                 </span>
                 <div className="text-foreground font-semibold">
-                  {personalizedContext.summary.knownAllergies}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <span className="font-medium text-muted-foreground">
-                  Recent Symptoms:
-                </span>
-                <div className="text-foreground font-semibold">
-                  {personalizedContext.summary.recentSymptoms}
+                  {symptoms.length}
                 </div>
               </div>
             </div>
 
-            {personalizedContext.medicalConditions.length > 0 && (
+            {conditions.length > 0 && (
               <div className="fade-in-up fade-in-delay-1">
                 <span className="font-medium text-muted-foreground text-sm">
                   Key Conditions:
                 </span>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {personalizedContext.medicalConditions
-                    .slice(0, 5)
-                    .map((condition, index) => (
-                      <Badge
-                        key={index}
-                        variant={
-                          condition.type === "chronic"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                        className="text-xs transform-smooth hover:scale-105"
-                      >
-                        {condition.name}
-                      </Badge>
-                    ))}
-                  {personalizedContext.medicalConditions.length > 5 && (
+                  {conditions.slice(0, 5).map((condition, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="text-xs transform-smooth hover:scale-105"
+                    >
+                      {condition}
+                    </Badge>
+                  ))}
+                  {conditions.length > 5 && (
                     <Badge variant="outline" className="text-xs">
-                      +{personalizedContext.medicalConditions.length - 5} more
+                      +{conditions.length - 5} more
                     </Badge>
                   )}
                 </div>
               </div>
             )}
+
+            {medications.length > 0 && (
+              <div className="fade-in-up fade-in-delay-2">
+                <span className="font-medium text-muted-foreground text-sm">
+                  Current Medications:
+                </span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {medications.slice(0, 3).map((medication, index) => (
+                    <Badge
+                      key={index}
+                      variant="outline"
+                      className="text-xs transform-smooth hover:scale-105 border-blue-200 text-blue-700"
+                    >
+                      {medication}
+                    </Badge>
+                  ))}
+                  {medications.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{medications.length - 3} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        )}
+
+        {showHealthRecords && aiHealthContext?.context?.recentActivity && (
+          <CardContent className="pt-0 space-y-4 fade-in-up border-t">
+            <div className="space-y-3">
+              <span className="font-medium text-muted-foreground text-sm flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                Recent Health Records
+              </span>
+              {aiHealthContext.context.recentActivity.records.slice(0, 3).map((record, index) => (
+                <div key={index} className="p-3 bg-white/70 rounded-lg border border-primary/10 hover:bg-white/90 transition-all">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-sm">{record.title}</div>
+                      <div className="text-xs text-muted-foreground capitalize">{record.type}</div>
+                      {record.description && (
+                        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {record.description}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(record.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         )}
       </Card>
