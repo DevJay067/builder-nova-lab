@@ -214,17 +214,11 @@ class ProductionBlockchainService {
     // Layer 2: Encrypt with data hash (data-specific encryption)
     const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
     const dataIv = crypto.randomBytes(16);
-    const dataCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      dataLayerKey,
-      dataIv,
-    );
-    dataCipher.setAAD(Buffer.from("data-layer"));
+    const dataCipher = crypto.createCipher("aes-256-cbc", dataLayerKey);
 
     let dataEncrypted = dataCipher.update(userLayerData, "utf8", "hex");
     dataEncrypted += dataCipher.final("hex");
-    const dataAuthTag = dataCipher.getAuthTag();
-    const dataLayerData = `${dataIv.toString("hex")}:${dataAuthTag.toString("hex")}:${dataEncrypted}`;
+    const dataLayerData = `${dataIv.toString("hex")}:${dataEncrypted}`;
 
     // Layer 3: Encrypt with combined hash (blockchain-specific encryption)
     const blockchainLayerKey = crypto
