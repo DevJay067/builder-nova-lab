@@ -356,6 +356,44 @@ export function createServer() {
   app.post("/api/health-records/cloud", storeHealthRecordSupabase);
   app.get("/api/health-records/cloud", getHealthRecordsSupabase);
 
+  // Demo endpoint to test cloud storage
+  app.post("/api/test-cloud-storage", async (req, res) => {
+    try {
+      console.log("🧪 Testing Supabase cloud storage with sample health data");
+
+      const sampleHealthData = {
+        type: "test-record",
+        title: "Test Health Record",
+        description: "Testing Supabase cloud storage functionality",
+        data: {
+          vitals: {
+            bloodPressure: "120/80",
+            heartRate: 72,
+            temperature: 98.6,
+          },
+          notes: "Sample health data for testing cloud storage",
+          timestamp: new Date().toISOString(),
+        },
+        metadata: {
+          testRecord: true,
+          cloudStorageTest: true,
+        },
+      };
+
+      // Forward to cloud storage
+      req.body = sampleHealthData;
+      storeHealthRecordSupabase(req, res, () => {});
+
+    } catch (error) {
+      console.error("❌ Test cloud storage error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Test failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
