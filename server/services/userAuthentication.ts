@@ -68,9 +68,13 @@ class UserAuthenticationService {
    * Create user tables in database
    */
   private static async createUserTables(): Promise<void> {
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === "") {
+      throw new Error("Database not configured");
+    }
+
     try {
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(process.env.DATABASE_URL);
 
       // Create users table
       await sql`
@@ -113,9 +117,13 @@ class UserAuthenticationService {
    * Store user in database
    */
   private static async storeUserInDatabase(user: User): Promise<void> {
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === "") {
+      throw new Error("Database not configured");
+    }
+
     try {
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(process.env.DATABASE_URL);
 
       await sql`
         INSERT INTO users (
@@ -152,9 +160,13 @@ class UserAuthenticationService {
   private static async getUserFromDatabase(
     username: string,
   ): Promise<User | null> {
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === "") {
+      return null;
+    }
+
     try {
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(process.env.DATABASE_URL);
 
       const result = await sql`
         SELECT * FROM users WHERE username = ${username}
@@ -192,9 +204,13 @@ class UserAuthenticationService {
    * Update user last login in database
    */
   private static async updateUserLastLogin(username: string): Promise<void> {
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === "") {
+      return;
+    }
+
     try {
       const { neon } = await import("@neondatabase/serverless");
-      const sql = neon(process.env.DATABASE_URL || "");
+      const sql = neon(process.env.DATABASE_URL);
 
       await sql`
         UPDATE users
