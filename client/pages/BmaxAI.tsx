@@ -194,6 +194,30 @@ export default function BmaxAI() {
     }
   };
 
+  const loadAIHealthContext = async (sessionToken: string) => {
+    try {
+      console.log("🤖 Loading AI health context from saved records...");
+      const response = await fetch("/api/ai/health-context", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ AI health context loaded:", {
+          totalRecords: data.context?.totalRecords,
+          conditions: data.context?.medicalProfile?.conditions?.length,
+          medications: data.context?.medicalProfile?.currentMedications?.length,
+        });
+        setAiHealthContext(data);
+      }
+    } catch (error) {
+      console.error("Error loading AI health context:", error);
+    }
+  };
+
   const loadHealthInsights = async (sessionToken: string) => {
     try {
       const response = await fetch("/api/medical-context/insights", {
