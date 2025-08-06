@@ -214,7 +214,7 @@ class ProductionBlockchainService {
     // Layer 2: Encrypt with data hash (data-specific encryption)
     const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
     const dataIv = crypto.randomBytes(16);
-    const dataCipher = crypto.createCipher("aes-256-cbc", dataLayerKey);
+    const dataCipher = crypto.createCipheriv("aes-256-cbc", dataLayerKey, dataIv);
 
     let dataEncrypted = dataCipher.update(userLayerData, "utf8", "hex");
     dataEncrypted += dataCipher.final("hex");
