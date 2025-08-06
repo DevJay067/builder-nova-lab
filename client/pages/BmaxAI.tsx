@@ -769,58 +769,89 @@ IMPORTANT INSTRUCTIONS:
         </Card>
 
         {/* Example Queries for Personalized Context */}
-        {personalizedContext?.hasData && (
+        {(aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData) && (
           <Card className="mt-4 shadow-colored border-primary/20 bg-gradient-to-r from-primary/5 to-primary/5 fade-in fade-in-delay-3">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center">
                 <Zap className="h-4 w-4 mr-2 text-primary" />
-                Try asking B-max about:
+                Try asking B-max about your health:
+                {aiHealthContext?.context?.totalRecords > 0 && (
+                  <Badge variant="outline" className="ml-2 text-xs">
+                    Based on {aiHealthContext.context.totalRecords} records
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                {personalizedContext.medicalConditions.some((c) =>
-                  c.name.toLowerCase().includes("diabetes"),
+                {/* Dynamic examples based on actual health records */}
+                {aiHealthContext?.context?.medicalProfile?.conditions?.some((c) =>
+                  c.toLowerCase().includes("diabetes")
                 ) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
                       "I'm feeling dizzy"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Gets diabetes-specific advice
+                      Gets diabetes-specific advice from your records
                     </div>
                   </div>
                 )}
-                {personalizedContext.medicalConditions.some((c) =>
-                  c.name.toLowerCase().includes("hypertension"),
+
+                {aiHealthContext?.context?.medicalProfile?.conditions?.some((c) =>
+                  c.toLowerCase().includes("hypertension") || c.toLowerCase().includes("blood pressure")
                 ) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
                       "I have a headache"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Considers blood pressure
+                      Considers your blood pressure history
                     </div>
                   </div>
                 )}
-                {personalizedContext.currentMedications.length > 0 && (
+
+                {(aiHealthContext?.context?.medicalProfile?.currentMedications?.length > 0 || personalizedContext?.currentMedications?.length > 0) && (
                   <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                     <div className="font-medium text-primary mb-1">
                       "Can I take [medication]?"
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Checks interactions
+                      Checks interactions with your current meds
                     </div>
                   </div>
                 )}
+
+                {aiHealthContext?.context?.recentActivity?.records?.length > 0 && (
+                  <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
+                    <div className="font-medium text-primary mb-1">
+                      "Explain my recent {aiHealthContext.context.recentActivity.records[0]?.type} record"
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      References your specific health records
+                    </div>
+                  </div>
+                )}
+
                 <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
                   <div className="font-medium text-primary mb-1">
-                    "What should I monitor?"
+                    "What should I monitor based on my history?"
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Personalized recommendations
+                    Personalized recommendations from your records
                   </div>
                 </div>
+
+                {aiHealthContext?.context?.medicalProfile?.conditions?.length > 0 && (
+                  <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-primary/20 hover:bg-white/80 transition-all cursor-pointer transform-smooth hover:scale-105">
+                    <div className="font-medium text-primary mb-1">
+                      "How do my conditions interact?"
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Analysis based on your documented conditions
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
