@@ -196,7 +196,7 @@ export default function BmaxAI() {
 
   const loadAIHealthContext = async (sessionToken: string) => {
     try {
-      console.log("🤖 Loading AI health context from saved records...");
+      console.log("�� Loading AI health context from saved records...");
       const response = await fetch("/api/ai/health-context", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
@@ -704,7 +704,7 @@ IMPORTANT INSTRUCTIONS:
                   ? `AI is personalized with ${aiHealthContext.context.totalRecords} health records (${aiHealthContext.context.medicalProfile.conditions.length} conditions, ${aiHealthContext.context.medicalProfile.currentMedications.length} medications). Ask about symptoms and get targeted advice based on your actual medical history.`
                   : personalizedContext?.hasData
                     ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
-                    : "AI is ready to help with general health questions. Add medical history for personalized recommendations."}
+                    : "AI is ready to help with general health questions. Add health records in the Health History section to get personalized recommendations based on your medical data."}
             </CardDescription>
           </CardHeader>
 
