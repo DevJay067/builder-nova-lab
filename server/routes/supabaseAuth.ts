@@ -151,10 +151,19 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
       hasSessionToken: !!healthData.sessionToken,
     });
 
-    if (!healthData.type || !healthData.data) {
+    if (!healthData.type) {
       return res.status(400).json({
         success: false,
-        message: "Health record type and data are required",
+        message: "Health record type is required",
+        details: "The 'type' field is missing from the request",
+      });
+    }
+
+    if (!healthData.data) {
+      return res.status(400).json({
+        success: false,
+        message: "Health record data is required",
+        details: "The 'data' field is missing from the request",
       });
     }
 
