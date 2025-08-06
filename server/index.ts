@@ -114,12 +114,6 @@ app.get("/api/system/info", async (req, res) => {
         auditLogging: true,
       },
       endpoints: {
-        legacy: [
-          "/api/auth/*",
-          "/api/enhanced-auth/*",
-          "/api/cloud-storage/*",
-          "/api/health-records/*",
-        ],
         secure: [
           "/api/secure-health/register",
           "/api/secure-health/login",
@@ -274,7 +268,7 @@ async function startServer() {
    ✅ AES-256-GCM encryption
    ✅ IPFS decentralized storage
    ✅ Blockchain integrity verification
-   ✅ Rate limiting protection
+   �� Rate limiting protection
    ✅ Complete audit trail
 
 📋 Legacy API (backward compatibility):
