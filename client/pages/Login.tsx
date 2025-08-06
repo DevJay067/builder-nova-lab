@@ -594,12 +594,16 @@ export default function Login() {
                 </span>
               </div>
               <div className="flex items-center space-x-1 text-xs text-slate-500 border-l pl-2 ml-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className={`w-2 h-2 rounded-full ${
+                  serverStatus.connected
+                    ? 'bg-green-500 animate-pulse'
+                    : 'bg-yellow-500'
+                }`}></div>
                 <span className="hidden md:inline font-mono">
-                  {window.location.hostname}
+                  {serverStatus.hostname}{serverStatus.port ? ':' + serverStatus.port : ''}
                 </span>
                 <span className="md:hidden font-mono">
-                  Server
+                  {serverStatus.connected ? 'Online' : 'Connecting...'}
                 </span>
               </div>
             </div>
