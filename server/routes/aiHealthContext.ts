@@ -359,9 +359,11 @@ export const searchHealthRecordsForAI: RequestHandler = async (req, res) => {
 
     console.log(`🔍 AI health search: "${query}"`);
 
+    // Use the actual user ID for patient isolation
+    const patientId = `user_${sessionResult.user.userHash || sessionResult.user.username || sessionResult.user.id}`;
+
     // Get all health records
-    const allRecordsResult =
-      await SupabaseService.getHealthRecords("authenticated-user");
+    const allRecordsResult = await SupabaseService.getHealthRecords(patientId);
 
     if (!allRecordsResult.success) {
       return res.status(500).json({
