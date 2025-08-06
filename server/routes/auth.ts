@@ -46,12 +46,12 @@ export const registerUser: RequestHandler = async (req, res) => {
 
     // Use the new authentication service
     const result = await UserAuthenticationService.registerUser(
-      username,
-      password,
-      email,
+      userData.username,
+      userData.password,
+      userData.email,
       {
-        firstName,
-        lastName,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
       },
     );
 
