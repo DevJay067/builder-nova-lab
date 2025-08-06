@@ -98,26 +98,16 @@ export function createServer() {
         console.log("   The system will work in demo mode");
       }
 
-      // Try to initialize the main database system
+      // Initialize Supabase database system
       try {
-        const { DatabaseInitService } = await import("./services/initDatabase");
-        await DatabaseInitService.initializeSecureHealthcareDatabase();
-        console.log("✅ Secure healthcare database initialized successfully");
+        const { SupabaseService } = await import("./services/supabaseService");
+        await SupabaseService.initializeDatabase();
+        await SupabaseService.initializeStorage();
+        console.log("✅ Supabase database and storage initialized successfully");
       } catch (dbError) {
         console.log(
-          "⚠️  Secure database not available, trying simple initialization...",
+          "⚠️  Supabase database not configured, system will work with mock data",
         );
-
-        // Try to create at least the essential medical_history table
-        try {
-          const { SimpleDatabaseInit } = await import(
-            "./services/simpleDatabaseInit"
-          );
-          await SimpleDatabaseInit.initializeMedicalHistoryTable();
-          console.log("✅ Essential medical history table created");
-        } catch (simpleError) {
-          console.log("⚠️  System will work with in-memory storage only");
-        }
       }
     } catch (error) {
       console.log(
