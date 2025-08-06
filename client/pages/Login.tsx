@@ -260,9 +260,25 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Registration error:", error);
+
+      // Handle different types of errors
+      let errorMessage = "Registration failed. Please try again.";
+
+      if (error instanceof Error) {
+        if (error.message.includes("HTTP error! status: 4")) {
+          errorMessage = "Invalid registration data. Please check your inputs.";
+        } else if (error.message.includes("HTTP error! status: 5")) {
+          errorMessage = "Server error. Please try again in a moment.";
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
