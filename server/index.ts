@@ -95,24 +95,6 @@ app.get("/health", (req, res) => {
 
 // API Routes
 
-// Legacy authentication routes (maintained for backward compatibility)
-app.use("/api/auth", authRoutes);
-app.use("/api/enhanced-auth", enhancedAuthRoutes);
-
-// Cloud storage and health records routes
-app.use("/api/cloud-storage", cloudStorageRoutes);
-app.use("/api/health-records", healthRecordsRoutes);
-
-// Image upload and processing
-app.use("/api/image-upload", imageUploadRoutes);
-
-// Demo and development routes
-app.use("/api/demo", demoRoutes);
-app.use("/api/demo-keys", demoKeysRoutes);
-
-// Database health monitoring
-app.use("/api/database-health", databaseHealthRoutes);
-
 // NEW: Secure Health API with split-key authentication and blockchain
 app.use("/api/secure-health", secureHealthAPIRoutes);
 
@@ -188,7 +170,7 @@ app.get("/api/system/stats", async (req, res) => {
     const stats = await MedicalRecordsManager.getSystemStats();
     res.json(stats);
   } catch (error) {
-    console.error("��� System stats error:", error);
+    console.error("❌ System stats error:", error);
     res.status(500).json({
       error: "Failed to retrieve system statistics",
     });
@@ -273,7 +255,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`
 🏥 HealthChain Secure Medical Records System Started
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━��━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🌐 Server: http://localhost:${PORT}
 🔗 Health Check: http://localhost:${PORT}/health
