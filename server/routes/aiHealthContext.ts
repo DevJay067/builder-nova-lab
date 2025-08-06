@@ -32,9 +32,12 @@ export const getHealthDataForAI: RequestHandler = async (req, res) => {
 
     console.log("🔍 Fetching health records for AI context...");
 
+    // Use the actual user ID for patient isolation
+    const patientId = `user_${sessionResult.user.userHash || sessionResult.user.username || sessionResult.user.id}`;
+    console.log(`👤 Fetching records for patient: ${patientId}`);
+
     // Get health records from Supabase
-    const healthRecordsResult =
-      await SupabaseService.getHealthRecords("authenticated-user");
+    const healthRecordsResult = await SupabaseService.getHealthRecords(patientId);
 
     if (!healthRecordsResult.success) {
       console.error(
