@@ -365,7 +365,23 @@ export default function HealthHistory() {
       }
     } catch (error) {
       console.error("Error saving record:", error);
-      setMessage({ type: "error", text: "Network error. Please try again." });
+
+      let errorMessage = "Network error. Please try again.";
+
+      if (error instanceof Error) {
+        if (error.message.includes("body stream")) {
+          errorMessage = "Request format error. Please try again.";
+        } else if (error.message.includes("HTTP error")) {
+          errorMessage = "Server error. Please check your login and try again.";
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage = "Network connection error. Please check your internet connection.";
+        }
+      }
+
+      setMessage({
+        type: "error",
+        text: errorMessage
+      });
     } finally {
       setIsSubmitting(false);
     }
