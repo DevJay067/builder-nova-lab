@@ -508,14 +508,20 @@ class UserAuthenticationService {
       } catch (secureError) {
         console.warn("⚠️ Secure authentication system not available, using fallback:", secureError instanceof Error ? secureError.message : "Unknown error");
 
+        const sessionToken = this.createSessionToken({
+          id: user.id,
+          username: user.username,
+          userHash: user.userHash,
+        });
+
         secureAuthResult = {
           authenticated: true,
-          sessionToken: crypto.randomBytes(32).toString('hex'),
+          sessionToken: sessionToken,
           splitKeySystemActive: false,
         };
 
         // Store session in fallback mode
-        this.storeSession(secureAuthResult.sessionToken, {
+        this.storeSession(sessionToken, {
           username: user.username,
           userHash: user.userHash,
           id: user.id,
