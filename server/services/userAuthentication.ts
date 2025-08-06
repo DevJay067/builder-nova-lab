@@ -700,22 +700,57 @@ class UserAuthenticationService {
   }
 
   /**
+   * In-memory session storage for fallback mode
+   */
+  private static sessions: Map<string, { user: any; expires: number }> = new Map();
+
+  /**
+   * Store session in fallback mode
+   */
+  static storeSession(sessionToken: string, user: any): void {
+    // Session expires in 24 hours
+    const expires = Date.now() + (24 * 60 * 60 * 1000);
+    this.sessions.set(sessionToken, { user, expires });
+  }
+
+  /**
    * Verify session token
    */
   static verifySession(sessionToken: string): { valid: boolean; user?: any } {
-    const isValid = SecureDataAccessService.validateSession(sessionToken);
-    if (isValid) {
-      const user = SecureDataAccessService.getUserFromSession(sessionToken);
+    try {
+      // Try secure data access service first
+      const isValid = SecureDataAccessService.validateSession(sessionToken);
+      if (isValid) {
+        const user = SecureDataAccessService.getUserFromSession(sessionToken);
+        return {
+          valid: true,
+          user: user
+            ? {
+                username: user.username,
+                userHash: user.userHash,
+              }
+            : undefined,
+        };
+      }
+    } catch (error) {
+      console.log("⚠️ SecureDataAccessService not available, using fallback");
+    }
+
+    // Fallback to in-memory session storage
+    const session = this.sessions.get(sessionToken);
+    if (session) {
+      // Check if session is expired
+      if (Date.now() > session.expires) {
+        this.sessions.delete(sessionToken);
+        return { valid: false };
+      }
+
       return {
         valid: true,
-        user: user
-          ? {
-              username: user.username,
-              userHash: user.userHash,
-            }
-          : undefined,
+        user: session.user,
       };
     }
+
     return { valid: false };
   }
 
