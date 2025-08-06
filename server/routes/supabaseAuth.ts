@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { SupabaseAuthService } from "../services/supabaseAuthService.js";
+import { SupabaseService } from "../services/supabaseService";
 
 /**
  * Supabase Authentication Route Handlers
