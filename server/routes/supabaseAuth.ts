@@ -22,7 +22,7 @@ export const registerUserSupabase: RequestHandler = async (req, res) => {
 
     console.log(`📝 Registering user with Supabase: ${email}`);
 
-    const result = await SupabaseAuthService.registerUser(email, password, profile);
+    const result = await SupabaseService.registerUser(email, password, profile);
 
     if (result.success) {
       res.status(201).json(result);
