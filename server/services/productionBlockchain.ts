@@ -232,11 +232,8 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      blockchainLayerKey,
-      blockchainIv,
-    );
+    const blockchainCipher = crypto.createCipherGCM("aes-256-gcm", blockchainLayerKey);
+    blockchainCipher.setIV(blockchainIv);
     blockchainCipher.setAAD(Buffer.from("blockchain-layer"));
 
     let blockchainEncrypted = blockchainCipher.update(
