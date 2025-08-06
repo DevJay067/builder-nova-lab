@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import crypto from "crypto";
 import { SupabaseService } from "../services/supabaseService";
+import { UserAuthenticationService } from "../services/userAuthentication";
 
 /**
  * Supabase Authentication Route Handlers
@@ -63,7 +64,7 @@ export const loginUserSupabase: RequestHandler = async (req, res) => {
       res.status(401).json(result);
     }
   } catch (error) {
-    console.error("��� Authentication error:", error);
+    console.error("❌ Authentication error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during authentication",
