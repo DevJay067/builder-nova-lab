@@ -81,14 +81,22 @@ class SupabaseService {
    */
   private static createMockClient(): any {
     const mockResponse = { data: [], error: null };
+    const mockChainableQuery = {
+      select: () => mockChainableQuery,
+      insert: () => mockChainableQuery,
+      update: () => mockChainableQuery,
+      delete: () => mockChainableQuery,
+      upsert: () => mockChainableQuery,
+      eq: () => mockChainableQuery,
+      order: () => mockChainableQuery,
+      limit: () => mockChainableQuery,
+      single: () => mockResponse,
+      then: (callback: any) => callback(mockResponse),
+      ...mockResponse,
+    };
+
     return {
-      from: () => ({
-        select: () => mockResponse,
-        insert: () => mockResponse,
-        update: () => mockResponse,
-        delete: () => mockResponse,
-        upsert: () => mockResponse,
-      }),
+      from: () => mockChainableQuery,
       storage: {
         from: () => ({
           upload: () => ({ data: { path: 'mock-path' }, error: null }),
