@@ -37,6 +37,8 @@ export class DatabaseHealthService {
     try {
       console.log("🔍 Checking database health...");
 
+      const sql = getDatabase();
+
       // Simple connectivity test
       const result = await sql`SELECT 1 as health_check`;
 
