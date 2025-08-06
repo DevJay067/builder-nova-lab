@@ -198,6 +198,11 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
     // Use the actual user ID from the session for patient isolation
     const patientId = `user_${sessionResult.user.userHash || sessionResult.user.username || sessionResult.user.id}`;
 
+    console.log(`🔒 Storing health record for isolated patient: ${patientId}`, {
+      username: sessionResult.user.username,
+      userHash: sessionResult.user.userHash?.substring(0, 8) + "...",
+    });
+
     // Prepare comprehensive health record for vault storage
     const vaultData = {
       recordId,
