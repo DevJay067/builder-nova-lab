@@ -320,12 +320,23 @@ export default function HealthHistory() {
         body: JSON.stringify(requestBody),
       });
 
+      console.log("📥 Health record response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log("✅ Health record result:", { success: result.success });
 
       if (result.success) {
         setMessage({
           type: "success",
-          text: "Health record saved securely to blockchain!",
+          text: "Health record saved securely to Supabase cloud storage!",
         });
         setIsDialogOpen(false);
         setNewRecord({
