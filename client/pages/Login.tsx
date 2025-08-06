@@ -42,6 +42,9 @@ export default function Login() {
     text: string;
   } | null>(null);
 
+  // Request deduplication
+  const [activeRequests, setActiveRequests] = useState<Set<string>>(new Set());
+
   // Page load animation and initialization
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
