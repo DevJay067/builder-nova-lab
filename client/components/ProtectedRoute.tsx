@@ -85,6 +85,10 @@ export default function ProtectedRoute({
             "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
       } else {
+        console.error("❌ Session verification failed:", {
+          status: response.status,
+          statusText: response.statusText,
+        });
         setIsAuthenticated(false);
         setAuthError("Authentication failed");
       }
