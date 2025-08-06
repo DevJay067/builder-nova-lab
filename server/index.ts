@@ -337,6 +337,25 @@ export function createServer() {
   app.get("/api/supabase/test-connection", testSupabaseConnection);
   app.get("/api/supabase/health", healthCheckSupabase);
 
+  // Universal Health Data Storage - ALL health data goes to Supabase cloud storage
+  app.post("/api/health-data/store", (req, res) => {
+    console.log("🚀 Routing ALL health data to Supabase cloud storage");
+
+    // Forward all health data storage requests to Supabase cloud storage
+    storeHealthRecordSupabase(req, res, () => {});
+  });
+
+  app.get("/api/health-data/records", (req, res) => {
+    console.log("🔍 Retrieving ALL health data from Supabase cloud storage");
+
+    // Forward all health data retrieval requests to Supabase cloud storage
+    getHealthRecordsSupabase(req, res, () => {});
+  });
+
+  // Redirect legacy health record endpoints to Supabase cloud storage
+  app.post("/api/health-records/cloud", storeHealthRecordSupabase);
+  app.get("/api/health-records/cloud", getHealthRecordsSupabase);
+
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
