@@ -78,23 +78,118 @@ class SupabaseService {
     return this.client;
   }
 
+  // In-memory storage for mock client
+  private static mockStorage: { [table: string]: any[] } = {
+    health_records: [],
+    secure_data_records: [],
+    users: [],
+  };
+  private static mockStorageFiles: { [path: string]: any } = {};
+
   /**
    * Create mock client for development when credentials are not available
    */
   private static createMockClient(): any {
-    const mockResponse = { data: [], error: null };
-    const mockChainableQuery = {
-      select: () => mockChainableQuery,
-      insert: () => mockChainableQuery,
-      update: () => mockChainableQuery,
-      delete: () => mockChainableQuery,
-      upsert: () => mockChainableQuery,
-      eq: () => mockChainableQuery,
-      order: () => mockChainableQuery,
-      limit: () => mockChainableQuery,
-      single: () => mockResponse,
-      then: (callback: any) => callback(mockResponse),
-      ...mockResponse,
+    const createMockQuery = (tableName: string) => {
+      let currentData = [...this.mockStorage[tableName] || []];
+      let filters: any = {};
+      let orderBy: any = null;
+      let limitValue: number | null = null;
+
+      const mockQuery = {
+        select: (columns?: string) => {
+          // Return the same query object for chaining
+          return mockQuery;
+        },
+
+        insert: (data: any) => {
+          const recordsToInsert = Array.isArray(data) ? data : [data];
+          recordsToInsert.forEach(record => {
+            const newRecord = {
+              ...record,
+              id: record.id || crypto.randomBytes(16).toString('hex'),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+            this.mockStorage[tableName].push(newRecord);
+          });
+
+          return {
+            data: recordsToInsert,
+            error: null,
+            then: (callback: any) => callback({ data: recordsToInsert, error: null })
+          };
+        },
+
+        eq: (column: string, value: any) => {
+          filters[column] = value;
+          return mockQuery;
+        },
+
+        order: (column: string, options?: any) => {
+          orderBy = { column, ascending: options?.ascending !== false };
+          return mockQuery;
+        },
+
+        limit: (count: number) => {
+          limitValue = count;
+          return mockQuery;
+        },
+
+        single: () => {
+          let results = this.mockStorage[tableName] || [];
+
+          // Apply filters
+          Object.keys(filters).forEach(key => {
+            results = results.filter(record => record[key] === filters[key]);
+          });
+
+          const singleResult = results[0] || null;
+          return {
+            data: singleResult,
+            error: singleResult ? null : { message: 'No data found' },
+            then: (callback: any) => callback({
+              data: singleResult,
+              error: singleResult ? null : { message: 'No data found' }
+            })
+          };
+        },
+
+        then: (callback: any) => {
+          let results = this.mockStorage[tableName] || [];
+
+          // Apply filters
+          Object.keys(filters).forEach(key => {
+            results = results.filter(record => record[key] === filters[key]);
+          });
+
+          // Apply ordering
+          if (orderBy) {
+            results.sort((a, b) => {
+              const aVal = a[orderBy.column];
+              const bVal = b[orderBy.column];
+              if (orderBy.ascending) {
+                return aVal > bVal ? 1 : -1;
+              } else {
+                return aVal < bVal ? 1 : -1;
+              }
+            });
+          }
+
+          // Apply limit
+          if (limitValue) {
+            results = results.slice(0, limitValue);
+          }
+
+          return callback({ data: results, error: null });
+        },
+
+        // Direct properties for immediate access
+        data: currentData,
+        error: null,
+      };
+
+      return mockQuery;
     };
 
     return {
