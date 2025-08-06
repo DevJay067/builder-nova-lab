@@ -162,22 +162,22 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
 
     const recordId = crypto.randomBytes(16).toString("hex");
     const timestamp = new Date().toISOString();
-    const patientId = sessionToken ? "authenticated-user" : "default-patient";
+    const patientId = healthData.sessionToken ? "authenticated-user" : "default-patient";
 
     // Prepare comprehensive health record for vault storage
     const vaultData = {
       recordId,
-      type,
-      title: title || `${type} - ${new Date().toLocaleDateString()}`,
-      description: description || "",
-      data,
+      type: healthData.type,
+      title: healthData.title || `${healthData.type} - ${new Date().toLocaleDateString()}`,
+      description: healthData.description || "",
+      data: healthData.data,
       metadata: {
-        ...metadata,
+        ...healthData.metadata,
         secureStorage: true,
         cloudVault: true,
         encryptionLayers: 3,
         storageLocation: "supabase-vault",
-        sessionToken,
+        sessionToken: healthData.sessionToken,
       },
       timestamp,
       patientId,
@@ -360,7 +360,7 @@ export const getSystemStatsSupabase: RequestHandler = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("��� Get system stats error:", error);
+    console.error("❌ Get system stats error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error getting system stats",
