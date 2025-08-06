@@ -220,6 +220,14 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("🔍 Starting registration process", {
+        username: registerForm.username,
+        email: registerForm.email,
+        hasPassword: !!registerForm.password,
+        firstName: registerForm.firstName,
+        lastName: registerForm.lastName,
+      });
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -234,11 +242,20 @@ export default function Login() {
         }),
       });
 
+      console.log("📡 Registration response received", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers),
+      });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error("❌ Registration failed with response:", errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
+      console.log("✅ Registration result:", result);
 
       if (result.success) {
         setMessage({
