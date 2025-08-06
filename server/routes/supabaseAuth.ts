@@ -217,7 +217,7 @@ export const getSystemStatsSupabase: RequestHandler = async (req, res) => {
   try {
     console.log("📊 Getting Supabase system statistics");
 
-    const stats = await SupabaseAuthService.getSystemStats();
+    const stats = await SupabaseService.getStatistics();
 
     res.json({
       success: true,
