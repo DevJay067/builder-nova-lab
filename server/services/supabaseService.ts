@@ -228,7 +228,10 @@ class SupabaseService {
           download: (path: string) => {
             const file = this.mockStorageFiles[path];
             return Promise.resolve({
-              data: file ? { toString: () => JSON.stringify(file) } : null,
+              data: file ? {
+                text: () => Promise.resolve(JSON.stringify(file)),
+                toString: () => JSON.stringify(file)
+              } : null,
               error: file ? null : { message: "File not found" },
             });
           },
