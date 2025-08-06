@@ -138,11 +138,31 @@ export default function Login() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let result;
+      let responseText = "";
+
+      try {
+        responseText = await response.text();
+      } catch (textError) {
+        console.error("❌ Failed to read response body:", textError);
+        throw new Error("Failed to read server response");
       }
 
-      const result = await response.json();
+      if (!response.ok) {
+        console.error("❌ Login failed with response:", responseText);
+        throw new Error(`HTTP error! status: ${response.status} - ${responseText}`);
+      }
+
+      if (!responseText || responseText.trim() === "") {
+        throw new Error("Empty response from server");
+      }
+
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("❌ Failed to parse response as JSON:", responseText);
+        throw new Error("Invalid response format from server");
+      }
 
       if (result.success) {
         const userData = {
