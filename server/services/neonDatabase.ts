@@ -23,6 +23,11 @@ export class NeonDatabaseService {
    * Initialize database tables for secure data storage
    */
   static async initializeDatabase(): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, skipping initialization");
+      return;
+    }
+
     try {
       // Create secure_data_records table
       await sql`
