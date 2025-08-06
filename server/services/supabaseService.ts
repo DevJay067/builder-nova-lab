@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Supabase Database Service
@@ -48,20 +48,22 @@ export class SupabaseService {
       const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !supabaseKey) {
-        console.warn('⚠️ Supabase credentials not found, database features will be limited');
+        console.warn(
+          "⚠️ Supabase credentials not found, database features will be limited",
+        );
         this.isInitialized = true;
         return;
       }
 
       this.client = createClient(supabaseUrl, supabaseKey);
-      console.log('✅ Supabase service initialized');
+      console.log("✅ Supabase service initialized");
 
       // Create necessary tables
       await this.createTables();
-      
+
       this.isInitialized = true;
     } catch (error) {
-      console.error('❌ Failed to initialize Supabase service:', error);
+      console.error("❌ Failed to initialize Supabase service:", error);
       this.isInitialized = true; // Continue without Supabase
     }
   }
@@ -74,7 +76,7 @@ export class SupabaseService {
 
     try {
       // Create split_key_users table
-      await this.client.rpc('create_split_key_users_table', {
+      await this.client.rpc("create_split_key_users_table", {
         sql_query: `
           CREATE TABLE IF NOT EXISTS split_key_users (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -91,11 +93,11 @@ export class SupabaseService {
           CREATE INDEX IF NOT EXISTS idx_split_key_users_email ON split_key_users(email);
           CREATE INDEX IF NOT EXISTS idx_split_key_users_username ON split_key_users(username);
           CREATE INDEX IF NOT EXISTS idx_split_key_users_active ON split_key_users(is_active);
-        `
+        `,
       });
 
       // Create medical_records_metadata table
-      await this.client.rpc('create_medical_records_table', {
+      await this.client.rpc("create_medical_records_table", {
         sql_query: `
           CREATE TABLE IF NOT EXISTS medical_records_metadata (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -118,11 +120,11 @@ export class SupabaseService {
           CREATE INDEX IF NOT EXISTS idx_medical_records_cid ON medical_records_metadata(cid);
           CREATE INDEX IF NOT EXISTS idx_medical_records_upload_time ON medical_records_metadata(upload_timestamp);
           CREATE INDEX IF NOT EXISTS idx_medical_records_active ON medical_records_metadata(is_active);
-        `
+        `,
       });
 
       // Create access_logs table for security auditing
-      await this.client.rpc('create_access_logs_table', {
+      await this.client.rpc("create_access_logs_table", {
         sql_query: `
           CREATE TABLE IF NOT EXISTS access_logs (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -140,12 +142,15 @@ export class SupabaseService {
           CREATE INDEX IF NOT EXISTS idx_access_logs_user_id ON access_logs(user_id);
           CREATE INDEX IF NOT EXISTS idx_access_logs_action ON access_logs(action);
           CREATE INDEX IF NOT EXISTS idx_access_logs_created_at ON access_logs(created_at);
-        `
+        `,
       });
 
-      console.log('✅ Database tables created successfully');
+      console.log("✅ Database tables created successfully");
     } catch (error) {
-      console.warn('⚠️ Table creation may have failed, they might already exist:', error);
+      console.warn(
+        "⚠️ Table creation may have failed, they might already exist:",
+        error,
+      );
     }
   }
 
@@ -153,53 +158,55 @@ export class SupabaseService {
    * Store medical record metadata
    */
   static async storeMedicalRecordMetadata(
-    metadata: Omit<MedicalRecordMetadata, 'id'>
+    metadata: Omit<MedicalRecordMetadata, "id">,
   ): Promise<{ success: boolean; recordId?: string; error?: string }> {
     if (!this.client) {
-      return { success: false, error: 'Supabase not initialized' };
+      return { success: false, error: "Supabase not initialized" };
     }
 
     try {
       const { data, error } = await this.client
-        .from('medical_records_metadata')
-        .insert([{
-          user_id: metadata.userId,
-          cid: metadata.cid,
-          original_name: metadata.originalName,
-          mime_type: metadata.mimeType,
-          file_size: metadata.size,
-          encrypted_title: metadata.encryptedTitle,
-          encrypted_description: metadata.encryptedDescription,
-          upload_timestamp: metadata.uploadTimestamp,
-          checksum: metadata.checksum,
-          encryption_metadata: metadata.encryptionMetadata,
-          tags: metadata.tags || [],
-          is_active: metadata.isActive
-        }])
-        .select('id')
+        .from("medical_records_metadata")
+        .insert([
+          {
+            user_id: metadata.userId,
+            cid: metadata.cid,
+            original_name: metadata.originalName,
+            mime_type: metadata.mimeType,
+            file_size: metadata.size,
+            encrypted_title: metadata.encryptedTitle,
+            encrypted_description: metadata.encryptedDescription,
+            upload_timestamp: metadata.uploadTimestamp,
+            checksum: metadata.checksum,
+            encryption_metadata: metadata.encryptionMetadata,
+            tags: metadata.tags || [],
+            is_active: metadata.isActive,
+          },
+        ])
+        .select("id")
         .single();
 
       if (error) {
-        console.error('❌ Failed to store medical record metadata:', error);
+        console.error("❌ Failed to store medical record metadata:", error);
         return { success: false, error: error.message };
       }
 
       // Log the access
       await this.logAccess(
         metadata.userId,
-        'store_record',
-        'medical_record',
+        "store_record",
+        "medical_record",
         data.id,
         null,
-        true
+        true,
       );
 
       return { success: true, recordId: data.id };
     } catch (error) {
-      console.error('❌ Error storing medical record metadata:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Storage failed' 
+      console.error("❌ Error storing medical record metadata:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Storage failed",
       };
     }
   }
@@ -209,31 +216,35 @@ export class SupabaseService {
    */
   static async getUserMedicalRecords(
     userId: string,
-    includeInactive: boolean = false
-  ): Promise<{ success: boolean; records?: MedicalRecordMetadata[]; error?: string }> {
+    includeInactive: boolean = false,
+  ): Promise<{
+    success: boolean;
+    records?: MedicalRecordMetadata[];
+    error?: string;
+  }> {
     if (!this.client) {
-      return { success: false, error: 'Supabase not initialized' };
+      return { success: false, error: "Supabase not initialized" };
     }
 
     try {
       let query = this.client
-        .from('medical_records_metadata')
-        .select('*')
-        .eq('user_id', userId)
-        .order('upload_timestamp', { ascending: false });
+        .from("medical_records_metadata")
+        .select("*")
+        .eq("user_id", userId)
+        .order("upload_timestamp", { ascending: false });
 
       if (!includeInactive) {
-        query = query.eq('is_active', true);
+        query = query.eq("is_active", true);
       }
 
       const { data, error } = await query;
 
       if (error) {
-        console.error('❌ Failed to fetch medical records:', error);
+        console.error("❌ Failed to fetch medical records:", error);
         return { success: false, error: error.message };
       }
 
-      const records: MedicalRecordMetadata[] = data.map(row => ({
+      const records: MedicalRecordMetadata[] = data.map((row) => ({
         id: row.id,
         userId: row.user_id,
         cid: row.cid,
@@ -247,25 +258,25 @@ export class SupabaseService {
         checksum: row.checksum,
         encryptionMetadata: row.encryption_metadata,
         tags: row.tags || [],
-        isActive: row.is_active
+        isActive: row.is_active,
       }));
 
       // Log the access
       await this.logAccess(
         userId,
-        'get_records',
-        'medical_record',
+        "get_records",
+        "medical_record",
         null,
         null,
-        true
+        true,
       );
 
       return { success: true, records };
     } catch (error) {
-      console.error('❌ Error fetching medical records:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Fetch failed' 
+      console.error("❌ Error fetching medical records:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
       };
     }
   }
@@ -275,28 +286,32 @@ export class SupabaseService {
    */
   static async getMedicalRecordMetadata(
     recordId: string,
-    userId: string
-  ): Promise<{ success: boolean; record?: MedicalRecordMetadata; error?: string }> {
+    userId: string,
+  ): Promise<{
+    success: boolean;
+    record?: MedicalRecordMetadata;
+    error?: string;
+  }> {
     if (!this.client) {
-      return { success: false, error: 'Supabase not initialized' };
+      return { success: false, error: "Supabase not initialized" };
     }
 
     try {
       const { data, error } = await this.client
-        .from('medical_records_metadata')
-        .select('*')
-        .eq('id', recordId)
-        .eq('user_id', userId)
-        .eq('is_active', true)
+        .from("medical_records_metadata")
+        .select("*")
+        .eq("id", recordId)
+        .eq("user_id", userId)
+        .eq("is_active", true)
         .single();
 
       if (error) {
-        console.error('❌ Failed to fetch medical record:', error);
+        console.error("❌ Failed to fetch medical record:", error);
         return { success: false, error: error.message };
       }
 
       if (!data) {
-        return { success: false, error: 'Record not found or access denied' };
+        return { success: false, error: "Record not found or access denied" };
       }
 
       const record: MedicalRecordMetadata = {
@@ -313,7 +328,7 @@ export class SupabaseService {
         checksum: data.checksum,
         encryptionMetadata: data.encryption_metadata,
         tags: data.tags || [],
-        isActive: data.is_active
+        isActive: data.is_active,
       };
 
       // Update last accessed timestamp
@@ -322,19 +337,19 @@ export class SupabaseService {
       // Log the access
       await this.logAccess(
         userId,
-        'get_record',
-        'medical_record',
+        "get_record",
+        "medical_record",
         recordId,
         null,
-        true
+        true,
       );
 
       return { success: true, record };
     } catch (error) {
-      console.error('❌ Error fetching medical record:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Fetch failed' 
+      console.error("❌ Error fetching medical record:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
       };
     }
   }
@@ -347,11 +362,11 @@ export class SupabaseService {
 
     try {
       await this.client
-        .from('medical_records_metadata')
+        .from("medical_records_metadata")
         .update({ last_accessed: new Date().toISOString() })
-        .eq('id', recordId);
+        .eq("id", recordId);
     } catch (error) {
-      console.error('❌ Error updating last accessed:', error);
+      console.error("❌ Error updating last accessed:", error);
     }
   }
 
@@ -360,40 +375,40 @@ export class SupabaseService {
    */
   static async deleteMedicalRecord(
     recordId: string,
-    userId: string
+    userId: string,
   ): Promise<{ success: boolean; error?: string }> {
     if (!this.client) {
-      return { success: false, error: 'Supabase not initialized' };
+      return { success: false, error: "Supabase not initialized" };
     }
 
     try {
       const { error } = await this.client
-        .from('medical_records_metadata')
+        .from("medical_records_metadata")
         .update({ is_active: false })
-        .eq('id', recordId)
-        .eq('user_id', userId);
+        .eq("id", recordId)
+        .eq("user_id", userId);
 
       if (error) {
-        console.error('❌ Failed to delete medical record:', error);
+        console.error("❌ Failed to delete medical record:", error);
         return { success: false, error: error.message };
       }
 
       // Log the access
       await this.logAccess(
         userId,
-        'delete_record',
-        'medical_record',
+        "delete_record",
+        "medical_record",
         recordId,
         null,
-        true
+        true,
       );
 
       return { success: true };
     } catch (error) {
-      console.error('❌ Error deleting medical record:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Delete failed' 
+      console.error("❌ Error deleting medical record:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Delete failed",
       };
     }
   }
@@ -403,27 +418,31 @@ export class SupabaseService {
    */
   static async searchMedicalRecords(
     userId: string,
-    searchTerm: string
-  ): Promise<{ success: boolean; records?: MedicalRecordMetadata[]; error?: string }> {
+    searchTerm: string,
+  ): Promise<{
+    success: boolean;
+    records?: MedicalRecordMetadata[];
+    error?: string;
+  }> {
     if (!this.client) {
-      return { success: false, error: 'Supabase not initialized' };
+      return { success: false, error: "Supabase not initialized" };
     }
 
     try {
       const { data, error } = await this.client
-        .from('medical_records_metadata')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_active', true)
+        .from("medical_records_metadata")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("is_active", true)
         .or(`original_name.ilike.%${searchTerm}%,tags.cs.{${searchTerm}}`)
-        .order('upload_timestamp', { ascending: false });
+        .order("upload_timestamp", { ascending: false });
 
       if (error) {
-        console.error('❌ Failed to search medical records:', error);
+        console.error("❌ Failed to search medical records:", error);
         return { success: false, error: error.message };
       }
 
-      const records: MedicalRecordMetadata[] = data.map(row => ({
+      const records: MedicalRecordMetadata[] = data.map((row) => ({
         id: row.id,
         userId: row.user_id,
         cid: row.cid,
@@ -437,25 +456,25 @@ export class SupabaseService {
         checksum: row.checksum,
         encryptionMetadata: row.encryption_metadata,
         tags: row.tags || [],
-        isActive: row.is_active
+        isActive: row.is_active,
       }));
 
       // Log the access
       await this.logAccess(
         userId,
-        'search_records',
-        'medical_record',
+        "search_records",
+        "medical_record",
         null,
         null,
-        true
+        true,
       );
 
       return { success: true, records };
     } catch (error) {
-      console.error('❌ Error searching medical records:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Search failed' 
+      console.error("❌ Error searching medical records:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Search failed",
       };
     }
   }
@@ -470,61 +489,67 @@ export class SupabaseService {
     resourceId?: string | null,
     ipAddress?: string | null,
     success: boolean = true,
-    errorMessage?: string
+    errorMessage?: string,
   ): Promise<void> {
     if (!this.client) return;
 
     try {
-      await this.client
-        .from('access_logs')
-        .insert([{
+      await this.client.from("access_logs").insert([
+        {
           user_id: userId,
           action,
           resource_type: resourceType,
           resource_id: resourceId,
           ip_address: ipAddress,
           success,
-          error_message: errorMessage
-        }]);
+          error_message: errorMessage,
+        },
+      ]);
     } catch (error) {
-      console.error('❌ Error logging access:', error);
+      console.error("❌ Error logging access:", error);
     }
   }
 
   /**
    * Get database statistics
    */
-  static async getDatabaseStats(): Promise<{ success: boolean; stats?: DatabaseStats; error?: string }> {
+  static async getDatabaseStats(): Promise<{
+    success: boolean;
+    stats?: DatabaseStats;
+    error?: string;
+  }> {
     if (!this.client) {
-      return { success: false, error: 'Supabase not initialized' };
+      return { success: false, error: "Supabase not initialized" };
     }
 
     try {
       // Get user count
       const { count: userCount } = await this.client
-        .from('split_key_users')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .from("split_key_users")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true);
 
       // Get record count
       const { count: recordCount } = await this.client
-        .from('medical_records_metadata')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .from("medical_records_metadata")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true);
 
       // Get total storage size
       const { data: sizeData } = await this.client
-        .from('medical_records_metadata')
-        .select('file_size')
-        .eq('is_active', true);
+        .from("medical_records_metadata")
+        .select("file_size")
+        .eq("is_active", true);
 
-      const totalSize = sizeData?.reduce((sum, record) => sum + (record.file_size || 0), 0) || 0;
+      const totalSize =
+        sizeData?.reduce((sum, record) => sum + (record.file_size || 0), 0) ||
+        0;
 
       // Get last activity
       const { data: lastActivity } = await this.client
-        .from('access_logs')
-        .select('created_at')
-        .order('created_at', { ascending: false })
+        .from("access_logs")
+        .select("created_at")
+        .order("created_at", { ascending: false })
         .limit(1)
         .single();
 
@@ -532,15 +557,16 @@ export class SupabaseService {
         totalUsers: userCount || 0,
         totalRecords: recordCount || 0,
         totalStorageSize: totalSize,
-        lastActivity: lastActivity?.created_at
+        lastActivity: lastActivity?.created_at,
       };
 
       return { success: true, stats };
     } catch (error) {
-      console.error('❌ Error getting database stats:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Stats retrieval failed' 
+      console.error("❌ Error getting database stats:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Stats retrieval failed",
       };
     }
   }
@@ -557,12 +583,12 @@ export class SupabaseService {
       initialized: this.isInitialized,
       clientAvailable: this.client !== null,
       features: [
-        'User management',
-        'Medical record metadata',
-        'Access logging',
-        'Search functionality',
-        'Database statistics'
-      ]
+        "User management",
+        "Medical record metadata",
+        "Access logging",
+        "Search functionality",
+        "Database statistics",
+      ],
     };
   }
 }

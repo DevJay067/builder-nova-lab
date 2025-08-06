@@ -1,5 +1,5 @@
-import { ethers, Contract, Wallet, JsonRpcProvider } from 'ethers';
-import crypto from 'crypto';
+import { ethers, Contract, Wallet, JsonRpcProvider } from "ethers";
+import crypto from "crypto";
 
 /**
  * Blockchain Service for Medical Records Registry
@@ -56,7 +56,7 @@ const HEALTH_RECORD_REGISTRY_ABI = [
   "event UserRegistered(address indexed user, uint256 timestamp)",
   "event MedicalRecordStored(address indexed user, uint256 indexed recordId, bytes32 indexed fileHash, string ipfsCid, string recordType, uint256 timestamp)",
   "event MedicalRecordAccessed(address indexed user, uint256 indexed recordId, address indexed accessor, uint256 timestamp)",
-  "event RecordDeactivated(address indexed user, uint256 indexed recordId, uint256 timestamp)"
+  "event RecordDeactivated(address indexed user, uint256 indexed recordId, uint256 timestamp)",
 ];
 
 export class BlockchainService {
@@ -73,16 +73,19 @@ export class BlockchainService {
     if (this.isInitialized) return;
 
     try {
-      console.log('🔗 Initializing blockchain service...');
+      console.log("🔗 Initializing blockchain service...");
 
       // Load configuration from environment
-      const providerUrl = process.env.BLOCKCHAIN_PROVIDER_URL || 'http://localhost:8545';
+      const providerUrl =
+        process.env.BLOCKCHAIN_PROVIDER_URL || "http://localhost:8545";
       const contractAddress = process.env.HEALTH_REGISTRY_CONTRACT_ADDRESS;
       const privateKey = process.env.BLOCKCHAIN_PRIVATE_KEY;
-      const networkId = parseInt(process.env.BLOCKCHAIN_NETWORK_ID || '31337');
+      const networkId = parseInt(process.env.BLOCKCHAIN_NETWORK_ID || "31337");
 
       if (!contractAddress || !privateKey) {
-        console.warn('⚠️ Blockchain configuration incomplete, running without blockchain features');
+        console.warn(
+          "⚠️ Blockchain configuration incomplete, running without blockchain features",
+        );
         this.isInitialized = true;
         return;
       }
@@ -91,27 +94,32 @@ export class BlockchainService {
         providerUrl,
         contractAddress,
         privateKey,
-        networkId
+        networkId,
       };
 
       // Initialize provider
       this.provider = new JsonRpcProvider(providerUrl);
-      
+
       // Initialize wallet
       this.wallet = new Wallet(privateKey, this.provider);
-      
+
       // Initialize contract
-      this.contract = new Contract(contractAddress, HEALTH_RECORD_REGISTRY_ABI, this.wallet);
+      this.contract = new Contract(
+        contractAddress,
+        HEALTH_RECORD_REGISTRY_ABI,
+        this.wallet,
+      );
 
       // Test connection
       const network = await this.provider.getNetwork();
-      console.log(`✅ Connected to blockchain network: ${network.name} (Chain ID: ${network.chainId})`);
+      console.log(
+        `✅ Connected to blockchain network: ${network.name} (Chain ID: ${network.chainId})`,
+      );
 
       this.isInitialized = true;
-      console.log('✅ Blockchain service initialized successfully');
-
+      console.log("✅ Blockchain service initialized successfully");
     } catch (error) {
-      console.error('❌ Failed to initialize blockchain service:', error);
+      console.error("❌ Failed to initialize blockchain service:", error);
       this.isInitialized = true; // Continue without blockchain
     }
   }
@@ -119,9 +127,11 @@ export class BlockchainService {
   /**
    * Register user on blockchain
    */
-  static async registerUser(userAddress: string): Promise<BlockchainOperationResult> {
+  static async registerUser(
+    userAddress: string,
+  ): Promise<BlockchainOperationResult> {
     if (!this.contract || !this.wallet) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
@@ -130,12 +140,12 @@ export class BlockchainService {
       // Check if user is already registered
       const isRegistered = await this.contract.isUserRegistered(userAddress);
       if (isRegistered) {
-        return { success: true, error: 'User already registered' };
+        return { success: true, error: "User already registered" };
       }
 
       // Create a contract instance for the user
       const userContract = this.contract.connect(this.wallet);
-      
+
       // Register user
       const tx = await userContract.registerUser();
       const receipt = await tx.wait();
@@ -146,14 +156,13 @@ export class BlockchainService {
         success: true,
         transactionHash: tx.hash,
         blockNumber: receipt.blockNumber,
-        gasUsed: receipt.gasUsed.toString()
+        gasUsed: receipt.gasUsed.toString(),
       };
-
     } catch (error) {
-      console.error('❌ Blockchain user registration failed:', error);
+      console.error("❌ Blockchain user registration failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Registration failed'
+        error: error instanceof Error ? error.message : "Registration failed",
       };
     }
   }
@@ -166,18 +175,20 @@ export class BlockchainService {
     fileBuffer: Buffer,
     ipfsCid: string,
     recordType: string,
-    metadataHash: string
+    metadataHash: string,
   ): Promise<BlockchainOperationResult> {
     if (!this.contract || !this.wallet) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      console.log(`🔗 Storing medical record hash on blockchain for user: ${userAddress}`);
+      console.log(
+        `🔗 Storing medical record hash on blockchain for user: ${userAddress}`,
+      );
 
       // Calculate file hash
-      const fileHash = crypto.createHash('sha256').update(fileBuffer).digest();
-      const fileHashHex = '0x' + fileHash.toString('hex');
+      const fileHash = crypto.createHash("sha256").update(fileBuffer).digest();
+      const fileHashHex = "0x" + fileHash.toString("hex");
 
       // Create contract instance for the user
       const userContract = this.contract.connect(this.wallet);
@@ -188,25 +199,26 @@ export class BlockchainService {
         ipfsCid,
         recordType,
         fileBuffer.length,
-        metadataHash
+        metadataHash,
       );
 
       const receipt = await tx.wait();
 
-      console.log(`✅ Medical record hash stored on blockchain. TX: ${tx.hash}`);
+      console.log(
+        `✅ Medical record hash stored on blockchain. TX: ${tx.hash}`,
+      );
 
       return {
         success: true,
         transactionHash: tx.hash,
         blockNumber: receipt.blockNumber,
-        gasUsed: receipt.gasUsed.toString()
+        gasUsed: receipt.gasUsed.toString(),
       };
-
     } catch (error) {
-      console.error('❌ Blockchain record storage failed:', error);
+      console.error("❌ Blockchain record storage failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Storage failed'
+        error: error instanceof Error ? error.message : "Storage failed",
       };
     }
   }
@@ -217,40 +229,44 @@ export class BlockchainService {
   static async verifyMedicalRecord(
     userAddress: string,
     recordId: number,
-    fileBuffer: Buffer
+    fileBuffer: Buffer,
   ): Promise<VerificationResult> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      console.log(`🔍 Verifying medical record on blockchain: ${userAddress}, Record ${recordId}`);
-
-      // Calculate file hash
-      const fileHash = crypto.createHash('sha256').update(fileBuffer).digest();
-      const fileHashHex = '0x' + fileHash.toString('hex');
-
-      // Verify on blockchain
-      const [exists, matches, timestamp] = await this.contract.verifyMedicalRecord(
-        userAddress,
-        recordId,
-        fileHashHex
+      console.log(
+        `🔍 Verifying medical record on blockchain: ${userAddress}, Record ${recordId}`,
       );
 
-      console.log(`✅ Record verification completed. Exists: ${exists}, Matches: ${matches}`);
+      // Calculate file hash
+      const fileHash = crypto.createHash("sha256").update(fileBuffer).digest();
+      const fileHashHex = "0x" + fileHash.toString("hex");
+
+      // Verify on blockchain
+      const [exists, matches, timestamp] =
+        await this.contract.verifyMedicalRecord(
+          userAddress,
+          recordId,
+          fileHashHex,
+        );
+
+      console.log(
+        `✅ Record verification completed. Exists: ${exists}, Matches: ${matches}`,
+      );
 
       return {
         success: true,
         exists,
         matches,
-        timestamp: timestamp.toNumber()
+        timestamp: timestamp.toNumber(),
       };
-
     } catch (error) {
-      console.error('❌ Blockchain verification failed:', error);
+      console.error("❌ Blockchain verification failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Verification failed'
+        error: error instanceof Error ? error.message : "Verification failed",
       };
     }
   }
@@ -260,14 +276,16 @@ export class BlockchainService {
    */
   static async logRecordAccess(
     userAddress: string,
-    recordId: number
+    recordId: number,
   ): Promise<BlockchainOperationResult> {
     if (!this.contract || !this.wallet) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      console.log(`📋 Logging record access on blockchain: ${userAddress}, Record ${recordId}`);
+      console.log(
+        `📋 Logging record access on blockchain: ${userAddress}, Record ${recordId}`,
+      );
 
       const tx = await this.contract.logRecordAccess(userAddress, recordId);
       const receipt = await tx.wait();
@@ -278,14 +296,13 @@ export class BlockchainService {
         success: true,
         transactionHash: tx.hash,
         blockNumber: receipt.blockNumber,
-        gasUsed: receipt.gasUsed.toString()
+        gasUsed: receipt.gasUsed.toString(),
       };
-
     } catch (error) {
-      console.error('❌ Blockchain access logging failed:', error);
+      console.error("❌ Blockchain access logging failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Access logging failed'
+        error: error instanceof Error ? error.message : "Access logging failed",
       };
     }
   }
@@ -295,20 +312,25 @@ export class BlockchainService {
    */
   static async getMedicalRecord(
     userAddress: string,
-    recordId: number
+    recordId: number,
   ): Promise<{
     success: boolean;
     record?: MedicalRecordOnChain;
     error?: string;
   }> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      console.log(`📋 Getting medical record from blockchain: ${userAddress}, Record ${recordId}`);
+      console.log(
+        `📋 Getting medical record from blockchain: ${userAddress}, Record ${recordId}`,
+      );
 
-      const recordData = await this.contract.getMedicalRecord(userAddress, recordId);
+      const recordData = await this.contract.getMedicalRecord(
+        userAddress,
+        recordId,
+      );
 
       const record: MedicalRecordOnChain = {
         fileHash: recordData.fileHash,
@@ -318,16 +340,16 @@ export class BlockchainService {
         fileSize: recordData.fileSize.toNumber(),
         isActive: recordData.isActive,
         accessCount: recordData.accessCount.toNumber(),
-        metadataHash: recordData.metadataHash
+        metadataHash: recordData.metadataHash,
       };
 
       return { success: true, record };
-
     } catch (error) {
-      console.error('❌ Failed to get record from blockchain:', error);
+      console.error("❌ Failed to get record from blockchain:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Record retrieval failed'
+        error:
+          error instanceof Error ? error.message : "Record retrieval failed",
       };
     }
   }
@@ -341,18 +363,18 @@ export class BlockchainService {
     error?: string;
   }> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
       const count = await this.contract.getUserRecordCount(userAddress);
       return { success: true, count: count.toNumber() };
-
     } catch (error) {
-      console.error('❌ Failed to get user record count:', error);
+      console.error("❌ Failed to get user record count:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Count retrieval failed'
+        error:
+          error instanceof Error ? error.message : "Count retrieval failed",
       };
     }
   }
@@ -363,7 +385,7 @@ export class BlockchainService {
   static async getUserRecords(
     userAddress: string,
     offset: number = 0,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<{
     success: boolean;
     records?: Array<{
@@ -374,29 +396,26 @@ export class BlockchainService {
     error?: string;
   }> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      const [recordIds, hashes, timestamps] = await this.contract.getUserRecords(
-        userAddress,
-        offset,
-        limit
-      );
+      const [recordIds, hashes, timestamps] =
+        await this.contract.getUserRecords(userAddress, offset, limit);
 
       const records = recordIds.map((id: any, index: number) => ({
         recordId: id.toNumber(),
         fileHash: hashes[index],
-        timestamp: timestamps[index].toNumber()
+        timestamp: timestamps[index].toNumber(),
       }));
 
       return { success: true, records };
-
     } catch (error) {
-      console.error('❌ Failed to get user records:', error);
+      console.error("❌ Failed to get user records:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Records retrieval failed'
+        error:
+          error instanceof Error ? error.message : "Records retrieval failed",
       };
     }
   }
@@ -406,14 +425,16 @@ export class BlockchainService {
    */
   static async deactivateRecord(
     userAddress: string,
-    recordId: number
+    recordId: number,
   ): Promise<BlockchainOperationResult> {
     if (!this.contract || !this.wallet) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      console.log(`🗑️ Deactivating record on blockchain: ${userAddress}, Record ${recordId}`);
+      console.log(
+        `🗑️ Deactivating record on blockchain: ${userAddress}, Record ${recordId}`,
+      );
 
       const tx = await this.contract.deactivateRecord(recordId);
       const receipt = await tx.wait();
@@ -424,14 +445,13 @@ export class BlockchainService {
         success: true,
         transactionHash: tx.hash,
         blockNumber: receipt.blockNumber,
-        gasUsed: receipt.gasUsed.toString()
+        gasUsed: receipt.gasUsed.toString(),
       };
-
     } catch (error) {
-      console.error('❌ Blockchain record deactivation failed:', error);
+      console.error("❌ Blockchain record deactivation failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Deactivation failed'
+        error: error instanceof Error ? error.message : "Deactivation failed",
       };
     }
   }
@@ -445,18 +465,18 @@ export class BlockchainService {
     error?: string;
   }> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
       const registered = await this.contract.isUserRegistered(userAddress);
       return { success: true, registered };
-
     } catch (error) {
-      console.error('❌ Failed to check user registration:', error);
+      console.error("❌ Failed to check user registration:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Registration check failed'
+        error:
+          error instanceof Error ? error.message : "Registration check failed",
       };
     }
   }
@@ -474,26 +494,27 @@ export class BlockchainService {
     error?: string;
   }> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      const [totalUsers, totalRecords, contractBalance] = await this.contract.getContractStats();
+      const [totalUsers, totalRecords, contractBalance] =
+        await this.contract.getContractStats();
 
       return {
         success: true,
         stats: {
           totalUsers: totalUsers.toNumber(),
           totalRecords: totalRecords.toNumber(),
-          contractBalance: ethers.formatEther(contractBalance)
-        }
+          contractBalance: ethers.formatEther(contractBalance),
+        },
       };
-
     } catch (error) {
-      console.error('❌ Failed to get contract stats:', error);
+      console.error("❌ Failed to get contract stats:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Stats retrieval failed'
+        error:
+          error instanceof Error ? error.message : "Stats retrieval failed",
       };
     }
   }
@@ -507,25 +528,24 @@ export class BlockchainService {
     error?: string;
   }> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
-      const fileHash = crypto.createHash('sha256').update(fileBuffer).digest();
-      const fileHashHex = '0x' + fileHash.toString('hex');
+      const fileHash = crypto.createHash("sha256").update(fileBuffer).digest();
+      const fileHashHex = "0x" + fileHash.toString("hex");
 
       const owner = await this.contract.getFileHashOwner(fileHashHex);
-      
-      return { 
-        success: true, 
-        owner: owner === ethers.ZeroAddress ? undefined : owner 
-      };
 
+      return {
+        success: true,
+        owner: owner === ethers.ZeroAddress ? undefined : owner,
+      };
     } catch (error) {
-      console.error('❌ Failed to get file hash owner:', error);
+      console.error("❌ Failed to get file hash owner:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Owner lookup failed'
+        error: error instanceof Error ? error.message : "Owner lookup failed",
       };
     }
   }
@@ -536,22 +556,36 @@ export class BlockchainService {
   static setupEventListeners(): void {
     if (!this.contract) return;
 
-    console.log('👂 Setting up blockchain event listeners...');
+    console.log("👂 Setting up blockchain event listeners...");
 
-    this.contract.on('UserRegistered', (user, timestamp) => {
-      console.log(`🔗 User registered on blockchain: ${user} at ${new Date(timestamp * 1000)}`);
+    this.contract.on("UserRegistered", (user, timestamp) => {
+      console.log(
+        `🔗 User registered on blockchain: ${user} at ${new Date(timestamp * 1000)}`,
+      );
     });
 
-    this.contract.on('MedicalRecordStored', (user, recordId, fileHash, ipfsCid, recordType, timestamp) => {
-      console.log(`🔗 Medical record stored: User ${user}, Record ${recordId}, Type ${recordType}`);
-    });
+    this.contract.on(
+      "MedicalRecordStored",
+      (user, recordId, fileHash, ipfsCid, recordType, timestamp) => {
+        console.log(
+          `🔗 Medical record stored: User ${user}, Record ${recordId}, Type ${recordType}`,
+        );
+      },
+    );
 
-    this.contract.on('MedicalRecordAccessed', (user, recordId, accessor, timestamp) => {
-      console.log(`🔗 Medical record accessed: User ${user}, Record ${recordId}, Accessor ${accessor}`);
-    });
+    this.contract.on(
+      "MedicalRecordAccessed",
+      (user, recordId, accessor, timestamp) => {
+        console.log(
+          `🔗 Medical record accessed: User ${user}, Record ${recordId}, Accessor ${accessor}`,
+        );
+      },
+    );
 
-    this.contract.on('RecordDeactivated', (user, recordId, timestamp) => {
-      console.log(`🔗 Medical record deactivated: User ${user}, Record ${recordId}`);
+    this.contract.on("RecordDeactivated", (user, recordId, timestamp) => {
+      console.log(
+        `🔗 Medical record deactivated: User ${user}, Record ${recordId}`,
+      );
     });
   }
 
@@ -571,14 +605,14 @@ export class BlockchainService {
       contractAddress: this.config?.contractAddress,
       networkId: this.config?.networkId,
       features: [
-        'User registration',
-        'Medical record hash storage',
-        'Integrity verification',
-        'Access logging',
-        'Record deactivation',
-        'Event monitoring',
-        'Statistics tracking'
-      ]
+        "User registration",
+        "Medical record hash storage",
+        "Integrity verification",
+        "Access logging",
+        "Record deactivation",
+        "Event monitoring",
+        "Statistics tracking",
+      ],
     };
   }
 
@@ -598,25 +632,28 @@ export class BlockchainService {
   /**
    * Estimate gas for operations
    */
-  static async estimateGas(operation: string, params: any[]): Promise<{
+  static async estimateGas(
+    operation: string,
+    params: any[],
+  ): Promise<{
     success: boolean;
     gasEstimate?: string;
     error?: string;
   }> {
     if (!this.contract) {
-      return { success: false, error: 'Blockchain service not initialized' };
+      return { success: false, error: "Blockchain service not initialized" };
     }
 
     try {
       const gasEstimate = await this.contract[operation].estimateGas(...params);
       return {
         success: true,
-        gasEstimate: gasEstimate.toString()
+        gasEstimate: gasEstimate.toString(),
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Gas estimation failed'
+        error: error instanceof Error ? error.message : "Gas estimation failed",
       };
     }
   }

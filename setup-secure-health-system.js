@@ -5,20 +5,20 @@
  * This script sets up the complete secure health system with blockchain integration
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+const fs = require("fs");
+const path = require("path");
+const { execSync } = require("child_process");
 
 // Color codes for console output
 const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
 };
 
 function colorLog(color, message) {
@@ -27,19 +27,19 @@ function colorLog(color, message) {
 
 function executeCommand(command, description) {
   try {
-    colorLog('blue', `🔧 ${description}...`);
-    execSync(command, { stdio: 'inherit' });
-    colorLog('green', `✅ ${description} completed`);
+    colorLog("blue", `🔧 ${description}...`);
+    execSync(command, { stdio: "inherit" });
+    colorLog("green", `✅ ${description} completed`);
     return true;
   } catch (error) {
-    colorLog('red', `❌ ${description} failed: ${error.message}`);
+    colorLog("red", `❌ ${description} failed: ${error.message}`);
     return false;
   }
 }
 
 function createEnvFile() {
-  colorLog('cyan', '📝 Creating environment configuration...');
-  
+  colorLog("cyan", "📝 Creating environment configuration...");
+
   const envContent = `# HealthChain Secure Medical Records System Configuration
 # =======================================================
 
@@ -87,90 +87,94 @@ LOG_LEVEL=info
 LOG_FORMAT=combined
 `;
 
-  fs.writeFileSync('.env', envContent);
-  colorLog('green', '✅ Environment file created');
+  fs.writeFileSync(".env", envContent);
+  colorLog("green", "✅ Environment file created");
 }
 
 function generateSecureKey(length = 64) {
-  const crypto = require('crypto');
-  return crypto.randomBytes(length).toString('hex');
+  const crypto = require("crypto");
+  return crypto.randomBytes(length).toString("hex");
 }
 
 function generatePrivateKey() {
-  const crypto = require('crypto');
-  return '0x' + crypto.randomBytes(32).toString('hex');
+  const crypto = require("crypto");
+  return "0x" + crypto.randomBytes(32).toString("hex");
 }
 
 function createDirectoryStructure() {
-  colorLog('cyan', '📁 Creating directory structure...');
-  
+  colorLog("cyan", "📁 Creating directory structure...");
+
   const directories = [
-    'data',
-    'uploads',
-    'logs',
-    'deployments',
-    'contracts',
-    'scripts',
-    'test/blockchain',
-    'server/services',
-    'server/routes',
-    'server/middleware',
-    'client/components',
-    'client/services',
+    "data",
+    "uploads",
+    "logs",
+    "deployments",
+    "contracts",
+    "scripts",
+    "test/blockchain",
+    "server/services",
+    "server/routes",
+    "server/middleware",
+    "client/components",
+    "client/services",
   ];
 
-  directories.forEach(dir => {
+  directories.forEach((dir) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
-      colorLog('green', `  ✓ Created ${dir}/`);
+      colorLog("green", `  ✓ Created ${dir}/`);
     }
   });
 }
 
 function createPackageJsonIfNeeded() {
-  if (!fs.existsSync('package.json')) {
-    colorLog('cyan', '📦 Creating package.json...');
-    
+  if (!fs.existsSync("package.json")) {
+    colorLog("cyan", "📦 Creating package.json...");
+
     const packageJson = {
-      "name": "healthchain-secure-medical-records",
-      "version": "1.0.0",
-      "description": "Secure medical records system with blockchain integrity and IPFS storage",
-      "main": "server/index.js",
-      "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview",
-        "server": "node server/index.js",
+      name: "healthchain-secure-medical-records",
+      version: "1.0.0",
+      description:
+        "Secure medical records system with blockchain integrity and IPFS storage",
+      main: "server/index.js",
+      scripts: {
+        dev: "vite",
+        build: "vite build",
+        preview: "vite preview",
+        server: "node server/index.js",
         "server:dev": "nodemon server/index.js",
         "blockchain:compile": "hardhat compile",
         "blockchain:test": "hardhat test",
-        "blockchain:deploy:local": "hardhat run scripts/deploy.js --network localhost",
-        "blockchain:deploy:testnet": "hardhat run scripts/deploy.js --network sepolia",
+        "blockchain:deploy:local":
+          "hardhat run scripts/deploy.js --network localhost",
+        "blockchain:deploy:testnet":
+          "hardhat run scripts/deploy.js --network sepolia",
         "blockchain:node": "hardhat node",
-        "test": "npm run test:server && npm run blockchain:test",
+        test: "npm run test:server && npm run blockchain:test",
         "test:server": "jest server/",
-        "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
+        lint: "eslint . --ext .js,.ts,.jsx,.tsx",
         "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix",
-        "setup": "node setup-secure-health-system.js",
+        setup: "node setup-secure-health-system.js",
         "setup:db": "node server/services/initDatabase.js",
-        "setup:blockchain": "npm run blockchain:compile && npm run blockchain:deploy:local"
+        "setup:blockchain":
+          "npm run blockchain:compile && npm run blockchain:deploy:local",
       },
-      "dependencies": {
+      dependencies: {
         "@openzeppelin/contracts": "^4.9.3",
         "@supabase/supabase-js": "^2.38.0",
-        "bcrypt": "^5.1.1",
-        "cors": "^2.8.5",
-        "dotenv": "^16.3.1",
-        "ethers": "^6.7.1",
-        "express": "^4.18.2",
+        bcrypt: "^5.1.1",
+        cors: "^2.8.5",
+        dotenv: "^16.3.1",
+        ethers: "^6.7.1",
+        express: "^4.18.2",
         "express-rate-limit": "^6.10.0",
-        "helmet": "^7.0.0",
-        "jsonwebtoken": "^9.0.2",
-        "multer": "^1.4.5-lts.1",
-        "sqlite3": "^5.1.6",
-        "web3.storage": "^4.5.4"
+        helmet: "^7.0.0",
+        jsonwebtoken: "^9.0.2",
+        multer: "^1.4.5-lts.1",
+        sqlite3: "^5.1.6",
+        "web3.storage": "^4.5.4",
       },
-      "devDependencies": {
+      devDependencies: {
         "@nomicfoundation/hardhat-toolbox": "^3.0.2",
         "@nomicfoundation/hardhat-verify": "^1.1.1",
         "@openzeppelin/hardhat-upgrades": "^1.28.0",
@@ -179,33 +183,33 @@ function createPackageJsonIfNeeded() {
         "@types/express": "^4.17.17",
         "@types/multer": "^1.4.7",
         "@types/node": "^20.5.0",
-        "hardhat": "^2.17.1",
+        hardhat: "^2.17.1",
         "hardhat-gas-reporter": "^1.0.9",
-        "jest": "^29.6.2",
-        "nodemon": "^3.0.1",
-        "typescript": "^5.1.6"
+        jest: "^29.6.2",
+        nodemon: "^3.0.1",
+        typescript: "^5.1.6",
       },
-      "keywords": [
+      keywords: [
         "healthcare",
         "medical-records",
         "blockchain",
         "encryption",
         "ipfs",
         "security",
-        "privacy"
+        "privacy",
       ],
-      "author": "HealthChain Team",
-      "license": "MIT"
+      author: "HealthChain Team",
+      license: "MIT",
     };
 
-    fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
-    colorLog('green', '✅ Package.json created');
+    fs.writeFileSync("package.json", JSON.stringify(packageJson, null, 2));
+    colorLog("green", "✅ Package.json created");
   }
 }
 
 function createGitignore() {
-  colorLog('cyan', '📝 Creating .gitignore...');
-  
+  colorLog("cyan", "📝 Creating .gitignore...");
+
   const gitignoreContent = `# Dependencies
 node_modules/
 npm-debug.log*
@@ -269,13 +273,13 @@ temp/
 private.txt
 `;
 
-  fs.writeFileSync('.gitignore', gitignoreContent);
-  colorLog('green', '✅ .gitignore created');
+  fs.writeFileSync(".gitignore", gitignoreContent);
+  colorLog("green", "✅ .gitignore created");
 }
 
 function createReadme() {
-  colorLog('cyan', '📚 Creating README.md...');
-  
+  colorLog("cyan", "📚 Creating README.md...");
+
   const readmeContent = `# HealthChain Secure Medical Records System
 
 🏥 **A blockchain-powered, encrypted medical records management system with IPFS storage and split-key authentication.**
@@ -511,13 +515,16 @@ This system is for educational and development purposes. For production medical 
 **Built with ❤️ for secure healthcare data management**
 `;
 
-  fs.writeFileSync('README.md', readmeContent);
-  colorLog('green', '✅ README.md created');
+  fs.writeFileSync("README.md", readmeContent);
+  colorLog("green", "✅ README.md created");
 }
 
 function displayCompletionInfo() {
-  colorLog('bright', '\n🎉 HealthChain Secure Medical Records System Setup Complete!');
-  
+  colorLog(
+    "bright",
+    "\n🎉 HealthChain Secure Medical Records System Setup Complete!",
+  );
+
   console.log(`
 ${colors.cyan}📋 Next Steps:${colors.reset}
 
@@ -576,9 +583,9 @@ ${colors.green}Happy coding! 🚀${colors.reset}
 // Main setup function
 async function main() {
   console.clear();
-  colorLog('bright', '🏥 HealthChain Secure Medical Records System Setup');
-  colorLog('cyan', '='.repeat(60));
-  
+  colorLog("bright", "🏥 HealthChain Secure Medical Records System Setup");
+  colorLog("cyan", "=".repeat(60));
+
   try {
     // Create basic structure
     createDirectoryStructure();
@@ -586,19 +593,21 @@ async function main() {
     createEnvFile();
     createGitignore();
     createReadme();
-    
+
     // Copy blockchain configuration files if they don't exist
-    if (!fs.existsSync('hardhat.config.js')) {
-      colorLog('cyan', '⛓️ Setting up blockchain configuration...');
+    if (!fs.existsSync("hardhat.config.js")) {
+      colorLog("cyan", "⛓️ Setting up blockchain configuration...");
       // In a real setup, these files would be copied from templates
-      colorLog('yellow', '  📝 Please ensure hardhat.config.js is properly configured');
+      colorLog(
+        "yellow",
+        "  📝 Please ensure hardhat.config.js is properly configured",
+      );
     }
-    
-    colorLog('green', '\n✅ All setup tasks completed successfully!');
+
+    colorLog("green", "\n✅ All setup tasks completed successfully!");
     displayCompletionInfo();
-    
   } catch (error) {
-    colorLog('red', `❌ Setup failed: ${error.message}`);
+    colorLog("red", `❌ Setup failed: ${error.message}`);
     process.exit(1);
   }
 }

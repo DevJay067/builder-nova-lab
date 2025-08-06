@@ -1,6 +1,6 @@
-import { Web3Storage, getFilesFromPath } from 'web3.storage';
-import { File } from '@web-std/file';
-import crypto from 'crypto';
+import { Web3Storage, getFilesFromPath } from "web3.storage";
+import { File } from "@web-std/file";
+import crypto from "crypto";
 
 /**
  * IPFS Storage Service using Web3.Storage
@@ -48,19 +48,21 @@ export class IPFSStorageService {
 
     try {
       const apiToken = process.env.WEB3_STORAGE_TOKEN;
-      
+
       if (!apiToken) {
-        console.warn('⚠️ Web3.Storage token not found, IPFS features will be limited');
+        console.warn(
+          "⚠️ Web3.Storage token not found, IPFS features will be limited",
+        );
         this.isInitialized = true;
         return;
       }
 
       this.client = new Web3Storage({ token: apiToken });
-      console.log('✅ IPFS storage service initialized with Web3.Storage');
-      
+      console.log("✅ IPFS storage service initialized with Web3.Storage");
+
       this.isInitialized = true;
     } catch (error) {
-      console.error('❌ Failed to initialize IPFS storage service:', error);
+      console.error("❌ Failed to initialize IPFS storage service:", error);
       this.isInitialized = true; // Continue without IPFS
     }
   }
@@ -70,20 +72,25 @@ export class IPFSStorageService {
    */
   static async uploadEncryptedFile(
     encryptedBuffer: Buffer,
-    metadata: StorageMetadata
+    metadata: StorageMetadata,
   ): Promise<IPFSUploadResult> {
     try {
       if (!this.client) {
         return {
           success: false,
-          error: 'IPFS client not initialized'
+          error: "IPFS client not initialized",
         };
       }
 
-      console.log(`📤 Uploading encrypted file to IPFS: ${metadata.originalName}`);
+      console.log(
+        `📤 Uploading encrypted file to IPFS: ${metadata.originalName}`,
+      );
 
       // Create a unique filename for IPFS
-      const fileHash = crypto.createHash('sha256').update(encryptedBuffer).digest('hex');
+      const fileHash = crypto
+        .createHash("sha256")
+        .update(encryptedBuffer)
+        .digest("hex");
       const fileName = `medical_${fileHash.substring(0, 16)}.enc`;
 
       // Create metadata file
@@ -92,15 +99,19 @@ export class IPFSStorageService {
 
       // Create File objects for Web3.Storage
       const files = [
-        new File([encryptedBuffer], fileName, { type: 'application/octet-stream' }),
-        new File([metadataContent], metadataFileName, { type: 'application/json' })
+        new File([encryptedBuffer], fileName, {
+          type: "application/octet-stream",
+        }),
+        new File([metadataContent], metadataFileName, {
+          type: "application/json",
+        }),
       ];
 
       // Upload to IPFS
       const cid = await this.client.put(files, {
         name: `HealthChain Medical Record - ${metadata.originalName}`,
         maxRetries: 3,
-        wrapWithDirectory: true
+        wrapWithDirectory: true,
       });
 
       console.log(`✅ File uploaded to IPFS successfully. CID: ${cid}`);
@@ -109,14 +120,13 @@ export class IPFSStorageService {
         success: true,
         cid,
         fileHash,
-        size: encryptedBuffer.length
+        size: encryptedBuffer.length,
       };
-
     } catch (error) {
-      console.error('❌ IPFS upload failed:', error);
+      console.error("❌ IPFS upload failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Upload failed'
+        error: error instanceof Error ? error.message : "Upload failed",
       };
     }
   }
@@ -126,13 +136,13 @@ export class IPFSStorageService {
    */
   static async retrieveEncryptedFile(
     cid: string,
-    fileName?: string
+    fileName?: string,
   ): Promise<IPFSRetrievalResult> {
     try {
       if (!this.client) {
         return {
           success: false,
-          error: 'IPFS client not initialized'
+          error: "IPFS client not initialized",
         };
       }
 
@@ -140,29 +150,29 @@ export class IPFSStorageService {
 
       // Get the file from IPFS
       const res = await this.client.get(cid);
-      
+
       if (!res.ok) {
         return {
           success: false,
-          error: `Failed to retrieve file: ${res.status}`
+          error: `Failed to retrieve file: ${res.status}`,
         };
       }
 
       const files = await res.files();
-      
+
       // Find the encrypted file (not the metadata)
       let targetFile = null;
       if (fileName) {
-        targetFile = files.find(f => f.name === fileName);
+        targetFile = files.find((f) => f.name === fileName);
       } else {
         // Find the first .enc file
-        targetFile = files.find(f => f.name.endsWith('.enc'));
+        targetFile = files.find((f) => f.name.endsWith(".enc"));
       }
 
       if (!targetFile) {
         return {
           success: false,
-          error: 'Encrypted file not found in IPFS response'
+          error: "Encrypted file not found in IPFS response",
         };
       }
 
@@ -170,19 +180,20 @@ export class IPFSStorageService {
       const arrayBuffer = await targetFile.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      console.log(`✅ File retrieved from IPFS successfully: ${targetFile.name}`);
+      console.log(
+        `✅ File retrieved from IPFS successfully: ${targetFile.name}`,
+      );
 
       return {
         success: true,
         fileBuffer,
-        fileName: targetFile.name
+        fileName: targetFile.name,
       };
-
     } catch (error) {
-      console.error('❌ IPFS retrieval failed:', error);
+      console.error("❌ IPFS retrieval failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Retrieval failed'
+        error: error instanceof Error ? error.message : "Retrieval failed",
       };
     }
   }
@@ -199,30 +210,30 @@ export class IPFSStorageService {
       if (!this.client) {
         return {
           success: false,
-          error: 'IPFS client not initialized'
+          error: "IPFS client not initialized",
         };
       }
 
       console.log(`📥 Retrieving metadata from IPFS. CID: ${cid}`);
 
       const res = await this.client.get(cid);
-      
+
       if (!res.ok) {
         return {
           success: false,
-          error: `Failed to retrieve metadata: ${res.status}`
+          error: `Failed to retrieve metadata: ${res.status}`,
         };
       }
 
       const files = await res.files();
-      
+
       // Find the metadata file
-      const metadataFile = files.find(f => f.name.endsWith('.metadata.json'));
-      
+      const metadataFile = files.find((f) => f.name.endsWith(".metadata.json"));
+
       if (!metadataFile) {
         return {
           success: false,
-          error: 'Metadata file not found'
+          error: "Metadata file not found",
         };
       }
 
@@ -231,14 +242,14 @@ export class IPFSStorageService {
 
       return {
         success: true,
-        metadata
+        metadata,
       };
-
     } catch (error) {
-      console.error('❌ Failed to retrieve metadata:', error);
+      console.error("❌ Failed to retrieve metadata:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Metadata retrieval failed'
+        error:
+          error instanceof Error ? error.message : "Metadata retrieval failed",
       };
     }
   }
@@ -272,7 +283,7 @@ export class IPFSStorageService {
       if (!this.client) {
         return {
           success: false,
-          error: 'IPFS client not initialized'
+          error: "IPFS client not initialized",
         };
       }
 
@@ -282,14 +293,14 @@ export class IPFSStorageService {
         success: true,
         stats: {
           totalUploads: 0,
-          totalSize: '0 KB'
-        }
+          totalSize: "0 KB",
+        },
       };
-
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Stats retrieval failed'
+        error:
+          error instanceof Error ? error.message : "Stats retrieval failed",
       };
     }
   }
@@ -307,15 +318,16 @@ export class IPFSStorageService {
       iv: string;
       authTag: string;
       algorithm: string;
-    }
+    },
   ): Promise<IPFSUploadResult> {
     try {
       console.log(`🏥 Uploading medical record: ${originalName}`);
 
       // Create checksum for integrity verification
-      const checksum = crypto.createHash('sha256')
+      const checksum = crypto
+        .createHash("sha256")
         .update(Buffer.concat([fileBuffer, Buffer.from(userId)]))
-        .digest('hex');
+        .digest("hex");
 
       // Prepare storage metadata
       const metadata: StorageMetadata = {
@@ -325,7 +337,7 @@ export class IPFSStorageService {
         uploadTimestamp: new Date().toISOString(),
         userId,
         encryptionMetadata,
-        checksum
+        checksum,
       };
 
       // Upload to IPFS
@@ -336,12 +348,14 @@ export class IPFSStorageService {
       }
 
       return uploadResult;
-
     } catch (error) {
-      console.error('❌ Medical record upload failed:', error);
+      console.error("❌ Medical record upload failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Medical record upload failed'
+        error:
+          error instanceof Error
+            ? error.message
+            : "Medical record upload failed",
       };
     }
   }
@@ -351,7 +365,7 @@ export class IPFSStorageService {
    */
   static async downloadMedicalRecord(
     cid: string,
-    userId: string
+    userId: string,
   ): Promise<{
     success: boolean;
     fileBuffer?: Buffer;
@@ -366,7 +380,7 @@ export class IPFSStorageService {
       if (!metadataResult.success || !metadataResult.metadata) {
         return {
           success: false,
-          error: metadataResult.error || 'Failed to retrieve metadata'
+          error: metadataResult.error || "Failed to retrieve metadata",
         };
       }
 
@@ -374,7 +388,7 @@ export class IPFSStorageService {
       if (metadataResult.metadata.userId !== userId) {
         return {
           success: false,
-          error: 'Access denied: User ID mismatch'
+          error: "Access denied: User ID mismatch",
         };
       }
 
@@ -383,7 +397,7 @@ export class IPFSStorageService {
       if (!fileResult.success || !fileResult.fileBuffer) {
         return {
           success: false,
-          error: fileResult.error || 'Failed to retrieve file'
+          error: fileResult.error || "Failed to retrieve file",
         };
       }
 
@@ -392,14 +406,16 @@ export class IPFSStorageService {
       return {
         success: true,
         fileBuffer: fileResult.fileBuffer,
-        metadata: metadataResult.metadata
+        metadata: metadataResult.metadata,
       };
-
     } catch (error) {
-      console.error('❌ Medical record download failed:', error);
+      console.error("❌ Medical record download failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Medical record download failed'
+        error:
+          error instanceof Error
+            ? error.message
+            : "Medical record download failed",
       };
     }
   }
@@ -414,15 +430,17 @@ export class IPFSStorageService {
     try {
       // Note: Web3.Storage doesn't provide direct unpin functionality
       // Files are garbage collected automatically if not pinned elsewhere
-      console.log(`⚠️ IPFS files are immutable. CID ${cid} may still be accessible`);
-      
+      console.log(
+        `⚠️ IPFS files are immutable. CID ${cid} may still be accessible`,
+      );
+
       return {
-        success: true
+        success: true,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unpin failed'
+        error: error instanceof Error ? error.message : "Unpin failed",
       };
     }
   }
@@ -439,12 +457,12 @@ export class IPFSStorageService {
       initialized: this.isInitialized,
       clientAvailable: this.client !== null,
       features: [
-        'Encrypted file upload',
-        'Secure file retrieval',
-        'Metadata storage',
-        'Integrity verification',
-        'Access control'
-      ]
+        "Encrypted file upload",
+        "Secure file retrieval",
+        "Metadata storage",
+        "Integrity verification",
+        "Access control",
+      ],
     };
   }
 }

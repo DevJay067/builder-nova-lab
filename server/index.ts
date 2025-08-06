@@ -18,32 +18,34 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      connectSrc: ["'self'", "https:", "wss:", "ws:"],
-      mediaSrc: ["'self'", "blob:"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        connectSrc: ["'self'", "https:", "wss:", "ws:"],
+        mediaSrc: ["'self'", "blob:"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false,
-}));
+    crossOriginEmbedderPolicy: false,
+  }),
+);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN?.split(',') || [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080'
+  origin: process.env.CORS_ORIGIN?.split(",") || [
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8080",
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-client-key'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-client-key"],
 };
 
 app.use(cors(corsOptions));
@@ -53,7 +55,7 @@ const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 1000, // Limit each IP to 1000 requests per windowMs
   message: {
-    error: 'Too many requests from this IP, please try again later.',
+    error: "Too many requests from this IP, please try again later.",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -62,8 +64,8 @@ const globalLimiter = rateLimit({
 app.use(globalLimiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -71,7 +73,7 @@ app.use((req, res, next) => {
   const method = req.method;
   const url = req.url;
   const ip = req.ip || req.connection.remoteAddress;
-  
+
   console.log(`${timestamp} - ${method} ${url} - IP: ${ip}`);
   next();
 });
@@ -122,11 +124,7 @@ app.get("/api/system/info", async (req, res) => {
           "/api/secure-health/download/:recordId",
           "/api/secure-health/search",
         ],
-        system: [
-          "/health",
-          "/api/system/info",
-          "/api/system/stats",
-        ],
+        system: ["/health", "/api/system/info", "/api/system/stats"],
       },
       security: {
         encryption: "AES-256-GCM",
@@ -150,15 +148,15 @@ app.get("/api/system/info", async (req, res) => {
 app.get("/api/system/stats", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Authentication required' });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authentication required" });
     }
 
     const sessionToken = authHeader.substring(7);
     const verification = SplitKeyAuthService.verifySessionToken(sessionToken);
-    
+
     if (!verification.valid) {
-      return res.status(401).json({ error: 'Invalid session token' });
+      return res.status(401).json({ error: "Invalid session token" });
     }
 
     const stats = await MedicalRecordsManager.getSystemStats();
@@ -172,17 +170,24 @@ app.get("/api/system/stats", async (req, res) => {
 });
 
 // Error handling middleware
-app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error("❌ Unhandled error:", error);
-  
-  // Don't expose internal errors in production
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  
-  res.status(error.status || 500).json({
-    error: isDevelopment ? error.message : 'Internal server error',
-    ...(isDevelopment && { stack: error.stack }),
-  });
-});
+app.use(
+  (
+    error: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    console.error("❌ Unhandled error:", error);
+
+    // Don't expose internal errors in production
+    const isDevelopment = process.env.NODE_ENV !== "production";
+
+    res.status(error.status || 500).json({
+      error: isDevelopment ? error.message : "Internal server error",
+      ...(isDevelopment && { stack: error.stack }),
+    });
+  },
+);
 
 // 404 handler
 app.use((req, res) => {
@@ -200,7 +205,7 @@ app.use((req, res) => {
 // Initialize all services
 async function initializeServices() {
   console.log("🚀 Initializing HealthChain Secure Medical Records System...");
-  
+
   try {
     // Initialize legacy services (maintain backward compatibility)
     await EnhancedUserAuthenticationService.initialize();
@@ -228,13 +233,13 @@ async function initializeServices() {
 }
 
 // Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log('📴 SIGTERM received, shutting down gracefully...');
+process.on("SIGTERM", () => {
+  console.log("📴 SIGTERM received, shutting down gracefully...");
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
-  console.log('📴 SIGINT received, shutting down gracefully...');
+process.on("SIGINT", () => {
+  console.log("📴 SIGINT received, shutting down gracefully...");
   process.exit(0);
 });
 
@@ -242,7 +247,7 @@ process.on('SIGINT', () => {
 async function startServer() {
   try {
     await initializeServices();
-    
+
     app.listen(PORT, () => {
       console.log(`
 🏥 HealthChain Secure Medical Records System Started

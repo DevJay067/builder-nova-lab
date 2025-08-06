@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 /**
  * Advanced Encryption Service using AES-256-GCM
@@ -37,7 +37,7 @@ export interface FileEncryptionResult {
 }
 
 export class EncryptionService {
-  private static readonly ALGORITHM = 'aes-256-gcm';
+  private static readonly ALGORITHM = "aes-256-gcm";
   private static readonly IV_LENGTH = 16; // 128 bits
   private static readonly TAG_LENGTH = 16; // 128 bits
   private static readonly KEY_LENGTH = 32; // 256 bits
@@ -56,52 +56,56 @@ export class EncryptionService {
   private static prepareKey(key: string): Buffer {
     if (!this.validateKey(key)) {
       // If key is not in correct format, hash it to get 32 bytes
-      return crypto.createHash('sha256').update(key).digest();
+      return crypto.createHash("sha256").update(key).digest();
     }
-    return Buffer.from(key, 'hex');
+    return Buffer.from(key, "hex");
   }
 
   /**
    * Encrypt data using AES-256-GCM
    */
-  static encryptData(data: Buffer | string, encryptionKey: string): EncryptionResult {
+  static encryptData(
+    data: Buffer | string,
+    encryptionKey: string,
+  ): EncryptionResult {
     try {
       // Prepare the key
       const key = this.prepareKey(encryptionKey);
-      
+
       // Generate random IV
       const iv = crypto.randomBytes(this.IV_LENGTH);
-      
+
       // Create cipher
       const cipher = crypto.createCipher(this.ALGORITHM, key);
-      cipher.setAAD(Buffer.from('healthchain-medical-data'));
+      cipher.setAAD(Buffer.from("healthchain-medical-data"));
 
       // Convert string to buffer if needed
-      const inputData = typeof data === 'string' ? Buffer.from(data, 'utf8') : data;
-      
+      const inputData =
+        typeof data === "string" ? Buffer.from(data, "utf8") : data;
+
       // Encrypt the data
       const encrypted = Buffer.concat([
         cipher.update(inputData),
-        cipher.final()
+        cipher.final(),
       ]);
-      
+
       // Get the authentication tag
       const authTag = cipher.getAuthTag();
-      
+
       return {
         success: true,
         encryptedData: encrypted,
         metadata: {
-          iv: iv.toString('hex'),
-          authTag: authTag.toString('hex'),
-          algorithm: this.ALGORITHM
-        }
+          iv: iv.toString("hex"),
+          authTag: authTag.toString("hex"),
+          algorithm: this.ALGORITHM,
+        },
       };
     } catch (error) {
-      console.error('❌ Encryption failed:', error);
+      console.error("❌ Encryption failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Encryption failed'
+        error: error instanceof Error ? error.message : "Encryption failed",
       };
     }
   }
@@ -116,36 +120,36 @@ export class EncryptionService {
       iv: string;
       authTag: string;
       algorithm: string;
-    }
+    },
   ): DecryptionResult {
     try {
       // Prepare the key
       const key = this.prepareKey(encryptionKey);
-      
+
       // Convert metadata from hex
-      const iv = Buffer.from(metadata.iv, 'hex');
-      const authTag = Buffer.from(metadata.authTag, 'hex');
-      
+      const iv = Buffer.from(metadata.iv, "hex");
+      const authTag = Buffer.from(metadata.authTag, "hex");
+
       // Create decipher
       const decipher = crypto.createDecipher(metadata.algorithm, key);
-      decipher.setAAD(Buffer.from('healthchain-medical-data'));
+      decipher.setAAD(Buffer.from("healthchain-medical-data"));
       decipher.setAuthTag(authTag);
-      
+
       // Decrypt the data
       const decrypted = Buffer.concat([
         decipher.update(encryptedData),
-        decipher.final()
+        decipher.final(),
       ]);
-      
+
       return {
         success: true,
-        decryptedData: decrypted
+        decryptedData: decrypted,
       };
     } catch (error) {
-      console.error('❌ Decryption failed:', error);
+      console.error("❌ Decryption failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Decryption failed'
+        error: error instanceof Error ? error.message : "Decryption failed",
       };
     }
   }
@@ -157,7 +161,7 @@ export class EncryptionService {
     fileBuffer: Buffer,
     encryptionKey: string,
     originalName: string,
-    mimeType: string
+    mimeType: string,
   ): FileEncryptionResult {
     try {
       console.log(`🔐 Encrypting medical file: ${originalName}`);
@@ -167,27 +171,27 @@ export class EncryptionService {
         originalName,
         mimeType,
         size: fileBuffer.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Combine metadata and file data
-      const metadataBuffer = Buffer.from(JSON.stringify(fileMetadata), 'utf8');
+      const metadataBuffer = Buffer.from(JSON.stringify(fileMetadata), "utf8");
       const metadataLength = Buffer.alloc(4);
       metadataLength.writeUInt32BE(metadataBuffer.length, 0);
-      
+
       const combinedData = Buffer.concat([
         metadataLength,
         metadataBuffer,
-        fileBuffer
+        fileBuffer,
       ]);
 
       // Encrypt the combined data
       const encryptionResult = this.encryptData(combinedData, encryptionKey);
-      
+
       if (!encryptionResult.success) {
         return {
           success: false,
-          error: encryptionResult.error
+          error: encryptionResult.error,
         };
       }
 
@@ -200,14 +204,15 @@ export class EncryptionService {
           ...encryptionResult.metadata!,
           originalName,
           mimeType,
-          size: fileBuffer.length
-        }
+          size: fileBuffer.length,
+        },
       };
     } catch (error) {
-      console.error('❌ File encryption failed:', error);
+      console.error("❌ File encryption failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'File encryption failed'
+        error:
+          error instanceof Error ? error.message : "File encryption failed",
       };
     }
   }
@@ -222,7 +227,7 @@ export class EncryptionService {
       iv: string;
       authTag: string;
       algorithm: string;
-    }
+    },
   ): {
     success: boolean;
     fileBuffer?: Buffer;
@@ -235,15 +240,19 @@ export class EncryptionService {
     error?: string;
   } {
     try {
-      console.log('🔓 Decrypting medical file...');
+      console.log("🔓 Decrypting medical file...");
 
       // Decrypt the data
-      const decryptionResult = this.decryptData(encryptedBuffer, encryptionKey, metadata);
-      
+      const decryptionResult = this.decryptData(
+        encryptedBuffer,
+        encryptionKey,
+        metadata,
+      );
+
       if (!decryptionResult.success) {
         return {
           success: false,
-          error: decryptionResult.error
+          error: decryptionResult.error,
         };
       }
 
@@ -251,26 +260,29 @@ export class EncryptionService {
 
       // Extract metadata length
       const metadataLength = decryptedData.readUInt32BE(0);
-      
+
       // Extract metadata
       const metadataBuffer = decryptedData.subarray(4, 4 + metadataLength);
-      const fileMetadata = JSON.parse(metadataBuffer.toString('utf8'));
-      
+      const fileMetadata = JSON.parse(metadataBuffer.toString("utf8"));
+
       // Extract file data
       const fileBuffer = decryptedData.subarray(4 + metadataLength);
 
-      console.log(`✅ File decrypted successfully: ${fileMetadata.originalName}`);
+      console.log(
+        `✅ File decrypted successfully: ${fileMetadata.originalName}`,
+      );
 
       return {
         success: true,
         fileBuffer,
-        fileMetadata
+        fileMetadata,
       };
     } catch (error) {
-      console.error('❌ File decryption failed:', error);
+      console.error("❌ File decryption failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'File decryption failed'
+        error:
+          error instanceof Error ? error.message : "File decryption failed",
       };
     }
   }
@@ -278,33 +290,37 @@ export class EncryptionService {
   /**
    * Encrypt sensitive text data (like descriptions, notes)
    */
-  static encryptText(text: string, encryptionKey: string): {
+  static encryptText(
+    text: string,
+    encryptionKey: string,
+  ): {
     success: boolean;
     encryptedText?: string;
     error?: string;
   } {
     try {
-      const textBuffer = Buffer.from(text, 'utf8');
+      const textBuffer = Buffer.from(text, "utf8");
       const result = this.encryptData(textBuffer, encryptionKey);
-      
+
       if (!result.success) {
         return { success: false, error: result.error };
       }
 
       // Combine encrypted data and metadata into a single string
       const combined = {
-        data: result.encryptedData!.toString('base64'),
-        metadata: result.metadata
+        data: result.encryptedData!.toString("base64"),
+        metadata: result.metadata,
       };
 
       return {
         success: true,
-        encryptedText: Buffer.from(JSON.stringify(combined)).toString('base64')
+        encryptedText: Buffer.from(JSON.stringify(combined)).toString("base64"),
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Text encryption failed'
+        error:
+          error instanceof Error ? error.message : "Text encryption failed",
       };
     }
   }
@@ -312,30 +328,40 @@ export class EncryptionService {
   /**
    * Decrypt sensitive text data
    */
-  static decryptText(encryptedText: string, encryptionKey: string): {
+  static decryptText(
+    encryptedText: string,
+    encryptionKey: string,
+  ): {
     success: boolean;
     decryptedText?: string;
     error?: string;
   } {
     try {
       // Parse the encrypted text
-      const combined = JSON.parse(Buffer.from(encryptedText, 'base64').toString('utf8'));
-      const encryptedData = Buffer.from(combined.data, 'base64');
-      
-      const result = this.decryptData(encryptedData, encryptionKey, combined.metadata);
-      
+      const combined = JSON.parse(
+        Buffer.from(encryptedText, "base64").toString("utf8"),
+      );
+      const encryptedData = Buffer.from(combined.data, "base64");
+
+      const result = this.decryptData(
+        encryptedData,
+        encryptionKey,
+        combined.metadata,
+      );
+
       if (!result.success) {
         return { success: false, error: result.error };
       }
 
       return {
         success: true,
-        decryptedText: result.decryptedData!.toString('utf8')
+        decryptedText: result.decryptedData!.toString("utf8"),
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Text decryption failed'
+        error:
+          error instanceof Error ? error.message : "Text decryption failed",
       };
     }
   }
@@ -344,14 +370,14 @@ export class EncryptionService {
    * Generate a secure encryption key
    */
   static generateSecureKey(): string {
-    return crypto.randomBytes(this.KEY_LENGTH).toString('hex');
+    return crypto.randomBytes(this.KEY_LENGTH).toString("hex");
   }
 
   /**
    * Hash data for integrity verification
    */
   static hashData(data: Buffer): string {
-    return crypto.createHash('sha256').update(data).digest('hex');
+    return crypto.createHash("sha256").update(data).digest("hex");
   }
 
   /**
@@ -368,9 +394,9 @@ export class EncryptionService {
   static createChecksum(encryptedData: Buffer, metadata: any): string {
     const combined = Buffer.concat([
       encryptedData,
-      Buffer.from(JSON.stringify(metadata), 'utf8')
+      Buffer.from(JSON.stringify(metadata), "utf8"),
     ]);
-    return crypto.createHash('sha256').update(combined).digest('hex');
+    return crypto.createHash("sha256").update(combined).digest("hex");
   }
 
   /**
@@ -379,7 +405,7 @@ export class EncryptionService {
   static verifyChecksum(
     encryptedData: Buffer,
     metadata: any,
-    expectedChecksum: string
+    expectedChecksum: string,
   ): boolean {
     const actualChecksum = this.createChecksum(encryptedData, metadata);
     return actualChecksum === expectedChecksum;
