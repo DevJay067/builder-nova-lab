@@ -80,6 +80,35 @@ export default function Login() {
 
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
+  // Debounced validation to prevent performance issues
+  const debouncedValidation = useCallback((field: string, value: string, isLogin: boolean = false) => {
+    const timeoutId = setTimeout(() => {
+      if (field === 'email' && value && !isLogin) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          setFormErrors(prev => ({ ...prev, email: 'Invalid email format' }));
+        } else {
+          setFormErrors(prev => ({ ...prev, email: '' }));
+        }
+      }
+      if (field === 'username' && value) {
+        if (value.length < 3 || value.length > 30) {
+          setFormErrors(prev => ({ ...prev, username: 'Username must be 3-30 characters' }));
+        } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+          setFormErrors(prev => ({ ...prev, username: 'Username can only contain letters, numbers, and underscores' }));
+        } else {
+          setFormErrors(prev => ({ ...prev, username: '' }));
+        }
+      }
+      if (field === 'password' && value && value.length > 0 && value.length < 6) {
+        setFormErrors(prev => ({ ...prev, password: 'Password must be at least 6 characters' }));
+      } else if (field === 'password' && value && value.length >= 6) {
+        setFormErrors(prev => ({ ...prev, password: '' }));
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   const validateForm = (isLogin: boolean = false) => {
     const errors: { [key: string]: string } = {};
 
