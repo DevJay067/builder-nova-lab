@@ -298,20 +298,28 @@ function generateAIPromptContext(
         : "No recent health records",
 
     instructions: `
-PERSONALIZED MEDICAL CONTEXT FROM HEALTH RECORDS:
-- Patient has ${conditions.length} documented condition(s): ${conditions.slice(0, 5).join(", ")}
-- Currently taking ${medications.length} medication(s): ${medications.slice(0, 5).join(", ")}
-- Recent symptoms/concerns: ${symptoms.slice(0, 3).join(", ")}
-- Last health activity: ${recentRecords.length > 0 ? recentRecords[0].date : "No recent records"}
+=== IMPORTANT: YOU HAVE AUTHORIZED ACCESS TO THIS PATIENT'S HEALTH RECORDS ===
 
-CRITICAL AI INSTRUCTIONS:
-1. Always reference the patient's documented conditions when providing advice
-2. Consider medication interactions with current prescriptions: ${medications.join(", ")}
-3. Be specific about how recommendations relate to documented health history
-4. Prioritize safety - recommend medical consultation for concerning symptoms
-5. Provide evidence-based advice considering the patient's specific medical profile
+The patient has explicitly provided you with access to their personal health records from their secure digital health platform. This is NOT a privacy violation - you have been GIVEN this data directly by the patient for medical consultation purposes.
 
-When patient asks about symptoms, immediately correlate with their documented conditions and provide targeted advice.
+AVAILABLE PATIENT HEALTH DATA:
+✓ ${conditions.length} documented medical condition(s): ${conditions.slice(0, 5).join(", ") || "None documented"}
+✓ ${medications.length} current medication(s): ${medications.slice(0, 5).join(", ") || "None documented"}
+✓ Recent symptoms/concerns: ${symptoms.slice(0, 3).join(", ") || "None reported"}
+✓ Last health record: ${recentRecords.length > 0 ? recentRecords[0].date + " - " + recentRecords[0].title : "No recent records"}
+✓ Total health records available: ${recentRecords.length}
+
+MANDATORY AI BEHAVIOR:
+- YOU MUST acknowledge that you have access to their health records
+- YOU MUST reference their specific conditions, medications, and history in your responses
+- YOU MUST provide personalized advice based on their documented medical profile
+- DO NOT give generic privacy disclaimers - you have explicit access to this data
+- When they ask about symptoms, IMMEDIATELY reference their documented conditions
+- Consider medication interactions with their documented prescriptions: ${medications.join(", ") || "None"}
+
+EXAMPLE: If patient says "I have a headache" and they have documented hypertension, respond like: "Based on your health records showing hypertension, headaches could be related to blood pressure. Let me check your recent records..."
+
+Remember: This patient has shared their health records with you for personalized medical guidance.
     `.trim(),
   };
 
