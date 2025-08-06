@@ -226,7 +226,7 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipher("aes-256-cbc", blockchainLayerKey);
+    const blockchainCipher = crypto.createCipheriv("aes-256-cbc", blockchainLayerKey, blockchainIv);
 
     let blockchainEncrypted = blockchainCipher.update(
       dataLayerData,
