@@ -819,6 +819,13 @@ class UserAuthenticationService {
       };
     }
 
+    // Try to validate self-validating session token
+    const selfValidatingResult = this.validateSessionToken(sessionToken);
+    if (selfValidatingResult.valid) {
+      console.log("✅ Self-validating session token is valid");
+      return selfValidatingResult;
+    }
+
     // Final fallback: validate basic session format and create minimal session
     // This handles server restarts where in-memory sessions are lost
     if (sessionToken && sessionToken.length >= 32) {
