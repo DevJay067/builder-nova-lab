@@ -594,7 +594,14 @@ class SecureDataAccessService {
    * Validate session token
    */
   static validateSession(sessionToken: string): boolean {
-    return this.userSessions.has(sessionToken);
+    const isValid = this.userSessions.has(sessionToken);
+    console.log("🔐 Session validation:", {
+      sessionToken: sessionToken ? `${sessionToken.substring(0, 20)}...` : "none",
+      isValid,
+      totalSessions: this.userSessions.size,
+      availableSessions: Array.from(this.userSessions.keys()).map(key => key.substring(0, 20) + "..."),
+    });
+    return isValid;
   }
 
   /**
