@@ -55,10 +55,13 @@ export default function ProtectedRoute({
           ?.split("=")[1];
 
       if (!sessionToken) {
+        console.log("❌ No session token found");
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
+
+      console.log("🔍 Found session token, verifying with server...");
 
       // Verify session with server
       const response = await fetch("/api/auth/verify", {
