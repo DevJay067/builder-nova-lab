@@ -47,12 +47,17 @@ export default function Login() {
 
   // Page load animation and initialization
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    // Small delay to ensure page is properly initialized
-    const timer = setTimeout(() => {
+    // Use requestAnimationFrame for better performance
+    const initializeComponent = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
       setIsInitialized(true);
-    }, 100);
-    return () => clearTimeout(timer);
+    };
+
+    const rafId = requestAnimationFrame(initializeComponent);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Login form state
@@ -503,18 +508,18 @@ export default function Login() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[calc(100vh-80px)]">
-        <div className="w-full max-w-md">
+      <div className="container mx-auto px-4 py-4 sm:py-8 flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="w-full max-w-md px-2 sm:px-0">
           {/* Welcome Card */}
-          <Card className="mb-6 shadow-colored border-border/50 fade-in">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
-                <Key className="w-8 h-8 text-primary-foreground" />
+          <Card className="mb-4 sm:mb-6 shadow-colored border-border/50 fade-in">
+            <CardHeader className="text-center pb-3 sm:pb-4 px-4 sm:px-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-r from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
+                <Key className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
               </div>
-              <CardTitle className="text-2xl font-bold">
+              <CardTitle className="text-xl sm:text-2xl font-bold">
                 Welcome to HealthChain
               </CardTitle>
-              <CardDescription className="text-muted-foreground">
+              <CardDescription className="text-muted-foreground text-sm sm:text-base">
                 Access your secure blockchain-powered healthcare platform
               </CardDescription>
             </CardHeader>
@@ -523,7 +528,7 @@ export default function Login() {
           {/* Message Alert */}
           {message && (
             <Alert
-              className={`mb-6 fade-in ${
+              className={`mb-4 sm:mb-6 fade-in mx-2 sm:mx-0 ${
                 message.type === "success"
                   ? "border-green-200 bg-green-50 text-green-800"
                   : "border-red-200 bg-red-50 text-red-800"
@@ -541,13 +546,13 @@ export default function Login() {
           )}
 
           {/* Auth Tabs */}
-          <Card className="shadow-colored-lg border-border/50 fade-in-up">
+          <Card className="shadow-colored-lg border-border/50 fade-in-up mx-2 sm:mx-0">
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 mx-2 sm:mx-0">
                 <TabsTrigger
                   value="login"
                   className="flex items-center space-x-2 state-transition"
@@ -566,16 +571,16 @@ export default function Login() {
 
               {/* Login Tab */}
               <TabsContent value="login" className="space-y-0">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center space-x-2">
-                    <LogIn className="w-5 h-5 text-primary" />
+                <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+                  <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                    <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     <span>Sign In</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-sm">
                     Enter your credentials to access your health dashboard
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 sm:px-6">
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
                       <Label
@@ -683,18 +688,18 @@ export default function Login() {
 
               {/* Register Tab */}
               <TabsContent value="register" className="space-y-0">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center space-x-2">
-                    <UserPlus className="w-5 h-5 text-primary" />
+                <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
+                  <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                    <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     <span>Create Account</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-sm">
                     Join HealthChain and secure your health data with blockchain
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 sm:px-6">
                   <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <Label
                           htmlFor="firstName"
@@ -944,11 +949,11 @@ export default function Login() {
           </Card>
 
           {/* Security Notice */}
-          <Card className="mt-6 border-primary/20 bg-primary/5 fade-in fade-in-delay-1">
-            <CardContent className="pt-6">
+          <Card className="mt-4 sm:mt-6 border-primary/20 bg-primary/5 fade-in fade-in-delay-1 mx-2 sm:mx-0">
+            <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6">
               <div className="flex items-start space-x-3">
-                <Shield className="w-5 h-5 text-primary mt-0.5" />
-                <div className="text-sm">
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-xs sm:text-sm">
                   <p className="font-medium text-primary mb-1">
                     Blockchain Security
                   </p>
