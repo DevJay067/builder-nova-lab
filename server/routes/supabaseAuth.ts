@@ -183,7 +183,17 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
 
     console.log("🔍 Retrieving health records from Supabase");
 
-    const result = await SupabaseAuthService.getHealthRecords(sessionToken);
+    // Get current user
+    const userResult = await SupabaseService.getCurrentUser();
+    if (!userResult.success || !userResult.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid session or user not found",
+      });
+    }
+
+    // Get health records
+    const result = await SupabaseService.getHealthRecords(userResult.user.id);
 
     if (result.success) {
       res.json(result);
