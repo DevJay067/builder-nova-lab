@@ -37,6 +37,14 @@ export default function Login() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [serverStatus, setServerStatus] = useState<{
+    hostname: string;
+    connected: boolean;
+    port?: string;
+  }>({
+    hostname: "localhost",
+    connected: false,
+  });
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
