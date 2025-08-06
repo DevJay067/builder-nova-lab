@@ -222,6 +222,9 @@ export default function Login() {
 
     setIsLoading(true);
 
+    // Create abort controller for this request
+    const abortController = new AbortController();
+
     try {
       console.log("🔍 Starting registration process", {
         username: registerForm.username,
@@ -243,6 +246,7 @@ export default function Login() {
           firstName: registerForm.firstName,
           lastName: registerForm.lastName,
         }),
+        signal: abortController.signal,
       });
 
       console.log("📡 Registration response received", {
