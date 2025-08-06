@@ -57,6 +57,7 @@ export class SimpleDatabaseInit {
    */
   static async testConnection(): Promise<boolean> {
     try {
+      const sql = getDatabase();
       await sql`SELECT 1 as test`;
       return true;
     } catch (error) {
