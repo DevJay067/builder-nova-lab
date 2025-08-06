@@ -409,14 +409,35 @@ export function createServer() {
   // Debug endpoint to check mock storage
   app.get("/api/debug/mock-storage", (req, res) => {
     try {
+      const sessionToken =
+        req.headers.authorization?.replace("Bearer ", "") ||
+        req.cookies.healthchain_session ||
+        (req.headers["x-session-token"] as string);
+
       const { SupabaseService } = require("./services/supabaseService");
+      const { UserAuthenticationService } = require("./services/userAuthentication");
+
+      let userInfo = null;
+      let userRecords = [];
+
+      if (sessionToken) {
+        const sessionResult = UserAuthenticationService.verifySession(sessionToken);
+        if (sessionResult.valid) {
+          userInfo = sessionResult.user;
+          const patientId = `user_${sessionResult.user.userHash || sessionResult.user.username || sessionResult.user.id}`;
+          userRecords = (SupabaseService as any).mockStorage?.health_records?.filter(
+            (record: any) => record.patient_id === patientId
+          ) || [];
+        }
+      }
+
       res.json({
         success: true,
-        mockStorage: (SupabaseService as any).mockStorage,
-        totalHealthRecords:
-          (SupabaseService as any).mockStorage?.health_records?.length || 0,
-        healthRecords:
-          (SupabaseService as any).mockStorage?.health_records || [],
+        currentUser: userInfo,
+        userHealthRecords: userRecords.length,
+        userRecords: userRecords,
+        allMockStorage: (SupabaseService as any).mockStorage,
+        totalAllRecords: (SupabaseService as any).mockStorage?.health_records?.length || 0,
       });
     } catch (error) {
       res.status(500).json({
