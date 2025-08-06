@@ -193,9 +193,9 @@ export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
 
     const recordId = crypto.randomBytes(16).toString("hex");
     const timestamp = new Date().toISOString();
-    const patientId = healthData.sessionToken
-      ? "authenticated-user"
-      : "default-patient";
+
+    // Use the actual user ID from the session for patient isolation
+    const patientId = `user_${sessionResult.user.userHash || sessionResult.user.username || sessionResult.user.id}`;
 
     // Prepare comprehensive health record for vault storage
     const vaultData = {
