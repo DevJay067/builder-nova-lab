@@ -486,14 +486,20 @@ class UserAuthenticationService {
 
         if (!secureAuthResult.authenticated) {
           console.warn("⚠️ Secure authentication failed, using fallback");
+          const sessionToken = this.createSessionToken({
+            id: user.id,
+            username: user.username,
+            userHash: user.userHash,
+          });
+
           secureAuthResult = {
             authenticated: true,
-            sessionToken: crypto.randomBytes(32).toString('hex'),
+            sessionToken: sessionToken,
             splitKeySystemActive: false,
           };
 
           // Store session in fallback mode
-          this.storeSession(secureAuthResult.sessionToken, {
+          this.storeSession(sessionToken, {
             username: user.username,
             userHash: user.userHash,
             id: user.id,
