@@ -629,6 +629,31 @@ export default function Login() {
             </CardHeader>
           </Card>
 
+          {/* Server Information */}
+          <Card className="mb-3 sm:mb-4 border-blue-200 bg-blue-50 fade-in fade-in-delay-1 mx-2 sm:mx-0">
+            <CardContent className="pt-3 pb-3 px-4 sm:px-6">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    serverStatus.connected
+                      ? 'bg-green-500'
+                      : 'bg-yellow-500'
+                  }`}></div>
+                  <span className="text-blue-800 font-medium">
+                    Server: {serverStatus.hostname}{serverStatus.port ? ':' + serverStatus.port : ''}
+                  </span>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  serverStatus.connected
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {serverStatus.connected ? 'Connected' : 'Connecting...'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Message Alert */}
           {message && (
             <Alert
