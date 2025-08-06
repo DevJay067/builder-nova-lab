@@ -279,7 +279,7 @@ async function startServer() {
    • /api/cloud-storage/* - Cloud storage
    • /api/health-records/* - Health records
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━��━━━━━━━━
+━━━━━━━━━━━━━━━━���━━━━━━━━━━━━━━━━━━━━━━━━━━��━━━━━━━━
 Ready for secure medical record management! 🚀
       `);
     });
@@ -289,12 +289,16 @@ Ready for secure medical record management! 🚀
   }
 }
 
-// Start the application
-startServer();
-
 // Export for vite.config.ts
 export function createServer() {
+  // Initialize services when creating server for Vite
+  initializeServices().catch(console.error);
   return app;
+}
+
+// Only start standalone server if this file is run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  startServer();
 }
 
 export default app;
