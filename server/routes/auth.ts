@@ -169,8 +169,17 @@ export const loginUser: RequestHandler = async (req, res) => {
         });
       }
 
-      // Simple fallback authentication (just basic password check)
-      // In a real app, you'd check against a simple user store
+      // Simple fallback authentication
+      // Generate consistent user ID and check basic credentials
+      const userExists = credentials.username && credentials.password && credentials.password.length >= 6;
+
+      if (!userExists) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid username or password",
+        });
+      }
+
       result = {
         success: true,
         user: {
