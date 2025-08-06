@@ -63,7 +63,7 @@ export const loginUserSupabase: RequestHandler = async (req, res) => {
       res.status(401).json(result);
     }
   } catch (error) {
-    console.error("❌ Authentication error:", error);
+    console.error("��� Authentication error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during authentication",
@@ -289,13 +289,33 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
   try {
     const sessionToken =
       req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies.healthchain_session ||
+      (req.headers["x-session-token"] as string) ||
       (req.query.sessionToken as string);
+
+    if (!sessionToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    // Verify session and get user info
+    const sessionResult = UserAuthenticationService.verifySession(sessionToken);
+    if (!sessionResult.valid || !sessionResult.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid session",
+      });
+    }
 
     console.log(
       "🔍 Retrieving health records from Supabase cloud storage vault",
+      { userId: sessionResult.user.username }
     );
 
-    const patientId = sessionToken ? "authenticated-user" : "default-patient";
+    // Use the actual user ID for patient isolation
+    const patientId = `user_${sessionResult.user.userHash || sessionResult.user.username || sessionResult.user.id}`;
 
     // Get health records metadata from database
     const dbResult = await SupabaseService.getHealthRecords(patientId);
