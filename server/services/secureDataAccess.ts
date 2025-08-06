@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import {
-  ProductionBlockchainService,
+  SimpleSecureStorage,
   SplitKeyData,
-} from "./productionBlockchain";
+} from "./simpleSecureStorage";
 import { NeonDatabaseService } from "./neonDatabase";
 
 /**
