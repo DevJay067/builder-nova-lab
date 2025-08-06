@@ -250,36 +250,47 @@ export const loginUser: RequestHandler = async (req, res) => {
  */
 export const verifySession: RequestHandler = async (req, res) => {
   try {
+    console.log("🔍 Session verification request:", {
+      hasAuthHeader: !!req.headers.authorization,
+      hasCookie: !!req.cookies.healthchain_session,
+      hasXSessionToken: !!req.headers["x-session-token"],
+    });
+
     const sessionToken =
       req.headers.authorization?.replace("Bearer ", "") ||
       req.cookies.healthchain_session ||
       (req.headers["x-session-token"] as string);
 
     if (!sessionToken) {
+      console.log("❌ No session token found in request");
       return res.status(401).json({
         success: false,
         message: "No session token provided",
       });
     }
 
+    console.log("🔐 Verifying session token...");
     const result = UserAuthenticationService.verifySession(sessionToken);
 
     if (result.valid) {
+      console.log("✅ Session verification successful:", { username: result.user?.username });
       res.json({
         success: true,
         user: result.user,
       });
     } else {
+      console.log("❌ Session verification failed: Invalid token");
       res.status(401).json({
         success: false,
         message: "Invalid session token",
       });
     }
   } catch (error) {
-    console.error("Error verifying session:", error);
+    console.error("❌ Error verifying session:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during session verification",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
