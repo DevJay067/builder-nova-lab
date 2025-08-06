@@ -37,7 +37,8 @@ export const getHealthDataForAI: RequestHandler = async (req, res) => {
     console.log(`👤 Fetching records for patient: ${patientId}`);
 
     // Get health records from Supabase
-    const healthRecordsResult = await SupabaseService.getHealthRecords(patientId);
+    const healthRecordsResult =
+      await SupabaseService.getHealthRecords(patientId);
 
     if (!healthRecordsResult.success) {
       console.error(

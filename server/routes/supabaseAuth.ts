@@ -323,8 +323,8 @@ export const getHealthRecordsSupabase: RequestHandler = async (req, res) => {
       {
         userId: sessionResult.user.username,
         patientId: patientId,
-        userHash: sessionResult.user.userHash?.substring(0, 8) + "..."
-      }
+        userHash: sessionResult.user.userHash?.substring(0, 8) + "...",
+      },
     );
 
     // Get health records metadata from database
