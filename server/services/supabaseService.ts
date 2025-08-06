@@ -193,7 +193,33 @@ class SupabaseService {
     };
 
     return {
-      from: () => mockChainableQuery,
+      from: (tableName: string) => createMockQuery(tableName),
+      storage: {
+        from: (bucketName: string) => ({
+          upload: (path: string, file: any) => {
+            this.mockStorageFiles[path] = file;
+            return Promise.resolve({
+              data: { path, id: crypto.randomBytes(16).toString('hex') },
+              error: null
+            });
+          },
+          download: (path: string) => {
+            const file = this.mockStorageFiles[path];
+            return Promise.resolve({
+              data: file ? { toString: () => JSON.stringify(file) } : null,
+              error: file ? null : { message: 'File not found' }
+            });
+          },
+          list: () => {
+            const files = Object.keys(this.mockStorageFiles).map(path => ({
+              name: path.split('/').pop(),
+              id: crypto.randomBytes(16).toString('hex'),
+              created_at: new Date().toISOString(),
+            }));
+            return Promise.resolve({ data: files, error: null });
+          }
+        })
+      },
       storage: {
         from: () => ({
           upload: () => ({ data: { path: "mock-path" }, error: null }),
