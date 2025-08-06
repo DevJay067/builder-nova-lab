@@ -151,6 +151,22 @@ export function createServer() {
     });
   });
 
+  // Debug endpoint for registration issues
+  app.post("/api/debug/register", (req, res) => {
+    console.log("🔍 Debug registration endpoint hit");
+    console.log("Headers:", req.headers);
+    console.log("Body type:", typeof req.body);
+    console.log("Body content:", req.body);
+
+    res.json({
+      success: true,
+      message: "Debug endpoint working",
+      headers: req.headers,
+      body: req.body,
+      bodyType: typeof req.body,
+    });
+  });
+
   // Debug endpoint to check user existence
   app.get("/api/debug/user/:username", async (req, res) => {
     try {
