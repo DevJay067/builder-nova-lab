@@ -410,7 +410,21 @@ export default function BmaxAI() {
     const hasHealthData = aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData;
 
     if (!hasHealthData) {
-      return "https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1";
+      const noRecordsContext = `
+You are a general health AI assistant. The patient has not yet provided any health records.
+
+IMPORTANT: You currently do not have access to this patient's personal health records because they haven't uploaded any yet.
+
+When providing advice:
+- Give general health information only
+- Recommend consulting healthcare providers for personal medical advice
+- Suggest that the patient can add their health records to this platform for personalized guidance
+- Do not make assumptions about their medical history
+
+If they ask about personal health matters, let them know that adding their health records will allow you to provide much more personalized and relevant advice.
+      `.trim();
+
+      return `https://agent.jotform.com/0198328d092a7ce998d0bac908260635265d?embedMode=iframe&background=1&shadow=1&context=${encodeURIComponent(noRecordsContext)}`;
     }
 
     let contextPrompt = "";
