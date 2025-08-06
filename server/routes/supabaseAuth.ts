@@ -118,9 +118,40 @@ export const signOutSupabase: RequestHandler = async (req, res) => {
  */
 export const storeHealthRecordSupabase: RequestHandler = async (req, res) => {
   try {
-    const { type, title, description, data, metadata, sessionToken } = req.body;
+    console.log("🏥 Supabase health record storage request received:", {
+      method: req.method,
+      contentType: req.headers["content-type"],
+      hasBody: !!req.body,
+      bodyKeys: req.body ? Object.keys(req.body) : [],
+    });
 
-    if (!type || !data) {
+    // Validate request body exists
+    if (!req.body || typeof req.body !== "object") {
+      console.error("❌ Invalid or missing request body");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request format",
+      });
+    }
+
+    // Extract data with safer destructuring
+    const healthData = {
+      type: req.body.type,
+      title: req.body.title,
+      description: req.body.description,
+      data: req.body.data,
+      metadata: req.body.metadata,
+      sessionToken: req.body.sessionToken,
+    };
+
+    console.log("🩺 Health record data extracted:", {
+      type: healthData.type,
+      title: healthData.title,
+      hasData: !!healthData.data,
+      hasSessionToken: !!healthData.sessionToken,
+    });
+
+    if (!healthData.type || !healthData.data) {
       return res.status(400).json({
         success: false,
         message: "Health record type and data are required",
@@ -329,7 +360,7 @@ export const getSystemStatsSupabase: RequestHandler = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("❌ Get system stats error:", error);
+    console.error("��� Get system stats error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error getting system stats",
