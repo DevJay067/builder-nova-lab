@@ -268,7 +268,7 @@ export default function HealthHistory() {
         return;
       }
 
-      const response = await fetch("/api/auth/data-access", {
+      const response = await fetch("/api/supabase/health-records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -277,6 +277,8 @@ export default function HealthHistory() {
         },
         body: JSON.stringify({
           type: newRecord.type,
+          title: newRecord.title,
+          description: newRecord.description,
           data: {
             title: newRecord.title,
             description: newRecord.description,
