@@ -225,6 +225,54 @@ export function createServer() {
     }
   });
 
+  // Auto-create test user endpoint for easier debugging
+  app.post("/api/test/create-user", async (req, res) => {
+    try {
+      const { UserAuthenticationService } = await import("./services/userAuthentication");
+
+      const testUser = {
+        username: "testuser",
+        password: "password123",
+        email: "test@example.com",
+        firstName: "Test",
+        lastName: "User",
+      };
+
+      console.log("🧪 Creating test user for debugging...");
+
+      const result = await UserAuthenticationService.registerUser(
+        testUser.username,
+        testUser.password,
+        testUser.email,
+        {
+          firstName: testUser.firstName,
+          lastName: testUser.lastName,
+        }
+      );
+
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "Test user created successfully",
+          user: result.user,
+          credentials: {
+            username: testUser.username,
+            password: testUser.password,
+          }
+        });
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error("❌ Error creating test user:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create test user",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // Debug endpoint to check user existence
   app.get("/api/debug/user/:username", async (req, res) => {
     try {
