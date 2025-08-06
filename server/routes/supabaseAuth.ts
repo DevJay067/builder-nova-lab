@@ -77,7 +77,7 @@ export const loginUserSupabase: RequestHandler = async (req, res) => {
  */
 export const getCurrentUserSupabase: RequestHandler = async (req, res) => {
   try {
-    const result = await SupabaseAuthService.getCurrentUser();
+    const result = await SupabaseService.getCurrentUser();
 
     if (result.success) {
       res.json(result);
