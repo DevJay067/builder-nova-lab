@@ -176,7 +176,7 @@ class SecureDataAccessService {
       // Create audit log
       await this.createAuditLog({
         action: "create",
-        dataRecordId: blockchainResult.transaction.id,
+        dataRecordId: blockchainResult.recordId,
         userId: userHash,
         userRole: "patient",
         success: true,
@@ -353,7 +353,7 @@ class SecureDataAccessService {
 
       // Create secure data record for database
       const secureRecord: SecureDataRecord = {
-        id: blockchainResult.transaction.id,
+        id: blockchainResult.recordId,
         patientId: userCredentials.userHash.substring(0, 16),
         dataType: "medical_history",
         encryptedData: blockchainResult.transaction.encryptedPayload,
@@ -377,7 +377,7 @@ class SecureDataAccessService {
       // Create audit log
       await this.createAuditLog({
         action: "create",
-        dataRecordId: blockchainResult.transaction.id,
+        dataRecordId: blockchainResult.recordId,
         userId: userCredentials.userHash,
         userRole: "patient",
         success: true,
@@ -393,7 +393,7 @@ class SecureDataAccessService {
 
       return {
         success: true,
-        recordId: blockchainResult.transaction.id,
+        recordId: blockchainResult.recordId,
         blockchainHash: blockchainResult.blockchainHash,
         splitKeyReference: blockchainResult.splitKeyData.combinedHash,
       };
