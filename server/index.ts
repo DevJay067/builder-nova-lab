@@ -180,6 +180,40 @@ export function createServer() {
     });
   });
 
+  // Simple registration test endpoint
+  app.post("/api/test/register", (req, res) => {
+    try {
+      const { username, password, email } = req.body;
+
+      console.log("🧪 Test registration:", { username, hasPassword: !!password, email });
+
+      if (!username || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Username and password required",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Test registration successful",
+        user: {
+          id: "test-" + Date.now(),
+          username,
+          email,
+          sessionToken: "test-token-" + Date.now(),
+        },
+      });
+    } catch (error) {
+      console.error("Test registration error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Test registration failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // Debug endpoint to check user existence
   app.get("/api/debug/user/:username", async (req, res) => {
     try {
