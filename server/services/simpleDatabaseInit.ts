@@ -21,6 +21,8 @@ export class SimpleDatabaseInit {
     try {
       console.log("🏥 Creating medical_history table...");
 
+      const sql = getDatabase();
+
       // Create medical_history table for health records
       await sql`
         CREATE TABLE IF NOT EXISTS medical_history (
