@@ -406,6 +406,24 @@ export function createServer() {
   app.get("/api/ai/health-context", getHealthDataForAI);
   app.post("/api/ai/search-health", searchHealthRecordsForAI);
 
+  // Debug endpoint to check mock storage
+  app.get("/api/debug/mock-storage", (req, res) => {
+    try {
+      const { SupabaseService } = require("./services/supabaseService");
+      res.json({
+        success: true,
+        mockStorage: (SupabaseService as any).mockStorage,
+        totalHealthRecords: (SupabaseService as any).mockStorage?.health_records?.length || 0,
+        healthRecords: (SupabaseService as any).mockStorage?.health_records || [],
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
     try {
