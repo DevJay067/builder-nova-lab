@@ -53,6 +53,10 @@ import {
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
 import {
+  getHealthDataForAI,
+  searchHealthRecordsForAI,
+} from "./routes/aiHealthContext";
+import {
   registerUserSupabase,
   loginUserSupabase,
   getCurrentUserSupabase,
