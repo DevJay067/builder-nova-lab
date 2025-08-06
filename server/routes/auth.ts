@@ -219,9 +219,19 @@ export const loginUser: RequestHandler = async (req, res) => {
     }
   } catch (error) {
     console.error("Error logging in user:", error);
+
+    // Check if it's a body stream error
+    if (error instanceof Error && error.message.includes("body stream")) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body format error. Please try again.",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Internal server error during login",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
