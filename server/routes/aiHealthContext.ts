@@ -72,6 +72,20 @@ export const getHealthDataForAI: RequestHandler = async (req, res) => {
  * Format health records for AI consumption
  */
 function formatHealthDataForAI(healthRecords: any[]) {
+  console.log(`🔄 Processing ${healthRecords.length} health records for AI context`);
+
+  if (!Array.isArray(healthRecords)) {
+    console.error("❌ healthRecords is not an array:", typeof healthRecords);
+    return {
+      totalRecords: 0,
+      lastRecordDate: null,
+      medicalProfile: { conditions: [], currentMedications: [], recentSymptoms: [], chronicConditions: [] },
+      recentActivity: { records: [], vitalSigns: [], labResults: [] },
+      aiPromptContext: { medicalHistory: { conditions: 'No records', medications: 'No records', recentSymptoms: 'No records' }, recentActivity: 'No records', instructions: 'No health records available' },
+      searchEnhancers: [],
+    };
+  }
+
   const conditions: string[] = [];
   const medications: string[] = [];
   const symptoms: string[] = [];
