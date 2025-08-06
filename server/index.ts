@@ -273,6 +273,51 @@ export function createServer() {
     }
   });
 
+  // Auto-create user for any login attempt (development mode)
+  app.post("/api/auth/auto-register", async (req, res) => {
+    try {
+      const { UserAuthenticationService } = await import("./services/userAuthentication");
+
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Username and password required",
+        });
+      }
+
+      console.log(`🔧 Auto-registering user: ${username}`);
+
+      const result = await UserAuthenticationService.registerUser(
+        username,
+        password,
+        `${username}@example.com`,
+        {
+          firstName: username,
+          lastName: "User",
+        }
+      );
+
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "User auto-registered successfully",
+          user: result.user,
+        });
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error("❌ Error auto-registering user:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to auto-register user",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // Debug endpoint to check user existence
   app.get("/api/debug/user/:username", async (req, res) => {
     try {
