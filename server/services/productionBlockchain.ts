@@ -201,11 +201,8 @@ class ProductionBlockchainService {
     // Layer 1: Encrypt with user hash (user-specific encryption)
     const userLayerKey = crypto.createHash("sha256").update(userHash).digest();
     const userIv = crypto.randomBytes(16);
-    const userCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      userLayerKey,
-      userIv,
-    );
+    const userCipher = crypto.createCipherGCM("aes-256-gcm", userLayerKey);
+    userCipher.setIV(userIv);
     userCipher.setAAD(Buffer.from("user-layer"));
 
     let userEncrypted = userCipher.update(
