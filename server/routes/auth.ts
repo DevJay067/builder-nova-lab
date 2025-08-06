@@ -1,4 +1,5 @@
 import { RequestHandler } from "express";
+import crypto from "crypto";
 import { UserAuthenticationService } from "../services/userAuthentication";
 
 /**
