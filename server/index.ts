@@ -1,427 +1,327 @@
-import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
-import { handleDemo } from "./routes/demo";
-import {
-  createHealthRecord,
-  getHealthRecords,
-  getHealthRecord,
-  getMedicalContext,
-  getPatientProfile,
-  verifyPatientBlockchain,
-  getBlockchainStats,
-  addTestData,
-  storeHealthRecordDirect,
-} from "./routes/healthRecords";
-import {
-  generateSplitKeys,
-  storeSecureData,
-  retrieveSecureData,
-  rotateKeys,
-  verifyDataIntegrity,
-  getAuditLogs,
-  generateEmergencyKey,
-  getSystemStatus,
-  validateKeyFragments,
-} from "./routes/secureDataAPI";
-import {
-  checkDatabaseHealth,
-  initializeDatabase,
-  testDatabaseConnection,
-} from "./routes/databaseHealth";
-import {
-  generateDemoKeys,
-  getDemoKeysInfo,
-  initializeDemoData,
-} from "./routes/demoKeys";
-import {
-  registerUser,
-  loginUser,
-  verifySession,
-  logoutUser,
-  getUserProfile,
-  createDataAccess,
-  verifyDataAccess,
-  getAuthStats,
-  authenticateUser,
-  healthCheck,
-} from "./routes/enhancedAuth";
-import {
-  getPersonalizedMedicalContext,
-  enhanceQueryWithContext,
-  getPersonalizedInsights,
-} from "./routes/personalizedContext";
-import {
-  uploadImages,
-  handleImageUpload,
-  analyzeImages,
-} from "./routes/imageUpload";
-import {
-  storeCloudHealthRecord,
-  getCloudHealthRecords,
-  syncToCloud,
-  getCloudStorageStats,
-  deleteCloudHealthRecord,
-  getCloudServiceStatus,
-  cloudHealthCheck,
-  setupUserCloudStorage,
-  requireCloudAuth,
-} from "./routes/cloudStorage";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { EnhancedUserAuthenticationService } from "./services/enhancedUserAuthentication";
+import { SecureCloudStorageService } from "./services/secureCloudStorage";
+import { CloudAuthenticationService } from "./services/cloudAuthenticationService";
+import { MedicalRecordsManager } from "./services/medicalRecordsManager";
+import { SplitKeyAuthService } from "./services/splitKeyAuthService";
+import { IPFSStorageService } from "./services/ipfsStorageService";
+import { SupabaseService } from "./services/supabaseService";
+import { BlockchainService } from "./services/blockchainService";
 
-export function createServer() {
-  // Setup environment first
-  const setupEnvironment = async () => {
-    try {
-      const { EnvironmentSetup } = await import("./setup-env");
-      EnvironmentSetup.setup();
-    } catch (setupError) {
-      console.warn("⚠️ Environment setup failed:", setupError);
-      // Continue without environment setup
-    }
-  };
+// Import existing routes
+import authRoutes from "./routes/auth";
+import enhancedAuthRoutes from "./routes/enhancedAuth";
+import cloudStorageRoutes from "./routes/cloudStorage";
+import healthRecordsRoutes from "./routes/healthRecords";
+import imageUploadRoutes from "./routes/imageUpload";
+import demoRoutes from "./routes/demo";
+import demoKeysRoutes from "./routes/demoKeys";
+import databaseHealthRoutes from "./routes/databaseHealth";
 
-  // Run environment setup without blocking
-  setupEnvironment();
+// Import new secure health API
+import secureHealthAPIRoutes from "./routes/secureHealthAPI";
 
-  // Initialize secure database on server startup
-  const initializeSecureSystem = async () => {
-    try {
-      console.log("🚀 Attempting to initialize secure healthcare system...");
+const app = express();
+const PORT = process.env.PORT || 8080;
 
-      // Initialize production blockchain system
-      try {
-        const { ProductionBlockchainService } = await import(
-          "./services/productionBlockchain"
-        );
-        ProductionBlockchainService.initializeBlockchain();
-        console.log("✅ Production blockchain system initialized successfully");
-      } catch (blockchainError) {
-        console.log(
-          "⚠️ Production blockchain initialization failed, continuing...",
-        );
-      }
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      connectSrc: ["'self'", "https:", "wss:", "ws:"],
+      mediaSrc: ["'self'", "blob:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 
-      // Initialize secure data access system
-      try {
-        const { SecureDataAccessService } = await import(
-          "./services/secureDataAccess"
-        );
-        await SecureDataAccessService.initialize();
-        console.log("✅ Secure data access system initialized successfully");
-      } catch (secureError) {
-        console.log(
-          "⚠️ Secure data access system initialization failed, continuing...",
-        );
-      }
+// CORS configuration
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN?.split(',') || [
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-client-key'],
+};
 
-      // Initialize cloud authentication system
-      try {
-        const { CloudAuthenticationService } = await import(
-          "./services/cloudAuthenticationService"
-        );
-        await CloudAuthenticationService.initialize();
-        console.log("✅ Cloud authentication system initialized successfully");
-      } catch (cloudAuthError) {
-        console.log(
-          "⚠️  Cloud authentication initialization failed:",
-          cloudAuthError,
-        );
-        console.log("   Attempting fallback to enhanced authentication...");
+app.use(cors(corsOptions));
 
-        try {
-          const { EnhancedUserAuthenticationService } = await import(
-            "./services/enhancedUserAuthentication"
-          );
-          await EnhancedUserAuthenticationService.initialize();
-          console.log("✅ Enhanced authentication system initialized");
-        } catch (enhancedError) {
-          console.log(
-            "⚠️  Enhanced authentication failed, trying basic authentication...",
-          );
+// Global rate limiting
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-          try {
-            const { UserAuthenticationService } = await import(
-              "./services/userAuthentication"
-            );
-            await UserAuthenticationService.initialize();
-            console.log("✅ Basic authentication system initialized");
-          } catch (basicError) {
-            console.log(
-              "⚠️  All authentication systems failed, continuing in demo mode",
-            );
-          }
-        }
-      }
+app.use(globalLimiter);
 
-      // Try to initialize the main database system
-      try {
-        const { DatabaseInitService } = await import("./services/initDatabase");
-        await DatabaseInitService.initializeSecureHealthcareDatabase();
-        console.log("✅ Secure healthcare database initialized successfully");
-      } catch (dbError) {
-        console.log(
-          "⚠️  Secure database not available, trying simple initialization...",
-        );
+// Body parsing middleware
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-        // Try to create at least the essential medical_history table
-        try {
-          const { SimpleDatabaseInit } = await import(
-            "./services/simpleDatabaseInit"
-          );
-          await SimpleDatabaseInit.initializeMedicalHistoryTable();
-          console.log("✅ Essential medical history table created");
-        } catch (simpleError) {
-          console.log("⚠��  System will work with in-memory storage only");
-        }
-      }
-    } catch (error) {
-      console.log(
-        "⚠️  Secure system initialization completed with some limitations",
-      );
-      console.log("   The application will continue to work in demo mode");
-    }
-  };
+// Request logging middleware
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.url;
+  const ip = req.ip || req.connection.remoteAddress;
+  
+  console.log(`${timestamp} - ${method} ${url} - IP: ${ip}`);
+  next();
+});
 
-  // Run initialization (don't await to avoid blocking server start)
-  initializeSecureSystem();
-
-  const app = express();
-
-  // Middleware
-  app.use(cors());
-  app.use(cookieParser());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-
-  // Example API routes
-  app.get("/api/ping", (_req, res) => {
-    const ping = process.env.PING_MESSAGE ?? "ping";
-    res.json({ message: ping });
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    services: {
+      authentication: EnhancedUserAuthenticationService.getSystemStats(),
+      cloudStorage: SecureCloudStorageService.getStatus(),
+      splitKeyAuth: SplitKeyAuthService.getStats(),
+      medicalRecords: MedicalRecordsManager.getStatus(),
+      ipfsStorage: IPFSStorageService.getStatus(),
+      database: SupabaseService.getStatus(),
+      blockchain: BlockchainService.getStatus(),
+    },
   });
+});
 
-  // Test endpoint for debugging
-  app.post("/api/test", (req, res) => {
-    console.log("🧪 Test endpoint hit", { body: req.body });
-    res.json({
-      success: true,
-      received: req.body,
-      timestamp: new Date().toISOString(),
+// API Routes
+
+// Legacy authentication routes (maintained for backward compatibility)
+app.use("/api/auth", authRoutes);
+app.use("/api/enhanced-auth", enhancedAuthRoutes);
+
+// Cloud storage and health records routes
+app.use("/api/cloud-storage", cloudStorageRoutes);
+app.use("/api/health-records", healthRecordsRoutes);
+
+// Image upload and processing
+app.use("/api/image-upload", imageUploadRoutes);
+
+// Demo and development routes
+app.use("/api/demo", demoRoutes);
+app.use("/api/demo-keys", demoKeysRoutes);
+
+// Database health monitoring
+app.use("/api/database-health", databaseHealthRoutes);
+
+// NEW: Secure Health API with split-key authentication and blockchain
+app.use("/api/secure-health", secureHealthAPIRoutes);
+
+// System information endpoint
+app.get("/api/system/info", async (req, res) => {
+  try {
+    const systemInfo = {
+      name: "HealthChain Secure Medical Records System",
+      version: "1.0.0",
+      features: {
+        splitKeyAuthentication: true,
+        aes256Encryption: true,
+        ipfsStorage: IPFSStorageService.getStatus().clientAvailable,
+        blockchainIntegrity: BlockchainService.getStatus().connected,
+        supabaseDatabase: SupabaseService.getStatus().clientAvailable,
+        rateLimiting: true,
+        auditLogging: true,
+      },
+      endpoints: {
+        legacy: [
+          "/api/auth/*",
+          "/api/enhanced-auth/*",
+          "/api/cloud-storage/*",
+          "/api/health-records/*",
+        ],
+        secure: [
+          "/api/secure-health/register",
+          "/api/secure-health/login",
+          "/api/secure-health/upload",
+          "/api/secure-health/records",
+          "/api/secure-health/download/:recordId",
+          "/api/secure-health/search",
+        ],
+        system: [
+          "/health",
+          "/api/system/info",
+          "/api/system/stats",
+        ],
+      },
+      security: {
+        encryption: "AES-256-GCM",
+        keyManagement: "Split-key architecture",
+        storage: "IPFS/Filecoin",
+        blockchain: "Ethereum/Polygon compatible",
+        authentication: "JWT with split-key validation",
+      },
+    };
+
+    res.json(systemInfo);
+  } catch (error) {
+    console.error("❌ System info error:", error);
+    res.status(500).json({
+      error: "Failed to retrieve system information",
     });
-  });
+  }
+});
 
-  // Debug endpoint to check auth system status
-  app.get("/api/debug/auth-status", async (req, res) => {
-    try {
-      const { EnhancedUserAuthenticationService } = await import(
-        "./services/enhancedUserAuthentication"
-      );
-
-      const stats = EnhancedUserAuthenticationService.getSystemStats();
-
-      res.json({
-        success: true,
-        authSystemStatus: "enhanced-initialized",
-        systemType: "SQLite + Enhanced Authentication",
-        systemStats: stats,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (enhancedError) {
-      // Fallback to basic auth
-      try {
-        const { UserAuthenticationService } = await import(
-          "./services/userAuthentication"
-        );
-
-        const stats = UserAuthenticationService.getSystemStats();
-
-        res.json({
-          success: true,
-          authSystemStatus: "basic-initialized",
-          systemType: "Basic Authentication (Fallback)",
-          systemStats: stats,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (basicError) {
-        res.json({
-          success: false,
-          authSystemStatus: "error",
-          error:
-            basicError instanceof Error ? basicError.message : "Unknown error",
-          enhancedError:
-            enhancedError instanceof Error
-              ? enhancedError.message
-              : "Enhanced auth failed",
-          timestamp: new Date().toISOString(),
-        });
-      }
+// System statistics endpoint
+app.get("/api/system/stats", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
-  });
 
-  // Debug endpoint to check user existence
-  app.get("/api/debug/user/:username", async (req, res) => {
-    try {
-      const { username } = req.params;
-      const { UserAuthenticationService } = await import(
-        "./services/userAuthentication"
-      );
-
-      // Check both memory and database
-      const stats = UserAuthenticationService.getSystemStats();
-
-      res.json({
-        success: true,
-        username: username,
-        systemStats: stats,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+    const sessionToken = authHeader.substring(7);
+    const verification = SplitKeyAuthService.verifySessionToken(sessionToken);
+    
+    if (!verification.valid) {
+      return res.status(401).json({ error: 'Invalid session token' });
     }
-  });
 
-  app.get("/api/demo", handleDemo);
-
-  // Health Records & Blockchain API Routes
-  app.post("/api/health-records", createHealthRecord);
-  app.get("/api/health-records", getHealthRecords);
-  app.get("/api/health-records/:recordId", getHealthRecord);
-  app.post("/api/health-records/store-direct", storeHealthRecordDirect);
-  app.get("/api/medical-context", getMedicalContext);
-  app.post("/api/add-test-data", addTestData);
-
-  // Patient & Blockchain Management
-  app.get("/api/patient/profile", getPatientProfile);
-  app.get("/api/patient/verify-blockchain", verifyPatientBlockchain);
-  app.get("/api/blockchain/stats", getBlockchainStats);
-
-  // Secure Data Access API Routes
-  app.post("/api/secure/keys/generate", generateSplitKeys);
-  app.post("/api/secure/data/store", storeSecureData);
-  app.post("/api/secure/data/retrieve/:recordId", retrieveSecureData);
-  app.post("/api/secure/keys/rotate/:keyId", rotateKeys);
-  app.get("/api/secure/data/verify/:recordId", verifyDataIntegrity);
-  app.get("/api/secure/audit/:recordId", getAuditLogs);
-  app.post("/api/secure/emergency/key", generateEmergencyKey);
-  app.get("/api/secure/system/status", getSystemStatus);
-  app.post("/api/secure/keys/validate", validateKeyFragments);
-
-  // Database Health & Management
-  app.get("/api/database/health", checkDatabaseHealth);
-  app.post("/api/database/initialize", initializeDatabase);
-  app.post("/api/database/test-connection", testDatabaseConnection);
-
-  // Demo Keys & Testing
-  app.post("/api/demo/keys/generate", generateDemoKeys);
-  app.get("/api/demo/keys/info", getDemoKeysInfo);
-  app.post("/api/demo/initialize", initializeDemoData);
-
-  // Auth health check endpoint
-  app.get("/api/auth/test", (req, res) => {
-    res.json({
-      success: true,
-      message: "Auth endpoints are accessible",
-      timestamp: new Date().toISOString(),
+    const stats = await MedicalRecordsManager.getSystemStats();
+    res.json(stats);
+  } catch (error) {
+    console.error("❌ System stats error:", error);
+    res.status(500).json({
+      error: "Failed to retrieve system statistics",
     });
+  }
+});
+
+// Error handling middleware
+app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("❌ Unhandled error:", error);
+  
+  // Don't expose internal errors in production
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  res.status(error.status || 500).json({
+    error: isDevelopment ? error.message : 'Internal server error',
+    ...(isDevelopment && { stack: error.stack }),
   });
+});
 
-  app.get("/api/auth/health", healthCheck);
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Endpoint not found",
+    availableEndpoints: [
+      "/health",
+      "/api/system/info",
+      "/api/secure-health/*",
+      "/api/auth/*",
+      "/api/enhanced-auth/*",
+      "/api/cloud-storage/*",
+      "/api/health-records/*",
+    ],
+  });
+});
 
-  // Authentication API Routes
-  app.post("/api/auth/register", registerUser);
-  app.post("/api/auth/login", loginUser);
-  app.get("/api/auth/verify", verifySession);
-  app.post("/api/auth/logout", logoutUser);
-  app.get("/api/auth/profile", getUserProfile);
-  app.post("/api/auth/data-access", createDataAccess);
-  app.get("/api/auth/data-access/records", verifyDataAccess);
-  app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
-  app.get("/api/auth/stats", getAuthStats);
+// Initialize all services
+async function initializeServices() {
+  console.log("🚀 Initializing HealthChain Secure Medical Records System...");
+  
+  try {
+    // Initialize legacy services (maintain backward compatibility)
+    await EnhancedUserAuthenticationService.initialize();
+    await SecureCloudStorageService.initialize();
+    await CloudAuthenticationService.initialize();
 
-  // Image Upload Routes for Medical Scans
-  app.post("/api/images/upload", uploadImages, handleImageUpload);
-  app.post("/api/images/analyze", analyzeImages);
+    // Initialize new secure services
+    await SplitKeyAuthService.initialize();
+    await IPFSStorageService.initialize();
+    await SupabaseService.initialize();
+    await BlockchainService.initialize();
+    await MedicalRecordsManager.initialize();
 
-  // Cloud Storage API Routes
-  app.post("/api/cloud/store", storeCloudHealthRecord);
-  app.get("/api/cloud/records", getCloudHealthRecords);
-  app.post("/api/cloud/sync", syncToCloud);
-  app.get("/api/cloud/stats", getCloudStorageStats);
-  app.delete("/api/cloud/records/:recordId", deleteCloudHealthRecord);
-  app.get("/api/cloud/status", getCloudServiceStatus);
-  app.get("/api/cloud/health", cloudHealthCheck);
-  app.post("/api/cloud/setup", setupUserCloudStorage);
-
-  // Personalized Medical Context API Routes
-  app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
-  app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
-  app.get("/api/medical-context/insights", getPersonalizedInsights);
-
-  // Enhanced Database Health Check Endpoint
-  app.get("/api/health/database", async (req, res) => {
-    try {
-      const { EnhancedDatabaseHealthService } = await import(
-        "./services/enhancedDatabaseHealth"
-      );
-      const systemStatus =
-        await EnhancedDatabaseHealthService.getSystemStatus();
-      res.json({
-        success: true,
-        ...systemStatus,
-      });
-    } catch (enhancedError) {
-      // Fallback to basic health check
-      try {
-        const { DatabaseHealthService } = await import(
-          "./services/databaseHealthCheck"
-        );
-        const health = await DatabaseHealthService.checkHealth();
-        res.json({
-          success: true,
-          database: health,
-          server: {
-            uptime: process.uptime(),
-            memory: process.memoryUsage(),
-            timestamp: new Date().toISOString(),
-          },
-          fallback: true,
-        });
-      } catch (error) {
-        res.status(500).json({
-          success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-          enhancedError:
-            enhancedError instanceof Error
-              ? enhancedError.message
-              : "Enhanced health check failed",
-          timestamp: new Date().toISOString(),
-        });
-      }
+    // Setup blockchain event listeners if available
+    if (BlockchainService.getStatus().connected) {
+      BlockchainService.setupEventListeners();
+      console.log("👂 Blockchain event listeners activated");
     }
-  });
 
-  // Enhanced system status endpoint
-  app.get("/api/health/system", async (req, res) => {
-    try {
-      const { EnhancedDatabaseHealthService } = await import(
-        "./services/enhancedDatabaseHealth"
-      );
-      const metrics = EnhancedDatabaseHealthService.getHealthMetrics();
-      res.json({
-        success: true,
-        metrics,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      });
-    }
-  });
-
-  return app;
+    console.log("✅ All services initialized successfully");
+  } catch (error) {
+    console.error("❌ Service initialization failed:", error);
+    console.log("⚠️ Some features may be limited");
+  }
 }
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('📴 SIGTERM received, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('📴 SIGINT received, shutting down gracefully...');
+  process.exit(0);
+});
+
+// Start the server
+async function startServer() {
+  try {
+    await initializeServices();
+    
+    app.listen(PORT, () => {
+      console.log(`
+🏥 HealthChain Secure Medical Records System Started
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 Server: http://localhost:${PORT}
+🔗 Health Check: http://localhost:${PORT}/health
+📊 System Info: http://localhost:${PORT}/api/system/info
+
+🔐 Secure Health API:
+   • Registration: POST /api/secure-health/register
+   • Login: POST /api/secure-health/login  
+   • Upload: POST /api/secure-health/upload
+   • Records: GET /api/secure-health/records
+   • Download: GET /api/secure-health/download/:id
+   • Search: GET /api/secure-health/search?q=term
+
+🛡️ Security Features:
+   ✅ Split-key authentication
+   ✅ AES-256-GCM encryption
+   ✅ IPFS decentralized storage
+   ✅ Blockchain integrity verification
+   ✅ Rate limiting protection
+   ✅ Complete audit trail
+
+📋 Legacy API (backward compatibility):
+   • /api/auth/* - Original authentication
+   • /api/enhanced-auth/* - Enhanced authentication
+   • /api/cloud-storage/* - Cloud storage
+   • /api/health-records/* - Health records
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Ready for secure medical record management! 🚀
+      `);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+// Start the application
+startServer();
+
+export default app;
