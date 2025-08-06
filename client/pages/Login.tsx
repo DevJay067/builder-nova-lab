@@ -124,18 +124,39 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("🔄 Starting login request");
+
+      const requestBody = {
+        username: loginForm.email,
+        password: loginForm.password,
+      };
+
+      console.log("📤 Login request body prepared:", {
+        username: requestBody.username,
+        hasPassword: !!requestBody.password
+      });
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
-        body: JSON.stringify({
-          username: loginForm.email,
-          password: loginForm.password,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("📥 Login response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log("✅ Login result:", { success: result.success });
 
       if (result.success) {
         const userData = {
