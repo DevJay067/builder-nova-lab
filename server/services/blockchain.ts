@@ -63,7 +63,8 @@ export class BlockchainService {
       const iv = Buffer.from(ivHex, "hex");
       const authTag = Buffer.from(authTagHex, "hex");
       const key = crypto.createHash("sha256").update(encryptionKey).digest();
-      const decipher = crypto.createDecipherGCM(algorithm, key, iv);
+      const decipher = crypto.createDecipherGCM(algorithm, key);
+      decipher.setIV(iv);
       decipher.setAuthTag(authTag);
 
       let decrypted = decipher.update(encrypted, "hex", "utf8");
