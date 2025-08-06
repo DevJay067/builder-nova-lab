@@ -9,9 +9,25 @@ export const registerUser: RequestHandler = async (req, res) => {
     console.log("🔍 Registration request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      fields: Object.keys(req.body || {}),
     });
 
     const { username, password, email, firstName, lastName } = req.body;
+
+    // Validate required fields
+    if (!username || !password || !email || !firstName || !lastName) {
+      console.log("❌ Missing required fields:", {
+        username: !!username,
+        password: !!password,
+        email: !!email,
+        firstName: !!firstName,
+        lastName: !!lastName,
+      });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required: username, password, email, firstName, lastName",
+      });
+    }
 
     // Use the new authentication service
     const result = await UserAuthenticationService.registerUser(
@@ -24,13 +40,19 @@ export const registerUser: RequestHandler = async (req, res) => {
       },
     );
 
+    console.log("📝 Registration result:", {
+      success: result.success,
+      message: result.message,
+      hasUser: !!result.user,
+    });
+
     if (result.success) {
       return res.status(201).json(result);
     } else {
       return res.status(400).json(result);
     }
   } catch (error) {
-    console.error("Error registering user:", error);
+    console.error("❌ Error registering user:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error during registration",
