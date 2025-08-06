@@ -86,6 +86,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/why-login" element={<WhyLogin />} />
               <Route path="/test-auth" element={<TestAuth />} />
+              <Route path="/test-storage" element={<TestStorage />} />
               <Route
                 path="/monitoring"
                 element={
