@@ -675,13 +675,15 @@ IMPORTANT INSTRUCTIONS:
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                     Loading Context
                   </Badge>
-                ) : personalizedContext?.hasData ? (
+                ) : (aiHealthContext?.context?.totalRecords > 0 || personalizedContext?.hasData) ? (
                   <Badge
                     variant="default"
                     className="text-xs bg-gradient-to-r from-green-500 to-green-600"
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Context Enabled
+                    {aiHealthContext?.context?.totalRecords > 0
+                      ? `${aiHealthContext.context.totalRecords} Records Loaded`
+                      : 'Context Enabled'}
                   </Badge>
                 ) : (
                   <Badge variant="secondary" className="text-xs">
