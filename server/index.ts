@@ -11,16 +11,6 @@ import { IPFSStorageService } from "./services/ipfsStorageService";
 import { SupabaseService } from "./services/supabaseService";
 import { BlockchainService } from "./services/blockchainService";
 
-// Import existing routes
-import authRoutes from "./routes/auth";
-import enhancedAuthRoutes from "./routes/enhancedAuth";
-import cloudStorageRoutes from "./routes/cloudStorage";
-import healthRecordsRoutes from "./routes/healthRecords";
-import imageUploadRoutes from "./routes/imageUpload";
-import demoRoutes from "./routes/demo";
-import demoKeysRoutes from "./routes/demoKeys";
-import databaseHealthRoutes from "./routes/databaseHealth";
-
 // Import new secure health API
 import secureHealthAPIRoutes from "./routes/secureHealthAPI";
 
@@ -198,7 +188,7 @@ app.get("/api/system/stats", async (req, res) => {
     const stats = await MedicalRecordsManager.getSystemStats();
     res.json(stats);
   } catch (error) {
-    console.error("❌ System stats error:", error);
+    console.error("��� System stats error:", error);
     res.status(500).json({
       error: "Failed to retrieve system statistics",
     });
@@ -283,7 +273,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`
 🏥 HealthChain Secure Medical Records System Started
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━��━━━━━━━━━━━━━━
 
 🌐 Server: http://localhost:${PORT}
 🔗 Health Check: http://localhost:${PORT}/health
