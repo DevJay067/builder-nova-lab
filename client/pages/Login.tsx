@@ -45,6 +45,32 @@ export default function Login() {
   // Request deduplication
   const [activeRequests, setActiveRequests] = useState<Set<string>>(new Set());
 
+  // Performance monitoring
+  useEffect(() => {
+    const performanceObserver = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      entries.forEach((entry) => {
+        if (entry.duration > 100) {
+          console.warn(`Slow operation detected: ${entry.name} took ${entry.duration}ms`);
+        }
+      });
+    });
+
+    try {
+      performanceObserver.observe({ entryTypes: ['measure', 'navigation'] });
+    } catch (e) {
+      // Performance Observer not supported, skip
+    }
+
+    return () => {
+      try {
+        performanceObserver.disconnect();
+      } catch (e) {
+        // Already disconnected or not supported
+      }
+    };
+  }, []);
+
   // Page load animation and initialization
   useEffect(() => {
     // Use requestAnimationFrame for better performance
