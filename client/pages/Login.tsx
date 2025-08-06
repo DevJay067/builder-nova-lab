@@ -59,13 +59,15 @@ export default function Login() {
       const entries = list.getEntries();
       entries.forEach((entry) => {
         if (entry.duration > 100) {
-          console.warn(`Slow operation detected: ${entry.name} took ${entry.duration}ms`);
+          console.warn(
+            `Slow operation detected: ${entry.name} took ${entry.duration}ms`,
+          );
         }
       });
     });
 
     try {
-      performanceObserver.observe({ entryTypes: ['measure', 'navigation'] });
+      performanceObserver.observe({ entryTypes: ["measure", "navigation"] });
     } catch (e) {
       // Performance Observer not supported, skip
     }
@@ -90,14 +92,14 @@ export default function Login() {
       const port = window.location.port;
 
       // Update document title with server info
-      document.title = `HealthChain Login - ${hostname}${port ? ':' + port : ''}`;
+      document.title = `HealthChain Login - ${hostname}${port ? ":" + port : ""}`;
 
       // Check server connectivity
       try {
-        const response = await fetch('/api/health', {
-          method: 'GET',
-          cache: 'no-cache',
-          timeout: 5000
+        const response = await fetch("/api/health", {
+          method: "GET",
+          cache: "no-cache",
+          timeout: 5000,
         });
         setServerStatus({
           hostname,
@@ -143,33 +145,54 @@ export default function Login() {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   // Debounced validation to prevent performance issues
-  const debouncedValidation = useCallback((field: string, value: string, isLogin: boolean = false) => {
-    const timeoutId = setTimeout(() => {
-      if (field === 'email' && value && !isLogin) {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          setFormErrors(prev => ({ ...prev, email: 'Invalid email format' }));
-        } else {
-          setFormErrors(prev => ({ ...prev, email: '' }));
+  const debouncedValidation = useCallback(
+    (field: string, value: string, isLogin: boolean = false) => {
+      const timeoutId = setTimeout(() => {
+        if (field === "email" && value && !isLogin) {
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            setFormErrors((prev) => ({
+              ...prev,
+              email: "Invalid email format",
+            }));
+          } else {
+            setFormErrors((prev) => ({ ...prev, email: "" }));
+          }
         }
-      }
-      if (field === 'username' && value) {
-        if (value.length < 3 || value.length > 30) {
-          setFormErrors(prev => ({ ...prev, username: 'Username must be 3-30 characters' }));
-        } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-          setFormErrors(prev => ({ ...prev, username: 'Username can only contain letters, numbers, and underscores' }));
-        } else {
-          setFormErrors(prev => ({ ...prev, username: '' }));
+        if (field === "username" && value) {
+          if (value.length < 3 || value.length > 30) {
+            setFormErrors((prev) => ({
+              ...prev,
+              username: "Username must be 3-30 characters",
+            }));
+          } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+            setFormErrors((prev) => ({
+              ...prev,
+              username:
+                "Username can only contain letters, numbers, and underscores",
+            }));
+          } else {
+            setFormErrors((prev) => ({ ...prev, username: "" }));
+          }
         }
-      }
-      if (field === 'password' && value && value.length > 0 && value.length < 6) {
-        setFormErrors(prev => ({ ...prev, password: 'Password must be at least 6 characters' }));
-      } else if (field === 'password' && value && value.length >= 6) {
-        setFormErrors(prev => ({ ...prev, password: '' }));
-      }
-    }, 300);
+        if (
+          field === "password" &&
+          value &&
+          value.length > 0 &&
+          value.length < 6
+        ) {
+          setFormErrors((prev) => ({
+            ...prev,
+            password: "Password must be at least 6 characters",
+          }));
+        } else if (field === "password" && value && value.length >= 6) {
+          setFormErrors((prev) => ({ ...prev, password: "" }));
+        }
+      }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, []);
+      return () => clearTimeout(timeoutId);
+    },
+    [],
+  );
 
   const validateForm = (isLogin: boolean = false) => {
     const errors: { [key: string]: string } = {};
@@ -245,7 +268,9 @@ export default function Login() {
       // Check response status first
       if (!response.ok) {
         console.error("❌ Login failed with status:", response.status);
-        throw new Error(`Login failed with status ${response.status}. Please check your credentials.`);
+        throw new Error(
+          `Login failed with status ${response.status}. Please check your credentials.`,
+        );
       }
 
       // Try to read the response body with multiple fallback approaches
@@ -268,7 +293,10 @@ export default function Login() {
             const responseText = new TextDecoder().decode(buffer);
             result = JSON.parse(responseText);
           } catch (bufferError) {
-            console.error("❌ All response reading methods failed:", bufferError);
+            console.error(
+              "❌ All response reading methods failed:",
+              bufferError,
+            );
 
             // Ultimate fallback: assume success based on status code
             if (response.status === 200 || response.status === 201) {
@@ -336,11 +364,13 @@ export default function Login() {
 
       if (error instanceof Error) {
         if (error.message.includes("HTTP error! status: 4")) {
-          errorMessage = "Invalid credentials. Please check your username and password.";
+          errorMessage =
+            "Invalid credentials. Please check your username and password.";
         } else if (error.message.includes("HTTP error! status: 5")) {
           errorMessage = "Server error. Please try again in a moment.";
         } else if (error.message.includes("Failed to fetch")) {
-          errorMessage = "Network error. Please check your connection and try again.";
+          errorMessage =
+            "Network error. Please check your connection and try again.";
         } else {
           errorMessage = error.message;
         }
@@ -365,7 +395,9 @@ export default function Login() {
 
     // Prevent duplicate submissions
     if (isLoading || activeRequests.has(requestKey)) {
-      console.log("⚠️ Registration already in progress, ignoring duplicate request");
+      console.log(
+        "⚠️ Registration already in progress, ignoring duplicate request",
+      );
       return;
     }
 
@@ -376,7 +408,7 @@ export default function Login() {
     }
 
     setIsLoading(true);
-    setActiveRequests(prev => new Set(prev).add(requestKey));
+    setActiveRequests((prev) => new Set(prev).add(requestKey));
 
     // Create abort controller for this request
     const abortController = new AbortController();
@@ -416,7 +448,9 @@ export default function Login() {
       // Check response status first
       if (!response.ok) {
         console.error("❌ Registration failed with status:", response.status);
-        throw new Error(`Registration failed with status ${response.status}. Please try again.`);
+        throw new Error(
+          `Registration failed with status ${response.status}. Please try again.`,
+        );
       }
 
       // Try to read the response body with multiple fallback approaches
@@ -439,11 +473,16 @@ export default function Login() {
             const responseText = new TextDecoder().decode(buffer);
             result = JSON.parse(responseText);
           } catch (bufferError) {
-            console.error("❌ All response reading methods failed:", bufferError);
+            console.error(
+              "❌ All response reading methods failed:",
+              bufferError,
+            );
 
             // Ultimate fallback: assume success based on status code
             if (response.status === 200 || response.status === 201) {
-              console.log("✅ Assuming registration success based on status code");
+              console.log(
+                "✅ Assuming registration success based on status code",
+              );
               result = {
                 success: true,
                 user: {
@@ -464,7 +503,7 @@ export default function Login() {
       console.log("✅ Registration result:", result);
 
       // Ensure result has the expected structure
-      if (!result || typeof result !== 'object') {
+      if (!result || typeof result !== "object") {
         console.warn("⚠️ Invalid result object, using fallback");
         result = {
           success: true,
@@ -527,7 +566,8 @@ export default function Login() {
         } else if (error.message.includes("HTTP error! status: 5")) {
           errorMessage = "Server error. Please try again in a moment.";
         } else if (error.message.includes("Failed to fetch")) {
-          errorMessage = "Network error. Please check your connection and try again.";
+          errorMessage =
+            "Network error. Please check your connection and try again.";
         } else {
           errorMessage = error.message;
         }
@@ -539,7 +579,7 @@ export default function Login() {
       });
     } finally {
       setIsLoading(false);
-      setActiveRequests(prev => {
+      setActiveRequests((prev) => {
         const newSet = new Set(prev);
         newSet.delete(requestKey);
         return newSet;
@@ -594,16 +634,19 @@ export default function Login() {
                 </span>
               </div>
               <div className="flex items-center space-x-1 text-xs text-slate-500 border-l pl-2 ml-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  serverStatus.connected
-                    ? 'bg-green-500 animate-pulse'
-                    : 'bg-yellow-500'
-                }`}></div>
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    serverStatus.connected
+                      ? "bg-green-500 animate-pulse"
+                      : "bg-yellow-500"
+                  }`}
+                ></div>
                 <span className="hidden md:inline font-mono">
-                  {serverStatus.hostname}{serverStatus.port ? ':' + serverStatus.port : ''}
+                  {serverStatus.hostname}
+                  {serverStatus.port ? ":" + serverStatus.port : ""}
                 </span>
                 <span className="md:hidden font-mono">
-                  {serverStatus.connected ? 'Online' : 'Connecting...'}
+                  {serverStatus.connected ? "Online" : "Connecting..."}
                 </span>
               </div>
             </div>
@@ -634,21 +677,24 @@ export default function Login() {
             <CardContent className="pt-3 pb-3 px-4 sm:px-6">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    serverStatus.connected
-                      ? 'bg-green-500'
-                      : 'bg-yellow-500'
-                  }`}></div>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      serverStatus.connected ? "bg-green-500" : "bg-yellow-500"
+                    }`}
+                  ></div>
                   <span className="text-blue-800 font-medium">
-                    Server: {serverStatus.hostname}{serverStatus.port ? ':' + serverStatus.port : ''}
+                    Server: {serverStatus.hostname}
+                    {serverStatus.port ? ":" + serverStatus.port : ""}
                   </span>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  serverStatus.connected
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {serverStatus.connected ? 'Connected' : 'Connecting...'}
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    serverStatus.connected
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {serverStatus.connected ? "Connected" : "Connecting..."}
                 </span>
               </div>
             </CardContent>
@@ -710,7 +756,10 @@ export default function Login() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 sm:px-6">
-                  <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
+                  <form
+                    onSubmit={handleLogin}
+                    className="space-y-3 sm:space-y-4"
+                  >
                     <div className="space-y-2">
                       <Label
                         htmlFor="login-email"
@@ -827,7 +876,10 @@ export default function Login() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 sm:px-6">
-                  <form onSubmit={handleRegister} className="space-y-3 sm:space-y-4">
+                  <form
+                    onSubmit={handleRegister}
+                    className="space-y-3 sm:space-y-4"
+                  >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <Label
