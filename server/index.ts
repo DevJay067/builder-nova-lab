@@ -402,6 +402,10 @@ export function createServer() {
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
 
+  // AI Health Context API Routes
+  app.get("/api/ai/health-context", getHealthDataForAI);
+  app.post("/api/ai/search-health", searchHealthRecordsForAI);
+
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
     try {
