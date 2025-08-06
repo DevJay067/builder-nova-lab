@@ -291,18 +291,10 @@ class ProductionBlockchainService {
         .createHash("sha256")
         .update(userHash)
         .digest();
-      const [userIvHex, userAuthTagHex, userEncrypted] =
-        userLayerData.split(":");
+      const [userIvHex, userEncrypted] = userLayerData.split(":");
       const userIv = Buffer.from(userIvHex, "hex");
-      const userAuthTag = Buffer.from(userAuthTagHex, "hex");
 
-      const userDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        userLayerKey,
-        userIv,
-      );
-      userDecipher.setAAD(Buffer.from("user-layer"));
-      userDecipher.setAuthTag(userAuthTag);
+      const userDecipher = crypto.createDecipher("aes-256-cbc", userLayerKey);
 
       let decryptedData = userDecipher.update(userEncrypted, "hex", "utf8");
       decryptedData += userDecipher.final("utf8");
