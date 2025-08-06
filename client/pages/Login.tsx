@@ -122,7 +122,10 @@ export default function Login() {
     if (!validateForm(true)) return;
 
     // Prevent duplicate submissions
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("⚠️ Login already in progress, ignoring duplicate request");
+      return;
+    }
 
     setIsLoading(true);
 
