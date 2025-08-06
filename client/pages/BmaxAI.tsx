@@ -66,6 +66,36 @@ interface PersonalizedContext {
   };
 }
 
+interface AIHealthContext {
+  success: boolean;
+  context: {
+    totalRecords: number;
+    lastRecordDate: string | null;
+    medicalProfile: {
+      conditions: string[];
+      currentMedications: string[];
+      recentSymptoms: string[];
+      chronicConditions: string[];
+    };
+    recentActivity: {
+      records: any[];
+      vitalSigns: any[];
+      labResults: any[];
+    };
+    aiPromptContext: {
+      medicalHistory: {
+        conditions: string;
+        medications: string;
+        recentSymptoms: string;
+      };
+      recentActivity: string;
+      instructions: string;
+    };
+    searchEnhancers: string[];
+  };
+  lastUpdated: string;
+}
+
 interface HealthInsight {
   category: string;
   priority: string;
