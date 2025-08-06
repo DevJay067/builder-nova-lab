@@ -265,13 +265,16 @@ export default function Login() {
 
     if (!validateForm(false)) return;
 
+    const requestKey = `register-${registerForm.username}`;
+
     // Prevent duplicate submissions
-    if (isLoading) {
+    if (isLoading || activeRequests.has(requestKey)) {
       console.log("⚠️ Registration already in progress, ignoring duplicate request");
       return;
     }
 
     setIsLoading(true);
+    setActiveRequests(prev => new Set(prev).add(requestKey));
 
     // Create abort controller for this request
     const abortController = new AbortController();
