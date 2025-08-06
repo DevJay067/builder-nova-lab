@@ -9,9 +9,26 @@ export const registerUser: RequestHandler = async (req, res) => {
     console.log("🔍 Registration request received", {
       body: req.body ? "present" : "missing",
       contentType: req.headers["content-type"],
+      bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
+    // Validate request body exists
+    if (!req.body) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is missing",
+      });
+    }
+
     const { username, password, email, firstName, lastName } = req.body;
+
+    // Validate required fields
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required",
+      });
+    }
 
     // Use the new authentication service
     const result = await UserAuthenticationService.registerUser(
