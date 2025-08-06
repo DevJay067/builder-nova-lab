@@ -99,7 +99,7 @@ export const getCurrentUserSupabase: RequestHandler = async (req, res) => {
  */
 export const signOutSupabase: RequestHandler = async (req, res) => {
   try {
-    const result = await SupabaseAuthService.signOut();
+    const result = await SupabaseService.signOut();
 
     if (result.success) {
       res.json(result);
