@@ -5,6 +5,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  DATABASE_URL = "postgresql://fallback:fallback@localhost:5432/fallback"
 
 [functions]
   external_node_modules = ["express", "bcrypt", "@neondatabase/serverless", "serverless-http"]
