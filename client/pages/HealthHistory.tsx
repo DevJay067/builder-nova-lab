@@ -210,10 +210,11 @@ export default function HealthHistory() {
   const loadHealthRecords = async (sessionToken: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/auth/data-access/records", {
+      const response = await fetch("/api/supabase/health-records", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
+          "Content-Type": "application/json",
         },
       });
 
