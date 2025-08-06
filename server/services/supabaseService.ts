@@ -104,6 +104,8 @@ class SupabaseService {
 
         insert: (data: any) => {
           const recordsToInsert = Array.isArray(data) ? data : [data];
+          const insertedRecords: any[] = [];
+
           recordsToInsert.forEach((record) => {
             const newRecord = {
               ...record,
@@ -112,14 +114,32 @@ class SupabaseService {
               updated_at: new Date().toISOString(),
             };
             this.mockStorage[tableName].push(newRecord);
+            insertedRecords.push(newRecord);
           });
 
-          return {
-            data: recordsToInsert,
+          // Return a chainable object that supports .select() and .single()
+          const insertResult = {
+            data: insertedRecords,
             error: null,
-            then: (callback: any) =>
-              callback({ data: recordsToInsert, error: null }),
+
+            select: (columns?: string) => ({
+              data: insertedRecords,
+              error: null,
+              single: () => ({
+                data: insertedRecords[0] || null,
+                error: insertedRecords.length === 0 ? { message: 'No data found' } : null,
+                then: (callback: any) => callback({
+                  data: insertedRecords[0] || null,
+                  error: insertedRecords.length === 0 ? { message: 'No data found' } : null
+                })
+              }),
+              then: (callback: any) => callback({ data: insertedRecords, error: null })
+            }),
+
+            then: (callback: any) => callback({ data: insertedRecords, error: null }),
           };
+
+          return insertResult;
         },
 
         eq: (column: string, value: any) => {
