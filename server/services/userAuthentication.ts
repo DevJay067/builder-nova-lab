@@ -485,6 +485,13 @@ class UserAuthenticationService {
             sessionToken: crypto.randomBytes(32).toString('hex'),
             splitKeySystemActive: false,
           };
+
+          // Store session in fallback mode
+          this.storeSession(secureAuthResult.sessionToken, {
+            username: user.username,
+            userHash: user.userHash,
+            id: user.id,
+          });
         }
       } catch (secureError) {
         console.warn("⚠️ Secure authentication system not available, using fallback:", secureError instanceof Error ? secureError.message : "Unknown error");
@@ -494,6 +501,13 @@ class UserAuthenticationService {
           sessionToken: crypto.randomBytes(32).toString('hex'),
           splitKeySystemActive: false,
         };
+
+        // Store session in fallback mode
+        this.storeSession(secureAuthResult.sessionToken, {
+          username: user.username,
+          userHash: user.userHash,
+          id: user.id,
+        });
       }
 
       // Update last login
