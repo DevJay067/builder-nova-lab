@@ -132,7 +132,7 @@ class SecureDataAccessService {
       console.log(`🔐 Creating secure account for user: ${username}`);
 
       // Generate user hash
-      const userHash = ProductionBlockchainService.generateUserHash(
+      const userHash = SimpleSecureStorage.generateUserHash(
         username,
         password,
       );
@@ -152,7 +152,7 @@ class SecureDataAccessService {
 
       // Store in production blockchain with split key system
       const blockchainResult =
-        await ProductionBlockchainService.storeSecureHealthRecord(
+        await SimpleSecureStorage.storeSecureHealthRecord(
           initialHealthRecord,
           username,
           password,
@@ -233,7 +233,7 @@ class SecureDataAccessService {
       console.log(`🔐 Authenticating user: ${username}`);
 
       // Generate user hash
-      const userHash = ProductionBlockchainService.generateUserHash(
+      const userHash = SimpleSecureStorage.generateUserHash(
         username,
         password,
       );
@@ -339,7 +339,7 @@ class SecureDataAccessService {
 
       // Store in production blockchain
       const blockchainResult =
-        await ProductionBlockchainService.storeSecureHealthRecord(
+        await SimpleSecureStorage.storeSecureHealthRecord(
           healthRecord,
           userCredentials.username,
           derivedPassword,
@@ -450,7 +450,7 @@ class SecureDataAccessService {
           // Try to decrypt from blockchain if it's a secure record
           if (record.secureRecordId) {
             const decryptedData =
-              ProductionBlockchainService.retrieveSecureHealthRecord(
+              SimpleSecureStorage.retrieveSecureHealthRecord(
                 userCredentials.username,
                 derivedPassword,
                 record.secureRecordId,
@@ -622,7 +622,7 @@ class SecureDataAccessService {
     cacheSize: number;
     totalAuditLogs: number;
   } {
-    const blockchainStats = ProductionBlockchainService.getBlockchainStats();
+    const blockchainStats = SimpleSecureStorage.getBlockchainStats();
 
     return {
       activeSessions: this.userSessions.size,
