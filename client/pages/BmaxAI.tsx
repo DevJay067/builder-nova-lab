@@ -166,6 +166,7 @@ export default function BmaxAI() {
 
       setIsAuthenticated(true);
       await loadPersonalizedContext(sessionToken);
+      await loadAIHealthContext(sessionToken);
       await loadHealthInsights(sessionToken);
     } catch (error) {
       console.error("Error checking authentication:", error);
