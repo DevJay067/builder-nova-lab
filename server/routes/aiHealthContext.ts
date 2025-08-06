@@ -33,7 +33,19 @@ export const getHealthDataForAI: RequestHandler = async (req, res) => {
     console.log("🔍 Fetching health records for AI context...");
 
     // Get health records from Supabase
-    const healthRecords = await SupabaseService.getHealthRecords("authenticated-user");
+    const healthRecordsResult = await SupabaseService.getHealthRecords("authenticated-user");
+
+    if (!healthRecordsResult.success) {
+      console.error("❌ Failed to fetch health records:", healthRecordsResult.error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch health records",
+        error: healthRecordsResult.error,
+      });
+    }
+
+    const healthRecords = healthRecordsResult.records || [];
+    console.log(`📊 Found ${healthRecords.length} health records for AI processing`);
 
     // Process and format health data for AI consumption
     const aiHealthContext = formatHealthDataForAI(healthRecords);
