@@ -206,19 +206,6 @@ export default function Login() {
 
       console.log("📤 Request body prepared:", Object.keys(requestBody));
 
-      // Try test endpoint first to debug the issue
-      const testResponse = await fetch("/api/test/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log("🧪 Test endpoint response:", testResponse.status);
-
-      // Now try the real endpoint
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
