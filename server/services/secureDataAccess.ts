@@ -93,11 +93,11 @@ class SecureDataAccessService {
     try {
       console.log("🔐 Initializing secure data access system...");
 
-      // Initialize production blockchain
-      ProductionBlockchainService.initializeBlockchain();
+      // Initialize simple secure storage
+      SimpleSecureStorage.initializeBlockchain();
 
       // Validate blockchain integrity
-      ProductionBlockchainService.validateBlockchain();
+      SimpleSecureStorage.validateBlockchain();
 
       this.isInitialized = true;
       console.log("✅ Secure data access system initialized successfully");
