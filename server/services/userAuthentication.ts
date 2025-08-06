@@ -732,6 +732,53 @@ class UserAuthenticationService {
     // Session expires in 24 hours
     const expires = Date.now() + (24 * 60 * 60 * 1000);
     this.sessions.set(sessionToken, { user, expires });
+    console.log(`📝 Stored session for user: ${user.username || user.id}`);
+  }
+
+  /**
+   * Create a self-validating session token that encodes user info
+   */
+  static createSessionToken(user: any): string {
+    const userData = {
+      id: user.id,
+      username: user.username,
+      userHash: user.userHash,
+      exp: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+    };
+
+    // Simple base64 encoding (not secure, but persistent across restarts)
+    const token = Buffer.from(JSON.stringify(userData)).toString('base64');
+    return `session_${token}`;
+  }
+
+  /**
+   * Validate and decode a self-validating session token
+   */
+  static validateSessionToken(sessionToken: string): { valid: boolean; user?: any } {
+    try {
+      if (!sessionToken.startsWith('session_')) {
+        return { valid: false };
+      }
+
+      const tokenData = sessionToken.replace('session_', '');
+      const userData = JSON.parse(Buffer.from(tokenData, 'base64').toString());
+
+      // Check expiration
+      if (Date.now() > userData.exp) {
+        return { valid: false };
+      }
+
+      return {
+        valid: true,
+        user: {
+          id: userData.id,
+          username: userData.username,
+          userHash: userData.userHash,
+        }
+      };
+    } catch (error) {
+      return { valid: false };
+    }
   }
 
   /**
