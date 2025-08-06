@@ -7,23 +7,37 @@ import { UserAuthenticationService } from "../services/userAuthentication";
 export const registerUser: RequestHandler = async (req, res) => {
   try {
     console.log("🔍 Registration request received", {
-      body: req.body ? "present" : "missing",
+      method: req.method,
       contentType: req.headers["content-type"],
-      bodyKeys: req.body ? Object.keys(req.body) : [],
+      hasBody: !!req.body,
     });
 
-    // Validate request body exists
-    if (!req.body) {
+    // Ensure we have a body to work with
+    if (!req.body || typeof req.body !== 'object') {
+      console.error("❌ Invalid or missing request body");
       return res.status(400).json({
         success: false,
-        message: "Request body is missing",
+        message: "Invalid request format",
       });
     }
 
-    const { username, password, email, firstName, lastName } = req.body;
+    // Extract data with safer destructuring
+    const userData = {
+      username: req.body.username,
+      password: req.body.password,
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+    };
+
+    console.log("📋 User data extracted:", {
+      username: userData.username,
+      hasPassword: !!userData.password,
+      email: userData.email,
+    });
 
     // Validate required fields
-    if (!username || !password) {
+    if (!userData.username || !userData.password) {
       return res.status(400).json({
         success: false,
         message: "Username and password are required",
