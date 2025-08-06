@@ -315,11 +315,8 @@ class ProductionBlockchainService {
       const userIv = Buffer.from(userIvHex, "hex");
       const userAuthTag = Buffer.from(userAuthTagHex, "hex");
 
-      const userDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        userLayerKey,
-        userIv,
-      );
+      const userDecipher = crypto.createDecipherGCM("aes-256-gcm", userLayerKey);
+      userDecipher.setIV(userIv);
       userDecipher.setAAD(Buffer.from("user-layer"));
       userDecipher.setAuthTag(userAuthTag);
 
