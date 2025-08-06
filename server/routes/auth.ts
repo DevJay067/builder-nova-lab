@@ -158,11 +158,14 @@ export const loginUser: RequestHandler = async (req, res) => {
 
       console.log("🔑 Authentication result:", {
         success: result.success,
-        message: result.message
+        message: result.message,
       });
 
       // If authentication failed due to user not existing, try auto-registration
-      if (!result.success && result.message === "Invalid username or password") {
+      if (
+        !result.success &&
+        result.message === "Invalid username or password"
+      ) {
         console.log("🔧 User doesn't exist, attempting auto-registration...");
 
         try {
@@ -173,11 +176,13 @@ export const loginUser: RequestHandler = async (req, res) => {
             {
               firstName: credentials.username,
               lastName: "User",
-            }
+            },
           );
 
           if (autoRegResult.success) {
-            console.log("✅ User auto-registered successfully, now logging in...");
+            console.log(
+              "✅ User auto-registered successfully, now logging in...",
+            );
             // Try to authenticate again with the newly created user
             result = await UserAuthenticationService.authenticateUser(
               credentials.username,

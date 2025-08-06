@@ -127,16 +127,25 @@ class SupabaseService {
               error: null,
               single: () => ({
                 data: insertedRecords[0] || null,
-                error: insertedRecords.length === 0 ? { message: 'No data found' } : null,
-                then: (callback: any) => callback({
-                  data: insertedRecords[0] || null,
-                  error: insertedRecords.length === 0 ? { message: 'No data found' } : null
-                })
+                error:
+                  insertedRecords.length === 0
+                    ? { message: "No data found" }
+                    : null,
+                then: (callback: any) =>
+                  callback({
+                    data: insertedRecords[0] || null,
+                    error:
+                      insertedRecords.length === 0
+                        ? { message: "No data found" }
+                        : null,
+                  }),
               }),
-              then: (callback: any) => callback({ data: insertedRecords, error: null })
+              then: (callback: any) =>
+                callback({ data: insertedRecords, error: null }),
             }),
 
-            then: (callback: any) => callback({ data: insertedRecords, error: null }),
+            then: (callback: any) =>
+              callback({ data: insertedRecords, error: null }),
           };
 
           return insertResult;
@@ -228,10 +237,12 @@ class SupabaseService {
           download: (path: string) => {
             const file = this.mockStorageFiles[path];
             return Promise.resolve({
-              data: file ? {
-                text: () => Promise.resolve(JSON.stringify(file)),
-                toString: () => JSON.stringify(file)
-              } : null,
+              data: file
+                ? {
+                    text: () => Promise.resolve(JSON.stringify(file)),
+                    toString: () => JSON.stringify(file),
+                  }
+                : null,
               error: file ? null : { message: "File not found" },
             });
           },

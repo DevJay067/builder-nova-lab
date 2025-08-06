@@ -228,7 +228,9 @@ export function createServer() {
   // Auto-create test user endpoint for easier debugging
   app.post("/api/test/create-user", async (req, res) => {
     try {
-      const { UserAuthenticationService } = await import("./services/userAuthentication");
+      const { UserAuthenticationService } = await import(
+        "./services/userAuthentication"
+      );
 
       const testUser = {
         username: "testuser",
@@ -247,7 +249,7 @@ export function createServer() {
         {
           firstName: testUser.firstName,
           lastName: testUser.lastName,
-        }
+        },
       );
 
       if (result.success) {
@@ -258,7 +260,7 @@ export function createServer() {
           credentials: {
             username: testUser.username,
             password: testUser.password,
-          }
+          },
         });
       } else {
         res.status(400).json(result);
@@ -276,7 +278,9 @@ export function createServer() {
   // Auto-create user for any login attempt (development mode)
   app.post("/api/auth/auto-register", async (req, res) => {
     try {
-      const { UserAuthenticationService } = await import("./services/userAuthentication");
+      const { UserAuthenticationService } = await import(
+        "./services/userAuthentication"
+      );
 
       const { username, password } = req.body;
 
@@ -296,7 +300,7 @@ export function createServer() {
         {
           firstName: username,
           lastName: "User",
-        }
+        },
       );
 
       if (result.success) {
