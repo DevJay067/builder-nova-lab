@@ -111,10 +111,12 @@ interface HealthInsight {
 export default function BmaxAI() {
   const [personalizedContext, setPersonalizedContext] =
     useState<PersonalizedContext | null>(null);
+  const [aiHealthContext, setAiHealthContext] = useState<AIHealthContext | null>(null);
   const [healthInsights, setHealthInsights] = useState<HealthInsight[]>([]);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showMedicalSummary, setShowMedicalSummary] = useState(false);
+  const [showHealthRecords, setShowHealthRecords] = useState(false);
   const [aiStatus, setAiStatus] = useState<"connecting" | "ready" | "active">(
     "connecting",
   );
