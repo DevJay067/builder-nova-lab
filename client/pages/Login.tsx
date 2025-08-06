@@ -141,11 +141,13 @@ export default function Login() {
         }),
       });
 
+      // Clone the response to avoid "body stream already read" errors
+      const responseClone = response.clone();
       let result;
       let responseText = "";
 
       try {
-        responseText = await response.text();
+        responseText = await responseClone.text();
       } catch (textError) {
         console.error("❌ Failed to read response body:", textError);
         throw new Error("Failed to read server response");
