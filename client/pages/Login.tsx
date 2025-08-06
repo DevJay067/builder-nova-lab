@@ -581,7 +581,7 @@ export default function Login() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 sm:px-6">
-                  <form onSubmit={handleLogin} className="space-y-4">
+                  <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
                     <div className="space-y-2">
                       <Label
                         htmlFor="login-email"
@@ -667,7 +667,7 @@ export default function Login() {
 
                     <Button
                       type="submit"
-                      className="w-full btn-smooth shadow-colored"
+                      className="w-full btn-smooth shadow-colored h-11 sm:h-10"
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -698,7 +698,7 @@ export default function Login() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 sm:px-6">
-                  <form onSubmit={handleRegister} className="space-y-4">
+                  <form onSubmit={handleRegister} className="space-y-3 sm:space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <Label
@@ -927,7 +927,7 @@ export default function Login() {
 
                     <Button
                       type="submit"
-                      className="w-full btn-smooth shadow-colored"
+                      className="w-full btn-smooth shadow-colored h-11 sm:h-10"
                       disabled={isLoading}
                     >
                       {isLoading ? (
