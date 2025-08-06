@@ -284,6 +284,32 @@ export default function HealthHistory() {
         return;
       }
 
+      console.log("💾 Saving health record to Supabase cloud storage...");
+
+      const requestBody = {
+        type: newRecord.type,
+        title: newRecord.title,
+        description: newRecord.description,
+        data: {
+          title: newRecord.title,
+          description: newRecord.description,
+          date: newRecord.date,
+          doctor: newRecord.doctor,
+          metadata: newRecord.metadata,
+        },
+        metadata: {
+          category: newRecord.type,
+          recordedAt: new Date().toISOString(),
+        },
+        sessionToken: sessionToken,
+      };
+
+      console.log("📤 Health record request body:", {
+        type: requestBody.type,
+        title: requestBody.title,
+        hasSessionToken: !!requestBody.sessionToken,
+      });
+
       const response = await fetch("/api/supabase/health-records", {
         method: "POST",
         headers: {
@@ -291,18 +317,7 @@ export default function HealthHistory() {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
-        body: JSON.stringify({
-          type: newRecord.type,
-          title: newRecord.title,
-          description: newRecord.description,
-          data: {
-            title: newRecord.title,
-            description: newRecord.description,
-            date: newRecord.date,
-            doctor: newRecord.doctor,
-            metadata: newRecord.metadata,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
