@@ -620,6 +620,37 @@ IMPORTANT INSTRUCTIONS:
         {/* Medical Summary */}
         {personalizedContext?.hasData && getMedicalContextSummary()}
 
+        {/* No Records Message */}
+        {isAuthenticated && !isLoadingContext && (!aiHealthContext?.context?.totalRecords || aiHealthContext.context.totalRecords === 0) && (
+          <Card className="mb-6 card-hover border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50/50 fade-in">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Stethoscope className="h-4 w-4 mr-2 text-blue-600" />
+                No Health Records Found
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-sm text-muted-foreground mb-3">
+                B-max AI can provide much more personalized and accurate health advice when it has access to your health records.
+              </p>
+              <div className="flex space-x-2">
+                <Button asChild size="sm" className="btn-smooth">
+                  <Link to="/history">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Health Records
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="btn-smooth">
+                  <Link to="/test-storage">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Test Storage
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Health Insights */}
         {healthInsights.length > 0 && (
           <div className="mb-6 space-y-3 fade-in fade-in-delay-1">
