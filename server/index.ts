@@ -191,11 +191,8 @@ app.use((req, res) => {
     availableEndpoints: [
       "/health",
       "/api/system/info",
+      "/api/system/stats",
       "/api/secure-health/*",
-      "/api/auth/*",
-      "/api/enhanced-auth/*",
-      "/api/cloud-storage/*",
-      "/api/health-records/*",
     ],
   });
 });
@@ -249,7 +246,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`
 🏥 HealthChain Secure Medical Records System Started
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━��━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🌐 Server: http://localhost:${PORT}
 🔗 Health Check: http://localhost:${PORT}/health
@@ -268,7 +265,7 @@ async function startServer() {
    ✅ AES-256-GCM encryption
    ✅ IPFS decentralized storage
    ✅ Blockchain integrity verification
-   �� Rate limiting protection
+   ✅ Rate limiting protection
    ✅ Complete audit trail
 
 📋 Legacy API (backward compatibility):
