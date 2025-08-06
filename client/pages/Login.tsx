@@ -264,9 +264,22 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Registration error:", error);
+
+      let errorMessage = "Network error. Please check your connection and try again.";
+
+      if (error instanceof Error) {
+        if (error.message.includes("body stream")) {
+          errorMessage = "Request format error. Please try again.";
+        } else if (error.message.includes("HTTP error")) {
+          errorMessage = "Server error. Please try again in a moment.";
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage = "Network connection error. Please check your internet connection.";
+        }
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
