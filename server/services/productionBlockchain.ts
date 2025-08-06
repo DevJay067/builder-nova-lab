@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { HealthRecord, BlockchainTransaction } from "@shared/api";
+import { CryptoHelper } from "./cryptoHelper";
 
 /**
  * Production-Level Blockchain Service with Split Key Cryptography
@@ -512,7 +513,7 @@ class ProductionBlockchainService {
 
     this.blockchain.push(newBlock);
     console.log(
-      `⛏️  Successfully mined block #${blockNumber} with ${transactions.length} transactions`,
+      `��️  Successfully mined block #${blockNumber} with ${transactions.length} transactions`,
     );
 
     return newBlock;
