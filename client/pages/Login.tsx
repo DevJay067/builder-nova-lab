@@ -141,16 +141,23 @@ export default function Login() {
         }),
       });
 
-      // Clone the response to avoid "body stream already read" errors
-      const responseClone = response.clone();
       let result;
       let responseText = "";
 
       try {
-        responseText = await responseClone.text();
-      } catch (textError) {
-        console.error("❌ Failed to read response body:", textError);
-        throw new Error("Failed to read server response");
+        // Use arrayBuffer approach to avoid "body stream already read" errors
+        const buffer = await response.arrayBuffer();
+        responseText = new TextDecoder().decode(buffer);
+      } catch (bufferError) {
+        console.error("❌ Failed to read response body:", bufferError);
+        // Try alternative approach with clone
+        try {
+          const responseClone = response.clone();
+          responseText = await responseClone.text();
+        } catch (cloneError) {
+          console.error("❌ Clone approach also failed:", cloneError);
+          throw new Error("Failed to read server response");
+        }
       }
 
       if (!response.ok) {
