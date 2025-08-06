@@ -51,6 +51,17 @@ import {
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import {
+  registerUserSupabase,
+  loginUserSupabase,
+  getCurrentUserSupabase,
+  signOutSupabase,
+  storeHealthRecordSupabase,
+  getHealthRecordsSupabase,
+  getSystemStatsSupabase,
+  testSupabaseConnection,
+  healthCheckSupabase,
+} from "./routes/supabaseAuth";
 
 export function createServer() {
   // Initialize secure database on server startup
