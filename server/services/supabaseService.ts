@@ -220,15 +220,6 @@ class SupabaseService {
           }
         })
       },
-      storage: {
-        from: () => ({
-          upload: () => ({ data: { path: "mock-path" }, error: null }),
-          download: () => ({ data: new Blob(), error: null }),
-          remove: () => ({ data: [], error: null }),
-          list: () => ({ data: [], error: null }),
-        }),
-        createBucket: () => ({ data: null, error: null }),
-      },
       auth: {
         signUp: () => ({ data: { user: null }, error: null }),
         signInWithPassword: () => ({ data: { user: null }, error: null }),
@@ -282,7 +273,7 @@ class SupabaseService {
     const client = this.initialize();
 
     try {
-      console.log("🗄️ Setting up Supabase Storage buckets...");
+      console.log("����️ Setting up Supabase Storage buckets...");
 
       // Create health-vault bucket for secure health data
       const { data: bucketData, error: bucketError } =
