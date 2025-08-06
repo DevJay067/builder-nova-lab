@@ -48,29 +48,51 @@
             resultDiv.innerHTML = 'Testing registration...';
 
             try {
+                const testData = {
+                    username: 'testuser' + Date.now(),
+                    password: 'password123',
+                    email: 'test' + Date.now() + '@example.com',
+                    firstName: 'Test',
+                    lastName: 'User'
+                };
+
+                console.log('Sending registration request:', testData);
+
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        username: 'testuser' + Date.now(),
-                        password: 'password123',
-                        email: 'test' + Date.now() + '@example.com',
-                        firstName: 'Test',
-                        lastName: 'User'
-                    })
+                    body: JSON.stringify(testData)
                 });
 
                 console.log('Response status:', response.status);
                 console.log('Response headers:', Object.fromEntries(response.headers));
 
-                const result = await response.json();
+                let result;
+                let responseText;
+
+                try {
+                    result = await response.json();
+                    responseText = JSON.stringify(result, null, 2);
+                } catch (jsonError) {
+                    console.warn('Failed to parse as JSON, trying text:', jsonError);
+                    try {
+                        responseText = await response.text();
+                        result = { rawResponse: responseText };
+                    } catch (textError) {
+                        console.warn('Failed to read as text:', textError);
+                        result = { error: 'Could not read response body' };
+                        responseText = 'Failed to read response';
+                    }
+                }
+
                 console.log('Response body:', result);
 
                 resultDiv.innerHTML = `
                     <h3>Registration Response (Status: ${response.status}):</h3>
-                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                    <h4>Success: ${response.ok ? 'YES' : 'NO'}</h4>
+                    <pre>${responseText}</pre>
                 `;
             } catch (error) {
                 console.error('Registration error:', error);
