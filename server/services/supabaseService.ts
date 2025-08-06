@@ -218,7 +218,9 @@ class SupabaseService {
             }));
             return Promise.resolve({ data: files, error: null });
           }
-        })
+        }),
+        createBucket: () => Promise.resolve({ data: null, error: null }),
+        getBucket: () => Promise.resolve({ data: { name: 'mock-bucket' }, error: null }),
       },
       auth: {
         signUp: () => ({ data: { user: null }, error: null }),
@@ -273,7 +275,7 @@ class SupabaseService {
     const client = this.initialize();
 
     try {
-      console.log("����️ Setting up Supabase Storage buckets...");
+      console.log("🗄️ Setting up Supabase Storage buckets...");
 
       // Create health-vault bucket for secure health data
       const { data: bucketData, error: bucketError } =
