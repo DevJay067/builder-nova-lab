@@ -386,17 +386,23 @@ class UserAuthenticationService {
         console.warn("⚠️ Secure data access system not available, using basic mode:", secureError instanceof Error ? secureError.message : "Unknown error");
 
         // Fallback to basic user account
+        const sessionToken = this.createSessionToken({
+          id: user.id,
+          username: user.username,
+          userHash: user.userHash,
+        });
+
         secureAccountResult = {
           dataAccessActivated: false,
           splitKeySystem: false,
-          sessionToken: crypto.randomBytes(32).toString('hex'),
+          sessionToken: sessionToken,
         };
 
         user.secureSystemActivated = false;
         user.splitKeySystemActive = false;
 
         // Store session in fallback mode
-        this.storeSession(secureAccountResult.sessionToken, {
+        this.storeSession(sessionToken, {
           username: user.username,
           userHash: user.userHash,
           id: user.id,
