@@ -264,7 +264,7 @@ class ProductionBlockchainService {
       const [blockchainIvHex, blockchainEncrypted] = encryptedData.split(":");
       const blockchainIv = Buffer.from(blockchainIvHex, "hex");
 
-      const blockchainDecipher = crypto.createDecipher("aes-256-cbc", blockchainLayerKey);
+      const blockchainDecipher = crypto.createDecipheriv("aes-256-cbc", blockchainLayerKey, blockchainIv);
 
       let dataLayerData = blockchainDecipher.update(
         blockchainEncrypted,
