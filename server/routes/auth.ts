@@ -25,7 +25,8 @@ export const registerUser: RequestHandler = async (req, res) => {
       });
       return res.status(400).json({
         success: false,
-        message: "All fields are required: username, password, email, firstName, lastName",
+        message:
+          "All fields are required: username, password, email, firstName, lastName",
       });
     }
 
@@ -129,7 +130,9 @@ export const verifySession: RequestHandler = async (req, res) => {
       hasAuthHeader: !!req.headers.authorization,
       hasCookie: !!req.cookies.healthchain_session,
       hasXSessionHeader: !!req.headers["x-session-token"],
-      sessionToken: sessionToken ? `${sessionToken.substring(0, 20)}...` : "none",
+      sessionToken: sessionToken
+        ? `${sessionToken.substring(0, 20)}...`
+        : "none",
     });
 
     if (!sessionToken) {
@@ -141,7 +144,10 @@ export const verifySession: RequestHandler = async (req, res) => {
     }
 
     const result = UserAuthenticationService.verifySession(sessionToken);
-    console.log("🔐 Session verification result:", { valid: result.valid, hasUser: !!result.user });
+    console.log("🔐 Session verification result:", {
+      valid: result.valid,
+      hasUser: !!result.user,
+    });
 
     if (result.valid) {
       res.json({

@@ -1,8 +1,5 @@
 import crypto from "crypto";
-import {
-  SimpleSecureStorage,
-  SplitKeyData,
-} from "./simpleSecureStorage";
+import { SimpleSecureStorage, SplitKeyData } from "./simpleSecureStorage";
 import { NeonDatabaseService } from "./neonDatabase";
 
 /**
@@ -132,10 +129,7 @@ class SecureDataAccessService {
       console.log(`🔐 Creating secure account for user: ${username}`);
 
       // Generate user hash
-      const userHash = SimpleSecureStorage.generateUserHash(
-        username,
-        password,
-      );
+      const userHash = SimpleSecureStorage.generateUserHash(username, password);
 
       // Create initial health record to activate split key system
       const initialHealthRecord = {
@@ -233,10 +227,7 @@ class SecureDataAccessService {
       console.log(`🔐 Authenticating user: ${username}`);
 
       // Generate user hash
-      const userHash = SimpleSecureStorage.generateUserHash(
-        username,
-        password,
-      );
+      const userHash = SimpleSecureStorage.generateUserHash(username, password);
 
       // Check if user has data in blockchain (this verifies they exist)
       const hasData = await this.checkUserDataExists(userHash);
@@ -549,7 +540,9 @@ class SecureDataAccessService {
       const hasKeys = this.splitKeyCache.has(userHash);
 
       if (hasKeys) {
-        console.log(`✅ User exists in split key cache: ${userHash.substring(0, 16)}...`);
+        console.log(
+          `✅ User exists in split key cache: ${userHash.substring(0, 16)}...`,
+        );
         return true;
       }
 
@@ -559,7 +552,9 @@ class SecureDataAccessService {
       // for newly registered users even without medical records
 
       // For development, allow users to authenticate even without medical records
-      console.log(`⚠️ User not found in cache, allowing authentication: ${userHash.substring(0, 16)}...`);
+      console.log(
+        `⚠️ User not found in cache, allowing authentication: ${userHash.substring(0, 16)}...`,
+      );
       return true;
     } catch (error) {
       console.error("❌ Error checking user data existence:", error);
@@ -610,10 +605,14 @@ class SecureDataAccessService {
   static validateSession(sessionToken: string): boolean {
     const isValid = this.userSessions.has(sessionToken);
     console.log("🔐 Session validation:", {
-      sessionToken: sessionToken ? `${sessionToken.substring(0, 20)}...` : "none",
+      sessionToken: sessionToken
+        ? `${sessionToken.substring(0, 20)}...`
+        : "none",
       isValid,
       totalSessions: this.userSessions.size,
-      availableSessions: Array.from(this.userSessions.keys()).map(key => key.substring(0, 20) + "..."),
+      availableSessions: Array.from(this.userSessions.keys()).map(
+        (key) => key.substring(0, 20) + "...",
+      ),
     });
     return isValid;
   }

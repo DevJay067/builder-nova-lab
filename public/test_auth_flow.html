@@ -1,289 +1,346 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Auth Flow Test - HealthChain</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            margin: 0;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 24px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .title {
-            text-align: center;
-            color: #333;
-            margin-bottom: 24px;
-            font-size: 24px;
-            font-weight: 700;
-        }
-        
-        .section {
-            margin-bottom: 32px;
-            padding: 20px;
-            border: 2px solid #e1e5e9;
-            border-radius: 12px;
-        }
-        
-        .section h3 {
-            margin: 0 0 16px 0;
-            color: #667eea;
-            font-size: 18px;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 8px;
-            box-sizing: border-box;
-        }
-        
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-right: 8px;
-            margin-bottom: 8px;
-        }
-        
-        button:hover {
-            transform: translateY(-1px);
-        }
-        
-        .result {
-            margin-top: 16px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: monospace;
-        }
-        
-        .success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-        
-        .info {
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #3b82f6;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        margin: 0;
+      }
+
+      .container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .title {
+        text-align: center;
+        color: #333;
+        margin-bottom: 24px;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .section {
+        margin-bottom: 32px;
+        padding: 20px;
+        border: 2px solid #e1e5e9;
+        border-radius: 12px;
+      }
+
+      .section h3 {
+        margin: 0 0 16px 0;
+        color: #667eea;
+        font-size: 18px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-right: 8px;
+        margin-bottom: 8px;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .result {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: monospace;
+      }
+
+      .success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #10b981;
+      }
+
+      .error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #ef4444;
+      }
+
+      .info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #3b82f6;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1 class="title">🔐 Auth Flow Test</h1>
-        
-        <div class="section">
-            <h3>1. Register New User</h3>
-            <div class="grid">
-                <input type="text" id="regFirstName" placeholder="First Name" value="Test">
-                <input type="text" id="regLastName" placeholder="Last Name" value="User">
-            </div>
-            <input type="text" id="regUsername" placeholder="Username" value="">
-            <input type="email" id="regEmail" placeholder="Email" value="">
-            <input type="password" id="regPassword" placeholder="Password" value="testpass123">
-            <button onclick="testRegistration()">Register User</button>
-            <div id="regResult" class="result" style="display:none;"></div>
+      <h1 class="title">🔐 Auth Flow Test</h1>
+
+      <div class="section">
+        <h3>1. Register New User</h3>
+        <div class="grid">
+          <input
+            type="text"
+            id="regFirstName"
+            placeholder="First Name"
+            value="Test"
+          />
+          <input
+            type="text"
+            id="regLastName"
+            placeholder="Last Name"
+            value="User"
+          />
         </div>
-        
-        <div class="section">
-            <h3>2. Login User</h3>
-            <input type="text" id="loginUsername" placeholder="Username" value="">
-            <input type="password" id="loginPassword" placeholder="Password" value="testpass123">
-            <button onclick="testLogin()">Login User</button>
-            <div id="loginResult" class="result" style="display:none;"></div>
-        </div>
-        
-        <div class="section">
-            <h3>3. Verify Session</h3>
-            <button onclick="testVerifySession()">Verify Current Session</button>
-            <div id="verifyResult" class="result" style="display:none;"></div>
-        </div>
-        
-        <div class="section">
-            <h3>4. Full Flow Test</h3>
-            <button onclick="testFullFlow()">Register → Login → Verify</button>
-            <div id="flowResult" class="result" style="display:none;"></div>
-        </div>
+        <input type="text" id="regUsername" placeholder="Username" value="" />
+        <input type="email" id="regEmail" placeholder="Email" value="" />
+        <input
+          type="password"
+          id="regPassword"
+          placeholder="Password"
+          value="testpass123"
+        />
+        <button onclick="testRegistration()">Register User</button>
+        <div id="regResult" class="result" style="display: none"></div>
+      </div>
+
+      <div class="section">
+        <h3>2. Login User</h3>
+        <input type="text" id="loginUsername" placeholder="Username" value="" />
+        <input
+          type="password"
+          id="loginPassword"
+          placeholder="Password"
+          value="testpass123"
+        />
+        <button onclick="testLogin()">Login User</button>
+        <div id="loginResult" class="result" style="display: none"></div>
+      </div>
+
+      <div class="section">
+        <h3>3. Verify Session</h3>
+        <button onclick="testVerifySession()">Verify Current Session</button>
+        <div id="verifyResult" class="result" style="display: none"></div>
+      </div>
+
+      <div class="section">
+        <h3>4. Full Flow Test</h3>
+        <button onclick="testFullFlow()">Register → Login → Verify</button>
+        <div id="flowResult" class="result" style="display: none"></div>
+      </div>
     </div>
 
     <script>
-        let currentSessionToken = null;
-        
-        // Auto-generate unique test data
-        window.addEventListener('load', () => {
-            const timestamp = Date.now();
-            const username = `testuser${timestamp}`;
-            const email = `test${timestamp}@example.com`;
-            
-            document.getElementById('regUsername').value = username;
-            document.getElementById('regEmail').value = email;
-            document.getElementById('loginUsername').value = username;
-        });
-        
-        function showResult(elementId, message, type = 'info') {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.className = `result ${type}`;
-            element.style.display = 'block';
+      let currentSessionToken = null;
+
+      // Auto-generate unique test data
+      window.addEventListener("load", () => {
+        const timestamp = Date.now();
+        const username = `testuser${timestamp}`;
+        const email = `test${timestamp}@example.com`;
+
+        document.getElementById("regUsername").value = username;
+        document.getElementById("regEmail").value = email;
+        document.getElementById("loginUsername").value = username;
+      });
+
+      function showResult(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = `result ${type}`;
+        element.style.display = "block";
+      }
+
+      async function testRegistration() {
+        const data = {
+          firstName: document.getElementById("regFirstName").value,
+          lastName: document.getElementById("regLastName").value,
+          username: document.getElementById("regUsername").value,
+          email: document.getElementById("regEmail").value,
+          password: document.getElementById("regPassword").value,
+        };
+
+        try {
+          console.log("🚀 Starting registration:", data.username);
+
+          const response = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+          console.log("📝 Registration response:", result);
+
+          if (response.ok && result.success) {
+            currentSessionToken = result.user?.sessionToken;
+            showResult(
+              "regResult",
+              `✅ Registration successful! SessionToken: ${currentSessionToken?.substring(0, 20)}...`,
+              "success",
+            );
+          } else {
+            showResult(
+              "regResult",
+              `❌ Registration failed: ${result.message}`,
+              "error",
+            );
+          }
+        } catch (error) {
+          console.error("Registration error:", error);
+          showResult("regResult", `🔥 Error: ${error.message}`, "error");
         }
-        
-        async function testRegistration() {
-            const data = {
-                firstName: document.getElementById('regFirstName').value,
-                lastName: document.getElementById('regLastName').value,
-                username: document.getElementById('regUsername').value,
-                email: document.getElementById('regEmail').value,
-                password: document.getElementById('regPassword').value
-            };
-            
-            try {
-                console.log('🚀 Starting registration:', data.username);
-                
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                console.log('📝 Registration response:', result);
-                
-                if (response.ok && result.success) {
-                    currentSessionToken = result.user?.sessionToken;
-                    showResult('regResult', `✅ Registration successful! SessionToken: ${currentSessionToken?.substring(0, 20)}...`, 'success');
-                } else {
-                    showResult('regResult', `❌ Registration failed: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                showResult('regResult', `🔥 Error: ${error.message}`, 'error');
-            }
+      }
+
+      async function testLogin() {
+        const data = {
+          username: document.getElementById("loginUsername").value,
+          password: document.getElementById("loginPassword").value,
+        };
+
+        try {
+          console.log("🔐 Starting login:", data.username);
+
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+          console.log("🔓 Login response:", result);
+
+          if (response.ok && result.success) {
+            currentSessionToken = result.user?.sessionToken;
+            localStorage.setItem("sessionToken", currentSessionToken);
+            showResult(
+              "loginResult",
+              `✅ Login successful! SessionToken: ${currentSessionToken?.substring(0, 20)}...`,
+              "success",
+            );
+          } else {
+            showResult(
+              "loginResult",
+              `❌ Login failed: ${result.message}`,
+              "error",
+            );
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          showResult("loginResult", `🔥 Error: ${error.message}`, "error");
         }
-        
-        async function testLogin() {
-            const data = {
-                username: document.getElementById('loginUsername').value,
-                password: document.getElementById('loginPassword').value
-            };
-            
-            try {
-                console.log('🔐 Starting login:', data.username);
-                
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                console.log('🔓 Login response:', result);
-                
-                if (response.ok && result.success) {
-                    currentSessionToken = result.user?.sessionToken;
-                    localStorage.setItem('sessionToken', currentSessionToken);
-                    showResult('loginResult', `✅ Login successful! SessionToken: ${currentSessionToken?.substring(0, 20)}...`, 'success');
-                } else {
-                    showResult('loginResult', `❌ Login failed: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                showResult('loginResult', `🔥 Error: ${error.message}`, 'error');
-            }
+      }
+
+      async function testVerifySession() {
+        const sessionToken =
+          currentSessionToken || localStorage.getItem("sessionToken");
+
+        if (!sessionToken) {
+          showResult("verifyResult", "❌ No session token available", "error");
+          return;
         }
-        
-        async function testVerifySession() {
-            const sessionToken = currentSessionToken || localStorage.getItem('sessionToken');
-            
-            if (!sessionToken) {
-                showResult('verifyResult', '❌ No session token available', 'error');
-                return;
-            }
-            
-            try {
-                console.log('🔍 Verifying session:', sessionToken.substring(0, 20) + '...');
-                
-                const response = await fetch('/api/auth/verify', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${sessionToken}`,
-                        'x-session-token': sessionToken
-                    }
-                });
-                
-                const result = await response.json();
-                console.log('✅ Verify response:', result);
-                
-                if (response.ok && result.success) {
-                    showResult('verifyResult', `✅ Session valid! User: ${result.user?.username}`, 'success');
-                } else {
-                    showResult('verifyResult', `❌ Session invalid: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                console.error('Verify error:', error);
-                showResult('verifyResult', `🔥 Error: ${error.message}`, 'error');
-            }
+
+        try {
+          console.log(
+            "🔍 Verifying session:",
+            sessionToken.substring(0, 20) + "...",
+          );
+
+          const response = await fetch("/api/auth/verify", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+              "x-session-token": sessionToken,
+            },
+          });
+
+          const result = await response.json();
+          console.log("✅ Verify response:", result);
+
+          if (response.ok && result.success) {
+            showResult(
+              "verifyResult",
+              `✅ Session valid! User: ${result.user?.username}`,
+              "success",
+            );
+          } else {
+            showResult(
+              "verifyResult",
+              `❌ Session invalid: ${result.message}`,
+              "error",
+            );
+          }
+        } catch (error) {
+          console.error("Verify error:", error);
+          showResult("verifyResult", `🔥 Error: ${error.message}`, "error");
         }
-        
-        async function testFullFlow() {
-            showResult('flowResult', '🚀 Starting full flow test...', 'info');
-            
-            try {
-                // Step 1: Register
-                await testRegistration();
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Step 2: Login
-                await testLogin();
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Step 3: Verify
-                await testVerifySession();
-                
-                showResult('flowResult', '✅ Full flow completed! Check individual sections for details.', 'success');
-            } catch (error) {
-                showResult('flowResult', `❌ Full flow failed: ${error.message}`, 'error');
-            }
+      }
+
+      async function testFullFlow() {
+        showResult("flowResult", "🚀 Starting full flow test...", "info");
+
+        try {
+          // Step 1: Register
+          await testRegistration();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // Step 2: Login
+          await testLogin();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // Step 3: Verify
+          await testVerifySession();
+
+          showResult(
+            "flowResult",
+            "✅ Full flow completed! Check individual sections for details.",
+            "success",
+          );
+        } catch (error) {
+          showResult(
+            "flowResult",
+            `❌ Full flow failed: ${error.message}`,
+            "error",
+          );
         }
+      }
     </script>
-</body>
+  </body>
 </html>
