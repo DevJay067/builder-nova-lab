@@ -353,7 +353,11 @@ class SupabaseService {
         return { success: false, error: error.message };
       }
 
-      console.log(`✅ Health record stored: ${recordId}`);
+      console.log(`✅ Health record stored: ${recordId}`, {
+        type: record.record_type,
+        title: record.title,
+        totalRecords: this.mockStorage?.health_records?.length || 'unknown'
+      });
       return { success: true, recordId };
     } catch (error) {
       console.error("❌ Error storing health record:", error);
