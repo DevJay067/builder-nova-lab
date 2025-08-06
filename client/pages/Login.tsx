@@ -191,6 +191,9 @@ export default function Login() {
 
     if (!validateForm(false)) return;
 
+    // Prevent duplicate submissions
+    if (isLoading) return;
+
     setIsLoading(true);
 
     try {
@@ -207,6 +210,10 @@ export default function Login() {
           lastName: registerForm.lastName,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
 
