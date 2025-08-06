@@ -55,7 +55,7 @@ export const loginUserSupabase: RequestHandler = async (req, res) => {
 
     console.log(`🔐 Authenticating user with Supabase: ${email}`);
 
-    const result = await SupabaseAuthService.authenticateUser(email, password);
+    const result = await SupabaseService.authenticateUser(email, password);
 
     if (result.success) {
       res.json(result);
