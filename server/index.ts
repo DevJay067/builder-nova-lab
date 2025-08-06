@@ -44,6 +44,7 @@ import {
   createDataAccess,
   verifyDataAccess,
   getAuthStats,
+  getAuthHealth,
   authenticateUser,
 } from "./routes/auth";
 import {
