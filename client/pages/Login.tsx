@@ -76,6 +76,11 @@ export default function Login() {
     // Use requestAnimationFrame for better performance
     const initializeComponent = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Update document title with server info
+      const serverInfo = window.location.hostname;
+      document.title = `HealthChain Login - ${serverInfo}`;
+
       setIsInitialized(true);
     };
 
