@@ -155,6 +155,11 @@ export const loginUser: RequestHandler = async (req, res) => {
         credentials.username,
         credentials.password,
       );
+
+      console.log("🔑 Authentication result:", {
+        success: result.success,
+        message: result.message
+      });
     } catch (error) {
       console.warn(
         "⚠️ Full authentication failed, using simple fallback:",
