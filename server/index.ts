@@ -95,17 +95,13 @@ export function createServer() {
         );
       }
 
-      // Initialize Supabase authentication system
+      // Initialize Supabase system
       try {
-        const { SupabaseAuthService } = await import(
-          "./services/supabaseAuthService"
-        );
-        await SupabaseAuthService.initialize();
-        console.log("✅ Supabase authentication system initialized successfully");
+        const { SupabaseService } = await import("./services/supabaseService");
+        SupabaseService.initialize();
+        console.log("✅ Supabase system initialized successfully");
       } catch (authError) {
-        console.log(
-          "⚠️  Supabase authentication system not configured, using fallback",
-        );
+        console.log("⚠️  Supabase system not configured, using fallback");
         console.log("   The system will work in demo mode");
       }
 
