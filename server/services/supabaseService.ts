@@ -65,8 +65,10 @@ class SupabaseService {
 
       if (!supabaseUrl || !supabaseKey) {
         console.warn(
-          "⚠️ Supabase credentials not configured, using mock client",
+          "⚠️ Supabase credentials not configured, using persistent mock client",
         );
+        // Load persistent storage before creating mock client
+        this.loadPersistentStorage();
         // Return a mock client for development
         return this.createMockClient();
       }
