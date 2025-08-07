@@ -422,6 +422,65 @@ export default function HealthAnalytics() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Quick Actions for Health Tracking */}
+        {isAuthenticated && (
+          <Card className="mb-6 bg-gradient-to-r from-primary/5 to-blue-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2 text-primary" />
+                Health Tracking Setup
+              </CardTitle>
+              <CardDescription>
+                Set up personalized notifications for better health management
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Moon className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <p className="text-sm font-medium">Sleep Cycle</p>
+                    <p className="text-xs text-muted-foreground">Set bedtime reminders</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Droplets className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium">Water Intake</p>
+                    <p className="text-xs text-muted-foreground">Hydration reminders</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Activity className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium">Activity Goals</p>
+                    <p className="text-xs text-muted-foreground">Coming soon</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Heart className="h-5 w-5 text-red-600" />
+                  <div>
+                    <p className="text-sm font-medium">Medication</p>
+                    <p className="text-xs text-muted-foreground">Coming soon</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Click on the "Tracking" tab above to set up your personalized health notifications
+                </p>
+                <Button variant="outline" size="sm" onClick={() => {
+                  const trackingTab = document.querySelector('[value="tracking"]') as HTMLElement;
+                  trackingTab?.click();
+                }}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Set Up Tracking
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Health Score Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {healthMetrics.map((metric, index) => (
