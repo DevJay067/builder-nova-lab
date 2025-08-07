@@ -23,6 +23,7 @@ import {
   Zap,
   Shield
 } from "lucide-react";
+import HealthTracking from "@/components/HealthTracking";
 
 interface HealthRecord {
   id: string;
