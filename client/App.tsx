@@ -74,6 +74,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/health-analytics"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <HealthAnalytics />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/legal" element={<Legal />} />
               <Route
                 path="/secure"
