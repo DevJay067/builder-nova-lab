@@ -604,12 +604,14 @@ IMPORTANT INSTRUCTIONS:
                 personalizedContext?.hasData) && (
                 <Badge
                   variant="default"
-                  className="text-xs bg-gradient-to-r from-primary to-primary/80 border-primary/20"
+                  className="text-xs bg-gradient-to-r from-primary to-primary/80 border-primary/20 hidden sm:flex"
                 >
                   <Activity className="h-3 w-3 mr-1" />
-                  {aiHealthContext?.context?.totalRecords > 0
-                    ? `${aiHealthContext.context.totalRecords} Records`
-                    : "Personalized"}
+                  <span className="hidden sm:inline">
+                    {aiHealthContext?.context?.totalRecords > 0
+                      ? `${aiHealthContext.context.totalRecords} Records`
+                      : "Personalized"}
+                  </span>
                 </Badge>
               )}
               <Badge
@@ -631,16 +633,25 @@ IMPORTANT INSTRUCTIONS:
                         : "status-error"
                   }`}
                 ></div>
-                {aiStatus === "active"
-                  ? "AI Ready"
-                  : aiStatus === "ready"
-                    ? "Connecting"
-                    : "Starting"}
+                <span className="hidden sm:inline">
+                  {aiStatus === "active"
+                    ? "AI Ready"
+                    : aiStatus === "ready"
+                      ? "Connecting"
+                      : "Starting"}
+                </span>
+                <span className="sm:hidden">
+                  {aiStatus === "active"
+                    ? "Ready"
+                    : aiStatus === "ready"
+                      ? "..."
+                      : "..."}
+                </span>
               </Badge>
               <Button
                 variant="outline"
                 size="sm"
-                className="btn-smooth hover:bg-muted"
+                className="btn-smooth hover:bg-muted px-2"
               >
                 <Settings className="h-4 w-4" />
               </Button>
