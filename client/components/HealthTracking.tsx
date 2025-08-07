@@ -6,17 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Moon, 
-  Droplets, 
-  Bell, 
-  Clock, 
+import {
+  Moon,
+  Droplets,
+  Bell,
+  Clock,
   Plus,
   CheckCircle,
   AlertCircle,
   Calendar,
   Trash2,
-  Settings
+  Settings,
+  Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
