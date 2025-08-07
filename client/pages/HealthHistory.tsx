@@ -95,6 +95,8 @@ export default function HealthHistory() {
   const [stats, setStats] = useState({
     totalRecords: 0,
     secureRecords: 0,
+    vaultRecords: 0,
+    cloudRecords: 0,
     lastUpdate: null as string | null,
   });
 
