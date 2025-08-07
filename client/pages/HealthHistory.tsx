@@ -250,11 +250,12 @@ export default function HealthHistory() {
           setRecords(transformedRecords);
           setStats({
             totalRecords: transformedRecords.length,
-            secureRecords: transformedRecords.filter((r: any) => r.isSecure)
-              .length,
-            cloudStorageRecords: transformedRecords.filter(
-              (r: any) =>
-                r.metadata?.cloudStorage?.type === "supabase-cloud-vault",
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
+            vaultRecords: transformedRecords.filter(
+              (r: any) => r.metadata?.encryptedVault || r.metadata?.cloudStorage?.type === "supabase-cloud-vault",
+            ).length,
+            cloudRecords: transformedRecords.filter(
+              (r: any) => r.metadata?.cloudStorage?.type === "supabase-cloud-vault",
             ).length,
             lastUpdate: new Date().toISOString(),
           });
