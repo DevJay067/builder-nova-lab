@@ -576,30 +576,30 @@ IMPORTANT INSTRUCTIONS:
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 page-transition">
       {/* Enhanced Header */}
       <header className="border-b border-border/40 glass backdrop-blur-xl sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 fade-in">
+            <div className="flex items-center space-x-2 sm:space-x-4 fade-in min-w-0 flex-1">
               <Link to="/">
-                <Button variant="ghost" size="sm" className="btn-smooth">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
+                <Button variant="ghost" size="sm" className="btn-smooth px-2 sm:px-3">
+                  <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
                 </Button>
               </Link>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 transform-smooth hover:scale-110">
-                  <Brain className="h-6 w-6" />
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 transform-smooth hover:scale-110 flex-shrink-0">
+                  <Brain className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-800">
-                    B-max AI Assistant
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-bold text-slate-800 truncate">
+                    B-max AI
                   </h1>
-                  <p className="text-sm text-slate-600 font-medium">
-                    Personalized Health AI
+                  <p className="text-xs sm:text-sm text-slate-600 font-medium truncate">
+                    Health AI
                   </p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2 fade-in fade-in-delay-1">
+            <div className="flex items-center space-x-1 sm:space-x-2 fade-in fade-in-delay-1 flex-shrink-0">
               {(aiHealthContext?.context?.totalRecords > 0 ||
                 personalizedContext?.hasData) && (
                 <Badge
