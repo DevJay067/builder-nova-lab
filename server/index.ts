@@ -503,15 +503,56 @@ export function createServer() {
   app.get("/api/ai/health-context", getHealthDataForAI);
   app.post("/api/ai/search-health", searchHealthRecordsForAI);
 
-  // Test persistent storage endpoint
-  app.post("/api/debug/save-storage", (req, res) => {
+  // Export storage data for backup
+  app.get("/api/debug/export-storage", (req, res) => {
     try {
       const { SupabaseService } = require("./services/supabaseService");
-      SupabaseService.forceSave();
+      const storageData = (SupabaseService as any).mockStorage;
+      const filesData = (SupabaseService as any).mockStorageFiles;
+
       res.json({
         success: true,
-        message: "Storage saved to file",
-        files: ["./mock_storage.json", "./mock_files_storage.json"],
+        message: "Storage data exported",
+        export: {
+          timestamp: new Date().toISOString(),
+          storage: storageData,
+          files: filesData,
+          summary: {
+            totalUsers: storageData?.users?.length || 0,
+            totalHealthRecords: storageData?.health_records?.length || 0,
+            totalFiles: Object.keys(filesData || {}).length,
+          }
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Import storage data from backup
+  app.post("/api/debug/import-storage", (req, res) => {
+    try {
+      const { SupabaseService } = require("./services/supabaseService");
+      const { storage, files } = req.body;
+
+      if (storage) {
+        (SupabaseService as any).mockStorage = storage;
+      }
+      if (files) {
+        (SupabaseService as any).mockStorageFiles = files;
+      }
+
+      res.json({
+        success: true,
+        message: "Storage data imported successfully",
+        imported: {
+          users: storage?.users?.length || 0,
+          health_records: storage?.health_records?.length || 0,
+          files: Object.keys(files || {}).length,
+        }
       });
     } catch (error) {
       res.status(500).json({
