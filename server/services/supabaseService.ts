@@ -587,11 +587,12 @@ class SupabaseService {
   }
 
   /**
-   * Retrieve health data from storage vault
+   * Retrieve and decrypt health data from storage vault
    */
   static async retrieveFromVault(
     path: string,
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+    patientId: string
+  ): Promise<{ success: boolean; data?: any; metadata?: any; error?: string }> {
     const client = this.initialize();
 
     try {
@@ -605,12 +606,74 @@ class SupabaseService {
       }
 
       const text = await data.text();
-      const parsedData = JSON.parse(text);
+      const vaultData = JSON.parse(text);
 
-      console.log(`✅ Data retrieved from vault: ${path}`);
-      return { success: true, data: parsedData };
+      // Verify this vault belongs to the requesting patient
+      if (vaultData.metadata?.patientId !== patientId) {
+        console.error("❌ Vault access denied: Patient ID mismatch");
+        return { success: false, error: "Access denied: Vault belongs to different user" };
+      }
+
+      // Decrypt the data
+      const decryptedData = this.decryptFromVault(
+        vaultData.encryptedPayload,
+        vaultData.metadata.iv,
+        patientId
+      );
+
+      // Update access count
+      vaultData.metadata.accessCount = (vaultData.metadata.accessCount || 0) + 1;
+      vaultData.metadata.lastAccessed = new Date().toISOString();
+
+      console.log(`✅ Data retrieved from encrypted vault: ${path}`, {
+        vaultId: vaultData.metadata.vaultId,
+        dataType: vaultData.metadata.dataType,
+        accessCount: vaultData.metadata.accessCount
+      });
+
+      return {
+        success: true,
+        data: decryptedData,
+        metadata: vaultData.metadata
+      };
     } catch (error) {
       console.error("❌ Error retrieving from vault:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  /**
+   * List all vault files for a specific patient
+   */
+  static async listPatientVaults(
+    patientId: string
+  ): Promise<{ success: boolean; vaults?: any[]; error?: string }> {
+    const client = this.initialize();
+
+    try {
+      const { data, error } = await client.storage
+        .from("health-vault")
+        .list(`${patientId}/vault`);
+
+      if (error) {
+        console.error("❌ Error listing vaults:", error);
+        return { success: false, error: error.message };
+      }
+
+      const vaults = data?.map(file => ({
+        name: file.name,
+        size: file.metadata?.size || 0,
+        lastModified: file.updated_at || file.created_at,
+        path: `${patientId}/vault/${file.name}`
+      })) || [];
+
+      console.log(`✅ Listed ${vaults.length} vaults for patient: ${patientId}`);
+      return { success: true, vaults };
+    } catch (error) {
+      console.error("❌ Error listing patient vaults:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
