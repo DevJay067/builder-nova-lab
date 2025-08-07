@@ -24,8 +24,30 @@ import {
   Shield
 } from "lucide-react";
 
+interface HealthRecord {
+  id: string;
+  record_type: string;
+  title: string;
+  description?: string;
+  doctor?: string;
+  date: string;
+  metadata?: any;
+}
+
+interface UserHealthData {
+  healthRecords: HealthRecord[];
+  totalRecords: number;
+  lastRecordDate: string | null;
+  conditions: string[];
+  medications: string[];
+  recentSymptoms: string[];
+}
+
 export default function HealthAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
+  const [userHealthData, setUserHealthData] = useState<UserHealthData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const healthMetrics = [
     {
