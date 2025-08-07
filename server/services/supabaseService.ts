@@ -171,6 +171,9 @@ class SupabaseService {
             insertedRecords.push(newRecord);
           });
 
+          // Save to persistent storage after insert
+          this.savePersistentStorage();
+
           // Return a chainable object that supports .select() and .single()
           const insertResult = {
             data: insertedRecords,
