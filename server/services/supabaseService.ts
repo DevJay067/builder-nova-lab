@@ -78,13 +78,65 @@ class SupabaseService {
     return this.client;
   }
 
-  // In-memory storage for mock client
+  // Persistent file-based storage for mock client
+  private static storageFilePath = "./mock_storage.json";
+  private static filesStoragePath = "./mock_files_storage.json";
+
   public static mockStorage: { [table: string]: any[] } = {
     health_records: [],
     secure_data_records: [],
     users: [],
   };
   private static mockStorageFiles: { [path: string]: any } = {};
+
+  /**
+   * Load persistent storage from file
+   */
+  private static loadPersistentStorage(): void {
+    try {
+      const fs = require('fs');
+      if (fs.existsSync(this.storageFilePath)) {
+        const data = fs.readFileSync(this.storageFilePath, 'utf8');
+        this.mockStorage = JSON.parse(data);
+        console.log("✅ Loaded persistent storage:", {
+          health_records: this.mockStorage.health_records?.length || 0,
+          users: this.mockStorage.users?.length || 0,
+        });
+      }
+
+      if (fs.existsSync(this.filesStoragePath)) {
+        const filesData = fs.readFileSync(this.filesStoragePath, 'utf8');
+        this.mockStorageFiles = JSON.parse(filesData);
+        console.log("✅ Loaded persistent file storage:", Object.keys(this.mockStorageFiles).length, "files");
+      }
+    } catch (error) {
+      console.log("⚠️ Could not load persistent storage, starting fresh:", error instanceof Error ? error.message : "Unknown error");
+      this.mockStorage = {
+        health_records: [],
+        secure_data_records: [],
+        users: [],
+      };
+      this.mockStorageFiles = {};
+    }
+  }
+
+  /**
+   * Save persistent storage to file
+   */
+  private static savePersistentStorage(): void {
+    try {
+      const fs = require('fs');
+      fs.writeFileSync(this.storageFilePath, JSON.stringify(this.mockStorage, null, 2));
+      fs.writeFileSync(this.filesStoragePath, JSON.stringify(this.mockStorageFiles, null, 2));
+      console.log("💾 Saved persistent storage:", {
+        health_records: this.mockStorage.health_records?.length || 0,
+        users: this.mockStorage.users?.length || 0,
+        files: Object.keys(this.mockStorageFiles).length,
+      });
+    } catch (error) {
+      console.error("❌ Failed to save persistent storage:", error);
+    }
+  }
 
   /**
    * Create mock client for development when credentials are not available
