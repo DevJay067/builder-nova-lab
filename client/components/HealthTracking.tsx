@@ -423,6 +423,42 @@ export default function HealthTracking() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Notification Setup Alert */}
+        {typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== "granted" && (
+          <Card className="mb-6 border-yellow-200 bg-yellow-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100">
+                  <Bell className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-yellow-800">Enable Notifications</h3>
+                  <p className="text-sm text-yellow-700 mb-3">
+                    {Notification.permission === "denied"
+                      ? "Notifications are blocked. Please enable them in your browser settings to receive health reminders."
+                      : "Allow notifications to receive personalized health reminders for sleep and hydration."
+                    }
+                  </p>
+                  <div className="flex space-x-2">
+                    {Notification.permission !== "denied" && (
+                      <Button onClick={requestNotificationPermission} size="sm">
+                        <Bell className="h-4 w-4 mr-2" />
+                        Enable Notifications
+                      </Button>
+                    )}
+                    {Notification.permission === "granted" && (
+                      <Button onClick={testNotifications} variant="outline" size="sm">
+                        <Zap className="h-4 w-4 mr-2" />
+                        Test Notifications
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="sleep" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="sleep" className="flex items-center space-x-2">
