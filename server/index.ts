@@ -503,6 +503,24 @@ export function createServer() {
   app.get("/api/ai/health-context", getHealthDataForAI);
   app.post("/api/ai/search-health", searchHealthRecordsForAI);
 
+  // Test persistent storage endpoint
+  app.post("/api/debug/save-storage", (req, res) => {
+    try {
+      const { SupabaseService } = require("./services/supabaseService");
+      SupabaseService.forceSave();
+      res.json({
+        success: true,
+        message: "Storage saved to file",
+        files: ["./mock_storage.json", "./mock_files_storage.json"],
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // Debug endpoint to check mock storage
   app.get("/api/debug/mock-storage", (req, res) => {
     try {
