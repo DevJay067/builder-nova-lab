@@ -704,39 +704,98 @@ export default function HealthTracking() {
             {/* Notification Status */}
             <Card>
               <CardHeader>
-                <CardTitle>Notification Status</CardTitle>
+                <CardTitle className="flex items-center">
+                  <Bell className="h-5 w-5 mr-2" />
+                  Notification Status
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {Notification.permission === "granted" ? (
-                  <div className="flex items-center space-x-2 text-green-600">
-                    <CheckCircle className="h-5 w-5" />
-                    <span>Notifications are enabled</span>
-                  </div>
-                ) : Notification.permission === "denied" ? (
-                  <div className="flex items-center space-x-2 text-red-600">
-                    <AlertCircle className="h-5 w-5" />
-                    <span>Notifications are blocked. Please enable them in browser settings.</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 text-yellow-600">
-                    <AlertCircle className="h-5 w-5" />
-                    <span>Please enable notifications for reminders to work</span>
-                  </div>
-                )}
+                <div className="space-y-3">
+                  {typeof window !== 'undefined' && 'Notification' in window ? (
+                    <>
+                      {/* Status Display */}
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          {Notification.permission === "granted" ? (
+                            <>
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                              <div>
+                                <p className="font-medium text-green-800">Notifications Enabled</p>
+                                <p className="text-sm text-green-600">You'll receive health tracking reminders</p>
+                              </div>
+                            </>
+                          ) : Notification.permission === "denied" ? (
+                            <>
+                              <AlertCircle className="h-5 w-5 text-red-600" />
+                              <div>
+                                <p className="font-medium text-red-800">Notifications Blocked</p>
+                                <p className="text-sm text-red-600">Enable in browser settings to receive reminders</p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="h-5 w-5 text-yellow-600" />
+                              <div>
+                                <p className="font-medium text-yellow-800">Notifications Not Set</p>
+                                <p className="text-sm text-yellow-600">Click below to enable health reminders</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className={`px-2 py-1 rounded text-xs font-medium ${
+                            Notification.permission === "granted"
+                              ? "bg-green-100 text-green-800"
+                              : Notification.permission === "denied"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}>
+                            {Notification.permission === "granted" ? "Active" :
+                             Notification.permission === "denied" ? "Blocked" : "Inactive"}
+                          </div>
+                        </div>
+                      </div>
 
-                <div className="flex space-x-2">
-                  {Notification.permission !== "granted" && (
-                    <Button onClick={requestNotificationPermission} size="sm">
-                      <Bell className="h-4 w-4 mr-2" />
-                      Enable Notifications
-                    </Button>
-                  )}
+                      {/* Action Buttons */}
+                      <div className="flex space-x-2">
+                        {Notification.permission === "default" && (
+                          <Button onClick={requestNotificationPermission} className="flex-1">
+                            <Bell className="h-4 w-4 mr-2" />
+                            Enable Notifications
+                          </Button>
+                        )}
 
-                  {Notification.permission === "granted" && (
-                    <Button onClick={testNotifications} variant="outline" size="sm">
-                      <Zap className="h-4 w-4 mr-2" />
-                      Test Notifications
-                    </Button>
+                        {Notification.permission === "granted" && (
+                          <>
+                            <Button onClick={testNotifications} variant="outline" className="flex-1">
+                              <Zap className="h-4 w-4 mr-2" />
+                              Test Notifications
+                            </Button>
+                            <Button onClick={requestNotificationPermission} variant="ghost" size="sm">
+                              Re-check Status
+                            </Button>
+                          </>
+                        )}
+
+                        {Notification.permission === "denied" && (
+                          <div className="w-full p-3 bg-red-50 rounded-lg text-center">
+                            <p className="text-sm text-red-700 mb-2">
+                              To enable notifications:
+                            </p>
+                            <ol className="text-xs text-red-600 text-left space-y-1">
+                              <li>1. Click the lock icon in your browser's address bar</li>
+                              <li>2. Set "Notifications" to "Allow"</li>
+                              <li>3. Refresh this page</li>
+                            </ol>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Notifications not supported in this browser</p>
+                    </div>
                   )}
                 </div>
               </CardContent>
