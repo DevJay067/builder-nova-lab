@@ -416,7 +416,7 @@ export default function HealthHistory() {
       if (result.success) {
         setMessage({
           type: "success",
-          text: "Health record saved securely to Supabase cloud storage!",
+          text: "Health record saved to cloud storage (vault unavailable, using fallback)!",
         });
         setIsDialogOpen(false);
         setNewRecord({
