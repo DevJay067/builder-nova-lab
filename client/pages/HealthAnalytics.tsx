@@ -49,6 +49,88 @@ export default function HealthAnalytics() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  useEffect(() => {
+    loadHealthAnalyticsData();
+  }, []);
+
+  const loadHealthAnalyticsData = async () => {
+    try {
+      setIsLoading(true);
+
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
+
+      if (!sessionToken) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Verify authentication
+      const authResponse = await fetch("/api/auth/verify", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      if (!authResponse.ok) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
+
+      // Load health records
+      const healthResponse = await fetch("/api/health-data/records", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      if (healthResponse.ok) {
+        const healthData = await healthResponse.json();
+        console.log("✅ Health analytics data loaded:", healthData);
+
+        if (healthData.success && healthData.records) {
+          const records = healthData.records;
+
+          // Extract analytics data from health records
+          const conditions = records
+            .filter((record: HealthRecord) => record.record_type === 'condition' || record.record_type === 'diagnosis')
+            .map((record: HealthRecord) => record.title);
+
+          const medications = records
+            .filter((record: HealthRecord) => record.record_type === 'medication')
+            .map((record: HealthRecord) => record.title);
+
+          const symptoms = records
+            .filter((record: HealthRecord) => record.record_type === 'symptom')
+            .map((record: HealthRecord) => record.title);
+
+          setUserHealthData({
+            healthRecords: records,
+            totalRecords: records.length,
+            lastRecordDate: records.length > 0 ? records[0].date : null,
+            conditions: conditions,
+            medications: medications,
+            recentSymptoms: symptoms
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error loading health analytics data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const healthMetrics = [
     {
       title: "Overall Health Score",
