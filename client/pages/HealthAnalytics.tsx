@@ -24,7 +24,8 @@ import {
   Shield,
   Moon,
   Droplets,
-  Settings
+  Settings,
+  Bell
 } from "lucide-react";
 import HealthTracking from "@/components/HealthTracking";
 
