@@ -198,7 +198,7 @@ export default function BmaxAI() {
 
   const loadAIHealthContext = async (sessionToken: string) => {
     try {
-      console.log("���� Loading AI health context from saved records...");
+      console.log("�� Loading AI health context from saved records...");
       const response = await fetch("/api/ai/health-context", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
@@ -793,14 +793,14 @@ IMPORTANT INSTRUCTIONS:
                 </div>
               </div>
             </div>
-            <CardDescription className="text-sm leading-relaxed">
+            <CardDescription className="text-xs sm:text-sm leading-relaxed">
               {isLoadingContext
                 ? "Loading your health records and medical context..."
                 : aiHealthContext?.context?.totalRecords > 0
-                  ? `AI is personalized with ${aiHealthContext.context.totalRecords} health records (${aiHealthContext.context.medicalProfile.conditions.length} conditions, ${aiHealthContext.context.medicalProfile.currentMedications.length} medications). Ask about symptoms and get targeted advice based on your actual medical history.`
+                  ? `AI personalized with ${aiHealthContext.context.totalRecords} health records (${aiHealthContext.context.medicalProfile.conditions.length} conditions, ${aiHealthContext.context.medicalProfile.currentMedications.length} medications). Ask about symptoms for targeted advice.`
                   : personalizedContext?.hasData
-                    ? `AI is personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms and get targeted advice.`
-                    : "AI is ready to help with general health questions. Add health records in the Health History section to get personalized recommendations based on your medical data."}
+                    ? `AI personalized with your medical history (${personalizedContext.summary.totalConditions} conditions, ${personalizedContext.summary.currentMedications} medications). Ask about symptoms for targeted advice.`
+                    : "AI ready for general health questions. Add health records for personalized recommendations."}
             </CardDescription>
           </CardHeader>
 
