@@ -386,9 +386,37 @@ export default function HealthTracking() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Bell className="h-5 w-5 mr-2 text-primary" />
-          Health Tracking & Notifications
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Bell className="h-5 w-5 mr-2 text-primary" />
+            Health Tracking & Notifications
+          </div>
+          {/* Notification Status Indicator */}
+          <div className="flex items-center space-x-2">
+            {typeof window !== 'undefined' && 'Notification' in window ? (
+              Notification.permission === "granted" ? (
+                <div className="flex items-center space-x-1 text-green-600 text-sm">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Enabled</span>
+                </div>
+              ) : Notification.permission === "denied" ? (
+                <div className="flex items-center space-x-1 text-red-600 text-sm">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Blocked</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-1 text-yellow-600 text-sm">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Not Set</span>
+                </div>
+              )
+            ) : (
+              <div className="flex items-center space-x-1 text-gray-500 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                <span>Unavailable</span>
+              </div>
+            )}
+          </div>
         </CardTitle>
         <CardDescription>
           Set up personalized reminders for sleep and hydration to maintain healthy habits
