@@ -840,23 +840,23 @@ IMPORTANT INSTRUCTIONS:
                   className="w-full h-full border-0 rounded-b-lg"
                   title="B-max AI Health Assistant"
                   allow="microphone; camera"
-                  style={{ minHeight: "400px" }}
+                  style={{ minHeight: "350px" }}
                 />
                 {/* AI Features Overlay */}
-                <div className="absolute top-4 right-4 flex space-x-2 pointer-events-none">
+                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex space-x-1 sm:space-x-2 pointer-events-none">
                   <Badge
                     variant="secondary"
-                    className="text-xs bg-white/90 backdrop-blur-sm"
+                    className="text-xs bg-white/90 backdrop-blur-sm px-2 py-1"
                   >
                     <Mic className="w-3 h-3 mr-1" />
-                    Voice
+                    <span className="hidden sm:inline">Voice</span>
                   </Badge>
                   <Badge
                     variant="secondary"
-                    className="text-xs bg-white/90 backdrop-blur-sm"
+                    className="text-xs bg-white/90 backdrop-blur-sm px-2 py-1"
                   >
                     <Video className="w-3 h-3 mr-1" />
-                    Video
+                    <span className="hidden sm:inline">Video</span>
                   </Badge>
                 </div>
               </div>
