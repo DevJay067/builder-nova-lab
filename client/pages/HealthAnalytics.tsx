@@ -455,10 +455,17 @@ export default function HealthAnalytics() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
-                  <Activity className="h-5 w-5 text-green-600" />
+                  <Bell className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="text-sm font-medium">Activity Goals</p>
-                    <p className="text-xs text-muted-foreground">Coming soon</p>
+                    <p className="text-sm font-medium">Notifications</p>
+                    <p className="text-xs text-muted-foreground">
+                      {typeof window !== 'undefined' && 'Notification' in window
+                        ? Notification.permission === "granted"
+                          ? "✓ Enabled"
+                          : "Not enabled"
+                        : "Not supported"
+                      }
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
