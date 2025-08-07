@@ -191,6 +191,24 @@ export default function HealthTracking() {
   };
 
   const addWaterReminder = () => {
+    if (newWater.interval < 15 || newWater.interval > 300) {
+      toast({
+        title: "Invalid Interval",
+        description: "Reminder interval must be between 15 and 300 minutes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newWater.startTime || !newWater.endTime) {
+      toast({
+        title: "Invalid Times",
+        description: "Please set both start and end times",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const reminder: WaterReminder = {
       id: crypto.randomUUID(),
       interval: newWater.interval,
@@ -207,7 +225,7 @@ export default function HealthTracking() {
 
     saveTrackingData(newData);
     scheduleWaterNotifications(reminder);
-    
+
     toast({
       title: "Water Reminder Added",
       description: `You'll be reminded every ${newWater.interval} minutes`,
