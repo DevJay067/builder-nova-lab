@@ -328,6 +328,52 @@ export default function HealthAnalytics() {
     }
   };
 
+  if (!isAuthenticated && !isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-info/5 flex items-center justify-center">
+        <Card className="max-w-md mx-auto shadow-colored-lg">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-info to-info/80 rounded-2xl flex items-center justify-center shadow-lg shadow-info/25">
+              <Shield className="h-8 w-8 text-info-foreground" />
+            </div>
+            <CardTitle className="text-xl">Authentication Required</CardTitle>
+            <CardDescription>
+              Please log in to view your health analytics and insights.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Link to="/login" className="w-full">
+              <Button className="w-full">
+                <Activity className="w-4 h-4 mr-2" />
+                Log In to View Analytics
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-info/5 flex items-center justify-center">
+        <Card className="max-w-md mx-auto shadow-colored-lg">
+          <CardContent className="pt-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-info/10 rounded-full flex items-center justify-center">
+              <Activity className="h-8 w-8 text-info animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-foreground font-medium">Loading Health Analytics...</p>
+              <p className="text-sm text-muted-foreground">
+                Analyzing your health data and generating insights
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-info/5">
       {/* Header */}
