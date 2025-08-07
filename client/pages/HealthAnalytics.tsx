@@ -52,6 +52,7 @@ export default function HealthAnalytics() {
   const [userHealthData, setUserHealthData] = useState<UserHealthData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTab, setActiveTab] = useState("insights");
 
   useEffect(() => {
     loadHealthAnalyticsData();
