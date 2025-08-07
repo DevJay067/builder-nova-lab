@@ -198,7 +198,7 @@ export default function BmaxAI() {
 
   const loadAIHealthContext = async (sessionToken: string) => {
     try {
-      console.log("�� Loading AI health context from saved records...");
+      console.log("���� Loading AI health context from saved records...");
       const response = await fetch("/api/ai/health-context", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
@@ -758,7 +758,8 @@ IMPORTANT INSTRUCTIONS:
                 {isLoadingContext ? (
                   <Badge variant="outline" className="text-xs">
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Loading Context
+                    <span className="hidden sm:inline">Loading Context</span>
+                    <span className="sm:hidden">Loading</span>
                   </Badge>
                 ) : aiHealthContext?.context?.totalRecords > 0 ||
                   personalizedContext?.hasData ? (
@@ -767,19 +768,28 @@ IMPORTANT INSTRUCTIONS:
                     className="text-xs bg-gradient-to-r from-green-500 to-green-600"
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    {aiHealthContext?.context?.totalRecords > 0
-                      ? `${aiHealthContext.context.totalRecords} Records Loaded`
-                      : "Context Enabled"}
+                    <span className="hidden sm:inline">
+                      {aiHealthContext?.context?.totalRecords > 0
+                        ? `${aiHealthContext.context.totalRecords} Records Loaded`
+                        : "Context Enabled"}
+                    </span>
+                    <span className="sm:hidden">
+                      {aiHealthContext?.context?.totalRecords > 0
+                        ? `${aiHealthContext.context.totalRecords} Records`
+                        : "Enabled"}
+                    </span>
                   </Badge>
                 ) : (
                   <Badge variant="secondary" className="text-xs">
                     <Brain className="h-3 w-3 mr-1" />
-                    General Mode
+                    <span className="hidden sm:inline">General Mode</span>
+                    <span className="sm:hidden">General</span>
                   </Badge>
                 )}
-                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1 text-xs sm:text-sm text-muted-foreground">
                   <div className="w-2 h-2 rounded-full status-online"></div>
                   <span className="hidden sm:inline">Live AI Agent</span>
+                  <span className="sm:hidden">Live</span>
                 </div>
               </div>
             </div>
