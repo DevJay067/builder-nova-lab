@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Activity, 
-  ArrowLeft, 
+import {
+  Activity,
+  ArrowLeft,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -21,7 +21,10 @@ import {
   PieChart,
   LineChart,
   Zap,
-  Shield
+  Shield,
+  Moon,
+  Droplets,
+  Settings
 } from "lucide-react";
 import HealthTracking from "@/components/HealthTracking";
 
