@@ -473,10 +473,7 @@ export default function HealthAnalytics() {
                 <p className="text-sm text-muted-foreground mb-2">
                   Click on the "Tracking" tab above to set up your personalized health notifications
                 </p>
-                <Button variant="outline" size="sm" onClick={() => {
-                  const trackingTab = document.querySelector('[value="tracking"]') as HTMLElement;
-                  trackingTab?.click();
-                }}>
+                <Button variant="outline" size="sm" onClick={() => setActiveTab("tracking")}>
                   <Settings className="h-4 w-4 mr-2" />
                   Set Up Tracking
                 </Button>
