@@ -131,40 +131,88 @@ export default function HealthAnalytics() {
     }
   };
 
-  const healthMetrics = [
-    {
-      title: "Overall Health Score",
-      value: 87,
-      target: 90,
-      trend: "up",
-      change: "+3.2%",
-      description: "Based on your recent health data and AI analysis"
-    },
-    {
-      title: "Cardiovascular Health",
-      value: 82,
-      target: 85,
-      trend: "up",
-      change: "+2.1%",
-      description: "Heart rate, blood pressure, and activity trends"
-    },
-    {
-      title: "Mental Wellness",
-      value: 78,
-      target: 80,
-      trend: "down",
-      change: "-1.5%",
-      description: "Stress levels, sleep quality, and mood tracking"
-    },
-    {
-      title: "Preventive Care",
-      value: 95,
-      target: 100,
-      trend: "up",
-      change: "+5.0%",
-      description: "Checkups, screenings, and vaccination status"
+  const getHealthMetrics = () => {
+    if (!userHealthData) {
+      return [
+        {
+          title: "Overall Health Score",
+          value: 0,
+          target: 100,
+          trend: "neutral",
+          change: "No data",
+          description: "Add health records to see your score"
+        },
+        {
+          title: "Health Records",
+          value: 0,
+          target: 10,
+          trend: "neutral",
+          change: "Start adding",
+          description: "Begin tracking your health journey"
+        },
+        {
+          title: "Active Conditions",
+          value: 0,
+          target: 0,
+          trend: "neutral",
+          change: "No data",
+          description: "Track medical conditions"
+        },
+        {
+          title: "Medications",
+          value: 0,
+          target: 0,
+          trend: "neutral",
+          change: "No data",
+          description: "Monitor your medications"
+        }
+      ];
     }
-  ];
+
+    const totalRecords = userHealthData.totalRecords;
+    const conditions = userHealthData.conditions.length;
+    const medications = userHealthData.medications.length;
+
+    // Calculate health score based on data completeness
+    const healthScore = Math.min(100, Math.max(20, (totalRecords * 10) + 20));
+
+    return [
+      {
+        title: "Overall Health Score",
+        value: healthScore,
+        target: 100,
+        trend: totalRecords > 5 ? "up" : "neutral",
+        change: totalRecords > 0 ? "+12% this month" : "Add more data",
+        description: "Based on your health record completeness"
+      },
+      {
+        title: "Health Records",
+        value: totalRecords,
+        target: Math.max(10, totalRecords + 3),
+        trend: totalRecords > 0 ? "up" : "neutral",
+        change: `${totalRecords} total`,
+        description: "Track more for better insights"
+      },
+      {
+        title: "Active Conditions",
+        value: conditions,
+        target: conditions,
+        trend: "neutral",
+        change: conditions > 0 ? "Monitored" : "None tracked",
+        description: "Medical conditions being monitored"
+      },
+      {
+        title: "Current Medications",
+        value: medications,
+        target: medications,
+        trend: "neutral",
+        change: medications > 0 ? "Active" : "None tracked",
+        description: "Medications currently taking"
+      }
+    ];
+  };
+
+  const healthMetrics = getHealthMetrics();
 
   const insights = [
     {
