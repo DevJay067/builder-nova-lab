@@ -650,7 +650,7 @@ IMPORTANT INSTRUCTIONS:
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-4 sm:py-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
         {/* Medical Summary */}
         {personalizedContext?.hasData && getMedicalContextSummary()}
 
