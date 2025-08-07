@@ -533,9 +533,29 @@ class SupabaseService {
 
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const vaultPath = `${patientId}/${timestamp}_${filename || "health-data.json"}`;
+      const vaultId = crypto.randomBytes(16).toString('hex');
+      const vaultPath = `${patientId}/vault/${vaultId}_${timestamp}_${filename || "health-data.json"}`;
 
-      const dataBlob = new Blob([JSON.stringify(data, null, 2)], {
+      // Encrypt data for this specific user
+      const encryptionResult = this.encryptForVault(data, patientId);
+
+      const vaultMetadata = {
+        patientId,
+        dataType: dataType || 'health-record',
+        timestamp,
+        vaultId,
+        checksum: encryptionResult.checksum,
+        iv: encryptionResult.iv,
+        encryptedAt: new Date().toISOString(),
+        accessCount: 0
+      };
+
+      const vaultData = {
+        metadata: vaultMetadata,
+        encryptedPayload: encryptionResult.encryptedData
+      };
+
+      const dataBlob = new Blob([JSON.stringify(vaultData, null, 2)], {
         type: "application/json",
       });
 
@@ -551,8 +571,12 @@ class SupabaseService {
         return { success: false, error: error.message };
       }
 
-      console.log(`✅ Data stored in vault: ${vaultPath}`);
-      return { success: true, path: vaultPath };
+      console.log(`✅ Data stored in encrypted vault: ${vaultPath}`, {
+        vaultId,
+        dataType: dataType || 'health-record',
+        patientId
+      });
+      return { success: true, path: vaultPath, vaultId };
     } catch (error) {
       console.error("❌ Error storing in vault:", error);
       return {
