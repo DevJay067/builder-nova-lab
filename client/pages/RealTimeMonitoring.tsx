@@ -440,8 +440,19 @@ export default function RealTimeMonitoring() {
                         strokeDasharray="3 3"
                         className="opacity-30"
                       />
-                      <XAxis dataKey="time" className="text-xs" />
-                      <YAxis className="text-xs" />
+                      <XAxis
+                        dataKey="time"
+                        className="text-xs"
+                        tick={{ fontSize: 12 }}
+                        tickLine={{ stroke: '#cbd5e0' }}
+                        axisLine={{ stroke: '#cbd5e0' }}
+                      />
+                      <YAxis
+                        className="text-xs"
+                        tick={{ fontSize: 12 }}
+                        tickLine={{ stroke: '#cbd5e0' }}
+                        axisLine={{ stroke: '#cbd5e0' }}
+                      />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "rgba(255, 255, 255, 0.95)",
