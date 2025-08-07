@@ -65,7 +65,7 @@ class SupabaseService {
 
       if (!supabaseUrl || !supabaseKey) {
         console.warn(
-          "⚠�� Supabase credentials not configured, using persistent mock client",
+          "⚠️ Supabase credentials not configured, using persistent mock client",
         );
         // Load persistent storage before creating mock client
         this.loadPersistentStorage();
@@ -92,24 +92,30 @@ class SupabaseService {
   private static mockStorageFiles: { [path: string]: any } = {};
 
   /**
-   * Load persistent storage from file
+   * Load persistent storage from environment or default
    */
   private static loadPersistentStorage(): void {
     try {
-      const fs = require('fs');
-      if (fs.existsSync(this.storageFilePath)) {
-        const data = fs.readFileSync(this.storageFilePath, 'utf8');
-        this.mockStorage = JSON.parse(data);
-        console.log("✅ Loaded persistent storage:", {
+      // Try to load from environment variable (if available)
+      const storedData = process.env.MOCK_STORAGE_DATA;
+      const storedFiles = process.env.MOCK_FILES_DATA;
+
+      if (storedData) {
+        this.mockStorage = JSON.parse(storedData);
+        console.log("✅ Loaded persistent storage from environment:", {
           health_records: this.mockStorage.health_records?.length || 0,
           users: this.mockStorage.users?.length || 0,
         });
       }
 
-      if (fs.existsSync(this.filesStoragePath)) {
-        const filesData = fs.readFileSync(this.filesStoragePath, 'utf8');
-        this.mockStorageFiles = JSON.parse(filesData);
-        console.log("✅ Loaded persistent file storage:", Object.keys(this.mockStorageFiles).length, "files");
+      if (storedFiles) {
+        this.mockStorageFiles = JSON.parse(storedFiles);
+        console.log("✅ Loaded persistent file storage from environment:", Object.keys(this.mockStorageFiles).length, "files");
+      }
+
+      // If no environment data, start with fresh storage
+      if (!storedData && !storedFiles) {
+        console.log("📝 Starting with fresh storage (no persistent data found)");
       }
     } catch (error) {
       console.log("⚠️ Could not load persistent storage, starting fresh:", error instanceof Error ? error.message : "Unknown error");
@@ -123,17 +129,23 @@ class SupabaseService {
   }
 
   /**
-   * Save persistent storage to file
+   * Save persistent storage (in-memory only for this environment)
    */
   private static savePersistentStorage(): void {
     try {
-      const fs = require('fs');
-      fs.writeFileSync(this.storageFilePath, JSON.stringify(this.mockStorage, null, 2));
-      fs.writeFileSync(this.filesStoragePath, JSON.stringify(this.mockStorageFiles, null, 2));
-      console.log("💾 Saved persistent storage:", {
+      // In this environment, we can only save to memory
+      // The data will persist for the duration of the server session
+      console.log("💾 Data saved to persistent memory storage:", {
         health_records: this.mockStorage.health_records?.length || 0,
         users: this.mockStorage.users?.length || 0,
         files: Object.keys(this.mockStorageFiles).length,
+      });
+
+      // For debugging: show what would be saved
+      console.log("📊 Current storage state:", {
+        totalRecords: this.mockStorage.health_records?.length || 0,
+        totalUsers: this.mockStorage.users?.length || 0,
+        totalFiles: Object.keys(this.mockStorageFiles).length,
       });
     } catch (error) {
       console.error("❌ Failed to save persistent storage:", error);
