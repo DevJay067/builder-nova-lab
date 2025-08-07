@@ -298,7 +298,62 @@ export default function HealthHistory() {
         return;
       }
 
-      console.log("💾 Saving health record to Supabase cloud storage...");
+      console.log("🔐 Saving health record to encrypted cloud vault...");
+
+      // First try the enhanced vault storage API
+      const vaultResponse = await fetch("/api/vault/store-health-record", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-session-token": sessionToken,
+        },
+        body: JSON.stringify({
+          record_type: newRecord.type,
+          title: newRecord.title,
+          description: newRecord.description || "",
+          doctor: newRecord.doctor || "",
+          date: newRecord.date,
+          metadata: {
+            category: newRecord.type,
+            recordedAt: new Date().toISOString(),
+            source: "health-history-enhanced",
+            userAgent: navigator.userAgent,
+            encryptedVault: true
+          },
+        }),
+      });
+
+      console.log("📥 Vault storage response:", {
+        status: vaultResponse.status,
+        statusText: vaultResponse.statusText,
+        ok: vaultResponse.ok,
+      });
+
+      if (vaultResponse.ok) {
+        const vaultResult = await vaultResponse.json();
+        if (vaultResult.success) {
+          setMessage({
+            type: "success",
+            text: `✅ Health record saved securely in encrypted vault! (ID: ${vaultResult.vaultId?.slice(0, 8) || 'encrypted'})`,
+          });
+
+          // Reset form and reload
+          setNewRecord({
+            type: "",
+            title: "",
+            description: "",
+            date: new Date().toISOString().split("T")[0],
+            doctor: "",
+            metadata: {},
+          });
+          setIsDialogOpen(false);
+          await loadHealthRecords(sessionToken);
+          return;
+        }
+      }
+
+      // Fallback to regular Supabase storage
+      console.log("⚠️ Vault storage failed, falling back to regular cloud storage...");
 
       const requestBody = {
         type: newRecord.type,
@@ -314,11 +369,12 @@ export default function HealthHistory() {
         metadata: {
           category: newRecord.type,
           recordedAt: new Date().toISOString(),
+          vaultFallback: true,
         },
         sessionToken: sessionToken,
       };
 
-      console.log("📤 Health record request body:", {
+      console.log("📤 Fallback storage request body:", {
         type: requestBody.type,
         title: requestBody.title,
         hasSessionToken: !!requestBody.sessionToken,
