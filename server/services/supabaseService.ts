@@ -286,6 +286,8 @@ class SupabaseService {
         from: (bucketName: string) => ({
           upload: (path: string, file: any) => {
             this.mockStorageFiles[path] = file;
+            // Save to persistent storage after upload
+            this.savePersistentStorage();
             return Promise.resolve({
               data: { path, id: crypto.randomBytes(16).toString("hex") },
               error: null,
