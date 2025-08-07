@@ -67,6 +67,7 @@ import {
   testSupabaseConnection,
   healthCheckSupabase,
 } from "./routes/supabaseAuth";
+import cloudVaultRoutes from "./routes/cloudVault";
 
 export function createServer() {
   // Initialize secure database on server startup
