@@ -747,14 +747,14 @@ IMPORTANT INSTRUCTIONS:
         )}
 
         {/* AI Chat Interface */}
-        <Card className="h-[calc(100vh-320px)] flex flex-col shadow-colored-lg border-border/50 fade-in fade-in-delay-2">
-          <CardHeader className="pb-4 bg-gradient-to-r from-muted/50 to-muted/30 rounded-t-lg">
+        <Card className="h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)] flex flex-col shadow-colored-lg border-border/50 fade-in fade-in-delay-2">
+          <CardHeader className="pb-3 sm:pb-4 bg-gradient-to-r from-muted/50 to-muted/30 rounded-t-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <CardTitle className="text-lg sm:text-xl flex items-center">
-                <Brain className="h-5 w-5 mr-2 text-primary" />
-                B-max AI Health Assistant
+              <CardTitle className="text-base sm:text-lg md:text-xl flex items-center">
+                <Brain className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
+                <span className="truncate">B-max AI Health Assistant</span>
               </CardTitle>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 {isLoadingContext ? (
                   <Badge variant="outline" className="text-xs">
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
