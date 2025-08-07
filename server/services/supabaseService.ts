@@ -474,13 +474,61 @@ class SupabaseService {
   }
 
   /**
-   * Store health data in secure storage vault
+   * Generate user-specific encryption key
+   */
+  private static generateUserVaultKey(patientId: string): string {
+    // Create a deterministic but secure key based on patient ID
+    const baseKey = process.env.VAULT_MASTER_KEY || "healthchain-vault-2024";
+    return crypto.pbkdf2Sync(patientId, baseKey, 10000, 32, 'sha256').toString('hex');
+  }
+
+  /**
+   * Encrypt data for user vault
+   */
+  private static encryptForVault(data: any, patientId: string): {
+    encryptedData: string;
+    iv: string;
+    checksum: string;
+  } {
+    const key = this.generateUserVaultKey(patientId);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher('aes-256-cbc', key);
+
+    const dataString = JSON.stringify(data);
+    let encrypted = cipher.update(dataString, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    const checksum = crypto.createHash('sha256').update(dataString).digest('hex');
+
+    return {
+      encryptedData: encrypted,
+      iv: iv.toString('hex'),
+      checksum
+    };
+  }
+
+  /**
+   * Decrypt data from user vault
+   */
+  private static decryptFromVault(encryptedData: string, iv: string, patientId: string): any {
+    const key = this.generateUserVaultKey(patientId);
+    const decipher = crypto.createDecipher('aes-256-cbc', key);
+
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    return JSON.parse(decrypted);
+  }
+
+  /**
+   * Store health data in secure storage vault with user-specific encryption
    */
   static async storeInVault(
     patientId: string,
     data: any,
     filename?: string,
-  ): Promise<{ success: boolean; path?: string; error?: string }> {
+    dataType?: string
+  ): Promise<{ success: boolean; path?: string; vaultId?: string; error?: string }> {
     const client = this.initialize();
 
     try {
