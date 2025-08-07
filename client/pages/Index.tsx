@@ -636,6 +636,13 @@ export default function Index() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Video Button */}
+      <FloatingVideoButton
+        videoId="dQw4w9WgXcQ"
+        title="HealthChain Demo - See How It Works"
+        position="bottom-right"
+      />
     </div>
   );
 }
