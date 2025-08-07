@@ -504,6 +504,9 @@ export function createServer() {
   app.get("/api/ai/health-context", getHealthDataForAI);
   app.post("/api/ai/search-health", searchHealthRecordsForAI);
 
+  // Cloud Vault API Routes
+  app.use("/api/vault", cloudVaultRoutes);
+
   // Export storage data for backup
   app.get("/api/debug/export-storage", (req, res) => {
     try {
