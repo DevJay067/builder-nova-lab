@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import LanguageSelector from "@/components/LanguageSelector";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { YouTubeVideoTrigger } from "@/components/YouTubeVideoPopup";
 
 export default function Index() {
   const { t } = useTranslation();
