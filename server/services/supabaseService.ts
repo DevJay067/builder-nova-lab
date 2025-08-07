@@ -65,7 +65,7 @@ class SupabaseService {
 
       if (!supabaseUrl || !supabaseKey) {
         console.warn(
-          "⚠️ Supabase credentials not configured, using persistent mock client",
+          "⚠�� Supabase credentials not configured, using persistent mock client",
         );
         // Load persistent storage before creating mock client
         this.loadPersistentStorage();
@@ -829,6 +829,39 @@ class SupabaseService {
       console.error("❌ Error getting storage usage:", error);
       return { vaultUsage: 0, recordsUsage: 0, totalFiles: 0 };
     }
+  }
+
+  /**
+   * Manual save for debugging and persistence
+   */
+  static forceSave(): void {
+    this.savePersistentStorage();
+  }
+
+  /**
+   * Manual reload for debugging
+   */
+  static forceReload(): void {
+    this.loadPersistentStorage();
+  }
+
+  /**
+   * Get system statistics
+   */
+  static getSystemStats(): {
+    totalUsers: number;
+    totalHealthRecords: number;
+    totalSecureRecords: number;
+    databaseHealthy: boolean;
+    storageHealthy: boolean;
+  } {
+    return {
+      totalUsers: this.mockStorage.users?.length || 0,
+      totalHealthRecords: this.mockStorage.health_records?.length || 0,
+      totalSecureRecords: this.mockStorage.secure_data_records?.length || 0,
+      databaseHealthy: true,
+      storageHealthy: true,
+    };
   }
 }
 
