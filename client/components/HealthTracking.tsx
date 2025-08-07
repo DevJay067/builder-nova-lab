@@ -344,11 +344,31 @@ export default function HealthTracking() {
       waterReminders: trackingData.waterReminders.filter(reminder => reminder.id !== id)
     };
     saveTrackingData(newData);
-    
+
     toast({
       title: "Reminder Deleted",
       description: "Water reminder has been removed",
     });
+  };
+
+  const testNotifications = () => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("🎉 Health Tracking Test", {
+        body: "Great! Your notifications are working properly. You'll receive health reminders like this.",
+        icon: "/manifest.json"
+      });
+
+      toast({
+        title: "Test Notification Sent",
+        description: "Check if you received the notification above",
+      });
+    } else {
+      toast({
+        title: "Notifications Not Available",
+        description: "Please enable notifications first",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
