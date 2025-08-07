@@ -458,18 +458,22 @@ export default function HealthAnalytics() {
         </div>
 
         <Tabs defaultValue="insights" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="insights" className="flex items-center space-x-2">
               <Zap className="h-4 w-4" />
-              <span>Insights</span>
+              <span className="hidden sm:inline">Insights</span>
             </TabsTrigger>
             <TabsTrigger value="trends" className="flex items-center space-x-2">
               <LineChart className="h-4 w-4" />
-              <span>Trends</span>
+              <span className="hidden sm:inline">Trends</span>
+            </TabsTrigger>
+            <TabsTrigger value="tracking" className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Tracking</span>
             </TabsTrigger>
             <TabsTrigger value="predictions" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
-              <span>Risk Analysis</span>
+              <span className="hidden sm:inline">Risk</span>
             </TabsTrigger>
           </TabsList>
 
