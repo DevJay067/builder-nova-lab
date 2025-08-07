@@ -529,6 +529,11 @@ export default function HealthAnalytics() {
             </Card>
           </TabsContent>
 
+          {/* Health Tracking Tab */}
+          <TabsContent value="tracking" className="space-y-6">
+            <HealthTracking />
+          </TabsContent>
+
           {/* Health Trends Tab */}
           <TabsContent value="trends" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
