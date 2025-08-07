@@ -214,40 +214,80 @@ export default function HealthAnalytics() {
 
   const healthMetrics = getHealthMetrics();
 
-  const insights = [
-    {
-      type: "positive",
-      icon: CheckCircle,
-      title: "Improved Sleep Pattern",
-      description: "Your sleep quality has improved by 15% this month. Keep maintaining your bedtime routine.",
-      importance: "medium",
-      action: "Continue current sleep schedule"
-    },
-    {
-      type: "warning",
-      icon: AlertCircle,
-      title: "Hydration Alert",
-      description: "Water intake is below recommended levels. Consider increasing daily fluid consumption.",
-      importance: "high",
-      action: "Increase water intake to 8 glasses daily"
-    },
-    {
-      type: "positive",
-      icon: Award,
-      title: "Exercise Goal Achieved",
-      description: "You've met your weekly exercise target for 3 consecutive weeks. Excellent progress!",
-      importance: "low",
-      action: "Maintain current activity level"
-    },
-    {
-      type: "neutral",
-      icon: Target,
-      title: "Nutrition Balance",
-      description: "Your protein intake is optimal, but consider adding more fiber-rich foods to your diet.",
-      importance: "medium",
-      action: "Add 2 servings of vegetables daily"
+  const getInsights = () => {
+    const baseInsights = [
+      {
+        type: "warning",
+        icon: AlertCircle,
+        title: "Set Up Health Tracking",
+        description: "Start by setting up your sleep cycle and water intake notifications for better health insights.",
+        importance: "high",
+        action: "Configure health tracking below"
+      },
+      {
+        type: "neutral",
+        icon: Target,
+        title: "Complete Your Health Profile",
+        description: "Add more health records to get personalized insights and recommendations.",
+        importance: "medium",
+        action: "Visit Health History to add records"
+      }
+    ];
+
+    if (!userHealthData || userHealthData.totalRecords === 0) {
+      return baseInsights;
     }
-  ];
+
+    const insights = [];
+
+    if (userHealthData.totalRecords > 0) {
+      insights.push({
+        type: "positive",
+        icon: CheckCircle,
+        title: "Health Data Available",
+        description: `You have ${userHealthData.totalRecords} health records. This helps provide personalized insights.`,
+        importance: "medium",
+        action: "Keep adding more records for better analysis"
+      });
+    }
+
+    if (userHealthData.conditions.length > 0) {
+      insights.push({
+        type: "neutral",
+        icon: Target,
+        title: "Conditions Monitored",
+        description: `You're tracking ${userHealthData.conditions.length} medical condition(s). Regular monitoring is important.`,
+        importance: "medium",
+        action: "Continue regular health checkups"
+      });
+    }
+
+    if (userHealthData.medications.length > 0) {
+      insights.push({
+        type: "warning",
+        icon: AlertCircle,
+        title: "Medication Management",
+        description: `You have ${userHealthData.medications.length} medication(s) recorded. Ensure proper adherence.`,
+        importance: "high",
+        action: "Set medication reminders if needed"
+      });
+    }
+
+    if (userHealthData.recentSymptoms.length > 0) {
+      insights.push({
+        type: "warning",
+        icon: AlertCircle,
+        title: "Recent Symptoms Tracked",
+        description: `${userHealthData.recentSymptoms.length} symptom(s) recorded. Monitor and discuss with healthcare provider.`,
+        importance: "high",
+        action: "Consider scheduling a doctor visit"
+      });
+    }
+
+    return insights.length > 0 ? insights : baseInsights;
+  };
+
+  const insights = getInsights();
 
   const riskFactors = [
     {
