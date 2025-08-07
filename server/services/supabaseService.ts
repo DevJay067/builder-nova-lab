@@ -492,7 +492,7 @@ class SupabaseService {
   } {
     const key = this.generateUserVaultKey(patientId);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher('aes-256-cbc', key);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex').slice(0, 32), iv);
 
     const dataString = JSON.stringify(data);
     let encrypted = cipher.update(dataString, 'utf8', 'hex');
@@ -512,7 +512,7 @@ class SupabaseService {
    */
   private static decryptFromVault(encryptedData: string, iv: string, patientId: string): any {
     const key = this.generateUserVaultKey(patientId);
-    const decipher = crypto.createDecipher('aes-256-cbc', key);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key, 'hex').slice(0, 32), Buffer.from(iv, 'hex'));
 
     let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
