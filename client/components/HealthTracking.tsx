@@ -159,6 +159,15 @@ export default function HealthTracking() {
   };
 
   const addSleepSchedule = () => {
+    if (!newSleep.bedtime || !newSleep.wakeTime) {
+      toast({
+        title: "Invalid Schedule",
+        description: "Please set both bedtime and wake time",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const schedule: SleepSchedule = {
       id: crypto.randomUUID(),
       bedtime: newSleep.bedtime,
@@ -174,7 +183,7 @@ export default function HealthTracking() {
 
     saveTrackingData(newData);
     scheduleSleepNotifications(schedule);
-    
+
     toast({
       title: "Sleep Schedule Added",
       description: "Notifications will remind you of bedtime and wake time",
