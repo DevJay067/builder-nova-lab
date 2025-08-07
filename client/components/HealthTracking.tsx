@@ -641,11 +641,16 @@ export default function HealthTracking() {
               <CardHeader>
                 <CardTitle>Notification Status</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 {Notification.permission === "granted" ? (
                   <div className="flex items-center space-x-2 text-green-600">
                     <CheckCircle className="h-5 w-5" />
                     <span>Notifications are enabled</span>
+                  </div>
+                ) : Notification.permission === "denied" ? (
+                  <div className="flex items-center space-x-2 text-red-600">
+                    <AlertCircle className="h-5 w-5" />
+                    <span>Notifications are blocked. Please enable them in browser settings.</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2 text-yellow-600">
@@ -653,6 +658,22 @@ export default function HealthTracking() {
                     <span>Please enable notifications for reminders to work</span>
                   </div>
                 )}
+
+                <div className="flex space-x-2">
+                  {Notification.permission !== "granted" && (
+                    <Button onClick={requestNotificationPermission} size="sm">
+                      <Bell className="h-4 w-4 mr-2" />
+                      Enable Notifications
+                    </Button>
+                  )}
+
+                  {Notification.permission === "granted" && (
+                    <Button onClick={testNotifications} variant="outline" size="sm">
+                      <Zap className="h-4 w-4 mr-2" />
+                      Test Notifications
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
