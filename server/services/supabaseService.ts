@@ -65,10 +65,14 @@ class SupabaseService {
 
       if (!supabaseUrl || !supabaseKey) {
         console.warn(
-          "⚠️ Supabase credentials not configured, using persistent mock client",
+          "⚠️ Supabase credentials not configured, using session-persistent mock client",
         );
         // Load persistent storage before creating mock client
         this.loadPersistentStorage();
+        console.log("📦 Mock storage initialized with:", {
+          health_records: this.mockStorage.health_records?.length || 0,
+          users: this.mockStorage.users?.length || 0,
+        });
         // Return a mock client for development
         return this.createMockClient();
       }
