@@ -81,6 +81,7 @@ interface HealthRecord {
 }
 
 export default function HealthHistory() {
+  const { t } = useTranslation();
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
