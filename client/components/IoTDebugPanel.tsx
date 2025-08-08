@@ -51,8 +51,12 @@ export default function IoTDebugPanel() {
   useEffect(() => {
     checkDeviceSupport();
     updateSimulationStatus();
-    
-    const interval = setInterval(updateSimulationStatus, 2000);
+    checkWebSocketStatus();
+
+    const interval = setInterval(() => {
+      updateSimulationStatus();
+      checkWebSocketStatus();
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
