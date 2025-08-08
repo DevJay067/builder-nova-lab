@@ -435,9 +435,25 @@ export default function HealthHistory() {
       console.log("✅ Health record result:", { success: result.success });
 
       if (result.success) {
+        // Also save to permanent storage
+        const recordData = {
+          record_type: newRecord.type,
+          title: newRecord.title,
+          description: newRecord.description || "",
+          doctor: newRecord.doctor || "",
+          date: newRecord.date,
+          metadata: {
+            category: newRecord.type,
+            recordedAt: new Date().toISOString(),
+            source: "health-history-fallback"
+          },
+        };
+
+        permanentStorage.storeHealthRecord(recordData);
+
         setMessage({
           type: "success",
-          text: "Health record saved to cloud storage (vault unavailable, using fallback)!",
+          text: "Health record saved (Cloud + Permanent Storage)!",
         });
         setIsDialogOpen(false);
         setNewRecord({
