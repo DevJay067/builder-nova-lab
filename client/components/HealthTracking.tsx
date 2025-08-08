@@ -20,6 +20,8 @@ import {
   Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import notificationService from "@/services/notificationService";
+import permanentStorage from "@/services/permanentStorage";
 
 interface SleepSchedule {
   id: string;
