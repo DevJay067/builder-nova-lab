@@ -537,6 +537,45 @@ class RealIoTDeviceService {
   isDeviceSupported(): boolean {
     return this.isSupported;
   }
+
+  // Manual WebSocket connection for production use
+  connectToHealthStream(wsUrl?: string): void {
+    if (this.websocket?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
+      return;
+    }
+
+    try {
+      const url = wsUrl || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/health-stream`;
+      console.log(`🔌 Manually connecting to WebSocket: ${url}`);
+
+      this.websocket = new WebSocket(url);
+
+      this.websocket.onopen = () => {
+        console.log('🌐 Manual WebSocket connection established');
+      };
+
+      this.websocket.onerror = (error: Event) => {
+        console.error('Manual WebSocket connection error:', error);
+      };
+
+      this.websocket.onclose = (event: CloseEvent) => {
+        console.log('Manual WebSocket connection closed:', event.code, event.reason);
+      };
+
+    } catch (error) {
+      console.error('Failed to establish manual WebSocket connection:', error);
+    }
+  }
+
+  // Disconnect WebSocket
+  disconnectHealthStream(): void {
+    if (this.websocket) {
+      this.websocket.close(1000, 'Manual disconnect');
+      this.websocket = null;
+      console.log('🔌 WebSocket manually disconnected');
+    }
+  }
 }
 
 export const realIoTDeviceService = new RealIoTDeviceService();
