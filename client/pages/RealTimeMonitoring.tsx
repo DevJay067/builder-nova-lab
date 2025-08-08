@@ -28,6 +28,11 @@ import {
   Smartphone,
   Watch,
   Brain,
+  Bluetooth,
+  BluetoothConnected,
+  Plus,
+  RefreshCw,
+  Settings,
 } from "lucide-react";
 import {
   LineChart,
@@ -39,33 +44,8 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  RechartsProps,
 } from "recharts";
-
-// Simulated IoT device data
-interface VitalSigns {
-  heartRate: number;
-  bloodPressure: { systolic: number; diastolic: number };
-  temperature: number;
-  oxygenSaturation: number;
-  respiratoryRate: number;
-  timestamp: string;
-}
-
-interface Device {
-  id: string;
-  name: string;
-  type:
-    | "smartwatch"
-    | "fitness_tracker"
-    | "blood_pressure"
-    | "thermometer"
-    | "pulse_oximeter";
-  status: "connected" | "disconnected" | "syncing";
-  battery: number;
-  lastSync: string;
-  icon: any;
-}
+import { realIoTDeviceService, type DeviceConnection, type VitalSigns } from "@/services/realIoTDeviceService";
 
 export default function RealTimeMonitoring() {
   const [vitalSigns, setVitalSigns] = useState<VitalSigns>({
@@ -74,116 +54,168 @@ export default function RealTimeMonitoring() {
     temperature: 98.6,
     oxygenSaturation: 98,
     respiratoryRate: 16,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date(),
+    deviceId: 'none'
   });
 
   const [vitalsHistory, setVitalsHistory] = useState<any[]>([]);
-  const [connectedDevices, setConnectedDevices] = useState<Device[]>([
-    {
-      id: "apple_watch",
-      name: "Apple Watch Series 9",
-      type: "smartwatch",
-      status: "connected",
-      battery: 85,
-      lastSync: "2 minutes ago",
-      icon: Watch,
-    },
-    {
-      id: "fitbit_charge",
-      name: "Fitbit Charge 6",
-      type: "fitness_tracker",
-      status: "connected",
-      battery: 62,
-      lastSync: "5 minutes ago",
-      icon: Activity,
-    },
-    {
-      id: "omron_bp",
-      name: "Omron Blood Pressure Monitor",
-      type: "blood_pressure",
-      status: "syncing",
-      battery: 45,
-      lastSync: "1 hour ago",
-      icon: Heart,
-    },
-    {
-      id: "pulse_ox",
-      name: "Masimo Pulse Oximeter",
-      type: "pulse_oximeter",
-      status: "disconnected",
-      battery: 20,
-      lastSync: "3 hours ago",
-      icon: Droplets,
-    },
-  ]);
+  const [connectedDevices, setConnectedDevices] = useState<DeviceConnection[]>([]);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isSupported, setIsSupported] = useState(true);
+  const [alerts, setAlerts] = useState<any[]>([]);
 
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      type: "warning",
-      message: "Heart rate elevated above normal range (>100 BPM)",
-      timestamp: "2 minutes ago",
-      severity: "medium",
-    },
-    {
-      id: 2,
-      type: "info",
-      message: "Fitbit sync completed successfully",
-      timestamp: "5 minutes ago",
-      severity: "low",
-    },
-  ]);
-
-  // Simulate real-time data updates
+  // Initialize real IoT device service
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const newVitals: VitalSigns = {
-        heartRate: Math.floor(Math.random() * 20) + 65, // 65-85 BPM
-        bloodPressure: {
-          systolic: Math.floor(Math.random() * 20) + 110, // 110-130
-          diastolic: Math.floor(Math.random() * 15) + 70, // 70-85
-        },
-        temperature: Math.random() * 2 + 97.5, // 97.5-99.5°F
-        oxygenSaturation: Math.floor(Math.random() * 3) + 97, // 97-100%
-        respiratoryRate: Math.floor(Math.random() * 6) + 14, // 14-20 per minute
-        timestamp: now.toISOString(),
-      };
+    setIsSupported(realIoTDeviceService.isDeviceSupported());
 
-      setVitalSigns(newVitals);
-
-      // Update history (keep last 20 readings)
+    // Listen for real device data
+    realIoTDeviceService.onDataReceived((data: VitalSigns) => {
+      console.log('📊 Real device data received:', data);
+      setVitalSigns(data);
+      
+      // Update history
       setVitalsHistory((prev) => {
         const newHistory = [
           ...prev,
           {
-            time: now.toLocaleTimeString(),
-            heartRate: newVitals.heartRate,
-            temperature: newVitals.temperature,
-            oxygenSat: newVitals.oxygenSaturation,
-            systolic: newVitals.bloodPressure.systolic,
+            time: new Date(data.timestamp).toLocaleTimeString(),
+            heartRate: data.heartRate || 0,
+            temperature: data.temperature || 0,
+            oxygenSat: data.oxygenSaturation || 0,
+            systolic: data.bloodPressure?.systolic || 0,
+            steps: data.steps || 0,
+            calories: data.calories || 0,
           },
         ].slice(-20);
         return newHistory;
       });
 
-      // Simulate alert generation
-      if (newVitals.heartRate > 100 && Math.random() > 0.8) {
-        setAlerts((prev) => [
-          {
-            id: Date.now(),
-            type: "warning",
-            message: `Heart rate spike detected: ${newVitals.heartRate} BPM`,
-            timestamp: "Just now",
-            severity: "high",
-          },
-          ...prev.slice(0, 4), // Keep only 5 most recent alerts
-        ]);
-      }
-    }, 3000); // Update every 3 seconds
+      // Generate alerts for real data
+      checkForAlerts(data);
+    });
 
-    return () => clearInterval(interval);
+    // Listen for device updates
+    realIoTDeviceService.onDeviceUpdate((devices: DeviceConnection[]) => {
+      console.log('🔄 Device list updated:', devices);
+      setConnectedDevices(devices);
+    });
+
+    // Load initially connected devices
+    setConnectedDevices(realIoTDeviceService.getConnectedDevices());
+
+    return () => {
+      // Cleanup listeners if needed
+    };
   }, []);
+
+  const checkForAlerts = (data: VitalSigns) => {
+    const newAlerts = [];
+
+    if (data.heartRate && data.heartRate > 100) {
+      newAlerts.push({
+        id: Date.now(),
+        type: "warning",
+        message: `High heart rate detected: ${data.heartRate} BPM from ${getDeviceName(data.deviceId)}`,
+        timestamp: "Just now",
+        severity: "high",
+      });
+    }
+
+    if (data.bloodPressure && data.bloodPressure.systolic > 140) {
+      newAlerts.push({
+        id: Date.now() + 1,
+        type: "warning",
+        message: `High blood pressure: ${data.bloodPressure.systolic}/${data.bloodPressure.diastolic} mmHg`,
+        timestamp: "Just now",
+        severity: "high",
+      });
+    }
+
+    if (data.temperature && data.temperature > 100.4) {
+      newAlerts.push({
+        id: Date.now() + 2,
+        type: "alert",
+        message: `Fever detected: ${data.temperature.toFixed(1)}°F`,
+        timestamp: "Just now",
+        severity: "critical",
+      });
+    }
+
+    if (data.oxygenSaturation && data.oxygenSaturation < 95) {
+      newAlerts.push({
+        id: Date.now() + 3,
+        type: "alert",
+        message: `Low oxygen saturation: ${data.oxygenSaturation}%`,
+        timestamp: "Just now",
+        severity: "critical",
+      });
+    }
+
+    if (newAlerts.length > 0) {
+      setAlerts((prev) => [...newAlerts, ...prev.slice(0, 4)]);
+    }
+  };
+
+  const getDeviceName = (deviceId: string): string => {
+    const device = connectedDevices.find(d => d.id === deviceId);
+    return device?.name || 'Unknown Device';
+  };
+
+  const connectNewDevice = async () => {
+    if (!isSupported) {
+      alert('Bluetooth not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      await realIoTDeviceService.connectDevice();
+      console.log('✅ Device connection completed');
+    } catch (error) {
+      console.error('❌ Device connection failed:', error);
+      alert('Failed to connect device. Please make sure your device is nearby and in pairing mode.');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const connectSpecificDevice = async (deviceType: string) => {
+    setIsConnecting(true);
+    try {
+      let connection = null;
+      switch (deviceType) {
+        case 'boat':
+          connection = await realIoTDeviceService.connectBoAtDevice();
+          break;
+        case 'fitbit':
+          connection = await realIoTDeviceService.connectFitbitDevice();
+          break;
+        default:
+          connection = await realIoTDeviceService.connectDevice();
+      }
+      
+      if (connection) {
+        console.log(`✅ ${deviceType} device connected successfully`);
+      }
+    } catch (error) {
+      console.error(`❌ ${deviceType} connection failed:`, error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const disconnectDevice = async (deviceId: string) => {
+    try {
+      await realIoTDeviceService.disconnectDevice(deviceId);
+      console.log('🔌 Device disconnected');
+    } catch (error) {
+      console.error('❌ Disconnect failed:', error);
+    }
+  };
+
+  const refreshDevices = () => {
+    setConnectedDevices(realIoTDeviceService.getConnectedDevices());
+  };
 
   const getVitalStatus = (type: string, value: number) => {
     switch (type) {
@@ -207,13 +239,10 @@ export default function RealTimeMonitoring() {
     }
   };
 
-  const heartRateStatus = getVitalStatus("heartRate", vitalSigns.heartRate);
-  const bpStatus = getVitalStatus(
-    "bloodPressure",
-    vitalSigns.bloodPressure.systolic,
-  );
-  const tempStatus = getVitalStatus("temperature", vitalSigns.temperature);
-  const oxygenStatus = getVitalStatus("oxygenSat", vitalSigns.oxygenSaturation);
+  const heartRateStatus = getVitalStatus("heartRate", vitalSigns.heartRate || 0);
+  const bpStatus = getVitalStatus("bloodPressure", vitalSigns.bloodPressure?.systolic || 0);
+  const tempStatus = getVitalStatus("temperature", vitalSigns.temperature || 0);
+  const oxygenStatus = getVitalStatus("oxygenSat", vitalSigns.oxygenSaturation || 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50 page-transition">
@@ -245,10 +274,16 @@ export default function RealTimeMonitoring() {
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
               <Badge
                 variant="secondary"
-                className="bg-green-50 text-green-700 border-green-200"
+                className={`${
+                  connectedDevices.length > 0 
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : "bg-gray-50 text-gray-700 border-gray-200"
+                }`}
               >
-                <div className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></div>
-                Live Monitoring
+                <div className={`w-2 h-2 rounded-full mr-2 ${
+                  connectedDevices.length > 0 ? "bg-green-500 animate-pulse" : "bg-gray-400"
+                }`}></div>
+                {connectedDevices.length > 0 ? "Live Monitoring" : "No Devices"}
               </Badge>
               <Badge variant="outline" className="text-slate-600">
                 <Clock className="w-3 h-3 mr-1" />
@@ -260,6 +295,169 @@ export default function RealTimeMonitoring() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Device Connection Section */}
+        <div className="mb-8 fade-in">
+          <Card className="shadow-colored border-border/50">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <BluetoothConnected className="w-5 h-5 mr-2 text-blue-600" />
+                    Device Connections
+                  </CardTitle>
+                  <CardDescription>
+                    Connect your smartwatch, fitness tracker, or health devices
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={refreshDevices}
+                    disabled={isConnecting}
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                  <Button 
+                    onClick={connectNewDevice} 
+                    disabled={!isSupported || isConnecting}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isConnecting ? (
+                      <>
+                        <Bluetooth className="w-4 h-4 mr-2 animate-pulse" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Connect Device
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!isSupported && (
+                <Alert className="mb-4 border-orange-200 bg-orange-50">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    Bluetooth not supported in this browser. Please use Chrome or Edge for device connections.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {connectedDevices.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bluetooth className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">No Devices Connected</h3>
+                  <p className="text-gray-500 mb-6">Connect your wearables to start monitoring your health</p>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => connectSpecificDevice('boat')}
+                      disabled={isConnecting}
+                      className="flex flex-col items-center p-4 h-auto"
+                    >
+                      <Watch className="w-6 h-6 mb-2" />
+                      <span className="text-sm">boAt Watch</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => connectSpecificDevice('fitbit')}
+                      disabled={isConnecting}
+                      className="flex flex-col items-center p-4 h-auto"
+                    >
+                      <Activity className="w-6 h-6 mb-2" />
+                      <span className="text-sm">Fitbit</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => connectSpecificDevice('apple')}
+                      disabled={isConnecting}
+                      className="flex flex-col items-center p-4 h-auto"
+                    >
+                      <Heart className="w-6 h-6 mb-2" />
+                      <span className="text-sm">Apple Watch</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={connectNewDevice}
+                      disabled={isConnecting}
+                      className="flex flex-col items-center p-4 h-auto"
+                    >
+                      <Smartphone className="w-6 h-6 mb-2" />
+                      <span className="text-sm">Other Device</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {connectedDevices.map((device) => {
+                    const IconComponent = device.type === 'smartwatch' ? Watch : 
+                                       device.type === 'fitness_tracker' ? Activity : 
+                                       device.type === 'blood_pressure' ? Heart : 
+                                       device.type === 'pulse_oximeter' ? Droplets : Smartphone;
+                    
+                    return (
+                      <div key={device.id} className="p-4 border rounded-lg bg-white/50">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-lg ${
+                              device.status === "connected" ? "bg-green-100 text-green-600" :
+                              device.status === "syncing" ? "bg-yellow-100 text-yellow-600" :
+                              "bg-red-100 text-red-600"
+                            }`}>
+                              <IconComponent className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium">{device.name}</h3>
+                              <p className="text-sm text-gray-500 capitalize">{device.type.replace('_', ' ')}</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => disconnectDevice(device.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            ×
+                          </Button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={device.status === "connected" ? "default" : "secondary"}>
+                              {device.status}
+                            </Badge>
+                            {device.protocols.includes('bluetooth') && (
+                              <BluetoothConnected className="w-4 h-4 text-blue-600" />
+                            )}
+                          </div>
+                          
+                          {device.battery && (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-600">{device.battery}%</span>
+                              <Progress value={device.battery} className="w-16 h-2" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 mt-2">
+                          Last sync: {new Date(device.lastSync).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Alerts Section */}
         {alerts.length > 0 && (
           <div className="mb-8 space-y-3 fade-in">
@@ -267,11 +465,13 @@ export default function RealTimeMonitoring() {
               <Alert
                 key={alert.id}
                 className={`border-l-4 ${
-                  alert.severity === "high"
+                  alert.severity === "critical"
                     ? "border-red-500 bg-red-50"
-                    : alert.severity === "medium"
-                      ? "border-yellow-500 bg-yellow-50"
-                      : "border-blue-500 bg-blue-50"
+                    : alert.severity === "high"
+                      ? "border-orange-500 bg-orange-50"
+                      : alert.severity === "medium"
+                        ? "border-yellow-500 bg-yellow-50"
+                        : "border-blue-500 bg-blue-50"
                 }`}
               >
                 <AlertTriangle className="h-4 w-4" />
@@ -294,29 +494,25 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Heart className={`w-5 h-5 ${heartRateStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">
-                    Heart Rate
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Heart Rate</CardTitle>
                 </div>
-                <Badge
-                  variant={
-                    heartRateStatus.status === "normal"
-                      ? "default"
-                      : "destructive"
-                  }
-                >
+                <Badge variant={heartRateStatus.status === "normal" ? "default" : "destructive"}>
                   {heartRateStatus.status}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold mb-2 text-slate-800">
-                {vitalSigns.heartRate}
+                {vitalSigns.heartRate || '--'}
                 <span className="text-lg text-muted-foreground ml-1">BPM</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
-                <TrendingUp className="w-4 h-4 mr-1 text-green-600" />
-                Normal range: 60-100 BPM
+                {vitalSigns.deviceId !== 'none' ? (
+                  <BluetoothConnected className="w-4 h-4 mr-1 text-blue-600" />
+                ) : (
+                  <WifiOff className="w-4 h-4 mr-1 text-gray-400" />
+                )}
+                {vitalSigns.deviceId !== 'none' ? getDeviceName(vitalSigns.deviceId) : 'No device connected'}
               </div>
             </CardContent>
           </Card>
@@ -327,25 +523,23 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Activity className={`w-5 h-5 ${bpStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">
-                    Blood Pressure
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Blood Pressure</CardTitle>
                 </div>
-                <Badge
-                  variant={
-                    bpStatus.status === "normal" ? "default" : "destructive"
-                  }
-                >
+                <Badge variant={bpStatus.status === "normal" ? "default" : "destructive"}>
                   {bpStatus.status}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold mb-2 text-slate-800">
-                {vitalSigns.bloodPressure.systolic}
-                <span className="text-xl text-muted-foreground">
-                  /{vitalSigns.bloodPressure.diastolic}
-                </span>
+                {vitalSigns.bloodPressure ? (
+                  <>
+                    {vitalSigns.bloodPressure.systolic}
+                    <span className="text-xl text-muted-foreground">
+                      /{vitalSigns.bloodPressure.diastolic}
+                    </span>
+                  </>
+                ) : '--/--'}
                 <span className="text-lg text-muted-foreground ml-1">mmHg</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
@@ -361,22 +555,16 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Thermometer className={`w-5 h-5 ${tempStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">
-                    Temperature
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Temperature</CardTitle>
                 </div>
-                <Badge
-                  variant={
-                    tempStatus.status === "normal" ? "default" : "destructive"
-                  }
-                >
+                <Badge variant={tempStatus.status === "normal" ? "default" : "destructive"}>
                   {tempStatus.status}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold mb-2 text-slate-800">
-                {vitalSigns.temperature.toFixed(1)}
+                {vitalSigns.temperature ? vitalSigns.temperature.toFixed(1) : '--'}
                 <span className="text-lg text-muted-foreground ml-1">°F</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
@@ -392,22 +580,16 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Droplets className={`w-5 h-5 ${oxygenStatus.color}`} />
-                  <CardTitle className="text-sm font-medium">
-                    Oxygen Saturation
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Oxygen Saturation</CardTitle>
                 </div>
-                <Badge
-                  variant={
-                    oxygenStatus.status === "normal" ? "default" : "destructive"
-                  }
-                >
+                <Badge variant={oxygenStatus.status === "normal" ? "default" : "destructive"}>
                   {oxygenStatus.status}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold mb-2 text-slate-800">
-                {vitalSigns.oxygenSaturation}
+                {vitalSigns.oxygenSaturation || '--'}
                 <span className="text-lg text-muted-foreground ml-1">%</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
@@ -418,62 +600,43 @@ export default function RealTimeMonitoring() {
           </Card>
         </div>
 
-        {/* Charts and Device Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Vital Signs Chart */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-colored border-border/50 fade-in fade-in-delay-4">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
-                  Live Vital Signs Trends
-                </CardTitle>
-                <CardDescription>
-                  Real-time data from connected IoT health devices
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minHeight={320}
-                  >
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+          <Card className="shadow-colored border-border/50 fade-in fade-in-delay-4">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+                Live Vital Signs Trends
+              </CardTitle>
+              <CardDescription>
+                Real-time data from connected IoT health devices ({connectedDevices.length} device{connectedDevices.length !== 1 ? 's' : ''} connected)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                {vitalsHistory.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%" minHeight={320}>
                     <LineChart
                       data={vitalsHistory}
                       margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                     >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        className="opacity-30"
-                        stroke="#e2e8f0"
-                        strokeOpacity={0.5}
-                      />
-                      <XAxis
-                        dataKey="time"
-                        className="text-xs"
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis 
+                        dataKey="time" 
                         tick={{ fontSize: 12 }}
-                        tickLine={{ stroke: '#cbd5e0' }}
-                        axisLine={{ stroke: '#cbd5e0' }}
                         interval="preserveStartEnd"
                       />
-                      <YAxis
-                        className="text-xs"
+                      <YAxis 
                         tick={{ fontSize: 12 }}
-                        tickLine={{ stroke: '#cbd5e0' }}
-                        axisLine={{ stroke: '#cbd5e0' }}
                         domain={['dataMin - 5', 'dataMax + 5']}
                       />
                       <Tooltip
-                        active={true}
                         contentStyle={{
                           backgroundColor: "rgba(255, 255, 255, 0.95)",
                           border: "1px solid #e2e8f0",
                           borderRadius: "8px",
                           boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                         }}
-                        labelStyle={{ color: '#374151' }}
-                        itemStyle={{ color: '#374151' }}
                       />
                       <Line
                         type="monotone"
@@ -481,9 +644,7 @@ export default function RealTimeMonitoring() {
                         stroke="#ef4444"
                         strokeWidth={2}
                         dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, fill: "#ef4444" }}
                         name="Heart Rate (BPM)"
-                        connectNulls={false}
                       />
                       <Line
                         type="monotone"
@@ -491,9 +652,7 @@ export default function RealTimeMonitoring() {
                         stroke="#3b82f6"
                         strokeWidth={2}
                         dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, fill: "#3b82f6" }}
                         name="Oxygen Saturation (%)"
-                        connectNulls={false}
                       />
                       <Line
                         type="monotone"
@@ -501,73 +660,22 @@ export default function RealTimeMonitoring() {
                         stroke="#10b981"
                         strokeWidth={2}
                         dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, fill: "#10b981" }}
                         name="Systolic BP (mmHg)"
-                        connectNulls={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Connected Devices */}
-          <div>
-            <Card className="shadow-colored border-border/50 fade-in fade-in-delay-5">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Smartphone className="w-5 h-5 mr-2 text-green-600" />
-                  Connected Devices
-                </CardTitle>
-                <CardDescription>IoT health monitoring devices</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {connectedDevices.map((device) => {
-                  const IconComponent = device.icon;
-                  return (
-                    <div
-                      key={device.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`p-2 rounded-lg ${
-                            device.status === "connected"
-                              ? "bg-green-100 text-green-600"
-                              : device.status === "syncing"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          <IconComponent className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{device.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {device.lastSync}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="text-xs text-muted-foreground">
-                          {device.battery}%
-                        </div>
-                        <Progress value={device.battery} className="w-12 h-2" />
-                        {device.status === "connected" ? (
-                          <Wifi className="w-4 h-4 text-green-600" />
-                        ) : device.status === "syncing" ? (
-                          <Zap className="w-4 h-4 text-yellow-600 animate-pulse" />
-                        ) : (
-                          <WifiOff className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="text-center">
+                      <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>Waiting for device data...</p>
+                      <p className="text-sm mt-2">Connect a device to see real-time charts</p>
                     </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
