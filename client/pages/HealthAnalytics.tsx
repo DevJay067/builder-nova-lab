@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import HealthTracking from "@/components/HealthTracking";
 import HealthDataStatus from "@/components/HealthDataStatus";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface HealthRecord {
   id: string;
