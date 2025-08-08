@@ -759,16 +759,49 @@ class RealIoTDeviceService {
         console.log('🌐 Manual WebSocket connection established');
       };
 
+      this.websocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'vital_signs') {
+            this.emitVitalSigns(data.payload);
+          } else if (data.type === 'device_update') {
+            this.handleDeviceUpdate(data.payload);
+          }
+        } catch (e) {
+          console.error('Manual WebSocket message parse error:', e);
+        }
+      };
+
       this.websocket.onerror = (error: Event) => {
-        console.error('Manual WebSocket connection error:', error);
+        const errorInfo = {
+          type: error.type,
+          timestamp: new Date().toISOString(),
+          url: url,
+          message: 'Manual WebSocket connection failed'
+        };
+
+        if (error instanceof ErrorEvent) {
+          errorInfo.message = error.message;
+        }
+
+        console.error('Manual WebSocket connection error:', errorInfo);
       };
 
       this.websocket.onclose = (event: CloseEvent) => {
-        console.log('Manual WebSocket connection closed:', event.code, event.reason);
+        console.log('Manual WebSocket connection closed:', {
+          code: event.code,
+          reason: event.reason || 'No reason provided',
+          wasClean: event.wasClean,
+          timestamp: new Date().toISOString()
+        });
       };
 
     } catch (error) {
-      console.error('Failed to establish manual WebSocket connection:', error);
+      console.error('Failed to establish manual WebSocket connection:', {
+        error: error instanceof Error ? error.message : String(error),
+        url: wsUrl,
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
