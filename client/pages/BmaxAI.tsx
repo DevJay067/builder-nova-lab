@@ -534,10 +534,9 @@ IMPORTANT INSTRUCTIONS:
               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
                 <Shield className="h-8 w-8 text-primary-foreground" />
               </div>
-              <CardTitle className="text-xl">Authentication Required</CardTitle>
+              <CardTitle className="text-xl">{t("auth.authenticationRequired")}</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Please log in to access your personalized B-max AI assistant
-                with medical context.
+                {t("bmax.loginToAccess")}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
