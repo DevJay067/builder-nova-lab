@@ -78,20 +78,19 @@ export default function HealthTracking() {
   }, []);
 
   const requestNotificationPermission = async () => {
-    if ("Notification" in window && Notification.permission === "default") {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        toast({
-          title: "Notifications Enabled",
-          description: "You'll now receive health tracking reminders",
-        });
-      } else if (permission === "denied") {
-        toast({
-          title: "Notifications Blocked",
-          description: "Please enable notifications in your browser settings for reminders to work",
-          variant: "destructive",
-        });
-      }
+    const granted = await notificationService.requestPermission();
+
+    if (granted) {
+      toast({
+        title: "Notifications Enabled",
+        description: "You'll now receive smart health tracking reminders",
+      });
+    } else {
+      toast({
+        title: "Notifications Not Enabled",
+        description: "Please enable notifications in your browser settings for reminders to work",
+        variant: "destructive",
+      });
     }
   };
 
