@@ -65,6 +65,7 @@ import {
   Globe,
   Database,
 } from "lucide-react";
+import permanentStorage from "@/services/permanentStorage";
 
 interface HealthRecord {
   id: string;
