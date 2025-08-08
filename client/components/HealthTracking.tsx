@@ -22,6 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import notificationService from "@/services/notificationService";
 import permanentStorage from "@/services/permanentStorage";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface SleepSchedule {
   id: string;
