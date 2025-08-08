@@ -40,6 +40,12 @@ export default function IoTDebugPanel() {
     activeDevices: 0,
     totalDevices: 0
   });
+  const [websocketStatus, setWebsocketStatus] = useState({
+    connected: false,
+    url: '',
+    state: 'Unknown',
+    lastError: ''
+  });
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
