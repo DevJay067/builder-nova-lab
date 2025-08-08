@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Google Translate Custom Styling */
+.goog-te-gadget {
+  display: none !important;
+}
+
+.goog-te-banner-frame {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+.goog-te-menu-value {
+  color: inherit !important;
+}
+
+.goog-te-menu-value span {
+  color: inherit !important;
+}
+
+/* Hide Google Translate toolbar */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+/* Custom translate widget styling */
+.google-translate-widget {
+  position: relative;
+}
+
+.google-translate-widget .goog-te-combo {
+  display: none !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
