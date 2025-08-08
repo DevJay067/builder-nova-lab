@@ -304,7 +304,7 @@ export default function HealthHistory() {
         return;
       }
 
-      console.log("�� Saving health record to encrypted cloud vault...");
+      console.log("🔐 Saving health record to encrypted cloud vault...");
 
       // First try the enhanced vault storage API
       const vaultResponse = await fetch("/api/vault/store-health-record", {
@@ -672,7 +672,7 @@ export default function HealthHistory() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="date">Date *</Label>
+                        <Label htmlFor="date">{t("history.date")} *</Label>
                         <Input
                           id="date"
                           type="date"
