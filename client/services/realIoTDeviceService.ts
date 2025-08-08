@@ -546,15 +546,45 @@ class RealIoTDeviceService {
    */
   async connectBoAtDevice(): Promise<DeviceConnection | null> {
     try {
+      // Pre-check Bluetooth availability
+      if (!navigator.bluetooth) {
+        throw new Error('Web Bluetooth not supported. Please use Chrome or Edge browser.');
+      }
+
+      const available = await navigator.bluetooth.getAvailability();
+      if (!available) {
+        throw new Error('Bluetooth not available. Please enable Bluetooth on your device.');
+      }
+
+      console.log('🎧 Searching for boAt devices...');
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ namePrefix: 'boAt' }],
-        optionalServices: [HEALTH_SERVICE_UUIDS.HEART_RATE, HEALTH_SERVICE_UUIDS.BATTERY_SERVICE]
+        filters: [
+          { namePrefix: 'boAt' },
+          { namePrefix: 'Boat' },
+          { namePrefix: 'BOAT' }
+        ],
+        optionalServices: [
+          HEALTH_SERVICE_UUIDS.HEART_RATE,
+          HEALTH_SERVICE_UUIDS.BATTERY_SERVICE,
+          HEALTH_SERVICE_UUIDS.DEVICE_INFO
+        ]
       });
 
+      console.log(`✅ Found boAt device: ${device.name}`);
       return await this.connectBluetoothDevice(device);
-    } catch (error) {
+    } catch (error: any) {
       console.error('boAt device connection failed:', error);
-      return null;
+
+      // Specific error handling for boAt devices
+      if (error.name === 'SecurityError') {
+        throw new Error('Bluetooth access denied. Please open this page in a new tab or enable Bluetooth permissions.');
+      } else if (error.name === 'NotFoundError') {
+        throw new Error('No boAt devices found. Make sure your boAt watch is in pairing mode and nearby.');
+      } else if (error.name === 'NotAllowedError') {
+        throw new Error('Bluetooth permission denied. Please allow access when prompted.');
+      }
+
+      throw error;
     }
   }
 
