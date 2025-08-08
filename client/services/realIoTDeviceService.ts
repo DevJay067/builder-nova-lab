@@ -224,10 +224,22 @@ class RealIoTDeviceService {
   private websocket: WebSocket | null = null;
 
   private initializeWebSocketConnection() {
+    // Skip WebSocket connection in development/demo mode
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    if (isDevelopment) {
+      console.log('⚠️ WebSocket skipped in development mode. Using local simulation instead.');
+      return;
+    }
+
     try {
-      // Connect to our backend WebSocket server for real-time health data
-      this.websocket = new WebSocket('wss://your-backend-url/health-stream');
-      
+      // Use the current domain for WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/health-stream`;
+
+      console.log(`🔌 Attempting WebSocket connection to: ${wsUrl}`);
+      this.websocket = new WebSocket(wsUrl);
+
       this.websocket.onopen = () => {
         console.log('🌐 WebSocket connected for real-time health streaming');
       };
@@ -245,17 +257,38 @@ class RealIoTDeviceService {
         }
       };
 
-      this.websocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
+      this.websocket.onerror = (error: Event) => {
+        console.error('WebSocket connection error:', {
+          type: error.type,
+          target: error.target,
+          message: 'Failed to connect to WebSocket server',
+          url: wsUrl
+        });
+
+        // Don't attempt reconnection in development
+        if (!isDevelopment) {
+          console.log('🔄 Will retry WebSocket connection in 10 seconds...');
+        }
       };
 
-      this.websocket.onclose = () => {
-        console.log('WebSocket disconnected, attempting reconnect...');
-        setTimeout(() => this.initializeWebSocketConnection(), 5000);
+      this.websocket.onclose = (event: CloseEvent) => {
+        console.log('WebSocket disconnected:', {
+          code: event.code,
+          reason: event.reason || 'No reason provided',
+          wasClean: event.wasClean
+        });
+
+        // Only attempt reconnection if not in development and connection was not clean
+        if (!isDevelopment && !event.wasClean && event.code !== 1000) {
+          setTimeout(() => {
+            console.log('🔄 Attempting WebSocket reconnection...');
+            this.initializeWebSocketConnection();
+          }, 10000);
+        }
       };
 
     } catch (error) {
-      console.warn('WebSocket connection failed:', error);
+      console.warn('WebSocket initialization failed:', error);
     }
   }
 
