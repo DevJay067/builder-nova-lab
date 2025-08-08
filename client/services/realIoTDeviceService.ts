@@ -637,6 +637,66 @@ class RealIoTDeviceService {
     return this.isSupported;
   }
 
+  // Check Bluetooth permissions and availability
+  async checkBluetoothPermissions(): Promise<{
+    supported: boolean;
+    available: boolean;
+    permission: PermissionState | null;
+    errors: string[];
+  }> {
+    const result = {
+      supported: false,
+      available: false,
+      permission: null as PermissionState | null,
+      errors: [] as string[]
+    };
+
+    try {
+      // Check if Web Bluetooth is supported
+      if (!('bluetooth' in navigator)) {
+        result.errors.push('Web Bluetooth API not supported in this browser');
+        return result;
+      }
+      result.supported = true;
+
+      // Check if Bluetooth is available
+      try {
+        result.available = await navigator.bluetooth.getAvailability();
+        if (!result.available) {
+          result.errors.push('Bluetooth is not available on this device');
+        }
+      } catch (e) {
+        result.errors.push('Cannot check Bluetooth availability');
+      }
+
+      // Check permissions if available
+      if ('permissions' in navigator) {
+        try {
+          const permission = await navigator.permissions.query({ name: 'bluetooth' as PermissionName });
+          result.permission = permission.state;
+
+          if (permission.state === 'denied') {
+            result.errors.push('Bluetooth permission denied');
+          } else if (permission.state === 'prompt') {
+            result.errors.push('Bluetooth permission will be requested');
+          }
+        } catch (e) {
+          result.errors.push('Cannot check Bluetooth permissions');
+        }
+      }
+
+      // Check secure context
+      if (!window.isSecureContext && window.location.protocol !== 'https:') {
+        result.errors.push('HTTPS required for Bluetooth access');
+      }
+
+    } catch (error) {
+      result.errors.push(`Bluetooth check failed: ${error}`);
+    }
+
+    return result;
+  }
+
   // Manual WebSocket connection for production use
   connectToHealthStream(wsUrl?: string): void {
     if (this.websocket?.readyState === WebSocket.OPEN) {
