@@ -111,6 +111,7 @@ interface HealthInsight {
 }
 
 export default function BmaxAI() {
+  const { t } = useTranslation();
   const [personalizedContext, setPersonalizedContext] =
     useState<PersonalizedContext | null>(null);
   const [aiHealthContext, setAiHealthContext] =
