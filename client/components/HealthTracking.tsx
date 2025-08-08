@@ -265,11 +265,13 @@ export default function HealthTracking() {
     };
 
     saveTrackingData(newData);
-    scheduleWaterNotifications(reminder);
+
+    // Use new notification service
+    notificationService.scheduleWaterReminders(reminder);
 
     toast({
       title: "Water Reminder Added",
-      description: `You'll be reminded every ${newWater.interval} minutes`,
+      description: `Smart notifications every ${newWater.interval} minutes with progress tracking`,
     });
   };
 
