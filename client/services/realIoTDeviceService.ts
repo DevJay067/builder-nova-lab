@@ -483,6 +483,11 @@ class RealIoTDeviceService {
     this.dataCallbacks.forEach(callback => callback(data));
   }
 
+  // Public method for external services (like simulation) to emit data
+  public emitDeviceData(data: VitalSigns): void {
+    this.emitVitalSigns(data);
+  }
+
   private notifyDeviceUpdate(): void {
     const devices = this.getConnectedDevices();
     this.deviceCallbacks.forEach(callback => callback(devices));
