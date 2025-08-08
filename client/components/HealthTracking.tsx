@@ -326,47 +326,45 @@ export default function HealthTracking() {
       todayWaterIntake: trackingData.todayWaterIntake + 1
     };
     saveTrackingData(newData);
-    
+
+    // Show achievement notification for milestones
+    const progress = Math.round((newData.todayWaterIntake / 8) * 100);
+    if (newData.todayWaterIntake === 8) {
+      notificationService.showNotification({
+        id: `water-goal-${Date.now()}`,
+        title: "🎉 Daily Water Goal Achieved!",
+        body: "Congratulations! You've reached your daily hydration goal.",
+        type: 'water',
+        timestamp: Date.now()
+      });
+    }
+
     toast({
       title: "Water Logged!",
-      description: `${newData.todayWaterIntake} glasses today`,
+      description: `${newData.todayWaterIntake} glasses today (${progress}% of goal)`,
     });
   };
 
-  const toggleSchedule = (id: string, enabled: boolean) => {
-    const newData = {
-      ...trackingData,
-      sleepSchedules: trackingData.sleepSchedules.map(schedule =>
-        schedule.id === id ? { ...schedule, enabled } : schedule
-      )
-    };
-    saveTrackingData(newData);
-  };
-
-  const toggleWaterReminder = (id: string, enabled: boolean) => {
-    const newData = {
-      ...trackingData,
-      waterReminders: trackingData.waterReminders.map(reminder =>
-        reminder.id === id ? { ...reminder, enabled } : reminder
-      )
-    };
-    saveTrackingData(newData);
-  };
-
   const deleteSchedule = (id: string) => {
+    // Clear notifications first
+    notificationService.clearScheduledNotification(id);
+
     const newData = {
       ...trackingData,
       sleepSchedules: trackingData.sleepSchedules.filter(schedule => schedule.id !== id)
     };
     saveTrackingData(newData);
-    
+
     toast({
       title: "Schedule Deleted",
-      description: "Sleep schedule has been removed",
+      description: "Sleep schedule and notifications removed",
     });
   };
 
   const deleteWaterReminder = (id: string) => {
+    // Clear notifications first
+    notificationService.clearScheduledNotification(id);
+
     const newData = {
       ...trackingData,
       waterReminders: trackingData.waterReminders.filter(reminder => reminder.id !== id)
@@ -375,7 +373,7 @@ export default function HealthTracking() {
 
     toast({
       title: "Reminder Deleted",
-      description: "Water reminder has been removed",
+      description: "Water reminder and notifications removed",
     });
   };
 
