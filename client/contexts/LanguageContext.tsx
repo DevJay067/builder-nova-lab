@@ -91,7 +91,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   useEffect(() => {
     loadTranslations(currentLanguage);
 
-    // Update document language and direction
+    // Update document language and direction for Chrome auto-translate
     document.documentElement.lang = currentLanguage;
     const languageInfo = SUPPORTED_LANGUAGES.find(
       (lang) => lang.code === currentLanguage,
@@ -101,7 +101,44 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     } else {
       document.documentElement.dir = "ltr";
     }
+
+    // Add Chrome translate integration
+    updateChromeTranslateSettings(currentLanguage);
   }, [currentLanguage]);
+
+  // Chrome auto-translate integration
+  const updateChromeTranslateSettings = (language: SupportedLanguage) => {
+    // Update meta tags for Chrome's translate detection
+    const existingMeta = document.querySelector('meta[name="google-translate-customization"]');
+    if (existingMeta) {
+      existingMeta.remove();
+    }
+
+    // Add or update content language meta tag
+    let contentLanguageMeta = document.querySelector('meta[http-equiv="content-language"]');
+    if (!contentLanguageMeta) {
+      contentLanguageMeta = document.createElement('meta');
+      contentLanguageMeta.setAttribute('http-equiv', 'content-language');
+      document.head.appendChild(contentLanguageMeta);
+    }
+    contentLanguageMeta.setAttribute('content', language);
+
+    // Update page title with language info for Chrome
+    const currentTitle = document.title;
+    const baseTitle = currentTitle.split(' - ')[0] || 'HealthChain';
+    const languageInfo = SUPPORTED_LANGUAGES.find(l => l.code === language);
+    document.title = `${baseTitle} - ${languageInfo?.nativeName || languageInfo?.name || ''}`;
+
+    // Notify Chrome about language change
+    if (window.google && window.google.translate) {
+      // If Google Translate is already loaded, trigger a refresh
+      try {
+        window.google.translate.TranslateElement._invalidateAllElements();
+      } catch (e) {
+        // Silently handle if translate API is not available
+      }
+    }
+  };
 
   const changeLanguage = (language: SupportedLanguage) => {
     setCurrentLanguage(language);
