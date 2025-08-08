@@ -50,6 +50,7 @@ interface TrackingData {
 }
 
 export default function HealthTracking() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [trackingData, setTrackingData] = useState<TrackingData>({
     sleepSchedules: [],
