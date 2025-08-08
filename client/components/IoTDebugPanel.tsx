@@ -327,6 +327,34 @@ export default function IoTDebugPanel() {
             </CardContent>
           </Card>
 
+          {/* WebSocket Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">WebSocket Status</CardTitle>
+              <CardDescription>Real-time health data streaming connection</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                <div>
+                  <p className="font-medium">Connection Status</p>
+                  <p className="text-sm text-gray-600">{websocketStatus.url}</p>
+                </div>
+                <Badge variant={websocketStatus.connected ? "default" : "secondary"}>
+                  {websocketStatus.state}
+                </Badge>
+              </div>
+
+              {websocketStatus.lastError && (
+                <Alert className="border-yellow-200 bg-yellow-50">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-700 text-sm">
+                    {websocketStatus.lastError}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Connection Testing */}
           <Card>
             <CardHeader>
