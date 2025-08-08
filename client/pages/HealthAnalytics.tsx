@@ -401,8 +401,8 @@ export default function HealthAnalytics() {
                   <Activity className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Health Analytics</h1>
-                  <p className="text-sm text-muted-foreground">AI-Powered Insights</p>
+                  <h1 className="text-xl font-bold text-foreground">{t("analytics.title")}</h1>
+                  <p className="text-sm text-muted-foreground">{t("analytics.subtitle")}</p>
                 </div>
               </div>
             </div>
