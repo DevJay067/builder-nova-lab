@@ -392,7 +392,7 @@ class DeviceSimulationService {
     }
 
     // Send emergency data
-    realIoTDeviceService['emitVitalSigns'](emergencyData as VitalSigns);
+    realIoTDeviceService.emitDeviceData(emergencyData as VitalSigns);
     
     // Return to normal after 30 seconds
     setTimeout(() => {
