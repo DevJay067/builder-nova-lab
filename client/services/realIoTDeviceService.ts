@@ -590,15 +590,46 @@ class RealIoTDeviceService {
 
   async connectFitbitDevice(): Promise<DeviceConnection | null> {
     try {
+      if (!navigator.bluetooth) {
+        throw new Error('Web Bluetooth not supported. Please use Chrome or Edge browser.');
+      }
+
+      const available = await navigator.bluetooth.getAvailability();
+      if (!available) {
+        throw new Error('Bluetooth not available. Please enable Bluetooth on your device.');
+      }
+
+      console.log('💚 Searching for Fitbit devices...');
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ namePrefix: 'Fitbit' }],
-        optionalServices: [HEALTH_SERVICE_UUIDS.HEART_RATE, HEALTH_SERVICE_UUIDS.BATTERY_SERVICE]
+        filters: [
+          { namePrefix: 'Fitbit' },
+          { namePrefix: 'FB' },
+          { namePrefix: 'Charge' },
+          { namePrefix: 'Versa' },
+          { namePrefix: 'Sense' },
+          { namePrefix: 'Inspire' }
+        ],
+        optionalServices: [
+          HEALTH_SERVICE_UUIDS.HEART_RATE,
+          HEALTH_SERVICE_UUIDS.BATTERY_SERVICE,
+          HEALTH_SERVICE_UUIDS.DEVICE_INFO
+        ]
       });
 
+      console.log(`✅ Found Fitbit device: ${device.name}`);
       return await this.connectBluetoothDevice(device);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fitbit device connection failed:', error);
-      return null;
+
+      if (error.name === 'SecurityError') {
+        throw new Error('Bluetooth access denied. Please open this page in a new tab or enable Bluetooth permissions.');
+      } else if (error.name === 'NotFoundError') {
+        throw new Error('No Fitbit devices found. Make sure your Fitbit is in pairing mode and nearby.');
+      } else if (error.name === 'NotAllowedError') {
+        throw new Error('Bluetooth permission denied. Please allow access when prompted.');
+      }
+
+      throw error;
     }
   }
 
