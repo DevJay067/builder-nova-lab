@@ -292,6 +292,21 @@ export default function RealTimeMonitoring() {
                 <Clock className="w-3 h-3 mr-1" />
                 {new Date().toLocaleTimeString()}
               </Badge>
+              <Button
+                variant={isDemoMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  if (!isDemoMode) {
+                    deviceSimulationService.startSimulation();
+                    setIsDemoMode(true);
+                  } else {
+                    deviceSimulationService.stopSimulation();
+                    setIsDemoMode(false);
+                  }
+                }}
+              >
+                {isDemoMode ? "Stop Demo" : "Demo Mode"}
+              </Button>
             </div>
           </div>
         </div>
