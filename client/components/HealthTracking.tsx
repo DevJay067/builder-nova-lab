@@ -149,10 +149,13 @@ export default function HealthTracking() {
 
   const saveTrackingData = async (newData: TrackingData) => {
     try {
-      // Save to localStorage
+      // Save to permanent storage first (most reliable)
+      permanentStorage.storeTrackingData(newData);
+
+      // Also save to localStorage for immediate access
       localStorage.setItem("healthTracking", JSON.stringify(newData));
-      
-      // Save to cloud vault
+
+      // Save to cloud vault as backup
       const sessionToken = localStorage.getItem("sessionToken");
       if (sessionToken) {
         try {
@@ -172,12 +175,18 @@ export default function HealthTracking() {
               }
             }),
           });
+          console.log("✅ Tracking data synchronized with cloud vault");
         } catch (error) {
-          console.log("Cloud save failed, data saved locally");
+          console.log("Cloud vault unavailable, data saved to permanent storage");
         }
       }
-      
+
       setTrackingData(newData);
+
+      toast({
+        title: "Data Saved",
+        description: "Your tracking preferences have been saved permanently",
+      });
     } catch (error) {
       console.error("Error saving tracking data:", error);
       toast({
