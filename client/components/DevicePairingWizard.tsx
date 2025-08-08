@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Bluetooth,
   BluetoothConnected,
@@ -25,9 +31,12 @@ import {
   Loader2,
   QrCode,
   Settings,
-  HelpCircle
-} from 'lucide-react';
-import { realIoTDeviceService, type DeviceConnection } from '@/services/realIoTDeviceService';
+  HelpCircle,
+} from "lucide-react";
+import {
+  realIoTDeviceService,
+  type DeviceConnection,
+} from "@/services/realIoTDeviceService";
 
 interface DevicePairingWizardProps {
   onDeviceConnected?: (device: DeviceConnection) => void;
@@ -45,99 +54,126 @@ interface DeviceBrand {
 
 const SUPPORTED_BRANDS: DeviceBrand[] = [
   {
-    id: 'boat',
-    name: 'boAt',
+    id: "boat",
+    name: "boAt",
     icon: <Watch className="w-6 h-6" />,
-    color: 'bg-red-500',
-    devices: ['boAt Wave Pro', 'boAt Wave Sigma', 'boAt Storm Pro', 'boAt Xtend'],
+    color: "bg-red-500",
+    devices: [
+      "boAt Wave Pro",
+      "boAt Wave Sigma",
+      "boAt Storm Pro",
+      "boAt Xtend",
+    ],
     instructions: [
-      'Press and hold the crown button for 3 seconds',
-      'Navigate to Settings > Bluetooth > Pairing Mode',
+      "Press and hold the crown button for 3 seconds",
+      "Navigate to Settings > Bluetooth > Pairing Mode",
       'Select "boAt Watch" from the device list',
-      'Confirm pairing on your watch'
+      "Confirm pairing on your watch",
     ],
-    bluetoothName: ['boAt', 'Boat', 'BOAT']
+    bluetoothName: ["boAt", "Boat", "BOAT"],
   },
   {
-    id: 'fitbit',
-    name: 'Fitbit',
+    id: "fitbit",
+    name: "Fitbit",
     icon: <Activity className="w-6 h-6" />,
-    color: 'bg-green-500',
-    devices: ['Fitbit Charge 6', 'Fitbit Versa 4', 'Fitbit Sense 2', 'Fitbit Inspire 3'],
+    color: "bg-green-500",
+    devices: [
+      "Fitbit Charge 6",
+      "Fitbit Versa 4",
+      "Fitbit Sense 2",
+      "Fitbit Inspire 3",
+    ],
     instructions: [
-      'Open Fitbit app on your phone first',
-      'Go to Profile > Data Export > Third-party Apps',
+      "Open Fitbit app on your phone first",
+      "Go to Profile > Data Export > Third-party Apps",
       'Enable "Health Data Sharing"',
-      'On your Fitbit, go to Settings > About > Bluetooth Pairing'
+      "On your Fitbit, go to Settings > About > Bluetooth Pairing",
     ],
-    bluetoothName: ['Fitbit', 'FB', 'Charge', 'Versa', 'Sense', 'Inspire']
+    bluetoothName: ["Fitbit", "FB", "Charge", "Versa", "Sense", "Inspire"],
   },
   {
-    id: 'garmin',
-    name: 'Garmin',
+    id: "garmin",
+    name: "Garmin",
     icon: <Heart className="w-6 h-6" />,
-    color: 'bg-blue-500',
-    devices: ['Garmin Venu 3', 'Garmin Forerunner 965', 'Garmin Fenix 7', 'Garmin Vivoactive 5'],
+    color: "bg-blue-500",
+    devices: [
+      "Garmin Venu 3",
+      "Garmin Forerunner 965",
+      "Garmin Fenix 7",
+      "Garmin Vivoactive 5",
+    ],
     instructions: [
-      'Press the UP button to access the main menu',
-      'Select Settings > System > Connectivity > Bluetooth',
+      "Press the UP button to access the main menu",
+      "Select Settings > System > Connectivity > Bluetooth",
       'Enable "Smart Notifications" and "Bluetooth"',
-      'Select "Pair Mobile Device"'
+      'Select "Pair Mobile Device"',
     ],
-    bluetoothName: ['Garmin', 'GARMIN', 'Venu', 'Forerunner', 'Fenix', 'Vivoactive']
+    bluetoothName: [
+      "Garmin",
+      "GARMIN",
+      "Venu",
+      "Forerunner",
+      "Fenix",
+      "Vivoactive",
+    ],
   },
   {
-    id: 'apple',
-    name: 'Apple Watch',
+    id: "apple",
+    name: "Apple Watch",
     icon: <Watch className="w-6 h-6" />,
-    color: 'bg-gray-600',
-    devices: ['Apple Watch Series 9', 'Apple Watch Ultra 2', 'Apple Watch SE'],
+    color: "bg-gray-600",
+    devices: ["Apple Watch Series 9", "Apple Watch Ultra 2", "Apple Watch SE"],
     instructions: [
-      'Open Settings app on your Apple Watch',
-      'Tap Privacy & Security > Health',
+      "Open Settings app on your Apple Watch",
+      "Tap Privacy & Security > Health",
       'Enable "Share Health Data"',
-      'On iPhone: Settings > Privacy > Health > HealthChain > Turn On All'
+      "On iPhone: Settings > Privacy > Health > HealthChain > Turn On All",
     ],
-    bluetoothName: ['Apple Watch', 'Watch', 'Apple']
+    bluetoothName: ["Apple Watch", "Watch", "Apple"],
   },
   {
-    id: 'samsung',
-    name: 'Samsung Galaxy',
+    id: "samsung",
+    name: "Samsung Galaxy",
     icon: <Smartphone className="w-6 h-6" />,
-    color: 'bg-purple-500',
-    devices: ['Galaxy Watch 6', 'Galaxy Watch 6 Classic', 'Galaxy Watch 5'],
+    color: "bg-purple-500",
+    devices: ["Galaxy Watch 6", "Galaxy Watch 6 Classic", "Galaxy Watch 5"],
     instructions: [
-      'Open Galaxy Wearable app on your phone',
-      'Go to Watch settings > Advanced features',
+      "Open Galaxy Wearable app on your phone",
+      "Go to Watch settings > Advanced features",
       'Enable "Continuous HR measurement"',
-      'Settings > Connections > Bluetooth > Available devices'
+      "Settings > Connections > Bluetooth > Available devices",
     ],
-    bluetoothName: ['Galaxy Watch', 'Samsung', 'SM-R', 'Galaxy']
+    bluetoothName: ["Galaxy Watch", "Samsung", "SM-R", "Galaxy"],
   },
   {
-    id: 'xiaomi',
-    name: 'Xiaomi Mi Band',
+    id: "xiaomi",
+    name: "Xiaomi Mi Band",
     icon: <Activity className="w-6 h-6" />,
-    color: 'bg-orange-500',
-    devices: ['Mi Band 8', 'Mi Band 7', 'Xiaomi Watch S3', 'Redmi Watch 4'],
+    color: "bg-orange-500",
+    devices: ["Mi Band 8", "Mi Band 7", "Xiaomi Watch S3", "Redmi Watch 4"],
     instructions: [
-      'Open Mi Fitness app on your phone',
-      'Go to Profile > Privacy settings',
+      "Open Mi Fitness app on your phone",
+      "Go to Profile > Privacy settings",
       'Enable "Data sharing with third-party apps"',
-      'On band: Settings > More > Factory reset (to enter pairing mode)'
+      "On band: Settings > More > Factory reset (to enter pairing mode)",
     ],
-    bluetoothName: ['Mi Band', 'Xiaomi', 'Redmi', 'MI', 'XIAOMI']
-  }
+    bluetoothName: ["Mi Band", "Xiaomi", "Redmi", "MI", "XIAOMI"],
+  },
 ];
 
-export default function DevicePairingWizard({ onDeviceConnected }: DevicePairingWizardProps) {
+export default function DevicePairingWizard({
+  onDeviceConnected,
+}: DevicePairingWizardProps) {
   const [selectedBrand, setSelectedBrand] = useState<DeviceBrand | null>(null);
   const [pairingStep, setPairingStep] = useState(0);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionProgress, setConnectionProgress] = useState(0);
-  const [connectedDevice, setConnectedDevice] = useState<DeviceConnection | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [discoveredDevices, setDiscoveredDevices] = useState<BluetoothDevice[]>([]);
+  const [connectedDevice, setConnectedDevice] =
+    useState<DeviceConnection | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [discoveredDevices, setDiscoveredDevices] = useState<BluetoothDevice[]>(
+    [],
+  );
 
   const resetPairing = () => {
     setSelectedBrand(null);
@@ -145,14 +181,14 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
     setIsConnecting(false);
     setConnectionProgress(0);
     setConnectedDevice(null);
-    setErrorMessage('');
+    setErrorMessage("");
     setDiscoveredDevices([]);
   };
 
   const startPairing = async (brand: DeviceBrand) => {
     setSelectedBrand(brand);
     setPairingStep(1);
-    setErrorMessage('');
+    setErrorMessage("");
   };
 
   const connectDevice = async () => {
@@ -164,33 +200,40 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
 
     try {
       // Check Bluetooth permissions first
-      const permissions = await realIoTDeviceService.checkBluetoothPermissions();
+      const permissions =
+        await realIoTDeviceService.checkBluetoothPermissions();
 
       if (!permissions.supported) {
-        throw new Error('Web Bluetooth not supported. Please use Chrome or Edge browser.');
+        throw new Error(
+          "Web Bluetooth not supported. Please use Chrome or Edge browser.",
+        );
       }
 
       if (!permissions.available) {
-        throw new Error('Bluetooth not available. Please enable Bluetooth on your device.');
+        throw new Error(
+          "Bluetooth not available. Please enable Bluetooth on your device.",
+        );
       }
 
-      if (permissions.permission === 'denied') {
-        throw new Error('Bluetooth permission denied. Please enable Bluetooth access in browser settings.');
+      if (permissions.permission === "denied") {
+        throw new Error(
+          "Bluetooth permission denied. Please enable Bluetooth access in browser settings.",
+        );
       }
 
       // Show progress
       const progressInterval = setInterval(() => {
-        setConnectionProgress(prev => Math.min(prev + 15, 90));
+        setConnectionProgress((prev) => Math.min(prev + 15, 90));
       }, 500);
 
       // Try to connect based on brand
       let device: DeviceConnection | null = null;
 
       switch (selectedBrand.id) {
-        case 'boat':
+        case "boat":
           device = await realIoTDeviceService.connectBoAtDevice();
           break;
-        case 'fitbit':
+        case "fitbit":
           device = await realIoTDeviceService.connectFitbitDevice();
           break;
         default:
@@ -210,23 +253,25 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
           resetPairing();
         }, 3000);
       } else {
-        throw new Error('Device connection failed - no device returned');
+        throw new Error("Device connection failed - no device returned");
       }
-
     } catch (error: any) {
       setConnectionProgress(0);
 
       // Provide user-friendly error messages
-      let userMessage = error.message || 'Failed to connect device';
+      let userMessage = error.message || "Failed to connect device";
 
-      if (error.message?.includes('permissions policy')) {
-        userMessage = 'Bluetooth blocked by browser. Try opening this page in a new tab or different browser.';
-      } else if (error.message?.includes('SecurityError')) {
-        userMessage = 'Bluetooth access denied. Please enable Bluetooth permissions and try again.';
-      } else if (error.message?.includes('NotFoundError')) {
+      if (error.message?.includes("permissions policy")) {
+        userMessage =
+          "Bluetooth blocked by browser. Try opening this page in a new tab or different browser.";
+      } else if (error.message?.includes("SecurityError")) {
+        userMessage =
+          "Bluetooth access denied. Please enable Bluetooth permissions and try again.";
+      } else if (error.message?.includes("NotFoundError")) {
         userMessage = `No ${selectedBrand.name} devices found. Make sure your device is in pairing mode and nearby.`;
-      } else if (error.message?.includes('HTTPS')) {
-        userMessage = 'Secure connection required. Please use HTTPS or localhost.';
+      } else if (error.message?.includes("HTTPS")) {
+        userMessage =
+          "Secure connection required. Please use HTTPS or localhost.";
       }
 
       setErrorMessage(userMessage);
@@ -241,13 +286,19 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
 
     try {
       setIsConnecting(true);
-      
+
       // Use Web Bluetooth to scan for devices matching the brand
-      const filters = selectedBrand.bluetoothName.map(name => ({ namePrefix: name }));
-      
+      const filters = selectedBrand.bluetoothName.map((name) => ({
+        namePrefix: name,
+      }));
+
       const device = await navigator.bluetooth.requestDevice({
         filters,
-        optionalServices: ['heart_rate', 'battery_service', 'device_information']
+        optionalServices: [
+          "heart_rate",
+          "battery_service",
+          "device_information",
+        ],
       });
 
       if (device) {
@@ -255,7 +306,9 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
         setPairingStep(2);
       }
     } catch (error: any) {
-      setErrorMessage('No devices found. Make sure your device is in pairing mode.');
+      setErrorMessage(
+        "No devices found. Make sure your device is in pairing mode.",
+      );
     } finally {
       setIsConnecting(false);
     }
@@ -283,16 +336,20 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
         {/* Step 0: Brand Selection */}
         {pairingStep === 0 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4">Select Your Device Brand</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Select Your Device Brand
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {SUPPORTED_BRANDS.map((brand) => (
-                <Card 
+                <Card
                   key={brand.id}
                   className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
                   onClick={() => startPairing(brand)}
                 >
                   <CardContent className="p-4 text-center">
-                    <div className={`w-12 h-12 rounded-full ${brand.color} flex items-center justify-center text-white mx-auto mb-3`}>
+                    <div
+                      className={`w-12 h-12 rounded-full ${brand.color} flex items-center justify-center text-white mx-auto mb-3`}
+                    >
                       {brand.icon}
                     </div>
                     <h4 className="font-semibold">{brand.name}</h4>
@@ -307,8 +364,9 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
             <Alert className="mt-6">
               <HelpCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Before pairing:</strong> Make sure your device is charged and within 3 feet of your computer. 
-                Enable Bluetooth on both devices.
+                <strong>Before pairing:</strong> Make sure your device is
+                charged and within 3 feet of your computer. Enable Bluetooth on
+                both devices.
               </AlertDescription>
             </Alert>
           </div>
@@ -318,7 +376,9 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
         {pairingStep === 1 && selectedBrand && (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Prepare Your {selectedBrand.name}</h3>
+              <h3 className="text-lg font-semibold">
+                Prepare Your {selectedBrand.name}
+              </h3>
               <Button variant="outline" size="sm" onClick={resetPairing}>
                 ← Back
               </Button>
@@ -327,18 +387,22 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full ${selectedBrand.color} flex items-center justify-center text-white mr-3`}>
+                  <div
+                    className={`w-8 h-8 rounded-full ${selectedBrand.color} flex items-center justify-center text-white mr-3`}
+                  >
                     {selectedBrand.icon}
                   </div>
                   {selectedBrand.name} Setup
                 </CardTitle>
                 <CardDescription>
-                  Supported models: {selectedBrand.devices.join(', ')}
+                  Supported models: {selectedBrand.devices.join(", ")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <h4 className="font-medium">Follow these steps on your device:</h4>
+                  <h4 className="font-medium">
+                    Follow these steps on your device:
+                  </h4>
                   <ol className="space-y-2">
                     {selectedBrand.instructions.map((instruction, index) => (
                       <li key={index} className="flex items-start space-x-3">
@@ -358,12 +422,18 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
                 <AlertTriangle className="h-4 w-4 text-red-600" />
                 <AlertDescription className="text-red-700">
                   <div className="space-y-2">
-                    <p><strong>Connection Failed:</strong> {errorMessage}</p>
+                    <p>
+                      <strong>Connection Failed:</strong> {errorMessage}
+                    </p>
                     <div className="text-sm">
-                      <p><strong>Troubleshooting tips:</strong></p>
+                      <p>
+                        <strong>Troubleshooting tips:</strong>
+                      </p>
                       <ul className="list-disc list-inside space-y-1 mt-1">
                         <li>Try opening this page in a new tab</li>
-                        <li>Use Chrome or Edge browser for best compatibility</li>
+                        <li>
+                          Use Chrome or Edge browser for best compatibility
+                        </li>
                         <li>Make sure your device is in pairing mode</li>
                         <li>Enable "Demo Mode" to test without real devices</li>
                       </ul>
@@ -374,7 +444,7 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
             )}
 
             <div className="flex space-x-3">
-              <Button 
+              <Button
                 onClick={scanForDevices}
                 disabled={isConnecting}
                 className="flex-1"
@@ -391,7 +461,7 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
                   </>
                 )}
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={connectDevice}
                 disabled={isConnecting}
@@ -412,23 +482,26 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
                 <BluetoothConnected className="w-16 h-16 text-blue-600" />
               )}
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-2">
-                {isConnecting ? 'Connecting to your device...' : 'Ready to Connect'}
+                {isConnecting
+                  ? "Connecting to your device..."
+                  : "Ready to Connect"}
               </h3>
               <p className="text-gray-600">
-                {isConnecting 
-                  ? 'Please wait while we establish the connection'
-                  : 'Make sure your device is in pairing mode'
-                }
+                {isConnecting
+                  ? "Please wait while we establish the connection"
+                  : "Make sure your device is in pairing mode"}
               </p>
             </div>
 
             {isConnecting && (
               <div className="space-y-2">
                 <Progress value={connectionProgress} className="w-full" />
-                <p className="text-sm text-gray-500">{connectionProgress}% complete</p>
+                <p className="text-sm text-gray-500">
+                  {connectionProgress}% complete
+                </p>
               </div>
             )}
 
@@ -441,7 +514,9 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{device.name}</p>
-                          <p className="text-sm text-gray-500">ID: {device.id}</p>
+                          <p className="text-sm text-gray-500">
+                            ID: {device.id}
+                          </p>
                         </div>
                         <Button size="sm" onClick={connectDevice}>
                           Connect
@@ -467,7 +542,7 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
             <div className="flex items-center justify-center">
               <CheckCircle className="w-16 h-16 text-green-600" />
             </div>
-            
+
             <div>
               <h3 className="text-xl font-bold text-green-600 mb-2">
                 Successfully Connected!
@@ -487,7 +562,7 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
                     <div className="text-left">
                       <p className="font-medium">{connectedDevice.name}</p>
                       <p className="text-sm text-gray-500 capitalize">
-                        {connectedDevice.type.replace('_', ' ')}
+                        {connectedDevice.type.replace("_", " ")}
                       </p>
                     </div>
                   </div>
@@ -495,13 +570,16 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
                     Connected
                   </Badge>
                 </div>
-                
+
                 {connectedDevice.battery && (
                   <div className="mt-3 flex items-center justify-between text-sm">
                     <span className="text-gray-600">Battery Level</span>
                     <div className="flex items-center space-x-2">
                       <span>{connectedDevice.battery}%</span>
-                      <Progress value={connectedDevice.battery} className="w-20 h-2" />
+                      <Progress
+                        value={connectedDevice.battery}
+                        className="w-20 h-2"
+                      />
                     </div>
                   </div>
                 )}
@@ -511,9 +589,9 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
             <Alert className="text-left">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>What's next?</strong> Your device will now automatically sync health data 
-                including heart rate, steps, and other metrics. You can view real-time data on the 
-                monitoring dashboard.
+                <strong>What's next?</strong> Your device will now automatically
+                sync health data including heart rate, steps, and other metrics.
+                You can view real-time data on the monitoring dashboard.
               </AlertDescription>
             </Alert>
 
