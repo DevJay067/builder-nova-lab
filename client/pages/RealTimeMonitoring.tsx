@@ -65,6 +65,7 @@ export default function RealTimeMonitoring() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const [alerts, setAlerts] = useState<any[]>([]);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Initialize real IoT device service
   useEffect(() => {
