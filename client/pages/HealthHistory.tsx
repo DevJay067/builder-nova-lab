@@ -571,10 +571,9 @@ export default function HealthHistory() {
               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <Shield className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="text-xl">Authentication Required</CardTitle>
+              <CardTitle className="text-xl">{t("auth.authenticationRequired")}</CardTitle>
               <CardDescription>
-                Please log in to access your secure health history and medical
-                records.
+                {t("bmax.loginToAccess")}
               </CardDescription>
             </CardHeader>
             <CardContent>
