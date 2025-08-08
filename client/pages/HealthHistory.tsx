@@ -304,7 +304,7 @@ export default function HealthHistory() {
         return;
       }
 
-      console.log("🔐 Saving health record to encrypted cloud vault...");
+      console.log("�� Saving health record to encrypted cloud vault...");
 
       // First try the enhanced vault storage API
       const vaultResponse = await fetch("/api/vault/store-health-record", {
@@ -648,7 +648,7 @@ export default function HealthHistory() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="type">Record Type *</Label>
+                        <Label htmlFor="type">{t("history.recordType")} *</Label>
                         <Select
                           value={newRecord.type}
                           onValueChange={(value) =>
