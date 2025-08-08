@@ -320,23 +320,12 @@ export default function RealTimeMonitoring() {
                     <RefreshCw className={`w-4 h-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
                     Refresh
                   </Button>
-                  <Button 
-                    onClick={connectNewDevice} 
-                    disabled={!isSupported || isConnecting}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isConnecting ? (
-                      <>
-                        <Bluetooth className="w-4 h-4 mr-2 animate-pulse" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Connect Device
-                      </>
-                    )}
-                  </Button>
+                  <DevicePairingWizard
+                    onDeviceConnected={(device) => {
+                      console.log('Device connected via wizard:', device);
+                      refreshDevices();
+                    }}
+                  />
                 </div>
               </div>
             </CardHeader>
