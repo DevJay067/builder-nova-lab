@@ -516,11 +516,11 @@ IMPORTANT INSTRUCTIONS:
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-foreground">
-                      B-max AI Assistant
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      Your Personal Health AI
-                    </p>
+                      {t("bmax.title")}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    {t("bmax.subtitle")}
+                  </p>
                   </div>
                 </div>
               </div>
