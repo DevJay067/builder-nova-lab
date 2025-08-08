@@ -221,11 +221,13 @@ export default function HealthTracking() {
     };
 
     saveTrackingData(newData);
-    scheduleSleepNotifications(schedule);
+
+    // Use new notification service
+    notificationService.scheduleSleepReminder(schedule);
 
     toast({
       title: "Sleep Schedule Added",
-      description: "Notifications will remind you of bedtime and wake time",
+      description: "Smart notifications will remind you of bedtime and wake time",
     });
   };
 
