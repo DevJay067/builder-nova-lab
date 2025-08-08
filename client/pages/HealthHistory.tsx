@@ -336,24 +336,41 @@ export default function HealthHistory() {
       if (vaultResponse.ok) {
         const vaultResult = await vaultResponse.json();
         if (vaultResult.success) {
-          setMessage({
-            type: "success",
-            text: `✅ Health record saved securely in encrypted vault! (ID: ${vaultResult.vaultId?.slice(0, 8) || 'encrypted'})`,
-          });
+        // Also save to permanent storage for extra reliability
+        const recordData = {
+          record_type: newRecord.type,
+          title: newRecord.title,
+          description: newRecord.description || "",
+          doctor: newRecord.doctor || "",
+          date: newRecord.date,
+          metadata: {
+            category: newRecord.type,
+            recordedAt: new Date().toISOString(),
+            source: "health-history-enhanced",
+            vaultId: vaultResult.vaultId
+          },
+        };
 
-          // Reset form and reload
-          setNewRecord({
-            type: "",
-            title: "",
-            description: "",
-            date: new Date().toISOString().split("T")[0],
-            doctor: "",
-            metadata: {},
-          });
-          setIsDialogOpen(false);
-          await loadHealthRecords(sessionToken);
-          return;
-        }
+        permanentStorage.storeHealthRecord(recordData);
+
+        setMessage({
+          type: "success",
+          text: `✅ Health record saved securely! (Vault + Permanent Storage)`,
+        });
+
+        // Reset form and reload
+        setNewRecord({
+          type: "",
+          title: "",
+          description: "",
+          date: new Date().toISOString().split("T")[0],
+          doctor: "",
+          metadata: {},
+        });
+        setIsDialogOpen(false);
+        await loadHealthRecords(sessionToken);
+        return;
+      }
       }
 
       // Fallback to regular Supabase storage
