@@ -404,7 +404,7 @@ export default function HealthTracking() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center">
             <Bell className="h-5 w-5 mr-2 text-primary" />
-            Health Tracking & Notifications
+            {t("tracking.title")}
           </div>
           {/* Notification Status Indicator */}
           <div className="flex items-center space-x-2">
