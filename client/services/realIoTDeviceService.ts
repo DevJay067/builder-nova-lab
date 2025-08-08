@@ -98,10 +98,21 @@ class RealIoTDeviceService {
    */
   async scanAndConnectBluetooth(): Promise<DeviceConnection[]> {
     if (!this.isSupported) {
-      throw new Error('Bluetooth not supported');
+      throw new Error('Bluetooth not supported in this browser or environment');
+    }
+
+    // Check for specific Bluetooth availability
+    if (!navigator.bluetooth) {
+      throw new Error('Web Bluetooth API not available. Please use Chrome or Edge browser.');
     }
 
     try {
+      // Check if Bluetooth is available (might be disabled)
+      const available = await navigator.bluetooth.getAvailability();
+      if (!available) {
+        throw new Error('Bluetooth is not available on this device. Please enable Bluetooth.');
+      }
+
       const devices = await navigator.bluetooth.requestDevice({
         filters: [
           { services: [HEALTH_SERVICE_UUIDS.HEART_RATE] },
@@ -135,9 +146,23 @@ class RealIoTDeviceService {
 
         return connections;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Bluetooth scan failed:', error);
-      throw error;
+
+      // Handle specific error types
+      if (error.name === 'SecurityError') {
+        throw new Error('Bluetooth access blocked. Please enable Bluetooth permissions in your browser settings or use HTTPS.');
+      } else if (error.name === 'NotFoundError') {
+        throw new Error('No compatible devices found. Make sure your device is in pairing mode and nearby.');
+      } else if (error.name === 'NotAllowedError') {
+        throw new Error('Bluetooth permission denied. Please allow Bluetooth access and try again.');
+      } else if (error.name === 'NotSupportedError') {
+        throw new Error('Bluetooth not supported on this device or browser.');
+      } else if (error.message?.includes('permissions policy')) {
+        throw new Error('Bluetooth blocked by browser policy. Try opening this page directly in a new tab.');
+      }
+
+      throw new Error(`Bluetooth connection failed: ${error.message || 'Unknown error'}`);
     }
 
     return [];
