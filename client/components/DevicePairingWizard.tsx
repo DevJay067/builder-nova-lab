@@ -357,7 +357,18 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
               <Alert className="border-red-200 bg-red-50">
                 <AlertTriangle className="h-4 w-4 text-red-600" />
                 <AlertDescription className="text-red-700">
-                  {errorMessage}
+                  <div className="space-y-2">
+                    <p><strong>Connection Failed:</strong> {errorMessage}</p>
+                    <div className="text-sm">
+                      <p><strong>Troubleshooting tips:</strong></p>
+                      <ul className="list-disc list-inside space-y-1 mt-1">
+                        <li>Try opening this page in a new tab</li>
+                        <li>Use Chrome or Edge browser for best compatibility</li>
+                        <li>Make sure your device is in pairing mode</li>
+                        <li>Enable "Demo Mode" to test without real devices</li>
+                      </ul>
+                    </div>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
