@@ -25,7 +25,6 @@ import TestStorage from "./pages/TestStorage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
-import TranslationWrapper from "./components/TranslationWrapper";
 
 const queryClient = new QueryClient();
 
