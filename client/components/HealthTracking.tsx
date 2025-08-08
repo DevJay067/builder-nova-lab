@@ -275,52 +275,49 @@ export default function HealthTracking() {
     });
   };
 
-  const scheduleSleepNotifications = (schedule: SleepSchedule) => {
-    if ("Notification" in window && Notification.permission === "granted") {
-      // Calculate time until bedtime
-      const now = new Date();
-      const bedtimeToday = new Date();
-      const [bedHours, bedMinutes] = schedule.bedtime.split(':').map(Number);
-      bedtimeToday.setHours(bedHours, bedMinutes, 0, 0);
-      
-      if (bedtimeToday <= now) {
-        bedtimeToday.setDate(bedtimeToday.getDate() + 1);
-      }
-      
-      const timeUntilBedtime = bedtimeToday.getTime() - now.getTime();
-      
-      setTimeout(() => {
-        new Notification("💤 Time for Bed!", {
-          body: "It's your scheduled bedtime. Getting good sleep is important for your health.",
-          icon: "/manifest.json"
-        });
-      }, timeUntilBedtime);
-    }
+  // Updated toggle functions to use new notification service
+  const toggleSchedule = (id: string, enabled: boolean) => {
+    const newData = {
+      ...trackingData,
+      sleepSchedules: trackingData.sleepSchedules.map(schedule => {
+        if (schedule.id === id) {
+          const updatedSchedule = { ...schedule, enabled };
+
+          // Update notification scheduling
+          if (enabled) {
+            notificationService.scheduleSleepReminder(updatedSchedule);
+          } else {
+            notificationService.clearScheduledNotification(id);
+          }
+
+          return updatedSchedule;
+        }
+        return schedule;
+      })
+    };
+    saveTrackingData(newData);
   };
 
-  const scheduleWaterNotifications = (reminder: WaterReminder) => {
-    if ("Notification" in window && Notification.permission === "granted") {
-      const intervalMs = reminder.interval * 60 * 1000;
-      
-      const waterInterval = setInterval(() => {
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        const [startHours, startMinutes] = reminder.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = reminder.endTime.split(':').map(Number);
-        const startTime = startHours * 60 + startMinutes;
-        const endTime = endHours * 60 + endMinutes;
-        
-        if (currentTime >= startTime && currentTime <= endTime) {
-          new Notification("💧 Time to Hydrate!", {
-            body: "Remember to drink water to stay healthy and hydrated.",
-            icon: "/manifest.json"
-          });
+  const toggleWaterReminder = (id: string, enabled: boolean) => {
+    const newData = {
+      ...trackingData,
+      waterReminders: trackingData.waterReminders.map(reminder => {
+        if (reminder.id === id) {
+          const updatedReminder = { ...reminder, enabled };
+
+          // Update notification scheduling
+          if (enabled) {
+            notificationService.scheduleWaterReminders(updatedReminder);
+          } else {
+            notificationService.clearScheduledNotification(id);
+          }
+
+          return updatedReminder;
         }
-      }, intervalMs);
-      
-      // Store interval ID for cleanup
-      (reminder as any).intervalId = waterInterval;
-    }
+        return reminder;
+      })
+    };
+    saveTrackingData(newData);
   };
 
   const logWater = () => {
