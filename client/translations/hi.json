@@ -19,7 +19,7 @@
   "auth.username": "उपयोगकर्ता नाम",
   "auth.password": "पासवर्ड",
   "auth.confirmPassword": "पासवर्ड की पुष्टि करें",
-  "auth.firstName": "��हला नाम",
+  "auth.firstName": "पहला नाम",
   "auth.lastName": "अंतिम नाम",
   "auth.signIn": "साइन इन",
   "auth.signUp": "साइन अप",
@@ -38,7 +38,7 @@
   "home.testimonials": "प्रशंसापत्र",
 
   "features.aiAssistant": "B-max AI सहायक",
-  "features.aiAssistant.description": "प्राकृतिक भाषा प्रसंस्करण और चिकित्सा ज्ञान आधार के स��थ उन्नत AI-संचालित स्वास्थ्य मार्गदर्शन",
+  "features.aiAssistant.description": "प्राकृतिक भाषा प्रसंस्करण और चिकित्सा ज्ञान आधार के साथ उन्नत AI-संचालित स्वास्थ्य मार्गदर्शन",
   "features.aiAssistant.stats": "AI संचालित",
 
   "features.monitoring": "रीयल-टाइम मॉनिटरिंग",
@@ -50,7 +50,7 @@
   "features.history.stats": "सुरक्षित और निजी",
 
   "features.analytics": "स्वास्थ्य विश्लेषण",
-  "features.analytics.description": "भविष्यवाणी AI मॉडलिंग के साथ आपके स्वास्थ्य डेटा से उन्नत विश्लेषण और अंतर्दृष्टि",
+  "features.analytics.description": "भविष्��वाणी AI मॉडलिंग के साथ आपके स्वास्थ्य डेटा से उन्नत विश्लेषण और अंतर्दृष्टि",
   "features.analytics.stats": "AI अंतर्दृष्टि",
 
   "features.firstAid": "आपातकालीन प्राथमिक चिकित्सा",
@@ -62,7 +62,7 @@
   "features.secure.stats": "ब्लॉकचेन सुरक्षित",
 
   "monitoring.title": "रीयल-टाइम स्वास्थ्य मॉनिटरिंग",
-  "monitoring.subtitle": "लाइव IoT डिवाइस एकीकरण",
+  "monitoring.subtitle": "लाइव IoT डिव��इस एकीकरण",
   "monitoring.heartRate": "हृदय गति",
   "monitoring.bloodPressure": "रक्तचाप",
   "monitoring.temperature": "तापमान",
@@ -82,7 +82,7 @@
   "ai.speaking": "बोल रहा है",
   "ai.voiceOn": "आवाज चालू",
   "ai.voiceOff": "आवाज बंद",
-  "ai.greeting": "नमस्��े! मैं आपका AI स्वास्थ्य सहायक हूं। मैं आपकी चिकित्सा प्रश्नों, स्वास्थ्य ट्रैकिंग और आपातकालीन मार्गदर्शन में मदद कर सकता हूं। आज मैं आपकी कैसे सहायता कर सकता हूं?",
+  "ai.greeting": "नमस्��े! मैं आपका AI स्वास्थ्य सहायक हूं। मैं आपकी चिकित्सा प्रश्नों, स्वास्थ्य ट्रैकि���ग और आपातकालीन मार्गदर्शन में मदद कर सकता हूं। आज मैं आपकी कैसे सहायता कर सकता हूं?",
 
   "history.title": "स्वास्थ्य इतिहास",
   "history.subtitle": "सुरक्षित चिकित्सा रिकॉर्ड",
@@ -115,7 +115,7 @@
   "history.enterDetails": "रिकॉर्ड विवरण दर्ज करें",
   "history.recordAdded": "रिकॉर्ड सफलतापूर्वक जोड़ा गया",
   "history.dataManagement": "स्वास्थ्य डेटा प्रबंधन",
-  "history.privateEncrypted": "निजी और ए���्क्रिप्टेड",
+  "history.privateEncrypted": "निजी और एन्क्रिप्टेड",
   "history.searchPlaceholder": "रिकॉर्ड खोजें...",
   "history.filterPlaceholder": "प्रकार के अनुसार फ़िल्टर करें...",
   "history.selectType": "रिकॉर्ड प्रकार चुनें",
@@ -131,9 +131,9 @@
   "history.appointment": "अपॉइंटमेंट",
   "history.other": "अन्य",
   "history.highPriority": "उच्च प्राथमिकता",
-  "history.mediumPriority": "मध्यम प्राथमिकता",
+  "history.mediumPriority": "म���्यम प्राथमिकता",
   "history.lowPriority": "कम प्राथमिकता",
-  "history.confidential": "गोप���ीय",
+  "history.confidential": "गोपनीय",
   "history.normal": "सामान्य",
   "history.urgent": "अत्यावश्यक",
   "history.routine": "नियमित",
@@ -153,7 +153,7 @@
   "secure.title": "सुरक्षित पहुंच",
   "secure.subtitle": "ब्लॉकचेन सुरक्षा डैशबोर्ड",
   "secure.encryptionActive": "एन्क्रिप्शन सक्रिय",
-  "secure.blockchainSecured": "ब्लॉकचेन स���रक्षित",
+  "secure.blockchainSecured": "ब्लॉकचेन सुरक्षित",
   "secure.dataProtected": "डेटा सुरक्षित",
 
   "language.select": "भाषा चुनें",
@@ -178,11 +178,11 @@
 
   "buttons.save": "सेव",
   "buttons.cancel": "रद्द करें",
-  "buttons.delete": "हटाएं",
+  "buttons.delete": "ह���ाएं",
   "buttons.edit": "संपादित करें",
   "buttons.view": "देखें",
-  "buttons.download": "डाउन���ोड",
-  "buttons.upload": "अपलोड",
+  "buttons.download": "डाउनलोड",
+  "buttons.upload": "अपलो��",
   "buttons.refresh": "रिफ्रेश",
   "buttons.search": "खोजें",
   "buttons.filter": "फिल्टर",
@@ -210,7 +210,7 @@
   "health.conditions": "चिकित्सा स्थितियां",
   "health.procedures": "प्रक्रियाएं",
   "health.immunizations": "टीकाकरण",
-  "health.labResults": "लैब परिणाम",
+  "health.labResults": "लैब पर��णाम",
   "health.symptoms": "लक्षण",
   "health.diagnosis": "निदान",
   "health.treatment": "उपचार",
@@ -225,6 +225,26 @@
   "success.dataSaved": "डेटा सफलतापूर्वक सेव किया गया",
   "success.profileUpdated": "प्रोफाइल सफलतापूर्वक अपडेट किया गया",
   "success.passwordChanged": "पासवर्ड सफलतापूर्वक बदला गया",
-  "success.emailSent": "ईमेल सफलतापूर्वक भेजा गया",
-  "success.accountCreated": "खाता सफलतापूर्वक बनाया गया"
+  "success.emailSent": "ईमेल सफलत��पूर्वक भेजा गया",
+  "success.accountCreated": "खाता सफलतापूर्वक बनाया गया",
+
+  "analytics.title": "स्वास्थ्य विश्लेषण",
+  "analytics.subtitle": "AI अंतर्दृष्टि और प्रेडिकटिव डाटा",
+  "analytics.notifications": "अधिसूचनाएं",
+  "analytics.enabled": "सक्रिय",
+
+  "bmax.title": "B-max AI सहायक",
+  "bmax.subtitle": "आपका व्यक्तिगत स्वास्थ्य AI",
+  "bmax.secure": "सुरक्षित",
+  "bmax.private": "निजी",
+  "bmax.personalized": "व्यक्तिगत",
+
+  "tracking.title": "स्वास्थ्य ट्रैकिंग",
+  "tracking.subtitle": "रीयल-टाइम मॉनिटरिंग",
+  "tracking.enableNotifications": "अधिसूचनाएं सक्रिय करें",
+  "tracking.testNotifications": "अधिसूचनाएं टेस्ट करें",
+
+  "storage.export": "निर्यात",
+  "storage.import": "आयात",
+  "storage.protected": "सुरक्षित"
 }
