@@ -85,6 +85,33 @@ export default function IoTDebugPanel() {
     setSimulationStatus(deviceSimulationService.getSimulationStatus());
   };
 
+  const checkWebSocketStatus = () => {
+    // Access the WebSocket instance through the service (we'll need to add a getter)
+    const isDevelopment =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.port === '8080';
+
+    if (isDevelopment) {
+      setWebsocketStatus({
+        connected: false,
+        url: 'Skipped in development',
+        state: 'Development Mode',
+        lastError: 'WebSocket disabled in development for better performance'
+      });
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/health-stream`;
+
+      setWebsocketStatus({
+        connected: false,
+        url: wsUrl,
+        state: 'Not Connected',
+        lastError: 'Production WebSocket not implemented yet'
+      });
+    }
+  };
+
   const startSimulation = () => {
     deviceSimulationService.startSimulation();
     updateSimulationStatus();
