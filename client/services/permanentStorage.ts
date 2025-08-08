@@ -1,5 +1,4 @@
 // Permanent Storage Service for Health Data
-import crypto from 'crypto-js';
 
 export interface StorageItem {
   id: string;
