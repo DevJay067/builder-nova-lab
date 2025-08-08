@@ -150,7 +150,7 @@ class PermanentStorageService {
       throw new Error('User ID not initialized');
     }
 
-    const id = crypto.lib.WordArray.random(128/8).toString();
+    const id = this.generateRandomKey().slice(0, 16);
     const timestamp = Date.now();
     const checksum = this.generateChecksum(data);
 
