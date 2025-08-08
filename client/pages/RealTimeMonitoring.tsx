@@ -731,11 +731,19 @@ export default function RealTimeMonitoring() {
                       <XAxis
                         dataKey="time"
                         tick={{ fontSize: 12 }}
+                        tickLine={{ stroke: '#cbd5e0' }}
+                        axisLine={{ stroke: '#cbd5e0' }}
                         interval="preserveStartEnd"
+                        type="category"
+                        allowDuplicatedCategory={false}
                       />
                       <YAxis
                         tick={{ fontSize: 12 }}
+                        tickLine={{ stroke: '#cbd5e0' }}
+                        axisLine={{ stroke: '#cbd5e0' }}
                         domain={["dataMin - 5", "dataMax + 5"]}
+                        type="number"
+                        allowDataOverflow={false}
                       />
                       <Tooltip
                         contentStyle={{
