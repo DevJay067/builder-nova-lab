@@ -51,6 +51,7 @@ interface UserHealthData {
 }
 
 export default function HealthAnalytics() {
+  const { t } = useTranslation();
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
   const [userHealthData, setUserHealthData] = useState<UserHealthData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
