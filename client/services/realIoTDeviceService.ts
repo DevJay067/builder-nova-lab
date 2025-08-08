@@ -60,9 +60,14 @@ class RealIoTDeviceService {
   private isSupported = false;
 
   constructor() {
-    this.checkDeviceSupport();
-    this.initializeWebSocketConnection();
-    this.initializeNativeHealthAPIs();
+    try {
+      this.checkDeviceSupport();
+      this.initializeWebSocketConnection();
+      this.initializeNativeHealthAPIs();
+    } catch (error) {
+      console.error('IoT Device Service initialization failed:', error);
+      this.isSupported = false;
+    }
   }
 
   private checkDeviceSupport() {
