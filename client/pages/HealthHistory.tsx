@@ -66,6 +66,7 @@ import {
   Database,
 } from "lucide-react";
 import permanentStorage from "@/services/permanentStorage";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface HealthRecord {
   id: string;
