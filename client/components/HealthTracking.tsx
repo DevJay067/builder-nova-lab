@@ -98,14 +98,26 @@ export default function HealthTracking() {
   const loadTrackingData = async () => {
     try {
       setIsLoading(true);
-      
-      // Load from localStorage first
-      const stored = localStorage.getItem("healthTracking");
-      if (stored) {
-        setTrackingData(JSON.parse(stored));
+
+      // Load from permanent storage first
+      const storedData = permanentStorage.getTrackingData();
+      if (storedData) {
+        setTrackingData(storedData);
+        console.log("✅ Loaded tracking data from permanent storage");
+      } else {
+        // Try legacy localStorage as fallback
+        const legacyStored = localStorage.getItem("healthTracking");
+        if (legacyStored) {
+          const legacyData = JSON.parse(legacyStored);
+          setTrackingData(legacyData);
+
+          // Migrate to permanent storage
+          permanentStorage.storeTrackingData(legacyData);
+          console.log("✅ Migrated tracking data to permanent storage");
+        }
       }
 
-      // TODO: Load from cloud vault API when available
+      // Try cloud vault as backup
       const sessionToken = localStorage.getItem("sessionToken");
       if (sessionToken) {
         try {
@@ -114,15 +126,18 @@ export default function HealthTracking() {
               "x-session-token": sessionToken,
             },
           });
-          
+
           if (response.ok) {
             const data = await response.json();
             if (data.success && data.data) {
               setTrackingData(data.data);
+              // Also store in permanent storage
+              permanentStorage.storeTrackingData(data.data);
+              console.log("✅ Loaded and synchronized tracking data from cloud vault");
             }
           }
         } catch (error) {
-          console.log("Using local storage for health tracking");
+          console.log("Cloud vault unavailable, using permanent storage");
         }
       }
     } catch (error) {
