@@ -50,13 +50,29 @@ export default function IoTDebugPanel() {
     return () => clearInterval(interval);
   }, []);
 
-  const checkDeviceSupport = () => {
-    setDeviceSupport({
-      bluetooth: 'bluetooth' in navigator,
-      serviceWorker: 'serviceWorker' in navigator,
-      healthkit: 'HealthKit' in window,
-      googlefit: 'GoogleFit' in window
-    });
+  const checkDeviceSupport = async () => {
+    try {
+      const bluetoothCheck = await realIoTDeviceService.checkBluetoothPermissions();
+
+      setDeviceSupport({
+        bluetooth: bluetoothCheck.supported,
+        serviceWorker: 'serviceWorker' in navigator,
+        healthkit: 'HealthKit' in window,
+        googlefit: 'GoogleFit' in window,
+        secureContext: window.isSecureContext,
+        permissions: bluetoothCheck.permission || 'unknown'
+      });
+    } catch (error) {
+      console.error('Device support check failed:', error);
+      setDeviceSupport({
+        bluetooth: 'bluetooth' in navigator,
+        serviceWorker: 'serviceWorker' in navigator,
+        healthkit: 'HealthKit' in window,
+        googlefit: 'GoogleFit' in window,
+        secureContext: window.isSecureContext,
+        permissions: 'unknown'
+      });
+    }
   };
 
   const updateSimulationStatus = () => {
