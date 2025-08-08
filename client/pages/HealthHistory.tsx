@@ -609,10 +609,10 @@ export default function HealthHistory() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-slate-800">
-                    Health History
+                    {t("history.title")}
                   </h1>
                   <p className="text-sm text-slate-600 font-medium">
-                    Secure Medical Records
+                    {t("history.subtitle")}
                   </p>
                 </div>
               </div>
