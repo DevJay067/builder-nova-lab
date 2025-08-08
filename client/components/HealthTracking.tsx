@@ -378,23 +378,12 @@ export default function HealthTracking() {
   };
 
   const testNotifications = () => {
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification("🎉 Health Tracking Test", {
-        body: "Great! Your notifications are working properly. You'll receive health reminders like this.",
-        icon: "/manifest.json"
-      });
+    notificationService.testNotification();
 
-      toast({
-        title: "Test Notification Sent",
-        description: "Check if you received the notification above",
-      });
-    } else {
-      toast({
-        title: "Notifications Not Available",
-        description: "Please enable notifications first",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Test Notification Sent",
+      description: "Check if you received the notification above",
+    });
   };
 
   if (isLoading) {
