@@ -231,7 +231,7 @@ export default function TranslationWrapper({ children }: TranslationWrapperProps
         } catch (error) {
           console.warn('Translation failed:', error);
         }
-      }, 100);
+      }, 50);
     };
 
     translatePage();
