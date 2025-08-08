@@ -690,7 +690,7 @@ export default function HealthHistory() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="title">Title *</Label>
+                      <Label htmlFor="title">{t("history.title.field")} *</Label>
                       <Input
                         id="title"
                         placeholder="e.g., Annual Physical Exam"
