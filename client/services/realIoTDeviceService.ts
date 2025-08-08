@@ -267,11 +267,23 @@ class RealIoTDeviceService {
   private websocket: WebSocket | null = null;
 
   private initializeWebSocketConnection() {
-    // Skip WebSocket connection in development/demo mode
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    // Enhanced development detection
+    const isDevelopment =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.includes('vite') ||
+      window.location.hostname.includes('dev') ||
+      window.location.port === '8080' ||
+      process.env.NODE_ENV === 'development';
 
     if (isDevelopment) {
       console.log('⚠️ WebSocket skipped in development mode. Using local simulation instead.');
+      return;
+    }
+
+    // Don't initialize WebSocket if already connected
+    if (this.websocket?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
       return;
     }
 
@@ -301,28 +313,47 @@ class RealIoTDeviceService {
       };
 
       this.websocket.onerror = (error: Event) => {
-        console.error('WebSocket connection error:', {
+        // Better error logging
+        const errorDetails = {
           type: error.type,
-          target: error.target,
-          message: 'Failed to connect to WebSocket server',
-          url: wsUrl
-        });
+          timestamp: new Date().toISOString(),
+          url: wsUrl,
+          readyState: this.websocket?.readyState,
+          readyStateText: this.getWebSocketStateText(this.websocket?.readyState),
+          message: 'WebSocket connection failed'
+        };
 
-        // Don't attempt reconnection in development
+        // Try to extract more error information
+        if (error instanceof ErrorEvent) {
+          errorDetails.message = error.message;
+        } else if ('target' in error && error.target) {
+          const target = error.target as any;
+          if (target.url) errorDetails.url = target.url;
+          if (target.readyState !== undefined) errorDetails.readyState = target.readyState;
+        }
+
+        console.error('WebSocket connection error:', errorDetails);
+
+        // Don't spam console in development
         if (!isDevelopment) {
           console.log('🔄 Will retry WebSocket connection in 10 seconds...');
         }
       };
 
       this.websocket.onclose = (event: CloseEvent) => {
-        console.log('WebSocket disconnected:', {
+        const closeDetails = {
           code: event.code,
           reason: event.reason || 'No reason provided',
-          wasClean: event.wasClean
-        });
+          wasClean: event.wasClean,
+          timestamp: new Date().toISOString(),
+          url: wsUrl
+        };
+
+        console.log('WebSocket disconnected:', closeDetails);
 
         // Only attempt reconnection if not in development and connection was not clean
-        if (!isDevelopment && !event.wasClean && event.code !== 1000) {
+        // Also avoid reconnecting for normal closure (code 1000)
+        if (!isDevelopment && !event.wasClean && event.code !== 1000 && event.code !== 1001) {
           setTimeout(() => {
             console.log('🔄 Attempting WebSocket reconnection...');
             this.initializeWebSocketConnection();
@@ -331,7 +362,21 @@ class RealIoTDeviceService {
       };
 
     } catch (error) {
-      console.warn('WebSocket initialization failed:', error);
+      console.warn('WebSocket initialization failed:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  private getWebSocketStateText(state?: number): string {
+    switch (state) {
+      case WebSocket.CONNECTING: return 'CONNECTING';
+      case WebSocket.OPEN: return 'OPEN';
+      case WebSocket.CLOSING: return 'CLOSING';
+      case WebSocket.CLOSED: return 'CLOSED';
+      default: return 'UNKNOWN';
     }
   }
 
