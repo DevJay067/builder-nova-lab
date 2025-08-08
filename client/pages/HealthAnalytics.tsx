@@ -609,6 +609,7 @@ export default function HealthAnalytics() {
           {/* Health Tracking Tab */}
           <TabsContent value="tracking" className="space-y-6">
             <HealthTracking />
+            <HealthDataStatus />
           </TabsContent>
 
           {/* Health Trends Tab */}
