@@ -157,12 +157,27 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
 
   const connectDevice = async () => {
     if (!selectedBrand) return;
-    
+
     setIsConnecting(true);
     setConnectionProgress(10);
     setPairingStep(2);
 
     try {
+      // Check Bluetooth permissions first
+      const permissions = await realIoTDeviceService.checkBluetoothPermissions();
+
+      if (!permissions.supported) {
+        throw new Error('Web Bluetooth not supported. Please use Chrome or Edge browser.');
+      }
+
+      if (!permissions.available) {
+        throw new Error('Bluetooth not available. Please enable Bluetooth on your device.');
+      }
+
+      if (permissions.permission === 'denied') {
+        throw new Error('Bluetooth permission denied. Please enable Bluetooth access in browser settings.');
+      }
+
       // Show progress
       const progressInterval = setInterval(() => {
         setConnectionProgress(prev => Math.min(prev + 15, 90));
@@ -170,7 +185,7 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
 
       // Try to connect based on brand
       let device: DeviceConnection | null = null;
-      
+
       switch (selectedBrand.id) {
         case 'boat':
           device = await realIoTDeviceService.connectBoAtDevice();
@@ -189,18 +204,32 @@ export default function DevicePairingWizard({ onDeviceConnected }: DevicePairing
         setConnectedDevice(device);
         setPairingStep(3);
         onDeviceConnected?.(device);
-        
+
         // Auto-close after success
         setTimeout(() => {
           resetPairing();
         }, 3000);
       } else {
-        throw new Error('Device connection failed');
+        throw new Error('Device connection failed - no device returned');
       }
 
     } catch (error: any) {
       setConnectionProgress(0);
-      setErrorMessage(error.message || 'Failed to connect device');
+
+      // Provide user-friendly error messages
+      let userMessage = error.message || 'Failed to connect device';
+
+      if (error.message?.includes('permissions policy')) {
+        userMessage = 'Bluetooth blocked by browser. Try opening this page in a new tab or different browser.';
+      } else if (error.message?.includes('SecurityError')) {
+        userMessage = 'Bluetooth access denied. Please enable Bluetooth permissions and try again.';
+      } else if (error.message?.includes('NotFoundError')) {
+        userMessage = `No ${selectedBrand.name} devices found. Make sure your device is in pairing mode and nearby.`;
+      } else if (error.message?.includes('HTTPS')) {
+        userMessage = 'Secure connection required. Please use HTTPS or localhost.';
+      }
+
+      setErrorMessage(userMessage);
       setPairingStep(1);
     } finally {
       setIsConnecting(false);
