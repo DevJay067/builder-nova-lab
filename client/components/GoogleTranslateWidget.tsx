@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Globe, Languages } from 'lucide-react';
+import { Globe, Languages, Check } from 'lucide-react';
 
-// Extended language support with Google Translate
+// Popular languages with Google Translate codes
 const GOOGLE_TRANSLATE_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -10,15 +10,12 @@ const GOOGLE_TRANSLATE_LANGUAGES = [
   { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
   { code: 'ja', name: '日本語', flag: '🇯🇵' },
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'zh-cn', name: '中文 (简体)', flag: '🇨🇳' },
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
   { code: 'pt', name: 'Português', flag: '🇵🇹' },
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   { code: 'ko', name: '한국어', flag: '🇰🇷' },
-  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
-  { code: 'sv', name: 'Svenska', flag: '🇸🇪' }
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' }
 ];
 
 declare global {
@@ -43,10 +40,14 @@ export default function GoogleTranslateWidget({
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Load Google Translate script
+    let isScriptLoaded = false;
+
     const loadGoogleTranslate = () => {
-      if (window.google?.translate) {
-        initializeTranslate();
+      // Check if script already exists
+      if (document.querySelector('script[src*="translate.google.com"]')) {
+        if (window.google?.translate) {
+          initializeTranslate();
+        }
         return;
       }
 
@@ -54,60 +55,135 @@ export default function GoogleTranslateWidget({
       const script = document.createElement('script');
       script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
+      script.defer = true;
 
-      // Initialize function
+      script.onload = () => {
+        isScriptLoaded = true;
+      };
+
+      script.onerror = () => {
+        console.warn('Failed to load Google Translate script');
+      };
+
+      // Set up callback
       window.googleTranslateElementInit = () => {
-        initializeTranslate();
+        if (isScriptLoaded) {
+          initializeTranslate();
+        }
       };
 
       document.head.appendChild(script);
     };
 
     const initializeTranslate = () => {
-      if (translateElementRef.current && window.google?.translate) {
-        new window.google.translate.TranslateElement({
-          pageLanguage: 'en',
-          includedLanguages: GOOGLE_TRANSLATE_LANGUAGES.map(lang => lang.code).join(','),
-          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-          autoDisplay: false,
-        }, translateElementRef.current);
-        
-        setIsLoaded(true);
-        
-        // Hide the default Google Translate widget
-        setTimeout(() => {
-          const goog = document.querySelector('.goog-te-gadget');
-          if (goog) {
-            (goog as HTMLElement).style.display = 'none';
-          }
-        }, 100);
+      try {
+        if (translateElementRef.current && window.google?.translate) {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: GOOGLE_TRANSLATE_LANGUAGES.map(lang => lang.code).join(','),
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false,
+            multilanguagePage: true
+          }, translateElementRef.current);
+          
+          setIsLoaded(true);
+          
+          // Hide Google's default elements after they load
+          setTimeout(() => {
+            hideGoogleElements();
+          }, 500);
+        }
+      } catch (error) {
+        console.warn('Failed to initialize Google Translate:', error);
       }
+    };
+
+    const hideGoogleElements = () => {
+      // Hide default Google Translate elements
+      const elements = [
+        '.goog-te-gadget',
+        '.goog-te-banner-frame',
+        '.goog-te-balloon-frame',
+        '.goog-te-menu-frame'
+      ];
+      
+      elements.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+          (element as HTMLElement).style.display = 'none';
+        }
+      });
+
+      // Ensure body is not pushed down
+      document.body.style.top = '0px';
     };
 
     loadGoogleTranslate();
 
     return () => {
-      // Cleanup
-      const script = document.querySelector('script[src*="translate.google.com"]');
-      if (script) {
-        script.remove();
+      // Cleanup on unmount
+      if (window.googleTranslateElementInit) {
+        delete window.googleTranslateElementInit;
       }
     };
   }, []);
 
   const changeLanguage = (langCode: string) => {
-    if (!window.google?.translate) return;
+    try {
+      if (!window.google?.translate) {
+        console.warn('Google Translate not loaded yet');
+        return;
+      }
 
-    // Find the Google Translate select element
-    const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-    if (selectElement) {
-      selectElement.value = langCode;
-      selectElement.dispatchEvent(new Event('change'));
-      setCurrentLanguage(langCode);
-      setIsOpen(false);
-      
-      // Show notification
-      showLanguageNotification(langCode);
+      // Method 1: Try to find and trigger the select element
+      const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (selectElement) {
+        selectElement.value = langCode;
+        selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+        setCurrentLanguage(langCode);
+        setIsOpen(false);
+        showLanguageNotification(langCode);
+        return;
+      }
+
+      // Method 2: If select element not found, try alternative approach
+      setTimeout(() => {
+        const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+        if (selectElement) {
+          selectElement.value = langCode;
+          selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+          setCurrentLanguage(langCode);
+          setIsOpen(false);
+          showLanguageNotification(langCode);
+        } else {
+          // Method 3: Fallback - recreate the translate element
+          console.log('Recreating translate element...');
+          if (translateElementRef.current) {
+            translateElementRef.current.innerHTML = '';
+            new window.google.translate.TranslateElement({
+              pageLanguage: 'en',
+              includedLanguages: GOOGLE_TRANSLATE_LANGUAGES.map(lang => lang.code).join(','),
+              layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+              autoDisplay: false
+            }, translateElementRef.current);
+
+            // Try again after recreation
+            setTimeout(() => {
+              const newSelectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+              if (newSelectElement) {
+                newSelectElement.value = langCode;
+                newSelectElement.dispatchEvent(new Event('change', { bubbles: true }));
+                setCurrentLanguage(langCode);
+                setIsOpen(false);
+                showLanguageNotification(langCode);
+              }
+            }, 1000);
+          }
+        }
+      }, 100);
+
+    } catch (error) {
+      console.warn('Error changing language:', error);
     }
   };
 
@@ -117,7 +193,12 @@ export default function GoogleTranslateWidget({
 
     const notification = document.createElement('div');
     notification.className = 'fixed top-4 right-4 bg-blue-100 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity';
-    notification.textContent = `Language: ${language.name}`;
+    notification.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span>${language.flag}</span>
+        <span>Translating to ${language.name}...</span>
+      </div>
+    `;
     document.body.appendChild(notification);
 
     setTimeout(() => {
@@ -127,108 +208,12 @@ export default function GoogleTranslateWidget({
           document.body.removeChild(notification);
         }
       }, 300);
-    }, 2000);
+    }, 3000);
   };
 
   const getCurrentLanguageInfo = () => {
     return GOOGLE_TRANSLATE_LANGUAGES.find(lang => lang.code === currentLanguage) || GOOGLE_TRANSLATE_LANGUAGES[0];
   };
-
-  if (variant === 'button') {
-    return (
-      <div className={`google-translate-widget ${className}`}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2"
-          disabled={!isLoaded}
-        >
-          <Globe className="h-4 w-4" />
-          {getCurrentLanguageInfo().flag}
-          <span className="hidden sm:inline">{getCurrentLanguageInfo().name}</span>
-        </Button>
-        
-        {isOpen && isLoaded && (
-          <div className="absolute top-full mt-2 bg-white border rounded-lg shadow-lg z-50 p-2">
-            <div className="grid grid-cols-2 gap-1 max-h-80 overflow-y-auto">
-              {GOOGLE_TRANSLATE_LANGUAGES.map((language) => (
-                <button
-                  key={language.code}
-                  onClick={() => changeLanguage(language.code)}
-                  className={`flex items-center gap-2 p-2 rounded hover:bg-gray-100 text-left ${
-                    currentLanguage === language.code ? 'bg-blue-50' : ''
-                  }`}
-                >
-                  <span>{language.flag}</span>
-                  <span className="text-sm">{language.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Hidden Google Translate element */}
-        <div ref={translateElementRef} style={{ display: 'none' }}></div>
-      </div>
-    );
-  }
-
-  if (variant === 'inline') {
-    return (
-      <div className={`google-translate-widget ${className}`}>
-        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-          <Languages className="h-4 w-4 text-gray-600" />
-          <span className="text-sm text-gray-600">Translate:</span>
-          {isLoaded ? (
-            <div className="flex gap-1">
-              {GOOGLE_TRANSLATE_LANGUAGES.slice(0, 6).map((language) => (
-                <button
-                  key={language.code}
-                  onClick={() => changeLanguage(language.code)}
-                  className={`px-2 py-1 text-xs rounded transition-colors ${
-                    currentLanguage === language.code 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-white hover:bg-gray-100'
-                  }`}
-                  title={language.name}
-                >
-                  {language.flag}
-                </button>
-              ))}
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="px-2 py-1 text-xs bg-white hover:bg-gray-100 rounded"
-              >
-                +{GOOGLE_TRANSLATE_LANGUAGES.length - 6}
-              </button>
-            </div>
-          ) : (
-            <span className="text-xs text-gray-400">Loading...</span>
-          )}
-        </div>
-        
-        {isOpen && (
-          <div className="mt-2 bg-white border rounded-lg shadow-lg p-2">
-            <div className="grid grid-cols-3 gap-1">
-              {GOOGLE_TRANSLATE_LANGUAGES.slice(6).map((language) => (
-                <button
-                  key={language.code}
-                  onClick={() => changeLanguage(language.code)}
-                  className="flex items-center gap-1 p-1 rounded hover:bg-gray-100 text-xs"
-                >
-                  <span>{language.flag}</span>
-                  <span>{language.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        <div ref={translateElementRef} style={{ display: 'none' }}></div>
-      </div>
-    );
-  }
 
   // Default dropdown variant
   return (
@@ -253,7 +238,7 @@ export default function GoogleTranslateWidget({
               <Globe className="h-4 w-4 text-blue-600" />
               <span className="font-medium">Google Translate</span>
             </div>
-            <p className="text-xs text-gray-600 mt-1">Powered by Google • 100+ languages</p>
+            <p className="text-xs text-gray-600 mt-1">Powered by Google • Real-time translation</p>
           </div>
           
           <div className="p-2">
@@ -268,37 +253,38 @@ export default function GoogleTranslateWidget({
                 <span className="text-lg">{language.flag}</span>
                 <span className="font-medium">{language.name}</span>
                 {currentLanguage === language.code && (
-                  <span className="ml-auto text-xs text-blue-600">Current</span>
+                  <div className="ml-auto flex items-center gap-1">
+                    <Check className="h-3 w-3 text-blue-600" />
+                    <span className="text-xs text-blue-600">Current</span>
+                  </div>
                 )}
               </button>
             ))}
+          </div>
+
+          <div className="p-2 border-t bg-gray-50">
+            <p className="text-xs text-gray-600 text-center">
+              Click any language to translate the entire page
+            </p>
           </div>
         </div>
       )}
 
       {/* Hidden Google Translate element */}
-      <div ref={translateElementRef} style={{ display: 'none' }}></div>
+      <div ref={translateElementRef} style={{ 
+        position: 'absolute', 
+        left: '-9999px', 
+        top: '-9999px',
+        visibility: 'hidden',
+        width: '1px',
+        height: '1px'
+      }}></div>
+      
+      {!isLoaded && (
+        <div className="absolute top-full mt-2 right-0 bg-yellow-50 border border-yellow-200 text-yellow-800 px-3 py-2 rounded-lg shadow-lg z-50 text-xs">
+          Loading Google Translate...
+        </div>
+      )}
     </div>
   );
-}
-
-// Hook to check if Google Translate is active
-export function useGoogleTranslateStatus() {
-  const [isActive, setIsActive] = useState(false);
-  
-  useEffect(() => {
-    const checkStatus = () => {
-      const isTranslated = document.documentElement.classList.contains('translated-ltr') ||
-                          document.documentElement.classList.contains('translated-rtl') ||
-                          document.querySelector('.goog-te-banner-frame') !== null;
-      setIsActive(isTranslated);
-    };
-
-    checkStatus();
-    const interval = setInterval(checkStatus, 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  return isActive;
 }
