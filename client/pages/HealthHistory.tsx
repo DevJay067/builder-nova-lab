@@ -637,7 +637,7 @@ export default function HealthHistory() {
                   <DialogHeader>
                     <DialogTitle className="flex items-center space-x-2">
                       <Plus className="w-5 h-5 text-primary" />
-                      <span>Add New Health Record</span>
+                      <span>{t("history.addRecord")}</span>
                     </DialogTitle>
                     <DialogDescription>
                       Create a new health record that will be securely stored on
