@@ -308,6 +308,7 @@ export default function RealTimeMonitoring() {
               >
                 {isDemoMode ? "Stop Demo" : "Demo Mode"}
               </Button>
+              <IoTDebugPanel />
             </div>
           </div>
         </div>
