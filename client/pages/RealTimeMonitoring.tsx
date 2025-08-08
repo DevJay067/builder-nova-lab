@@ -46,6 +46,7 @@ import {
   Area,
 } from "recharts";
 import { realIoTDeviceService, type DeviceConnection, type VitalSigns } from "@/services/realIoTDeviceService";
+import { DevicePairingWizard } from "@/components/DevicePairingWizard";
 
 export default function RealTimeMonitoring() {
   const [vitalSigns, setVitalSigns] = useState<VitalSigns>({
