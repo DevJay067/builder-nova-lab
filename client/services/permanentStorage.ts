@@ -63,12 +63,22 @@ class PermanentStorageService {
   private createPersistentUserId(): string {
     // Create a unique, persistent user ID based on browser fingerprint
     const fingerprint = this.createBrowserFingerprint();
-    const userId = crypto.SHA256(fingerprint).toString();
-    
+    const userId = this.simpleHash(fingerprint);
+
     localStorage.setItem('healthchain_permanent_user_id', userId);
     this.userId = userId;
-    
+
     return userId;
+  }
+
+  private simpleHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
   }
 
   private createBrowserFingerprint(): string {
