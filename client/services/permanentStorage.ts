@@ -23,10 +23,16 @@ class PermanentStorageService {
   private getOrCreateEncryptionKey(): string {
     let key = localStorage.getItem('healthchain_encryption_key');
     if (!key) {
-      key = crypto.lib.WordArray.random(256/8).toString();
+      key = this.generateRandomKey();
       localStorage.setItem('healthchain_encryption_key', key);
     }
     return key;
+  }
+
+  private generateRandomKey(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
 
   private initializeUserId(): void {
