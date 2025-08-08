@@ -759,7 +759,10 @@ export default function RealTimeMonitoring() {
                         stroke="#ef4444"
                         strokeWidth={2}
                         dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, fill: "#ef4444" }}
                         name="Heart Rate (BPM)"
+                        connectNulls={false}
+                        animationDuration={300}
                       />
                       <Line
                         type="monotone"
@@ -767,7 +770,10 @@ export default function RealTimeMonitoring() {
                         stroke="#3b82f6"
                         strokeWidth={2}
                         dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, fill: "#3b82f6" }}
                         name="Oxygen Saturation (%)"
+                        connectNulls={false}
+                        animationDuration={300}
                       />
                       <Line
                         type="monotone"
@@ -775,7 +781,10 @@ export default function RealTimeMonitoring() {
                         stroke="#10b981"
                         strokeWidth={2}
                         dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, fill: "#10b981" }}
                         name="Systolic BP (mmHg)"
+                        connectNulls={false}
+                        animationDuration={300}
                       />
                     </LineChart>
                   </ResponsiveContainer>
