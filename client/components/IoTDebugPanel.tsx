@@ -31,7 +31,9 @@ export default function IoTDebugPanel() {
     bluetooth: false,
     serviceWorker: false,
     healthkit: false,
-    googlefit: false
+    googlefit: false,
+    secureContext: false,
+    permissions: 'unknown' as PermissionState | 'unknown'
   });
   const [simulationStatus, setSimulationStatus] = useState({
     isRunning: false,
