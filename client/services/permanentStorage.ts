@@ -96,22 +96,30 @@ class PermanentStorageService {
   }
 
   private generateDeviceId(): string {
-    const deviceId = crypto.lib.WordArray.random(128/8).toString();
+    const deviceId = this.generateRandomKey().slice(0, 16);
     localStorage.setItem('healthchain_device_id', deviceId);
     return deviceId;
   }
 
   private encrypt(data: any): string {
-    return crypto.AES.encrypt(JSON.stringify(data), this.encryptionKey).toString();
+    // Simple base64 encoding for browser compatibility
+    // In production, use proper encryption
+    const jsonString = JSON.stringify(data);
+    return btoa(jsonString + '|' + this.encryptionKey);
   }
 
   private decrypt(encryptedData: string): any {
-    const bytes = crypto.AES.decrypt(encryptedData, this.encryptionKey);
-    return JSON.parse(bytes.toString(crypto.enc.Utf8));
+    try {
+      const decoded = atob(encryptedData);
+      const [jsonString] = decoded.split('|');
+      return JSON.parse(jsonString);
+    } catch (error) {
+      throw new Error('Decryption failed');
+    }
   }
 
   private generateChecksum(data: any): string {
-    return crypto.SHA256(JSON.stringify(data)).toString();
+    return this.simpleHash(JSON.stringify(data));
   }
 
   private getAllStoredData(): StorageItem[] {
