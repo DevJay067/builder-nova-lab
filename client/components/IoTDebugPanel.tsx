@@ -383,15 +383,27 @@ export default function IoTDebugPanel() {
 
           {/* Debug Information */}
           <Alert>
-            <AlertTriangle className="h-4 w-4" />
+            <CheckCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Debug Tips:</strong>
+              <strong>Development Mode Active:</strong>
+              <div className="mt-2 space-y-2 text-sm">
+                <p>• WebSocket connections are disabled in development for better performance</p>
+                <p>• Use <strong>Demo Mode</strong> to test with realistic simulated device data</p>
+                <p>• Bluetooth connections work if you have compatible devices nearby</p>
+                <p>• All features will work normally in production deployment</p>
+              </div>
+            </AlertDescription>
+          </Alert>
+
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertTriangle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-700">
+              <strong>Browser Compatibility:</strong>
               <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
                 <li>Use Chrome or Edge browser for best Bluetooth support</li>
                 <li>Enable HTTPS for Bluetooth access (required by Web Bluetooth API)</li>
-                <li>Start with simulation mode to test the UI without real devices</li>
-                <li>Check browser console for detailed error messages</li>
-                <li>WebSocket errors in localhost are normal - they'll work in production</li>
+                <li>Allow Bluetooth permissions when prompted</li>
+                <li>Make sure devices are in pairing mode</li>
               </ul>
             </AlertDescription>
           </Alert>
