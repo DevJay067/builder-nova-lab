@@ -71,13 +71,26 @@ class RealIoTDeviceService {
   }
 
   private checkDeviceSupport() {
-    this.isSupported = 'bluetooth' in navigator && 'serviceWorker' in navigator;
+    const hasBluetoothAPI = 'bluetooth' in navigator;
+    const hasServiceWorker = 'serviceWorker' in navigator;
+    const isSecureContext = window.isSecureContext;
+    const isHTTPS = window.location.protocol === 'https:';
+
+    this.isSupported = hasBluetoothAPI && hasServiceWorker && (isSecureContext || isHTTPS);
+
     console.log('🔧 Device support check:', {
-      bluetooth: 'bluetooth' in navigator,
-      serviceWorker: 'serviceWorker' in navigator,
+      bluetooth: hasBluetoothAPI,
+      serviceWorker: hasServiceWorker,
+      secureContext: isSecureContext,
+      https: isHTTPS,
       healthkit: 'HealthKit' in window,
+      userAgent: navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other',
       supported: this.isSupported
     });
+
+    if (hasBluetoothAPI && !isSecureContext && !isHTTPS) {
+      console.warn('⚠️ Web Bluetooth requires HTTPS or localhost');
+    }
   }
 
   /**
