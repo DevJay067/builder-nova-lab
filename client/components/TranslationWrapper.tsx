@@ -148,6 +148,17 @@ const COMMON_TRANSLATIONS: Record<string, string> = {
 export default function TranslationWrapper({ children }: TranslationWrapperProps) {
   const { t, currentLanguage } = useTranslation();
 
+  // Detect if Chrome auto-translate is active
+  const isChromeTranslateActive = () => {
+    // Check for Google Translate indicators
+    const hasTranslateElements = document.querySelector('.goog-te-banner-frame, .goog-te-menu-frame');
+    const hasTranslateFont = document.querySelector('font[face="arial"]');
+    const hasTranslateClass = document.documentElement.classList.contains('translated-rtl') ||
+                             document.documentElement.classList.contains('translated-ltr');
+
+    return !!(hasTranslateElements || hasTranslateFont || hasTranslateClass);
+  };
+
   // Function to translate text nodes
   const translateTextNodes = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -227,7 +238,12 @@ export default function TranslationWrapper({ children }: TranslationWrapperProps
       // Wait for DOM to be ready
       setTimeout(() => {
         try {
-          translateTextNodes(document.body);
+          // Skip our custom translation if Chrome auto-translate is active
+          if (!isChromeTranslateActive()) {
+            translateTextNodes(document.body);
+          } else {
+            console.info('Chrome auto-translate detected, skipping custom translation');
+          }
         } catch (error) {
           console.warn('Translation failed:', error);
         }
@@ -238,6 +254,11 @@ export default function TranslationWrapper({ children }: TranslationWrapperProps
 
     // Set up a MutationObserver to translate dynamically added content
     const observer = new MutationObserver((mutations) => {
+      // Don't interfere if Chrome auto-translate is active
+      if (isChromeTranslateActive()) {
+        return;
+      }
+
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
