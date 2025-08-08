@@ -28,6 +28,7 @@ import {
   Bell
 } from "lucide-react";
 import HealthTracking from "@/components/HealthTracking";
+import HealthDataStatus from "@/components/HealthDataStatus";
 
 interface HealthRecord {
   id: string;
