@@ -178,6 +178,31 @@ export default function IoTDebugPanel() {
                     {deviceSupport.googlefit ? 'Available' : 'Android Only'}
                   </Badge>
                 </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium">Secure Context</span>
+                  </div>
+                  <Badge variant={deviceSupport.secureContext ? "default" : "destructive"}>
+                    {deviceSupport.secureContext ? 'HTTPS/Localhost' : 'Insecure'}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-medium">Bluetooth Permission</span>
+                  </div>
+                  <Badge variant={
+                    deviceSupport.permissions === 'granted' ? "default" :
+                    deviceSupport.permissions === 'denied' ? "destructive" : "secondary"
+                  }>
+                    {deviceSupport.permissions === 'granted' ? 'Granted' :
+                     deviceSupport.permissions === 'denied' ? 'Denied' :
+                     deviceSupport.permissions === 'prompt' ? 'Will Ask' : 'Unknown'}
+                  </Badge>
+                </div>
               </div>
               
               <Button onClick={checkDeviceSupport} variant="outline" size="sm" className="w-full">
