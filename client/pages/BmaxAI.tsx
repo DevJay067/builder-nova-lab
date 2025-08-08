@@ -32,6 +32,7 @@ import {
   Plus,
 } from "lucide-react";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface MedicalCondition {
   name: string;
