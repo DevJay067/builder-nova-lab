@@ -149,7 +149,7 @@ class DeviceSimulationService {
       const vitalSigns = this.generateRealisticVitalSigns(device);
       
       // Emit the data through the real IoT service
-      realIoTDeviceService['emitVitalSigns'](vitalSigns);
+      realIoTDeviceService.emitDeviceData(vitalSigns);
       
       // Update device patterns occasionally
       if (Math.random() < 0.1) { // 10% chance every interval
