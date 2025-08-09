@@ -210,15 +210,44 @@ export default function RealTimeMonitoring() {
     } catch (error: any) {
       console.error(`❌ ${deviceType} connection failed:`, error);
 
-      // Show user-friendly error message
+      // Handle Bluetooth unavailable error specially
+      if (error.name === 'BluetoothUnavailableError' || error.message?.includes('BLUETOOTH_UNAVAILABLE')) {
+        const instructions = error.message.replace('BLUETOOTH_UNAVAILABLE: ', '');
+
+        // Show a user-friendly dialog with automatic Demo Mode option
+        const enableDemo = confirm(
+          `🔵 Bluetooth Not Available\n\n${instructions}\n\n` +
+          `Would you like to enable Demo Mode instead?\n\n` +
+          `Demo Mode will simulate real device data so you can:\n` +
+          `• Test the interface without real devices\n` +
+          `• See how the monitoring system works\n` +
+          `• Experience realistic health data visualization\n\n` +
+          `Click OK to enable Demo Mode, or Cancel to try again later.`
+        );
+
+        if (enableDemo) {
+          // Automatically enable demo mode
+          if (!isDemoMode) {
+            deviceSimulationService.startSimulation();
+            setIsDemoMode(true);
+          }
+
+          // Show success message
+          setTimeout(() => {
+            alert(`✨ Demo Mode Enabled!\n\nYou can now see simulated health data from virtual devices. The interface works exactly the same as with real devices.\n\nTo connect real devices later, enable Bluetooth and refresh the page.`);
+          }, 500);
+        }
+
+        return; // Don't show additional error messages
+      }
+
+      // Handle other error types
       const errorMessage = error.message || 'Unknown error occurred';
 
-      if (errorMessage.includes('Bluetooth is disabled') || errorMessage.includes('not available')) {
-        alert(`🔵 Bluetooth Issue\n\n${errorMessage}\n\nAlternatively, you can:\n• Use "Demo Mode" to test the interface\n• Try connecting via your device's native app first`);
-      } else if (errorMessage.includes('not supported')) {
-        alert(`🌐 Browser Compatibility\n\n${errorMessage}\n\nPlease try:\n• Using Chrome or Edge browser\n• Enabling HTTPS if on a local network`);
+      if (errorMessage.includes('not supported')) {
+        alert(`🌐 Browser Compatibility\n\n${errorMessage}\n\nPlease try:\n• Using Chrome or Edge browser\n• Enabling HTTPS if on a local network\n• Using "Demo Mode" to test the interface`);
       } else if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
-        alert(`🔒 Permission Required\n\n${errorMessage}\n\nPlease:\n• Allow Bluetooth access when prompted\n• Check browser permissions in settings`);
+        alert(`🔒 Permission Required\n\n${errorMessage}\n\nPlease:\n• Allow Bluetooth access when prompted\n• Check browser permissions in settings\n• Try "Demo Mode" if permissions can't be granted`);
       } else if (errorMessage.includes('not found') || errorMessage.includes('No devices')) {
         alert(`📱 Device Not Found\n\n${errorMessage}\n\nPlease:\n• Make sure your ${deviceType} device is in pairing mode\n• Move closer to your device\n• Try "Demo Mode" to test without a real device`);
       } else {
