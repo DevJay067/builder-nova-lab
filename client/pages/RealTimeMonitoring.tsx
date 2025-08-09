@@ -207,8 +207,23 @@ export default function RealTimeMonitoring() {
       if (connection) {
         console.log(`✅ ${deviceType} device connected successfully`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ ${deviceType} connection failed:`, error);
+
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Unknown error occurred';
+
+      if (errorMessage.includes('Bluetooth is disabled') || errorMessage.includes('not available')) {
+        alert(`🔵 Bluetooth Issue\n\n${errorMessage}\n\nAlternatively, you can:\n• Use "Demo Mode" to test the interface\n• Try connecting via your device's native app first`);
+      } else if (errorMessage.includes('not supported')) {
+        alert(`🌐 Browser Compatibility\n\n${errorMessage}\n\nPlease try:\n• Using Chrome or Edge browser\n• Enabling HTTPS if on a local network`);
+      } else if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
+        alert(`🔒 Permission Required\n\n${errorMessage}\n\nPlease:\n• Allow Bluetooth access when prompted\n• Check browser permissions in settings`);
+      } else if (errorMessage.includes('not found') || errorMessage.includes('No devices')) {
+        alert(`📱 Device Not Found\n\n${errorMessage}\n\nPlease:\n• Make sure your ${deviceType} device is in pairing mode\n• Move closer to your device\n• Try "Demo Mode" to test without a real device`);
+      } else {
+        alert(`⚠️ Connection Failed\n\n${errorMessage}\n\nTry:\n• Refreshing the page\n• Using "Demo Mode" for testing\n• Checking device compatibility`);
+      }
     } finally {
       setIsConnecting(false);
     }
