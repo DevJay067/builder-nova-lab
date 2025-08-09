@@ -750,11 +750,30 @@ class RealIoTDeviceService {
         );
       }
 
-      const available = await navigator.bluetooth.getAvailability();
+      // Check Bluetooth availability with detailed error handling
+      let available = false;
+      try {
+        available = await navigator.bluetooth.getAvailability();
+      } catch (availabilityError) {
+        console.warn('Bluetooth availability check failed:', availabilityError);
+        // If availability check fails, we'll still try to proceed
+        available = true;
+      }
+
       if (!available) {
-        throw new Error(
-          "Bluetooth not available. Please enable Bluetooth on your device.",
-        );
+        // Provide detailed instructions based on platform
+        const userAgent = navigator.userAgent.toLowerCase();
+        let instructions = "Please enable Bluetooth on your device and try again.";
+
+        if (userAgent.includes('windows')) {
+          instructions = "Go to Windows Settings > Devices > Bluetooth & other devices and turn on Bluetooth.";
+        } else if (userAgent.includes('mac')) {
+          instructions = "Go to System Preferences > Bluetooth and turn on Bluetooth.";
+        } else if (userAgent.includes('android')) {
+          instructions = "Go to Android Settings > Connected devices > Bluetooth and turn on Bluetooth.";
+        }
+
+        throw new Error(`Bluetooth is disabled or not available. ${instructions} Then refresh this page and try again.`);
       }
 
       console.log("💚 Searching for Fitbit devices...");
