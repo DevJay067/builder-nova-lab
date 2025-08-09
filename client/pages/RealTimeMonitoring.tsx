@@ -791,6 +791,12 @@ export default function RealTimeMonitoring() {
                         interval="preserveStartEnd"
                         type="category"
                         allowDuplicatedCategory={false}
+                        scale="auto"
+                        tickFormatter={undefined}
+                        tickCount={undefined}
+                        angle={0}
+                        textAnchor="middle"
+                        height={30}
                       />
                       <YAxis
                         tick={{ fontSize: 12, fill: '#64748b' }}
@@ -799,6 +805,12 @@ export default function RealTimeMonitoring() {
                         domain={["dataMin - 5", "dataMax + 5"]}
                         type="number"
                         allowDataOverflow={false}
+                        scale="auto"
+                        tickFormatter={undefined}
+                        tickCount={undefined}
+                        angle={0}
+                        textAnchor="end"
+                        width={60}
                       />
                       <Tooltip
                         active={true}
