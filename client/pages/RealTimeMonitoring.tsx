@@ -36,9 +36,9 @@ import {
   Star,
   Shield,
   Sparkles,
-  Pulse,
   CircuitBoard,
   Signal,
+  Zap,
 } from "lucide-react";
 import {
   LineChart,
