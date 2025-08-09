@@ -277,7 +277,7 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-xl shadow-blue-500/30 transform hover:scale-110 transition-all duration-300">
-                    <Pulse className="h-8 w-8 animate-pulse" />
+                    <Activity className="h-8 w-8 animate-pulse" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-ping"></div>
                 </div>
