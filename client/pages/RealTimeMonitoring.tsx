@@ -180,7 +180,7 @@ export default function RealTimeMonitoring() {
     setIsConnecting(true);
     try {
       await realIoTDeviceService.connectDevice();
-      console.log('�� Device connection completed');
+      console.log('✅ Device connection completed');
     } catch (error) {
       console.error('❌ Device connection failed:', error);
       alert('Failed to connect device. Please make sure your device is nearby and in pairing mode.');
@@ -239,7 +239,8 @@ export default function RealTimeMonitoring() {
         return; // Don't show additional error messages
       }
 
-      // Handle other error types
+      // Handle other error types (log these since they're unexpected)
+      console.error(`❌ ${deviceType} connection failed:`, error);
       const errorMessage = error.message || 'Unknown error occurred';
 
       if (errorMessage.includes('not supported')) {
