@@ -682,7 +682,7 @@ class RealIoTDeviceService {
       try {
         available = await navigator.bluetooth.getAvailability();
       } catch (availabilityError) {
-        console.warn('Bluetooth availability check failed:', availabilityError);
+        console.warn("Bluetooth availability check failed:", availabilityError);
         // If availability check fails, we'll still try to proceed
         // as some browsers might not support getAvailability() but still support Bluetooth
         available = true;
@@ -691,19 +691,25 @@ class RealIoTDeviceService {
       if (!available) {
         // Provide detailed instructions based on platform
         const userAgent = navigator.userAgent.toLowerCase();
-        let instructions = "Please enable Bluetooth on your device and try again.";
+        let instructions =
+          "Please enable Bluetooth on your device and try again.";
 
-        if (userAgent.includes('windows')) {
-          instructions = "Go to Windows Settings > Devices > Bluetooth & other devices and turn on Bluetooth.";
-        } else if (userAgent.includes('mac')) {
-          instructions = "Go to System Preferences > Bluetooth and turn on Bluetooth.";
-        } else if (userAgent.includes('android')) {
-          instructions = "Go to Android Settings > Connected devices > Bluetooth and turn on Bluetooth.";
+        if (userAgent.includes("windows")) {
+          instructions =
+            "Go to Windows Settings > Devices > Bluetooth & other devices and turn on Bluetooth.";
+        } else if (userAgent.includes("mac")) {
+          instructions =
+            "Go to System Preferences > Bluetooth and turn on Bluetooth.";
+        } else if (userAgent.includes("android")) {
+          instructions =
+            "Go to Android Settings > Connected devices > Bluetooth and turn on Bluetooth.";
         }
 
         // Create a custom error that the UI can handle gracefully
-        const bluetoothError = new Error(`BLUETOOTH_UNAVAILABLE: ${instructions}`);
-        bluetoothError.name = 'BluetoothUnavailableError';
+        const bluetoothError = new Error(
+          `BLUETOOTH_UNAVAILABLE: ${instructions}`,
+        );
+        bluetoothError.name = "BluetoothUnavailableError";
         throw bluetoothError;
       }
 
@@ -758,7 +764,7 @@ class RealIoTDeviceService {
       try {
         available = await navigator.bluetooth.getAvailability();
       } catch (availabilityError) {
-        console.warn('Bluetooth availability check failed:', availabilityError);
+        console.warn("Bluetooth availability check failed:", availabilityError);
         // If availability check fails, we'll still try to proceed
         available = true;
       }
@@ -766,19 +772,25 @@ class RealIoTDeviceService {
       if (!available) {
         // Provide detailed instructions based on platform
         const userAgent = navigator.userAgent.toLowerCase();
-        let instructions = "Please enable Bluetooth on your device and try again.";
+        let instructions =
+          "Please enable Bluetooth on your device and try again.";
 
-        if (userAgent.includes('windows')) {
-          instructions = "Go to Windows Settings > Devices > Bluetooth & other devices and turn on Bluetooth.";
-        } else if (userAgent.includes('mac')) {
-          instructions = "Go to System Preferences > Bluetooth and turn on Bluetooth.";
-        } else if (userAgent.includes('android')) {
-          instructions = "Go to Android Settings > Connected devices > Bluetooth and turn on Bluetooth.";
+        if (userAgent.includes("windows")) {
+          instructions =
+            "Go to Windows Settings > Devices > Bluetooth & other devices and turn on Bluetooth.";
+        } else if (userAgent.includes("mac")) {
+          instructions =
+            "Go to System Preferences > Bluetooth and turn on Bluetooth.";
+        } else if (userAgent.includes("android")) {
+          instructions =
+            "Go to Android Settings > Connected devices > Bluetooth and turn on Bluetooth.";
         }
 
         // Create a custom error that the UI can handle gracefully
-        const bluetoothError = new Error(`BLUETOOTH_UNAVAILABLE: ${instructions}`);
-        bluetoothError.name = 'BluetoothUnavailableError';
+        const bluetoothError = new Error(
+          `BLUETOOTH_UNAVAILABLE: ${instructions}`,
+        );
+        bluetoothError.name = "BluetoothUnavailableError";
         throw bluetoothError;
       }
 

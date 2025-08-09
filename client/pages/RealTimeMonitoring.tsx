@@ -51,7 +51,11 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { realIoTDeviceService, type DeviceConnection, type VitalSigns } from "@/services/realIoTDeviceService";
+import {
+  realIoTDeviceService,
+  type DeviceConnection,
+  type VitalSigns,
+} from "@/services/realIoTDeviceService";
 import { DevicePairingWizard } from "@/components/DevicePairingWizard";
 import { deviceSimulationService } from "@/services/deviceSimulationService";
 import IoTDebugPanel from "@/components/IoTDebugPanel";
@@ -64,11 +68,13 @@ export default function RealTimeMonitoring() {
     oxygenSaturation: 98,
     respiratoryRate: 16,
     timestamp: new Date(),
-    deviceId: 'none'
+    deviceId: "none",
   });
 
   const [vitalsHistory, setVitalsHistory] = useState<any[]>([]);
-  const [connectedDevices, setConnectedDevices] = useState<DeviceConnection[]>([]);
+  const [connectedDevices, setConnectedDevices] = useState<DeviceConnection[]>(
+    [],
+  );
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -80,9 +86,9 @@ export default function RealTimeMonitoring() {
 
     // Listen for real device data
     realIoTDeviceService.onDataReceived((data: VitalSigns) => {
-      console.log('📊 Real device data received:', data);
+      console.log("📊 Real device data received:", data);
       setVitalSigns(data);
-      
+
       // Update history
       setVitalsHistory((prev) => {
         const newHistory = [
@@ -106,7 +112,7 @@ export default function RealTimeMonitoring() {
 
     // Listen for device updates
     realIoTDeviceService.onDeviceUpdate((devices: DeviceConnection[]) => {
-      console.log('🔄 Device list updated:', devices);
+      console.log("🔄 Device list updated:", devices);
       setConnectedDevices(devices);
     });
 
@@ -167,23 +173,27 @@ export default function RealTimeMonitoring() {
   };
 
   const getDeviceName = (deviceId: string): string => {
-    const device = connectedDevices.find(d => d.id === deviceId);
-    return device?.name || 'Unknown Device';
+    const device = connectedDevices.find((d) => d.id === deviceId);
+    return device?.name || "Unknown Device";
   };
 
   const connectNewDevice = async () => {
     if (!isSupported) {
-      alert('Bluetooth not supported in this browser. Please use Chrome or Edge.');
+      alert(
+        "Bluetooth not supported in this browser. Please use Chrome or Edge.",
+      );
       return;
     }
 
     setIsConnecting(true);
     try {
       await realIoTDeviceService.connectDevice();
-      console.log('✅ Device connection completed');
+      console.log("✅ Device connection completed");
     } catch (error) {
-      console.error('❌ Device connection failed:', error);
-      alert('Failed to connect device. Please make sure your device is nearby and in pairing mode.');
+      console.error("❌ Device connection failed:", error);
+      alert(
+        "Failed to connect device. Please make sure your device is nearby and in pairing mode.",
+      );
     } finally {
       setIsConnecting(false);
     }
@@ -194,33 +204,39 @@ export default function RealTimeMonitoring() {
     try {
       let connection = null;
       switch (deviceType) {
-        case 'boat':
+        case "boat":
           connection = await realIoTDeviceService.connectBoAtDevice();
           break;
-        case 'fitbit':
+        case "fitbit":
           connection = await realIoTDeviceService.connectFitbitDevice();
           break;
         default:
           connection = await realIoTDeviceService.connectDevice();
       }
-      
+
       if (connection) {
         console.log(`✅ ${deviceType} device connected successfully`);
       }
     } catch (error: any) {
       // Handle Bluetooth unavailable error specially (don't log to console since it's expected)
-      if (error.name === 'BluetoothUnavailableError' || error.message?.includes('BLUETOOTH_UNAVAILABLE')) {
-        const instructions = error.message.replace('BLUETOOTH_UNAVAILABLE: ', '');
+      if (
+        error.name === "BluetoothUnavailableError" ||
+        error.message?.includes("BLUETOOTH_UNAVAILABLE")
+      ) {
+        const instructions = error.message.replace(
+          "BLUETOOTH_UNAVAILABLE: ",
+          "",
+        );
 
         // Show a user-friendly dialog with automatic Demo Mode option
         const enableDemo = confirm(
           `🔵 Bluetooth Not Available\n\n${instructions}\n\n` +
-          `Would you like to enable Demo Mode instead?\n\n` +
-          `Demo Mode will simulate real device data so you can:\n` +
-          `• Test the interface without real devices\n` +
-          `• See how the monitoring system works\n` +
-          `• Experience realistic health data visualization\n\n` +
-          `Click OK to enable Demo Mode, or Cancel to try again later.`
+            `Would you like to enable Demo Mode instead?\n\n` +
+            `Demo Mode will simulate real device data so you can:\n` +
+            `• Test the interface without real devices\n` +
+            `• See how the monitoring system works\n` +
+            `• Experience realistic health data visualization\n\n` +
+            `Click OK to enable Demo Mode, or Cancel to try again later.`,
         );
 
         if (enableDemo) {
@@ -232,7 +248,9 @@ export default function RealTimeMonitoring() {
 
           // Show success message
           setTimeout(() => {
-            alert(`✨ Demo Mode Enabled!\n\nYou can now see simulated health data from virtual devices. The interface works exactly the same as with real devices.\n\nTo connect real devices later, enable Bluetooth and refresh the page.`);
+            alert(
+              `✨ Demo Mode Enabled!\n\nYou can now see simulated health data from virtual devices. The interface works exactly the same as with real devices.\n\nTo connect real devices later, enable Bluetooth and refresh the page.`,
+            );
           }, 500);
         }
 
@@ -241,16 +259,30 @@ export default function RealTimeMonitoring() {
 
       // Handle other error types (log these since they're unexpected)
       console.error(`❌ ${deviceType} connection failed:`, error);
-      const errorMessage = error.message || 'Unknown error occurred';
+      const errorMessage = error.message || "Unknown error occurred";
 
-      if (errorMessage.includes('not supported')) {
-        alert(`🌐 Browser Compatibility\n\n${errorMessage}\n\nPlease try:\n• Using Chrome or Edge browser\n• Enabling HTTPS if on a local network\n• Using "Demo Mode" to test the interface`);
-      } else if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
-        alert(`🔒 Permission Required\n\n${errorMessage}\n\nPlease:\n• Allow Bluetooth access when prompted\n• Check browser permissions in settings\n• Try "Demo Mode" if permissions can't be granted`);
-      } else if (errorMessage.includes('not found') || errorMessage.includes('No devices')) {
-        alert(`�� Device Not Found\n\n${errorMessage}\n\nPlease:\n• Make sure your ${deviceType} device is in pairing mode\n• Move closer to your device\n• Try "Demo Mode" to test without a real device`);
+      if (errorMessage.includes("not supported")) {
+        alert(
+          `🌐 Browser Compatibility\n\n${errorMessage}\n\nPlease try:\n• Using Chrome or Edge browser\n• Enabling HTTPS if on a local network\n• Using "Demo Mode" to test the interface`,
+        );
+      } else if (
+        errorMessage.includes("permission") ||
+        errorMessage.includes("denied")
+      ) {
+        alert(
+          `🔒 Permission Required\n\n${errorMessage}\n\nPlease:\n• Allow Bluetooth access when prompted\n• Check browser permissions in settings\n• Try "Demo Mode" if permissions can't be granted`,
+        );
+      } else if (
+        errorMessage.includes("not found") ||
+        errorMessage.includes("No devices")
+      ) {
+        alert(
+          `�� Device Not Found\n\n${errorMessage}\n\nPlease:\n• Make sure your ${deviceType} device is in pairing mode\n• Move closer to your device\n• Try "Demo Mode" to test without a real device`,
+        );
       } else {
-        alert(`⚠️ Connection Failed\n\n${errorMessage}\n\nTry:\n• Refreshing the page\n• Using "Demo Mode" for testing\n• Checking device compatibility`);
+        alert(
+          `⚠️ Connection Failed\n\n${errorMessage}\n\nTry:\n• Refreshing the page\n• Using "Demo Mode" for testing\n• Checking device compatibility`,
+        );
       }
     } finally {
       setIsConnecting(false);
@@ -260,9 +292,9 @@ export default function RealTimeMonitoring() {
   const disconnectDevice = async (deviceId: string) => {
     try {
       await realIoTDeviceService.disconnectDevice(deviceId);
-      console.log('🔌 Device disconnected');
+      console.log("🔌 Device disconnected");
     } catch (error) {
-      console.error('❌ Disconnect failed:', error);
+      console.error("❌ Disconnect failed:", error);
     }
   };
 
@@ -273,29 +305,105 @@ export default function RealTimeMonitoring() {
   const getVitalStatus = (type: string, value: number) => {
     switch (type) {
       case "heartRate":
-        if (value < 60) return { status: "low", color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" };
-        if (value > 100) return { status: "high", color: "text-red-600", bgColor: "bg-red-50", borderColor: "border-red-200" };
-        return { status: "normal", color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" };
+        if (value < 60)
+          return {
+            status: "low",
+            color: "text-blue-600",
+            bgColor: "bg-blue-50",
+            borderColor: "border-blue-200",
+          };
+        if (value > 100)
+          return {
+            status: "high",
+            color: "text-red-600",
+            bgColor: "bg-red-50",
+            borderColor: "border-red-200",
+          };
+        return {
+          status: "normal",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+        };
       case "bloodPressure":
-        if (value > 140) return { status: "high", color: "text-red-600", bgColor: "bg-red-50", borderColor: "border-red-200" };
-        if (value < 90) return { status: "low", color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" };
-        return { status: "normal", color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" };
+        if (value > 140)
+          return {
+            status: "high",
+            color: "text-red-600",
+            bgColor: "bg-red-50",
+            borderColor: "border-red-200",
+          };
+        if (value < 90)
+          return {
+            status: "low",
+            color: "text-blue-600",
+            bgColor: "bg-blue-50",
+            borderColor: "border-blue-200",
+          };
+        return {
+          status: "normal",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+        };
       case "temperature":
-        if (value > 100.4) return { status: "fever", color: "text-red-600", bgColor: "bg-red-50", borderColor: "border-red-200" };
-        if (value < 97) return { status: "low", color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200" };
-        return { status: "normal", color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" };
+        if (value > 100.4)
+          return {
+            status: "fever",
+            color: "text-red-600",
+            bgColor: "bg-red-50",
+            borderColor: "border-red-200",
+          };
+        if (value < 97)
+          return {
+            status: "low",
+            color: "text-blue-600",
+            bgColor: "bg-blue-50",
+            borderColor: "border-blue-200",
+          };
+        return {
+          status: "normal",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+        };
       case "oxygenSat":
-        if (value < 95) return { status: "low", color: "text-red-600", bgColor: "bg-red-50", borderColor: "border-red-200" };
-        return { status: "normal", color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" };
+        if (value < 95)
+          return {
+            status: "low",
+            color: "text-red-600",
+            bgColor: "bg-red-50",
+            borderColor: "border-red-200",
+          };
+        return {
+          status: "normal",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+        };
       default:
-        return { status: "normal", color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200" };
+        return {
+          status: "normal",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+        };
     }
   };
 
-  const heartRateStatus = getVitalStatus("heartRate", vitalSigns.heartRate || 0);
-  const bpStatus = getVitalStatus("bloodPressure", vitalSigns.bloodPressure?.systolic || 0);
+  const heartRateStatus = getVitalStatus(
+    "heartRate",
+    vitalSigns.heartRate || 0,
+  );
+  const bpStatus = getVitalStatus(
+    "bloodPressure",
+    vitalSigns.bloodPressure?.systolic || 0,
+  );
   const tempStatus = getVitalStatus("temperature", vitalSigns.temperature || 0);
-  const oxygenStatus = getVitalStatus("oxygenSat", vitalSigns.oxygenSaturation || 0);
+  const oxygenStatus = getVitalStatus(
+    "oxygenSat",
+    vitalSigns.oxygenSaturation || 0,
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 relative overflow-hidden">
@@ -312,7 +420,11 @@ export default function RealTimeMonitoring() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6 fade-in">
               <Link to="/">
-                <Button variant="ghost" size="sm" className="text-slate-700 hover:text-slate-900 hover:bg-white/20 transition-all duration-300 rounded-xl">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-slate-700 hover:text-slate-900 hover:bg-white/20 transition-all duration-300 rounded-xl"
+                >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Dashboard
                 </Button>
@@ -339,17 +451,24 @@ export default function RealTimeMonitoring() {
               <Badge
                 variant="secondary"
                 className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                  connectedDevices.length > 0 
+                  connectedDevices.length > 0
                     ? "bg-green-100 text-green-700 border-green-200 shadow-green-100/50 shadow-lg"
                     : "bg-slate-100 text-slate-700 border-slate-200"
                 }`}
               >
-                <div className={`w-2.5 h-2.5 rounded-full mr-2 ${
-                  connectedDevices.length > 0 ? "bg-green-500 animate-pulse" : "bg-slate-400"
-                }`}></div>
+                <div
+                  className={`w-2.5 h-2.5 rounded-full mr-2 ${
+                    connectedDevices.length > 0
+                      ? "bg-green-500 animate-pulse"
+                      : "bg-slate-400"
+                  }`}
+                ></div>
                 {connectedDevices.length > 0 ? "Live Monitoring" : "No Devices"}
               </Badge>
-              <Badge variant="outline" className="text-slate-600 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
+              <Badge
+                variant="outline"
+                className="text-slate-600 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm"
+              >
                 <Clock className="w-3 h-3 mr-1" />
                 {new Date().toLocaleTimeString()}
               </Badge>
@@ -366,8 +485,8 @@ export default function RealTimeMonitoring() {
                   }
                 }}
                 className={`rounded-xl px-4 py-2 transition-all duration-300 ${
-                  isDemoMode 
-                    ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30" 
+                  isDemoMode
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30"
                     : "hover:bg-white/20"
                 }`}
               >
@@ -403,25 +522,28 @@ export default function RealTimeMonitoring() {
                       <Shield className="w-5 h-5 ml-2 text-green-600" />
                     </CardTitle>
                     <CardDescription className="text-lg mt-2 text-slate-600">
-                      Connect your smartwatch, fitness tracker, or health devices for real-time monitoring
+                      Connect your smartwatch, fitness tracker, or health
+                      devices for real-time monitoring
                     </CardDescription>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={refreshDevices}
                       disabled={isConnecting}
                       className="rounded-xl hover:bg-blue-50 border-blue-200 text-blue-700"
                     >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
+                      <RefreshCw
+                        className={`w-4 h-4 mr-2 ${isConnecting ? "animate-spin" : ""}`}
+                      />
                       Refresh
                     </Button>
-                    <DevicePairingWizard 
+                    <DevicePairingWizard
                       onDeviceConnected={(device) => {
-                        console.log('Device connected via wizard:', device);
+                        console.log("Device connected via wizard:", device);
                         refreshDevices();
-                      }} 
+                      }}
                     />
                   </div>
                 </div>
@@ -432,7 +554,9 @@ export default function RealTimeMonitoring() {
                 <Alert className="mb-6 border-amber-200 bg-amber-50/80 backdrop-blur-sm rounded-2xl">
                   <AlertTriangle className="h-5 w-5 text-amber-600" />
                   <AlertDescription className="text-amber-700 font-medium">
-                    Bluetooth not supported in this browser. Please use Chrome or Edge for device connections, or try Demo Mode to test the interface.
+                    Bluetooth not supported in this browser. Please use Chrome
+                    or Edge for device connections, or try Demo Mode to test the
+                    interface.
                   </AlertDescription>
                 </Alert>
               )}
@@ -443,8 +567,12 @@ export default function RealTimeMonitoring() {
                   <div className="flex items-center gap-3">
                     <Bluetooth className="w-5 h-5 text-blue-600" />
                     <div>
-                      <p className="font-medium text-blue-800">Bluetooth Device Connection</p>
-                      <p className="text-sm text-blue-600">Connect real devices or use Demo Mode for testing</p>
+                      <p className="font-medium text-blue-800">
+                        Bluetooth Device Connection
+                      </p>
+                      <p className="text-sm text-blue-600">
+                        Connect real devices or use Demo Mode for testing
+                      </p>
                     </div>
                   </div>
                   <Button
@@ -473,22 +601,47 @@ export default function RealTimeMonitoring() {
                   </Button>
                 </div>
               </div>
-              
+
               {connectedDevices.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="relative mb-6">
                     <Bluetooth className="w-16 h-16 mx-auto text-slate-300 animate-pulse" />
                     <div className="absolute inset-0 w-16 h-16 mx-auto border-4 border-blue-200 rounded-full animate-ping"></div>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-700 mb-3">No Devices Connected</h3>
-                  <p className="text-slate-500 mb-8 text-lg">Connect your wearables to start monitoring your health in real-time</p>
-                  
+                  <h3 className="text-2xl font-bold text-slate-700 mb-3">
+                    No Devices Connected
+                  </h3>
+                  <p className="text-slate-500 mb-8 text-lg">
+                    Connect your wearables to start monitoring your health in
+                    real-time
+                  </p>
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                     {[
-                      { type: 'boat', name: 'boAt Watch', icon: Watch, color: 'from-red-500 to-orange-500' },
-                      { type: 'fitbit', name: 'Fitbit', icon: Activity, color: 'from-green-500 to-emerald-500' },
-                      { type: 'apple', name: 'Apple Watch', icon: Heart, color: 'from-gray-600 to-slate-600' },
-                      { type: 'other', name: 'Other Device', icon: Smartphone, color: 'from-blue-500 to-cyan-500' }
+                      {
+                        type: "boat",
+                        name: "boAt Watch",
+                        icon: Watch,
+                        color: "from-red-500 to-orange-500",
+                      },
+                      {
+                        type: "fitbit",
+                        name: "Fitbit",
+                        icon: Activity,
+                        color: "from-green-500 to-emerald-500",
+                      },
+                      {
+                        type: "apple",
+                        name: "Apple Watch",
+                        icon: Heart,
+                        color: "from-gray-600 to-slate-600",
+                      },
+                      {
+                        type: "other",
+                        name: "Other Device",
+                        icon: Smartphone,
+                        color: "from-blue-500 to-cyan-500",
+                      },
                     ].map((device, index) => (
                       <Button
                         key={device.type}
@@ -496,14 +649,18 @@ export default function RealTimeMonitoring() {
                         onClick={() => connectSpecificDevice(device.type)}
                         disabled={isConnecting}
                         className={`flex flex-col items-center p-6 h-auto rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl group ${
-                          isConnecting ? 'opacity-50' : ''
+                          isConnecting ? "opacity-50" : ""
                         }`}
                         style={{ animationDelay: `${index * 100}ms` }}
                       >
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${device.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                        <div
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${device.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}
+                        >
                           <device.icon className="w-6 h-6 text-white" />
                         </div>
-                        <span className="font-semibold text-slate-700">{device.name}</span>
+                        <span className="font-semibold text-slate-700">
+                          {device.name}
+                        </span>
                       </Button>
                     ))}
                   </div>
@@ -511,26 +668,43 @@ export default function RealTimeMonitoring() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {connectedDevices.map((device, index) => {
-                    const IconComponent = device.type === 'smartwatch' ? Watch : 
-                                       device.type === 'fitness_tracker' ? Activity : 
-                                       device.type === 'blood_pressure' ? Heart : 
-                                       device.type === 'pulse_oximeter' ? Droplets : Smartphone;
-                    
+                    const IconComponent =
+                      device.type === "smartwatch"
+                        ? Watch
+                        : device.type === "fitness_tracker"
+                          ? Activity
+                          : device.type === "blood_pressure"
+                            ? Heart
+                            : device.type === "pulse_oximeter"
+                              ? Droplets
+                              : Smartphone;
+
                     return (
-                      <Card key={device.id} className="border-0 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                      <Card
+                        key={device.id}
+                        className="border-0 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      >
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-4">
-                              <div className={`p-3 rounded-xl ${
-                                device.status === "connected" ? "bg-green-100 text-green-600" :
-                                device.status === "syncing" ? "bg-yellow-100 text-yellow-600" :
-                                "bg-red-100 text-red-600"
-                              }`}>
+                              <div
+                                className={`p-3 rounded-xl ${
+                                  device.status === "connected"
+                                    ? "bg-green-100 text-green-600"
+                                    : device.status === "syncing"
+                                      ? "bg-yellow-100 text-yellow-600"
+                                      : "bg-red-100 text-red-600"
+                                }`}
+                              >
                                 <IconComponent className="w-6 h-6" />
                               </div>
                               <div>
-                                <h3 className="font-bold text-lg text-slate-800">{device.name}</h3>
-                                <p className="text-sm text-slate-500 capitalize">{device.type.replace('_', ' ')}</p>
+                                <h3 className="font-bold text-lg text-slate-800">
+                                  {device.name}
+                                </h3>
+                                <p className="text-sm text-slate-500 capitalize">
+                                  {device.type.replace("_", " ")}
+                                </p>
                               </div>
                             </div>
                             <Button
@@ -542,28 +716,43 @@ export default function RealTimeMonitoring() {
                               ×
                             </Button>
                           </div>
-                          
+
                           <div className="flex items-center justify-between mb-3">
-                            <Badge variant={device.status === "connected" ? "default" : "secondary"} className="rounded-full">
+                            <Badge
+                              variant={
+                                device.status === "connected"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className="rounded-full"
+                            >
                               {device.status}
                             </Badge>
-                            {device.protocols.includes('bluetooth') && (
+                            {device.protocols.includes("bluetooth") && (
                               <BluetoothConnected className="w-4 h-4 text-blue-600" />
                             )}
                           </div>
-                          
+
                           {device.battery && (
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-sm font-medium text-slate-600">Battery</span>
+                              <span className="text-sm font-medium text-slate-600">
+                                Battery
+                              </span>
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm font-bold text-slate-700">{device.battery}%</span>
-                                <Progress value={device.battery} className="w-20 h-2" />
+                                <span className="text-sm font-bold text-slate-700">
+                                  {device.battery}%
+                                </span>
+                                <Progress
+                                  value={device.battery}
+                                  className="w-20 h-2"
+                                />
                               </div>
                             </div>
                           )}
-                          
+
                           <p className="text-xs text-slate-500">
-                            Last sync: {new Date(device.lastSync).toLocaleTimeString()}
+                            Last sync:{" "}
+                            {new Date(device.lastSync).toLocaleTimeString()}
                           </p>
                         </CardContent>
                       </Card>
@@ -607,50 +796,80 @@ export default function RealTimeMonitoring() {
         {/* Enhanced Live Vital Signs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Heart Rate */}
-          <Card className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${heartRateStatus.bgColor} ${heartRateStatus.borderColor} border-2`}>
+          <Card
+            className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${heartRateStatus.bgColor} ${heartRateStatus.borderColor} border-2`}
+          >
             <div className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm h-full">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-2xl ${heartRateStatus.bgColor} ${heartRateStatus.borderColor} border`}>
-                      <Heart className={`w-6 h-6 ${heartRateStatus.color} animate-pulse`} />
+                    <div
+                      className={`p-3 rounded-2xl ${heartRateStatus.bgColor} ${heartRateStatus.borderColor} border`}
+                    >
+                      <Heart
+                        className={`w-6 h-6 ${heartRateStatus.color} animate-pulse`}
+                      />
                     </div>
-                    <CardTitle className="text-lg font-bold text-slate-800">Heart Rate</CardTitle>
+                    <CardTitle className="text-lg font-bold text-slate-800">
+                      Heart Rate
+                    </CardTitle>
                   </div>
-                  <Badge variant={heartRateStatus.status === "normal" ? "default" : "destructive"} className="rounded-full px-3 py-1">
+                  <Badge
+                    variant={
+                      heartRateStatus.status === "normal"
+                        ? "default"
+                        : "destructive"
+                    }
+                    className="rounded-full px-3 py-1"
+                  >
                     {heartRateStatus.status}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-bold mb-3 text-slate-800">
-                  {vitalSigns.heartRate || '--'}
-                  <span className="text-xl text-muted-foreground ml-2">BPM</span>
+                  {vitalSigns.heartRate || "--"}
+                  <span className="text-xl text-muted-foreground ml-2">
+                    BPM
+                  </span>
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
-                  {vitalSigns.deviceId !== 'none' ? (
+                  {vitalSigns.deviceId !== "none" ? (
                     <BluetoothConnected className="w-4 h-4 mr-2 text-blue-600" />
                   ) : (
                     <WifiOff className="w-4 h-4 mr-2 text-slate-400" />
                   )}
-                  {vitalSigns.deviceId !== 'none' ? getDeviceName(vitalSigns.deviceId) : 'No device connected'}
+                  {vitalSigns.deviceId !== "none"
+                    ? getDeviceName(vitalSigns.deviceId)
+                    : "No device connected"}
                 </div>
               </CardContent>
             </div>
           </Card>
 
           {/* Blood Pressure */}
-          <Card className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${bpStatus.bgColor} ${bpStatus.borderColor} border-2`}>
+          <Card
+            className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${bpStatus.bgColor} ${bpStatus.borderColor} border-2`}
+          >
             <div className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm h-full">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-2xl ${bpStatus.bgColor} ${bpStatus.borderColor} border`}>
+                    <div
+                      className={`p-3 rounded-2xl ${bpStatus.bgColor} ${bpStatus.borderColor} border`}
+                    >
                       <Activity className={`w-6 h-6 ${bpStatus.color}`} />
                     </div>
-                    <CardTitle className="text-lg font-bold text-slate-800">Blood Pressure</CardTitle>
+                    <CardTitle className="text-lg font-bold text-slate-800">
+                      Blood Pressure
+                    </CardTitle>
                   </div>
-                  <Badge variant={bpStatus.status === "normal" ? "default" : "destructive"} className="rounded-full px-3 py-1">
+                  <Badge
+                    variant={
+                      bpStatus.status === "normal" ? "default" : "destructive"
+                    }
+                    className="rounded-full px-3 py-1"
+                  >
                     {bpStatus.status}
                   </Badge>
                 </div>
@@ -664,8 +883,12 @@ export default function RealTimeMonitoring() {
                         /{vitalSigns.bloodPressure.diastolic}
                       </span>
                     </>
-                  ) : '--/--'}
-                  <span className="text-xl text-muted-foreground ml-2">mmHg</span>
+                  ) : (
+                    "--/--"
+                  )}
+                  <span className="text-xl text-muted-foreground ml-2">
+                    mmHg
+                  </span>
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <TrendingUp className="w-4 h-4 mr-2 text-green-600" />
@@ -676,24 +899,37 @@ export default function RealTimeMonitoring() {
           </Card>
 
           {/* Temperature */}
-          <Card className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${tempStatus.bgColor} ${tempStatus.borderColor} border-2`}>
+          <Card
+            className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${tempStatus.bgColor} ${tempStatus.borderColor} border-2`}
+          >
             <div className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm h-full">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-2xl ${tempStatus.bgColor} ${tempStatus.borderColor} border`}>
+                    <div
+                      className={`p-3 rounded-2xl ${tempStatus.bgColor} ${tempStatus.borderColor} border`}
+                    >
                       <Thermometer className={`w-6 h-6 ${tempStatus.color}`} />
                     </div>
-                    <CardTitle className="text-lg font-bold text-slate-800">Temperature</CardTitle>
+                    <CardTitle className="text-lg font-bold text-slate-800">
+                      Temperature
+                    </CardTitle>
                   </div>
-                  <Badge variant={tempStatus.status === "normal" ? "default" : "destructive"} className="rounded-full px-3 py-1">
+                  <Badge
+                    variant={
+                      tempStatus.status === "normal" ? "default" : "destructive"
+                    }
+                    className="rounded-full px-3 py-1"
+                  >
                     {tempStatus.status}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-bold mb-3 text-slate-800">
-                  {vitalSigns.temperature ? vitalSigns.temperature.toFixed(1) : '--'}
+                  {vitalSigns.temperature
+                    ? vitalSigns.temperature.toFixed(1)
+                    : "--"}
                   <span className="text-xl text-muted-foreground ml-2">°F</span>
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
@@ -705,24 +941,37 @@ export default function RealTimeMonitoring() {
           </Card>
 
           {/* Oxygen Saturation */}
-          <Card className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${oxygenStatus.bgColor} ${oxygenStatus.borderColor} border-2`}>
+          <Card
+            className={`border-0 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 overflow-hidden ${oxygenStatus.bgColor} ${oxygenStatus.borderColor} border-2`}
+          >
             <div className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm h-full">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-2xl ${oxygenStatus.bgColor} ${oxygenStatus.borderColor} border`}>
+                    <div
+                      className={`p-3 rounded-2xl ${oxygenStatus.bgColor} ${oxygenStatus.borderColor} border`}
+                    >
                       <Droplets className={`w-6 h-6 ${oxygenStatus.color}`} />
                     </div>
-                    <CardTitle className="text-lg font-bold text-slate-800">Oxygen Saturation</CardTitle>
+                    <CardTitle className="text-lg font-bold text-slate-800">
+                      Oxygen Saturation
+                    </CardTitle>
                   </div>
-                  <Badge variant={oxygenStatus.status === "normal" ? "default" : "destructive"} className="rounded-full px-3 py-1">
+                  <Badge
+                    variant={
+                      oxygenStatus.status === "normal"
+                        ? "default"
+                        : "destructive"
+                    }
+                    className="rounded-full px-3 py-1"
+                  >
                     {oxygenStatus.status}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-bold mb-3 text-slate-800">
-                  {vitalSigns.oxygenSaturation || '--'}
+                  {vitalSigns.oxygenSaturation || "--"}
                   <span className="text-xl text-muted-foreground ml-2">%</span>
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
@@ -745,34 +994,74 @@ export default function RealTimeMonitoring() {
                   <Signal className="w-5 h-5 ml-2 text-green-600 animate-pulse" />
                 </CardTitle>
                 <CardDescription className="text-lg text-slate-600">
-                  Real-time data from connected IoT health devices ({connectedDevices.length} device{connectedDevices.length !== 1 ? 's' : ''} connected)
+                  Real-time data from connected IoT health devices (
+                  {connectedDevices.length} device
+                  {connectedDevices.length !== 1 ? "s" : ""} connected)
                 </CardDescription>
               </CardHeader>
             </div>
             <CardContent className="p-8 bg-white/90 backdrop-blur-sm">
               <div className="h-96">
                 {vitalsHistory.length > 0 ? (
-                  <ResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    debounce={50}
-                  >
+                  <ResponsiveContainer width="100%" height="100%" debounce={50}>
                     <AreaChart
                       data={vitalsHistory}
                       margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                     >
                       <defs>
-                        <linearGradient id="heartRateGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                        <linearGradient
+                          id="heartRateGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#ef4444"
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#ef4444"
+                            stopOpacity={0}
+                          />
                         </linearGradient>
-                        <linearGradient id="oxygenGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        <linearGradient
+                          id="oxygenGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#3b82f6"
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#3b82f6"
+                            stopOpacity={0}
+                          />
                         </linearGradient>
-                        <linearGradient id="systolicGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        <linearGradient
+                          id="systolicGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#10b981"
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#10b981"
+                            stopOpacity={0}
+                          />
                         </linearGradient>
                       </defs>
                       <CartesianGrid
@@ -784,9 +1073,9 @@ export default function RealTimeMonitoring() {
                       />
                       <XAxis
                         dataKey="time"
-                        tick={{ fontSize: 12, fill: '#64748b' }}
-                        tickLine={{ stroke: '#cbd5e0' }}
-                        axisLine={{ stroke: '#cbd5e0' }}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
+                        tickLine={{ stroke: "#cbd5e0" }}
+                        axisLine={{ stroke: "#cbd5e0" }}
                         interval="preserveStartEnd"
                         type="category"
                         allowDuplicatedCategory={false}
@@ -798,9 +1087,9 @@ export default function RealTimeMonitoring() {
                         height={30}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: '#64748b' }}
-                        tickLine={{ stroke: '#cbd5e0' }}
-                        axisLine={{ stroke: '#cbd5e0' }}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
+                        tickLine={{ stroke: "#cbd5e0" }}
+                        axisLine={{ stroke: "#cbd5e0" }}
                         domain={["dataMin - 5", "dataMax + 5"]}
                         type="number"
                         allowDataOverflow={false}
@@ -818,11 +1107,12 @@ export default function RealTimeMonitoring() {
                           backgroundColor: "rgba(255, 255, 255, 0.95)",
                           border: "none",
                           borderRadius: "16px",
-                          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                          backdropFilter: "blur(10px)"
+                          boxShadow:
+                            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                          backdropFilter: "blur(10px)",
                         }}
-                        labelStyle={{ color: '#374151', fontWeight: 'bold' }}
-                        cursor={{ strokeDasharray: '3 3', stroke: '#94a3b8' }}
+                        labelStyle={{ color: "#374151", fontWeight: "bold" }}
+                        cursor={{ strokeDasharray: "3 3", stroke: "#94a3b8" }}
                       />
                       <Area
                         type="monotone"
@@ -831,7 +1121,12 @@ export default function RealTimeMonitoring() {
                         strokeWidth={3}
                         fill="url(#heartRateGradient)"
                         dot={{ fill: "#ef4444", strokeWidth: 2, r: 5 }}
-                        activeDot={{ r: 8, fill: "#ef4444", stroke: "#fff", strokeWidth: 2 }}
+                        activeDot={{
+                          r: 8,
+                          fill: "#ef4444",
+                          stroke: "#fff",
+                          strokeWidth: 2,
+                        }}
                         name="Heart Rate (BPM)"
                         connectNulls={false}
                         animationDuration={500}
@@ -843,7 +1138,12 @@ export default function RealTimeMonitoring() {
                         strokeWidth={3}
                         fill="url(#oxygenGradient)"
                         dot={{ fill: "#3b82f6", strokeWidth: 2, r: 5 }}
-                        activeDot={{ r: 8, fill: "#3b82f6", stroke: "#fff", strokeWidth: 2 }}
+                        activeDot={{
+                          r: 8,
+                          fill: "#3b82f6",
+                          stroke: "#fff",
+                          strokeWidth: 2,
+                        }}
                         name="Oxygen Saturation (%)"
                         connectNulls={false}
                         animationDuration={500}
@@ -855,7 +1155,12 @@ export default function RealTimeMonitoring() {
                         strokeWidth={3}
                         fill="url(#systolicGradient)"
                         dot={{ fill: "#10b981", strokeWidth: 2, r: 5 }}
-                        activeDot={{ r: 8, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }}
+                        activeDot={{
+                          r: 8,
+                          fill: "#10b981",
+                          stroke: "#fff",
+                          strokeWidth: 2,
+                        }}
                         name="Systolic BP (mmHg)"
                         connectNulls={false}
                         animationDuration={500}
@@ -869,8 +1174,13 @@ export default function RealTimeMonitoring() {
                         <Activity className="w-16 h-16 mx-auto text-slate-300 animate-pulse" />
                         <div className="absolute inset-0 w-16 h-16 mx-auto border-4 border-blue-200 rounded-full animate-ping"></div>
                       </div>
-                      <h3 className="text-xl font-bold text-slate-600 mb-2">Waiting for device data...</h3>
-                      <p className="text-slate-500">Connect a device or enable Demo Mode to see real-time charts</p>
+                      <h3 className="text-xl font-bold text-slate-600 mb-2">
+                        Waiting for device data...
+                      </h3>
+                      <p className="text-slate-500">
+                        Connect a device or enable Demo Mode to see real-time
+                        charts
+                      </p>
                     </div>
                   </div>
                 )}
