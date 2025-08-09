@@ -776,7 +776,10 @@ class RealIoTDeviceService {
           instructions = "Go to Android Settings > Connected devices > Bluetooth and turn on Bluetooth.";
         }
 
-        throw new Error(`Bluetooth is disabled or not available. ${instructions} Then refresh this page and try again.`);
+        // Create a custom error that the UI can handle gracefully
+        const bluetoothError = new Error(`BLUETOOTH_UNAVAILABLE: ${instructions}`);
+        bluetoothError.name = 'BluetoothUnavailableError';
+        throw bluetoothError;
       }
 
       console.log("💚 Searching for Fitbit devices...");
