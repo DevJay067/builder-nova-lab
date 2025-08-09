@@ -249,7 +249,7 @@ export default function RealTimeMonitoring() {
       } else if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
         alert(`🔒 Permission Required\n\n${errorMessage}\n\nPlease:\n• Allow Bluetooth access when prompted\n• Check browser permissions in settings\n• Try "Demo Mode" if permissions can't be granted`);
       } else if (errorMessage.includes('not found') || errorMessage.includes('No devices')) {
-        alert(`📱 Device Not Found\n\n${errorMessage}\n\nPlease:\n• Make sure your ${deviceType} device is in pairing mode\n• Move closer to your device\n• Try "Demo Mode" to test without a real device`);
+        alert(`�� Device Not Found\n\n${errorMessage}\n\nPlease:\n• Make sure your ${deviceType} device is in pairing mode\n• Move closer to your device\n• Try "Demo Mode" to test without a real device`);
       } else {
         alert(`⚠️ Connection Failed\n\n${errorMessage}\n\nTry:\n• Refreshing the page\n• Using "Demo Mode" for testing\n• Checking device compatibility`);
       }
@@ -433,10 +433,47 @@ export default function RealTimeMonitoring() {
                 <Alert className="mb-6 border-amber-200 bg-amber-50/80 backdrop-blur-sm rounded-2xl">
                   <AlertTriangle className="h-5 w-5 text-amber-600" />
                   <AlertDescription className="text-amber-700 font-medium">
-                    Bluetooth not supported in this browser. Please use Chrome or Edge for device connections.
+                    Bluetooth not supported in this browser. Please use Chrome or Edge for device connections, or try Demo Mode to test the interface.
                   </AlertDescription>
                 </Alert>
               )}
+
+              {/* Bluetooth Quick Status */}
+              <div className="mb-6 p-4 bg-blue-50/80 backdrop-blur-sm rounded-2xl border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Bluetooth className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium text-blue-800">Bluetooth Device Connection</p>
+                      <p className="text-sm text-blue-600">Connect real devices or use Demo Mode for testing</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!isDemoMode) {
+                        deviceSimulationService.startSimulation();
+                        setIsDemoMode(true);
+                      }
+                    }}
+                    disabled={isDemoMode}
+                    className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+                  >
+                    {isDemoMode ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Demo Active
+                      </>
+                    ) : (
+                      <>
+                        <Star className="w-4 h-4 mr-2" />
+                        Try Demo Mode
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
               
               {connectedDevices.length === 0 ? (
                 <div className="text-center py-12">
