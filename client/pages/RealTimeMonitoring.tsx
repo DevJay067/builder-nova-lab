@@ -180,7 +180,7 @@ export default function RealTimeMonitoring() {
     setIsConnecting(true);
     try {
       await realIoTDeviceService.connectDevice();
-      console.log('✅ Device connection completed');
+      console.log('�� Device connection completed');
     } catch (error) {
       console.error('❌ Device connection failed:', error);
       alert('Failed to connect device. Please make sure your device is nearby and in pairing mode.');
@@ -208,9 +208,7 @@ export default function RealTimeMonitoring() {
         console.log(`✅ ${deviceType} device connected successfully`);
       }
     } catch (error: any) {
-      console.error(`❌ ${deviceType} connection failed:`, error);
-
-      // Handle Bluetooth unavailable error specially
+      // Handle Bluetooth unavailable error specially (don't log to console since it's expected)
       if (error.name === 'BluetoothUnavailableError' || error.message?.includes('BLUETOOTH_UNAVAILABLE')) {
         const instructions = error.message.replace('BLUETOOTH_UNAVAILABLE: ', '');
 
