@@ -55,10 +55,13 @@ export default function ProtectedRoute({
           ?.split("=")[1];
 
       if (!sessionToken) {
+        console.log("❌ No session token found");
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
+
+      console.log("🔍 Found session token, verifying with server...");
 
       // Verify session with server
       const response = await fetch("/api/auth/verify", {
@@ -82,6 +85,21 @@ export default function ProtectedRoute({
             "healthchain_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
       } else {
+        const errorDetails = {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+        };
+        console.error("❌ Session verification failed:", errorDetails);
+
+        // Try to get response text for more details
+        try {
+          const errorText = await response.text();
+          console.error("❌ Session verification error details:", errorText);
+        } catch (textError) {
+          console.error("❌ Could not read error response:", textError);
+        }
+
         setIsAuthenticated(false);
         setAuthError("Authentication failed");
       }

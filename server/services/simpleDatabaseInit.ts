@@ -1,12 +1,20 @@
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL || "");
+// Only initialize if DATABASE_URL is properly configured
+const sql = process.env.DATABASE_URL && process.env.DATABASE_URL !== ""
+  ? neon(process.env.DATABASE_URL)
+  : null;
 
 export class SimpleDatabaseInit {
   /**
    * Initialize only the essential medical_history table
    */
   static async initializeMedicalHistoryTable(): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, skipping table creation");
+      return;
+    }
+
     try {
       console.log("🏥 Creating medical_history table...");
 
@@ -34,8 +42,8 @@ export class SimpleDatabaseInit {
 
       console.log("✅ Medical history table created successfully");
     } catch (error) {
-      console.error("❌ Error creating medical_history table:", error);
-      throw error;
+      console.log("⚠️ Database connection failed, using in-memory storage");
+      // Don't throw error, allow fallback to in-memory storage
     }
   }
 
@@ -43,11 +51,14 @@ export class SimpleDatabaseInit {
    * Test database connectivity
    */
   static async testConnection(): Promise<boolean> {
+    if (!sql) {
+      return false;
+    }
+
     try {
       await sql`SELECT 1 as test`;
       return true;
     } catch (error) {
-      console.error("Database connection test failed:", error);
       return false;
     }
   }

@@ -124,18 +124,39 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("🔄 Starting login request");
+
+      const requestBody = {
+        username: loginForm.email,
+        password: loginForm.password,
+      };
+
+      console.log("📤 Login request body prepared:", {
+        username: requestBody.username,
+        hasPassword: !!requestBody.password,
+      });
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({
-          username: loginForm.email,
-          password: loginForm.password,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("📥 Login response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log("✅ Login result:", { success: result.success });
 
       if (result.success) {
         const userData = {
@@ -176,9 +197,24 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
+
+      let errorMessage =
+        "Network error. Please check your connection and try again.";
+
+      if (error instanceof Error) {
+        if (error.message.includes("body stream")) {
+          errorMessage = "Request format error. Please try again.";
+        } else if (error.message.includes("HTTP error")) {
+          errorMessage = "Server error. Please try again in a moment.";
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage =
+            "Network connection error. Please check your internet connection.";
+        }
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -194,21 +230,39 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log("🔄 Starting registration request");
+
+      const requestBody = {
+        username: registerForm.username,
+        email: registerForm.email,
+        password: registerForm.password,
+        firstName: registerForm.firstName,
+        lastName: registerForm.lastName,
+      };
+
+      console.log("📤 Request body prepared:", Object.keys(requestBody));
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({
-          username: registerForm.username,
-          email: registerForm.email,
-          password: registerForm.password,
-          firstName: registerForm.firstName,
-          lastName: registerForm.lastName,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("📥 Response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log("✅ Registration result:", { success: result.success });
 
       if (result.success) {
         setMessage({
@@ -246,9 +300,24 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Registration error:", error);
+
+      let errorMessage =
+        "Network error. Please check your connection and try again.";
+
+      if (error instanceof Error) {
+        if (error.message.includes("body stream")) {
+          errorMessage = "Request format error. Please try again.";
+        } else if (error.message.includes("HTTP error")) {
+          errorMessage = "Server error. Please try again in a moment.";
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage =
+            "Network connection error. Please check your internet connection.";
+        }
+      }
+
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);

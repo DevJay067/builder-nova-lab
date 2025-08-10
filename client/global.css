@@ -2,6 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Google Translate Custom Styling */
+.goog-te-gadget {
+  display: none !important;
+}
+
+.goog-te-banner-frame {
+  display: none !important;
+}
+
+.goog-te-balloon-frame {
+  display: none !important;
+}
+
+.goog-te-menu-frame {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+  position: static !important;
+}
+
+.goog-te-menu-value {
+  color: inherit !important;
+}
+
+.goog-te-menu-value span {
+  color: inherit !important;
+}
+
+/* Hide Google Translate toolbar */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+/* Ensure body doesn't get pushed down */
+body.goog-te-reset {
+  top: 0 !important;
+  position: static !important;
+}
+
+/* Custom translate widget styling */
+.google-translate-widget {
+  position: relative;
+}
+
+.google-translate-widget .goog-te-combo {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Make sure translated content looks good */
+.goog-te-highlighted {
+  background-color: transparent !important;
+}
+
+/* Handle any iframe issues */
+iframe.goog-te-banner-frame {
+  display: none !important;
+}
+
+/* Fix for mobile */
+@media (max-width: 768px) {
+  .goog-te-gadget {
+    display: none !important;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

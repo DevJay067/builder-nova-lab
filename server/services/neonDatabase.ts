@@ -13,17 +13,21 @@ import {
  * encrypted healthcare data with blockchain immutability.
  */
 
-// Database connection
-const sql = neon(
-  process.env.DATABASE_URL ||
-    "postgresql://misty-glitter-69745686-user:default@ep-empty-frog-a5lp6eyz.us-east-2.aws.neon.tech/misty-glitter-69745686-db?sslmode=require",
-);
+// Database connection - only initialize if properly configured
+const sql = process.env.DATABASE_URL && process.env.DATABASE_URL !== ""
+  ? neon(process.env.DATABASE_URL)
+  : null;
 
 export class NeonDatabaseService {
   /**
    * Initialize database tables for secure data storage
    */
   static async initializeDatabase(): Promise<void> {
+    if (!sql) {
+      console.log("⚠️ Database not configured, skipping initialization");
+      return;
+    }
+
     try {
       // Create secure_data_records table
       await sql`

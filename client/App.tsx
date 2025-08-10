@@ -20,6 +20,8 @@ import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
+import TestAuth from "./pages/TestAuth";
+import TestStorage from "./pages/TestStorage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -72,6 +74,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/health-analytics"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <HealthAnalytics />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/legal" element={<Legal />} />
               <Route
                 path="/secure"
@@ -83,6 +93,8 @@ const App = () => {
               />
               <Route path="/login" element={<Login />} />
               <Route path="/why-login" element={<WhyLogin />} />
+              <Route path="/test-auth" element={<TestAuth />} />
+              <Route path="/test-storage" element={<TestStorage />} />
               <Route
                 path="/monitoring"
                 element={

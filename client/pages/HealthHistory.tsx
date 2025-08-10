@@ -65,6 +65,8 @@ import {
   Globe,
   Database,
 } from "lucide-react";
+import permanentStorage from "@/services/permanentStorage";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface HealthRecord {
   id: string;
@@ -79,6 +81,7 @@ interface HealthRecord {
 }
 
 export default function HealthHistory() {
+  const { t } = useTranslation();
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,6 +98,8 @@ export default function HealthHistory() {
   const [stats, setStats] = useState({
     totalRecords: 0,
     secureRecords: 0,
+    vaultRecords: 0,
+    cloudRecords: 0,
     lastUpdate: null as string | null,
   });
 
@@ -210,35 +215,57 @@ export default function HealthHistory() {
   const loadHealthRecords = async (sessionToken: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/auth/data-access/records", {
+      const response = await fetch("/api/supabase/health-records", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
+          "Content-Type": "application/json",
         },
       });
 
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.records) {
-          const transformedRecords = data.records.map((record: any) => ({
-            id: record.id,
-            type: record.recordType || record.type,
-            title: record.title,
-            description: record.description,
-            date: record.date,
-            doctor: record.doctor,
-            isSecure: !!record.secureRecordId,
-            blockchainHash: record.secureRecordId,
-            metadata: record.metadata,
-          }));
+          const transformedRecords = data.records.map((record: any) => {
+            // Extract data from cloud storage vault if available
+            const fullData = record.fullData || {};
+            const storageInfo = record.storageInfo || {};
+
+            return {
+              id: record.id,
+              type: record.record_type || fullData.type || record.type,
+              title: record.title || fullData.title,
+              description: record.description || fullData.description,
+              date: record.date || fullData.date,
+              doctor: fullData.data?.doctor || record.doctor,
+              isSecure: storageInfo.type === "supabase-cloud-vault",
+              blockchainHash: record.storage_path,
+              metadata: {
+                ...record.metadata,
+                cloudStorage: storageInfo,
+                recordId: fullData.recordId,
+                storedAt: fullData.storedAt,
+              },
+              fullCloudData: fullData, // Include full cloud data
+            };
+          });
 
           setRecords(transformedRecords);
           setStats({
             totalRecords: transformedRecords.length,
-            secureRecords: transformedRecords.filter((r: any) => r.isSecure)
-              .length,
+            secureRecords: transformedRecords.filter((r: any) => r.isSecure).length,
+            vaultRecords: transformedRecords.filter(
+              (r: any) => r.metadata?.encryptedVault || r.metadata?.cloudStorage?.type === "supabase-cloud-vault",
+            ).length,
+            cloudRecords: transformedRecords.filter(
+              (r: any) => r.metadata?.cloudStorage?.type === "supabase-cloud-vault",
+            ).length,
             lastUpdate: new Date().toISOString(),
           });
+
+          console.log(
+            `✅ Loaded ${transformedRecords.length} health records from Supabase cloud storage`,
+          );
         }
       }
     } catch (error) {
@@ -267,31 +294,168 @@ export default function HealthHistory() {
         return;
       }
 
-      const response = await fetch("/api/auth/data-access", {
+      // Validate required fields
+      if (!newRecord.type) {
+        setMessage({ type: "error", text: "Please select a record type" });
+        return;
+      }
+      if (!newRecord.title) {
+        setMessage({ type: "error", text: "Please enter a title" });
+        return;
+      }
+
+      console.log("🔐 Saving health record to encrypted cloud vault...");
+
+      // First try the enhanced vault storage API
+      const vaultResponse = await fetch("/api/vault/store-health-record", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-session-token": sessionToken,
+        },
+        body: JSON.stringify({
+          record_type: newRecord.type,
+          title: newRecord.title,
+          description: newRecord.description || "",
+          doctor: newRecord.doctor || "",
+          date: newRecord.date,
+          metadata: {
+            category: newRecord.type,
+            recordedAt: new Date().toISOString(),
+            source: "health-history-enhanced",
+            userAgent: navigator.userAgent,
+            encryptedVault: true
+          },
+        }),
+      });
+
+      console.log("📥 Vault storage response:", {
+        status: vaultResponse.status,
+        statusText: vaultResponse.statusText,
+        ok: vaultResponse.ok,
+      });
+
+      if (vaultResponse.ok) {
+        const vaultResult = await vaultResponse.json();
+        if (vaultResult.success) {
+        // Also save to permanent storage for extra reliability
+        const recordData = {
+          record_type: newRecord.type,
+          title: newRecord.title,
+          description: newRecord.description || "",
+          doctor: newRecord.doctor || "",
+          date: newRecord.date,
+          metadata: {
+            category: newRecord.type,
+            recordedAt: new Date().toISOString(),
+            source: "health-history-enhanced",
+            vaultId: vaultResult.vaultId
+          },
+        };
+
+        permanentStorage.storeHealthRecord(recordData);
+
+        setMessage({
+          type: "success",
+          text: `✅ Health record saved securely! (Vault + Permanent Storage)`,
+        });
+
+        // Reset form and reload
+        setNewRecord({
+          type: "",
+          title: "",
+          description: "",
+          date: new Date().toISOString().split("T")[0],
+          doctor: "",
+          metadata: {},
+        });
+        setIsDialogOpen(false);
+        await loadHealthRecords(sessionToken);
+        return;
+      }
+      }
+
+      // Fallback to regular Supabase storage
+      console.log("⚠️ Vault storage failed, falling back to regular cloud storage...");
+
+      const requestBody = {
+        type: newRecord.type,
+        title: newRecord.title,
+        description: newRecord.description || "",
+        data: {
+          title: newRecord.title,
+          description: newRecord.description || "",
+          date: newRecord.date,
+          doctor: newRecord.doctor || "",
+          metadata: newRecord.metadata || {},
+        },
+        metadata: {
+          category: newRecord.type,
+          recordedAt: new Date().toISOString(),
+          vaultFallback: true,
+        },
+        sessionToken: sessionToken,
+      };
+
+      console.log("📤 Fallback storage request body:", {
+        type: requestBody.type,
+        title: requestBody.title,
+        hasSessionToken: !!requestBody.sessionToken,
+      });
+
+      const response = await fetch("/api/supabase/health-records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
         },
-        body: JSON.stringify({
-          type: newRecord.type,
-          data: {
-            title: newRecord.title,
-            description: newRecord.description,
-            date: newRecord.date,
-            doctor: newRecord.doctor,
-            metadata: newRecord.metadata,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("📥 Health record response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        // Try to get more details about the error
+        let errorDetails = `HTTP error! status: ${response.status}`;
+        try {
+          const errorText = await response.text();
+          console.error("❌ Health record save error details:", errorText);
+          const errorData = JSON.parse(errorText);
+          errorDetails = errorData.message || errorDetails;
+        } catch (parseError) {
+          console.error("❌ Could not parse error response:", parseError);
+        }
+        throw new Error(errorDetails);
+      }
+
       const result = await response.json();
+      console.log("✅ Health record result:", { success: result.success });
 
       if (result.success) {
+        // Also save to permanent storage
+        const recordData = {
+          record_type: newRecord.type,
+          title: newRecord.title,
+          description: newRecord.description || "",
+          doctor: newRecord.doctor || "",
+          date: newRecord.date,
+          metadata: {
+            category: newRecord.type,
+            recordedAt: new Date().toISOString(),
+            source: "health-history-fallback"
+          },
+        };
+
+        permanentStorage.storeHealthRecord(recordData);
+
         setMessage({
           type: "success",
-          text: "Health record saved securely to blockchain!",
+          text: "Health record saved (Cloud + Permanent Storage)!",
         });
         setIsDialogOpen(false);
         setNewRecord({
@@ -320,7 +484,24 @@ export default function HealthHistory() {
       }
     } catch (error) {
       console.error("Error saving record:", error);
-      setMessage({ type: "error", text: "Network error. Please try again." });
+
+      let errorMessage = "Network error. Please try again.";
+
+      if (error instanceof Error) {
+        if (error.message.includes("body stream")) {
+          errorMessage = "Request format error. Please try again.";
+        } else if (error.message.includes("HTTP error")) {
+          errorMessage = "Server error. Please check your login and try again.";
+        } else if (error.message.includes("Failed to fetch")) {
+          errorMessage =
+            "Network connection error. Please check your internet connection.";
+        }
+      }
+
+      setMessage({
+        type: "error",
+        text: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -373,10 +554,10 @@ export default function HealthHistory() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">
-                    Health History
+                    {t("history.title")}
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Secure Medical Records
+                    {t("history.subtitle")}
                   </p>
                 </div>
               </div>
@@ -390,10 +571,9 @@ export default function HealthHistory() {
               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <Shield className="h-8 w-8 text-white" />
               </div>
-              <CardTitle className="text-xl">Authentication Required</CardTitle>
+              <CardTitle className="text-xl">{t("auth.authenticationRequired")}</CardTitle>
               <CardDescription>
-                Please log in to access your secure health history and medical
-                records.
+                {t("bmax.loginToAccess")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -429,10 +609,10 @@ export default function HealthHistory() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-slate-800">
-                    Health History
+                    {t("history.title")}
                   </h1>
                   <p className="text-sm text-slate-600 font-medium">
-                    Secure Medical Records
+                    {t("history.subtitle")}
                   </p>
                 </div>
               </div>
@@ -450,14 +630,14 @@ export default function HealthHistory() {
                 <DialogTrigger asChild>
                   <Button className="btn-smooth shadow-colored">
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Record
+                    {t("history.addRecord")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center space-x-2">
                       <Plus className="w-5 h-5 text-primary" />
-                      <span>Add New Health Record</span>
+                      <span>{t("history.addRecord")}</span>
                     </DialogTitle>
                     <DialogDescription>
                       Create a new health record that will be securely stored on
@@ -468,7 +648,7 @@ export default function HealthHistory() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="type">Record Type *</Label>
+                        <Label htmlFor="type">{t("history.recordType")} *</Label>
                         <Select
                           value={newRecord.type}
                           onValueChange={(value) =>
@@ -492,7 +672,7 @@ export default function HealthHistory() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="date">Date *</Label>
+                        <Label htmlFor="date">{t("history.date")} *</Label>
                         <Input
                           id="date"
                           type="date"
@@ -510,7 +690,7 @@ export default function HealthHistory() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="title">Title *</Label>
+                      <Label htmlFor="title">{t("history.title.field")} *</Label>
                       <Input
                         id="title"
                         placeholder="e.g., Annual Physical Exam"

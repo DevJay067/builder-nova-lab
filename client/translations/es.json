@@ -174,5 +174,39 @@
   "success.profileUpdated": "Perfil actualizado exitosamente",
   "success.passwordChanged": "Contraseña cambiada exitosamente",
   "success.emailSent": "Correo enviado exitosamente",
-  "success.accountCreated": "Cuenta creada exitosamente"
+  "success.accountCreated": "Cuenta creada exitosamente",
+
+  "history.addRecord": "Agregar Registro de Salud",
+  "history.noRecords": "No se Encontraron Registros de Salud",
+  "history.recordType": "Tipo de Registro",
+  "history.title.field": "Título",
+  "history.description": "Descripción",
+  "history.date": "Fecha",
+  "history.doctor": "Doctor/Proveedor",
+  "history.save": "Guardar Registro",
+  "history.cancel": "Cancelar",
+  "history.searchPlaceholder": "Buscar registros...",
+
+  "analytics.title": "Análisis de Salud",
+  "analytics.subtitle": "Insights Impulsados por IA",
+  "analytics.tracking": "Seguimiento",
+  "analytics.sleepCycle": "Ciclo de Sueño",
+  "analytics.waterIntake": "Ingesta de Agua",
+  "analytics.notifications": "Notificaciones",
+  "analytics.enabled": "Habilitado",
+
+  "bmax.title": "Asistente de IA B-max",
+  "bmax.subtitle": "IA de Salud Personalizada",
+  "bmax.authRequired": "Autenticación Requerida",
+
+  "tracking.title": "Seguimiento de Salud y Notificaciones",
+  "tracking.sleep": "Sueño",
+  "tracking.water": "Agua",
+  "tracking.bedtime": "Hora de Dormir",
+  "tracking.enableNotifications": "Habilitar Notificaciones",
+
+  "storage.title": "Estado de Almacenamiento de Datos",
+  "storage.healthRecords": "Registros de Salud",
+  "storage.export": "Exportar",
+  "storage.import": "Importar"
 }

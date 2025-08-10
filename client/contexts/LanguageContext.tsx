@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type SupportedLanguage = "en" | "es" | "fr" | "hi" | "de" | "ja";
+export type SupportedLanguage = "en" | "es" | "fr" | "hi" | "de" | "ja" | "zh" | "ar" | "pt" | "ru" | "ko" | "it" | "tr" | "nl" | "sv";
 
 export interface LanguageOption {
   code: SupportedLanguage;
@@ -10,6 +10,7 @@ export interface LanguageOption {
   rtl?: boolean;
 }
 
+// Extended language support with Google Translate
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: "en", name: "English", nativeName: "English", flag: "🇺🇸" },
   { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸" },
@@ -17,6 +18,15 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳" },
   { code: "de", name: "German", nativeName: "Deutsch", flag: "🇩🇪" },
   { code: "ja", name: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
+  { code: "zh", name: "Chinese", nativeName: "中文", flag: "🇨🇳" },
+  { code: "ar", name: "Arabic", nativeName: "العربية", flag: "🇸🇦", rtl: true },
+  { code: "pt", name: "Portuguese", nativeName: "Português", flag: "🇵🇹" },
+  { code: "ru", name: "Russian", nativeName: "Русский", flag: "🇷🇺" },
+  { code: "ko", name: "Korean", nativeName: "한국어", flag: "🇰🇷" },
+  { code: "it", name: "Italian", nativeName: "Italiano", flag: "🇮🇹" },
+  { code: "tr", name: "Turkish", nativeName: "Türkçe", flag: "🇹🇷" },
+  { code: "nl", name: "Dutch", nativeName: "Nederlands", flag: "🇳🇱" },
+  { code: "sv", name: "Swedish", nativeName: "Svenska", flag: "🇸🇪" },
 ];
 
 interface LanguageContextType {
@@ -36,47 +46,13 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [currentLanguage, setCurrentLanguage] =
-    useState<SupportedLanguage>("en");
-  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>("en");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Load translations for a specific language
-  const loadTranslations = async (language: SupportedLanguage) => {
-    setIsLoading(true);
-    try {
-      const translationModule = await import(
-        `../translations/${language}.json`
-      );
-      setTranslations(translationModule.default);
-    } catch (error) {
-      console.warn(
-        `Failed to load translations for ${language}, falling back to English`,
-      );
-      try {
-        const englishModule = await import("../translations/en.json");
-        setTranslations(englishModule.default);
-      } catch (fallbackError) {
-        console.error(
-          "Failed to load even English translations:",
-          fallbackError,
-        );
-        setTranslations({});
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Initialize language from localStorage or browser preference
   useEffect(() => {
-    const savedLanguage = localStorage.getItem(
-      "healthchain_language",
-    ) as SupportedLanguage;
-    if (
-      savedLanguage &&
-      SUPPORTED_LANGUAGES.some((lang) => lang.code === savedLanguage)
-    ) {
+    const savedLanguage = localStorage.getItem("healthchain_language") as SupportedLanguage;
+    if (savedLanguage && SUPPORTED_LANGUAGES.some((lang) => lang.code === savedLanguage)) {
       setCurrentLanguage(savedLanguage);
     } else {
       // Detect browser language
@@ -87,11 +63,8 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     }
   }, []);
 
-  // Load translations when language changes
+  // Update document attributes when language changes
   useEffect(() => {
-    loadTranslations(currentLanguage);
-
-    // Update document language and direction
     document.documentElement.lang = currentLanguage;
     const languageInfo = SUPPORTED_LANGUAGES.find(
       (lang) => lang.code === currentLanguage,
@@ -101,26 +74,36 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     } else {
       document.documentElement.dir = "ltr";
     }
+
+    // Update meta tag for Google Translate
+    let contentLanguageMeta = document.querySelector('meta[http-equiv="content-language"]');
+    if (!contentLanguageMeta) {
+      contentLanguageMeta = document.createElement('meta');
+      contentLanguageMeta.setAttribute('http-equiv', 'content-language');
+      document.head.appendChild(contentLanguageMeta);
+    }
+    contentLanguageMeta.setAttribute('content', currentLanguage);
   }, [currentLanguage]);
 
   const changeLanguage = (language: SupportedLanguage) => {
     setCurrentLanguage(language);
     localStorage.setItem("healthchain_language", language);
-
-    // Announce language change for screen readers
-    const announcement = `Language changed to ${SUPPORTED_LANGUAGES.find((l) => l.code === language)?.name}`;
-    const announcer = document.createElement("div");
-    announcer.setAttribute("aria-live", "polite");
-    announcer.setAttribute("aria-atomic", "true");
-    announcer.style.position = "absolute";
-    announcer.style.left = "-10000px";
-    announcer.textContent = announcement;
-    document.body.appendChild(announcer);
-    setTimeout(() => document.body.removeChild(announcer), 1000);
   };
 
+  // Simplified translation function - now relies on Google Translate
   const t = (key: string, params?: Record<string, string | number>): string => {
-    let translation = translations[key] || key;
+    // For basic keys, return English text that Google Translate will handle
+    const basicTranslations: Record<string, string> = {
+      'app.title': 'HealthChain',
+      'nav.home': 'Home',
+      'nav.dashboard': 'Dashboard', 
+      'auth.login': 'Login',
+      'language.select': 'Select Language',
+      'language.current': 'Current',
+      // Add more basic keys as needed
+    };
+
+    let translation = basicTranslations[key] || key;
 
     // Handle parameter substitution
     if (params) {

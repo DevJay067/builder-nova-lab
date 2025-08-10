@@ -5,7 +5,9 @@ import { neon } from "@neondatabase/serverless";
  * Monitors database connectivity and provides fallback mechanisms
  */
 
-const sql = neon(process.env.DATABASE_URL || "");
+const sql = process.env.DATABASE_URL && process.env.DATABASE_URL !== ""
+  ? neon(process.env.DATABASE_URL)
+  : null;
 
 export class DatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
@@ -21,6 +23,16 @@ export class DatabaseHealthService {
     connectionStatus: string;
     latency?: number;
   }> {
+    if (!sql) {
+      this.isHealthy = false;
+      this.lastHealthCheck = new Date();
+      return {
+        isHealthy: false,
+        lastChecked: this.lastHealthCheck,
+        connectionStatus: "no database configuration"
+      };
+    }
+
     const startTime = Date.now();
 
     try {

@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Activity, 
-  ArrowLeft, 
+import {
+  Activity,
+  ArrowLeft,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -21,81 +21,282 @@ import {
   PieChart,
   LineChart,
   Zap,
-  Shield
+  Shield,
+  Moon,
+  Droplets,
+  Settings,
+  Bell
 } from "lucide-react";
+import HealthTracking from "@/components/HealthTracking";
+import HealthDataStatus from "@/components/HealthDataStatus";
+import { useTranslation } from "@/contexts/LanguageContext";
+
+interface HealthRecord {
+  id: string;
+  record_type: string;
+  title: string;
+  description?: string;
+  doctor?: string;
+  date: string;
+  metadata?: any;
+}
+
+interface UserHealthData {
+  healthRecords: HealthRecord[];
+  totalRecords: number;
+  lastRecordDate: string | null;
+  conditions: string[];
+  medications: string[];
+  recentSymptoms: string[];
+}
 
 export default function HealthAnalytics() {
+  const { t } = useTranslation();
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
+  const [userHealthData, setUserHealthData] = useState<UserHealthData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTab, setActiveTab] = useState("insights");
 
-  const healthMetrics = [
-    {
-      title: "Overall Health Score",
-      value: 87,
-      target: 90,
-      trend: "up",
-      change: "+3.2%",
-      description: "Based on your recent health data and AI analysis"
-    },
-    {
-      title: "Cardiovascular Health",
-      value: 82,
-      target: 85,
-      trend: "up",
-      change: "+2.1%",
-      description: "Heart rate, blood pressure, and activity trends"
-    },
-    {
-      title: "Mental Wellness",
-      value: 78,
-      target: 80,
-      trend: "down",
-      change: "-1.5%",
-      description: "Stress levels, sleep quality, and mood tracking"
-    },
-    {
-      title: "Preventive Care",
-      value: 95,
-      target: 100,
-      trend: "up",
-      change: "+5.0%",
-      description: "Checkups, screenings, and vaccination status"
-    }
-  ];
+  useEffect(() => {
+    loadHealthAnalyticsData();
+  }, []);
 
-  const insights = [
-    {
-      type: "positive",
-      icon: CheckCircle,
-      title: "Improved Sleep Pattern",
-      description: "Your sleep quality has improved by 15% this month. Keep maintaining your bedtime routine.",
-      importance: "medium",
-      action: "Continue current sleep schedule"
-    },
-    {
-      type: "warning",
-      icon: AlertCircle,
-      title: "Hydration Alert",
-      description: "Water intake is below recommended levels. Consider increasing daily fluid consumption.",
-      importance: "high",
-      action: "Increase water intake to 8 glasses daily"
-    },
-    {
-      type: "positive",
-      icon: Award,
-      title: "Exercise Goal Achieved",
-      description: "You've met your weekly exercise target for 3 consecutive weeks. Excellent progress!",
-      importance: "low",
-      action: "Maintain current activity level"
-    },
-    {
-      type: "neutral",
-      icon: Target,
-      title: "Nutrition Balance",
-      description: "Your protein intake is optimal, but consider adding more fiber-rich foods to your diet.",
-      importance: "medium",
-      action: "Add 2 servings of vegetables daily"
+  const loadHealthAnalyticsData = async () => {
+    try {
+      setIsLoading(true);
+
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
+
+      if (!sessionToken) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Verify authentication
+      const authResponse = await fetch("/api/auth/verify", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      if (!authResponse.ok) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
+
+      // Load health records
+      const healthResponse = await fetch("/api/health-data/records", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      if (healthResponse.ok) {
+        const healthData = await healthResponse.json();
+        console.log("✅ Health analytics data loaded:", healthData);
+
+        if (healthData.success && healthData.records) {
+          const records = healthData.records;
+
+          // Extract analytics data from health records
+          const conditions = records
+            .filter((record: HealthRecord) => record.record_type === 'condition' || record.record_type === 'diagnosis')
+            .map((record: HealthRecord) => record.title);
+
+          const medications = records
+            .filter((record: HealthRecord) => record.record_type === 'medication')
+            .map((record: HealthRecord) => record.title);
+
+          const symptoms = records
+            .filter((record: HealthRecord) => record.record_type === 'symptom')
+            .map((record: HealthRecord) => record.title);
+
+          setUserHealthData({
+            healthRecords: records,
+            totalRecords: records.length,
+            lastRecordDate: records.length > 0 ? records[0].date : null,
+            conditions: conditions,
+            medications: medications,
+            recentSymptoms: symptoms
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error loading health analytics data:", error);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
+
+  const getHealthMetrics = () => {
+    if (!userHealthData) {
+      return [
+        {
+          title: "Overall Health Score",
+          value: 0,
+          target: 100,
+          trend: "neutral",
+          change: "No data",
+          description: "Add health records to see your score"
+        },
+        {
+          title: "Health Records",
+          value: 0,
+          target: 10,
+          trend: "neutral",
+          change: "Start adding",
+          description: "Begin tracking your health journey"
+        },
+        {
+          title: "Active Conditions",
+          value: 0,
+          target: 0,
+          trend: "neutral",
+          change: "No data",
+          description: "Track medical conditions"
+        },
+        {
+          title: "Medications",
+          value: 0,
+          target: 0,
+          trend: "neutral",
+          change: "No data",
+          description: "Monitor your medications"
+        }
+      ];
+    }
+
+    const totalRecords = userHealthData.totalRecords;
+    const conditions = userHealthData.conditions.length;
+    const medications = userHealthData.medications.length;
+
+    // Calculate health score based on data completeness
+    const healthScore = Math.min(100, Math.max(20, (totalRecords * 10) + 20));
+
+    return [
+      {
+        title: "Overall Health Score",
+        value: healthScore,
+        target: 100,
+        trend: totalRecords > 5 ? "up" : "neutral",
+        change: totalRecords > 0 ? "+12% this month" : "Add more data",
+        description: "Based on your health record completeness"
+      },
+      {
+        title: "Health Records",
+        value: totalRecords,
+        target: Math.max(10, totalRecords + 3),
+        trend: totalRecords > 0 ? "up" : "neutral",
+        change: `${totalRecords} total`,
+        description: "Track more for better insights"
+      },
+      {
+        title: "Active Conditions",
+        value: conditions,
+        target: conditions,
+        trend: "neutral",
+        change: conditions > 0 ? "Monitored" : "None tracked",
+        description: "Medical conditions being monitored"
+      },
+      {
+        title: "Current Medications",
+        value: medications,
+        target: medications,
+        trend: "neutral",
+        change: medications > 0 ? "Active" : "None tracked",
+        description: "Medications currently taking"
+      }
+    ];
+  };
+
+  const healthMetrics = getHealthMetrics();
+
+  const getInsights = () => {
+    const baseInsights = [
+      {
+        type: "warning",
+        icon: AlertCircle,
+        title: "Set Up Health Tracking",
+        description: "Start by setting up your sleep cycle and water intake notifications for better health insights.",
+        importance: "high",
+        action: "Configure health tracking below"
+      },
+      {
+        type: "neutral",
+        icon: Target,
+        title: "Complete Your Health Profile",
+        description: "Add more health records to get personalized insights and recommendations.",
+        importance: "medium",
+        action: "Visit Health History to add records"
+      }
+    ];
+
+    if (!userHealthData || userHealthData.totalRecords === 0) {
+      return baseInsights;
+    }
+
+    const insights = [];
+
+    if (userHealthData.totalRecords > 0) {
+      insights.push({
+        type: "positive",
+        icon: CheckCircle,
+        title: "Health Data Available",
+        description: `You have ${userHealthData.totalRecords} health records. This helps provide personalized insights.`,
+        importance: "medium",
+        action: "Keep adding more records for better analysis"
+      });
+    }
+
+    if (userHealthData.conditions.length > 0) {
+      insights.push({
+        type: "neutral",
+        icon: Target,
+        title: "Conditions Monitored",
+        description: `You're tracking ${userHealthData.conditions.length} medical condition(s). Regular monitoring is important.`,
+        importance: "medium",
+        action: "Continue regular health checkups"
+      });
+    }
+
+    if (userHealthData.medications.length > 0) {
+      insights.push({
+        type: "warning",
+        icon: AlertCircle,
+        title: "Medication Management",
+        description: `You have ${userHealthData.medications.length} medication(s) recorded. Ensure proper adherence.`,
+        importance: "high",
+        action: "Set medication reminders if needed"
+      });
+    }
+
+    if (userHealthData.recentSymptoms.length > 0) {
+      insights.push({
+        type: "warning",
+        icon: AlertCircle,
+        title: "Recent Symptoms Tracked",
+        description: `${userHealthData.recentSymptoms.length} symptom(s) recorded. Monitor and discuss with healthcare provider.`,
+        importance: "high",
+        action: "Consider scheduling a doctor visit"
+      });
+    }
+
+    return insights.length > 0 ? insights : baseInsights;
+  };
+
+  const insights = getInsights();
 
   const riskFactors = [
     {
@@ -136,6 +337,52 @@ export default function HealthAnalytics() {
     }
   };
 
+  if (!isAuthenticated && !isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-info/5 flex items-center justify-center">
+        <Card className="max-w-md mx-auto shadow-colored-lg">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-info to-info/80 rounded-2xl flex items-center justify-center shadow-lg shadow-info/25">
+              <Shield className="h-8 w-8 text-info-foreground" />
+            </div>
+            <CardTitle className="text-xl">Authentication Required</CardTitle>
+            <CardDescription>
+              Please log in to view your health analytics and insights.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Link to="/login" className="w-full">
+              <Button className="w-full">
+                <Activity className="w-4 h-4 mr-2" />
+                Log In to View Analytics
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-info/5 flex items-center justify-center">
+        <Card className="max-w-md mx-auto shadow-colored-lg">
+          <CardContent className="pt-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-info/10 rounded-full flex items-center justify-center">
+              <Activity className="h-8 w-8 text-info animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-foreground font-medium">Loading Health Analytics...</p>
+              <p className="text-sm text-muted-foreground">
+                Analyzing your health data and generating insights
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-info/5">
       {/* Header */}
@@ -154,8 +401,8 @@ export default function HealthAnalytics() {
                   <Activity className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Health Analytics</h1>
-                  <p className="text-sm text-muted-foreground">AI-Powered Insights</p>
+                  <h1 className="text-xl font-bold text-foreground">{t("analytics.title")}</h1>
+                  <p className="text-sm text-muted-foreground">{t("analytics.subtitle")}</p>
                 </div>
               </div>
             </div>
@@ -183,6 +430,77 @@ export default function HealthAnalytics() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Quick Actions for Health Tracking */}
+        {isAuthenticated && (
+          <Card className="mb-6 bg-gradient-to-r from-primary/5 to-blue-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2 text-primary" />
+                Health Tracking Setup
+              </CardTitle>
+              <CardDescription>
+                Set up personalized notifications for better health management
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Moon className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <p className="text-sm font-medium">Sleep Cycle</p>
+                    <p className="text-xs text-muted-foreground">Set bedtime reminders</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Droplets className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium">Water Intake</p>
+                    <p className="text-xs text-muted-foreground">Hydration reminders</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Bell className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium">Notifications</p>
+                    <p className="text-xs text-muted-foreground">
+                      {typeof window !== 'undefined' && 'Notification' in window
+                        ? Notification.permission === "granted"
+                          ? "✓ Enabled"
+                          : "Not enabled"
+                        : "Not supported"
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 bg-white/70 rounded-lg">
+                  <Heart className="h-5 w-5 text-red-600" />
+                  <div>
+                    <p className="text-sm font-medium">Medication</p>
+                    <p className="text-xs text-muted-foreground">Coming soon</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Click on the "Tracking" tab above to set up your personalized health notifications
+                </p>
+                <div className="flex justify-center space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("tracking")}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Set Up Tracking
+                  </Button>
+                  {typeof window !== 'undefined' && 'Notification' in window && Notification.permission === "granted" && (
+                    <div className="flex items-center text-green-600 text-sm">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      <span>Notifications enabled</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Health Score Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {healthMetrics.map((metric, index) => (
@@ -218,19 +536,23 @@ export default function HealthAnalytics() {
           ))}
         </div>
 
-        <Tabs defaultValue="insights" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="insights" className="flex items-center space-x-2">
               <Zap className="h-4 w-4" />
-              <span>Insights</span>
+              <span className="hidden sm:inline">Insights</span>
             </TabsTrigger>
             <TabsTrigger value="trends" className="flex items-center space-x-2">
               <LineChart className="h-4 w-4" />
-              <span>Trends</span>
+              <span className="hidden sm:inline">Trends</span>
+            </TabsTrigger>
+            <TabsTrigger value="tracking" className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Tracking</span>
             </TabsTrigger>
             <TabsTrigger value="predictions" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
-              <span>Risk Analysis</span>
+              <span className="hidden sm:inline">Risk</span>
             </TabsTrigger>
           </TabsList>
 
@@ -284,6 +606,12 @@ export default function HealthAnalytics() {
                 })}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Health Tracking Tab */}
+          <TabsContent value="tracking" className="space-y-6">
+            <HealthTracking />
+            <HealthDataStatus />
           </TabsContent>
 
           {/* Health Trends Tab */}
