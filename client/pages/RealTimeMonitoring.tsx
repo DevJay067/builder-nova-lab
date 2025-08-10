@@ -1080,11 +1080,19 @@ export default function RealTimeMonitoring() {
                         type="category"
                         allowDuplicatedCategory={false}
                         scale="auto"
-                        tickFormatter={undefined}
-                        tickCount={undefined}
                         angle={0}
                         textAnchor="middle"
                         height={30}
+                        includeHidden={false}
+                        reversed={false}
+                        allowDecimals={true}
+                        allowDataOverflow={false}
+                        hide={false}
+                        mirror={false}
+                        orientation="bottom"
+                        padding={{ left: 0, right: 0 }}
+                        minTickGap={5}
+                        tickMargin={5}
                       />
                       <YAxis
                         tick={{ fontSize: 12, fill: "#64748b" }}
@@ -1094,11 +1102,18 @@ export default function RealTimeMonitoring() {
                         type="number"
                         allowDataOverflow={false}
                         scale="auto"
-                        tickFormatter={undefined}
-                        tickCount={undefined}
                         angle={0}
                         textAnchor="end"
                         width={60}
+                        includeHidden={false}
+                        reversed={false}
+                        allowDecimals={true}
+                        hide={false}
+                        mirror={false}
+                        orientation="left"
+                        padding={{ top: 0, bottom: 0 }}
+                        minTickGap={5}
+                        tickMargin={5}
                       />
                       <Tooltip
                         active={true}
