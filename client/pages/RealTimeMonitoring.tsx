@@ -1093,6 +1093,12 @@ export default function RealTimeMonitoring() {
                         padding={{ left: 0, right: 0 }}
                         minTickGap={5}
                         tickMargin={5}
+                        tickSize={6}
+                        tickCount={5}
+                        domain={[]}
+                        name=""
+                        unit=""
+                        tickFormatter={(value) => value}
                       />
                       <YAxis
                         tick={{ fontSize: 12, fill: "#64748b" }}
