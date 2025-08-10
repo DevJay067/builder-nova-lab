@@ -1,4 +1,4 @@
-# 🏆 HealthChain - International Competition Documentation
+# 🏆 HealthChain - Competition Documentation
 
 ## 🌟 Project Overview
 
