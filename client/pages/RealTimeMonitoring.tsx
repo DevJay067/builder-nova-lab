@@ -1120,6 +1120,12 @@ export default function RealTimeMonitoring() {
                         padding={{ top: 0, bottom: 0 }}
                         minTickGap={5}
                         tickMargin={5}
+                        tickSize={6}
+                        tickCount={5}
+                        name=""
+                        unit=""
+                        tickFormatter={(value) => value}
+                        dataKey=""
                       />
                       <Tooltip
                         active={true}
