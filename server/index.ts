@@ -59,6 +59,7 @@ import {
   stopMock,
 } from "./routes/iot";
 import { setGoals, getGoals, setReminders, getReminders, deleteAllMyData, registerPushSubscription } from "./routes/analytics";
+import { ReminderScheduler } from "./services/reminderScheduler";
 
 export function createServer() {
   // Initialize secure database on server startup
@@ -137,6 +138,8 @@ export function createServer() {
 
   // Run initialization (don't await to avoid blocking server start)
   initializeSecureSystem();
+  // Start background reminder scheduler (no-op without VAPID/DATABASE_URL)
+  ReminderScheduler.start();
 
   const app = express();
 
