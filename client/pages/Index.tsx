@@ -138,7 +138,7 @@ export default function Index() {
         "Advanced analytics and insights from your health data with predictive AI modeling.",
       icon: Activity,
       color: "bg-orange-500",
-      route: "/health-analytics",
+      route: "/analytics",
       stats: "AI Insights",
       gradient: "from-orange-500/20 to-red-500/20",
     },
