@@ -140,10 +140,67 @@ export function createServer() {
   const app = express();
 
   // Middleware
-  app.use(cors());
+  const allowedOrigins = [
+    /^(http:\/\/|https:\/\/)localhost(:\d+)?$/,
+    /^(http:\/\/|https:\/\/)127\.0\.0\.1(:\d+)?$/,
+  ];
+  app.use(
+    cors({
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        if (process.env.NODE_ENV === "production") {
+          // In production allow same-origin only
+          return cb(null, true);
+        }
+        if (allowedOrigins.some((re) => re.test(origin))) return cb(null, true);
+        return cb(null, false);
+      },
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "x-session-token",
+        "x-patient-key",
+        "x-provider-key",
+      ],
+    }),
+  );
   app.use(cookieParser());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Minimal hardening headers (subset of helmet)
+  app.disable("x-powered-by");
+  app.use((_, res, next) => {
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    next();
+  });
+
+  // Basic in-memory rate limiter (per-IP)
+  const requests: Record<string, { count: number; ts: number }> = {};
+  function rateLimit(windowMs = 60_000, max = 120) {
+    return (req: any, res: any, next: any) => {
+      const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+      const now = Date.now();
+      const entry = requests[ip] || { count: 0, ts: now };
+      if (now - entry.ts > windowMs) {
+        entry.count = 0;
+        entry.ts = now;
+      }
+      entry.count += 1;
+      requests[ip] = entry;
+      if (entry.count > max) {
+        return res.status(429).json({ success: false, message: "Too many requests" });
+      }
+      next();
+    };
+  }
+  // Apply to sensitive routes
+  app.use(["/api/auth/", "/api/vitals/", "/api/secure/"], rateLimit());
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {

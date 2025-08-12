@@ -6,10 +6,7 @@ import { UserAuthenticationService } from "../services/userAuthentication";
  */
 export const registerUser: RequestHandler = async (req, res) => {
   try {
-    console.log("🔍 Registration request received", {
-      body: req.body ? "present" : "missing",
-      contentType: req.headers["content-type"],
-    });
+    console.log("🔍 Registration request received");
 
     const { username, password, email, firstName, lastName } = req.body;
 
@@ -43,10 +40,7 @@ export const registerUser: RequestHandler = async (req, res) => {
  */
 export const loginUser: RequestHandler = async (req, res) => {
   try {
-    console.log("🔍 Login request received", {
-      body: req.body ? "present" : "missing",
-      contentType: req.headers["content-type"],
-    });
+    console.log("🔍 Login request received");
 
     const { username, password } = req.body;
 

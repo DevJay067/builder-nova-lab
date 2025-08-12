@@ -14,10 +14,16 @@ import {
  */
 
 // Database connection
-const sql = neon(
-  process.env.DATABASE_URL ||
-    "postgresql://misty-glitter-69745686-user:default@ep-empty-frog-a5lp6eyz.us-east-2.aws.neon.tech/misty-glitter-69745686-db?sslmode=require",
-);
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.warn("ℹ️ DATABASE_URL not set. Neon DB operations will be disabled.");
+}
+// Safe fallback tag function: throws when DB is not configured
+const sql: any = connectionString
+  ? neon(connectionString)
+  : (async () => {
+      throw new Error("DATABASE_URL not set; Neon DB disabled");
+    }) as any;
 
 export class NeonDatabaseService {
   /**
