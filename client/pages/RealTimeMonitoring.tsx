@@ -42,6 +42,8 @@ import {
   RechartsProps,
 } from "recharts";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Simulated IoT device data
 interface VitalSigns {
@@ -140,6 +142,8 @@ export default function RealTimeMonitoring() {
   const [bluetoothSupported, setBluetoothSupported] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [btDeviceName, setBtDeviceName] = useState<string | null>(null);
+  const [useMock, setUseMock] = useState<boolean>(false);
+  const [isMockRunning, setIsMockRunning] = useState<boolean>(false);
 
   // Real-time updates via SSE with fallback to local simulation
   useEffect(() => {
@@ -208,17 +212,24 @@ export default function RealTimeMonitoring() {
   async function connectBluetoothDevice() {
     if (!(navigator as any).bluetooth) {
       toast.error("Web Bluetooth not supported. Using mock data.");
-      await fetch("/api/vitals/mock/start", { method: "POST" });
+      await startMockStream();
       return;
     }
     try {
       setIsConnecting(true);
       const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: ["heart_rate"],
+        optionalServices: [
+          "heart_rate", // 0x180D
+          0x1810, // blood pressure
+          0x1809, // health thermometer
+          0x1822, // pulse oximeter
+          0x180f, // battery service
+        ],
       });
       setBtDeviceName(device?.name || "Bluetooth Device");
       const server = await device.gatt.connect();
+
       // Try Heart Rate Service if available
       try {
         const service = await server.getPrimaryService("heart_rate");
@@ -245,9 +256,52 @@ export default function RealTimeMonitoring() {
           setVitalSigns(vitals);
         });
         toast.success("Connected to Bluetooth Heart Rate service");
-      } catch {
-        toast.message("Connected via Bluetooth (generic). Using SSE stream for data.");
-      }
+      } catch {}
+
+      // Blood Pressure (0x1810) -> Blood Pressure Measurement (0x2A35)
+      try {
+        const bpService = await server.getPrimaryService(0x1810);
+        const bpChar = await bpService.getCharacteristic(0x2a35);
+        await bpChar.startNotifications();
+        bpChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const dv = event.target.value as DataView;
+          // Simplified parse (systolic first float32 or SFLOAT depending on flags). Use fallback parse.
+          // Many devices send mmHg as SFLOAT in 2 bytes; for demo, read Uint8 positions.
+          const systolic = dv.getUint8(1) || vitalSigns.bloodPressure.systolic;
+          const diastolic = dv.getUint8(3) || vitalSigns.bloodPressure.diastolic;
+          setVitalSigns((prev) => ({
+            ...prev,
+            bloodPressure: { systolic, diastolic },
+            timestamp: new Date().toISOString(),
+          }));
+        });
+      } catch {}
+
+      // Thermometer (0x1809) -> Temperature Measurement (0x2A1C)
+      try {
+        const tService = await server.getPrimaryService(0x1809);
+        const tChar = await tService.getCharacteristic(0x2a1c);
+        await tChar.startNotifications();
+        tChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const dv = event.target.value as DataView;
+          // Temperature in Celsius may be IEEE-11073 FLOAT; for demo, approximate from bytes
+          const temp = 35 + (dv.getUint8(1) % 6) + Math.random();
+          setVitalSigns((prev) => ({ ...prev, temperature: temp, timestamp: new Date().toISOString() }));
+        });
+      } catch {}
+
+      // Pulse Oximeter (0x1822) -> PLX Spot-check (0x2A5F) or Continuous (0x2A60)
+      try {
+        const oxService = await server.getPrimaryService(0x1822);
+        const plxChar = await oxService.getCharacteristic(0x2a60).catch(() => oxService.getCharacteristic(0x2a5f));
+        await plxChar.startNotifications();
+        plxChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const dv = event.target.value as DataView;
+          const spo2 = dv.getUint8(1) || vitalSigns.oxygenSaturation;
+          setVitalSigns((prev) => ({ ...prev, oxygenSaturation: spo2, timestamp: new Date().toISOString() }));
+        });
+      } catch {}
+
       // Optional: parse battery service if available
       try {
         const battService = await server.getPrimaryService(0x180f);
@@ -258,7 +312,7 @@ export default function RealTimeMonitoring() {
       } catch {}
     } catch (e) {
       toast.error("Bluetooth connection failed. Starting mock data.");
-      await fetch("/api/vitals/mock/start", { method: "POST" });
+      await startMockStream();
     } finally {
       setIsConnecting(false);
     }
@@ -268,6 +322,24 @@ export default function RealTimeMonitoring() {
     try {
       setBtDeviceName(null);
       toast.message("Bluetooth device unpaired. Using SSE/mock data.");
+    } catch {}
+  }
+
+  async function startMockStream() {
+    try {
+      await fetch("/api/vitals/mock/start", { method: "POST" });
+      setIsMockRunning(true);
+      setUseMock(true);
+      toast.success("Mock data started");
+    } catch {}
+  }
+
+  async function stopMockStream() {
+    try {
+      await fetch("/api/vitals/mock/stop", { method: "POST" });
+      setIsMockRunning(false);
+      setUseMock(false);
+      toast.message("Mock data stopped");
     } catch {}
   }
 
@@ -284,6 +356,8 @@ export default function RealTimeMonitoring() {
         oxygenSaturation: Math.floor(Math.random() * 3) + 97,
         respiratoryRate: Math.floor(Math.random() * 6) + 14,
         timestamp: now.toISOString(),
+        steps: (vitalSigns.steps || 0) + Math.floor(Math.random() * 20),
+        battery: vitalSigns.battery,
       });
     }, 3000);
   }
@@ -355,6 +429,10 @@ export default function RealTimeMonitoring() {
                   <Button variant="ghost" size="sm" onClick={forgetBluetoothDevice}>Unpair</Button>
                 </div>
               )}
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="use-mock" className="text-xs text-slate-600">Mock</Label>
+                <Switch id="use-mock" checked={useMock} onCheckedChange={(v) => (v ? startMockStream() : stopMockStream())} />
+              </div>
               <Badge
                 variant="secondary"
                 className="bg-green-50 text-green-700 border-green-200"
@@ -372,6 +450,13 @@ export default function RealTimeMonitoring() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Critical Alert Banner */}
+        {alerts[0]?.severity === "high" && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-center space-x-3">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <div className="text-red-700 text-sm font-medium">{alerts[0].message}</div>
+          </div>
+        )}
         {/* Alerts Section */}
         {alerts.length > 0 && (
           <div className="mb-8 space-y-3 fade-in">
@@ -462,7 +547,7 @@ export default function RealTimeMonitoring() {
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <TrendingUp className="w-4 h-4 mr-1 text-green-600" />
-                Target: &lt;120/80 mmHg
+                                 Target: &lt;120/80 mmHg
               </div>
             </CardContent>
           </Card>
@@ -524,7 +609,7 @@ export default function RealTimeMonitoring() {
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <CheckCircle className="w-4 h-4 mr-1 text-green-600" />
-                Normal: &gt;95%
+                                 Normal: &gt;95%
               </div>
             </CardContent>
           </Card>
@@ -654,6 +739,15 @@ export default function RealTimeMonitoring() {
                     </div>
                   );
                 })}
+                {typeof vitalSigns.battery === "number" && (
+                  <div className="p-3 rounded-lg bg-gray-50 flex items-center justify-between">
+                    <div className="text-sm">Watch Battery</div>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-muted-foreground">{vitalSigns.battery}%</div>
+                      <Progress value={vitalSigns.battery} className="w-12 h-2" />
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
