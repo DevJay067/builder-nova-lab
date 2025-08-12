@@ -58,6 +58,7 @@ import {
   startMock,
   stopMock,
 } from "./routes/iot";
+import { setGoals, getGoals, setReminders, getReminders } from "./routes/analytics";
 
 export function createServer() {
   // Initialize secure database on server startup
@@ -302,6 +303,12 @@ export function createServer() {
   app.post("/api/vitals/update", updateVitals);
   app.post("/api/vitals/mock/start", startMock);
   app.post("/api/vitals/mock/stop", stopMock);
+
+  // Health Analytics (Goals and Reminders)
+  app.post("/api/analytics/goals", setGoals);
+  app.get("/api/analytics/goals", getGoals);
+  app.post("/api/analytics/reminders", setReminders);
+  app.get("/api/analytics/reminders", getReminders);
 
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {

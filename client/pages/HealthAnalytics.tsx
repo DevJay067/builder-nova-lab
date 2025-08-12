@@ -23,9 +23,77 @@ import {
   Zap,
   Shield
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 export default function HealthAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
+  const [isSaving, setIsSaving] = useState(false);
+  const [goals, setGoals] = useState({ stepsTarget: 10000, waterGlassesPerDay: 8, sleepHours: 8 });
+  const [reminders, setReminders] = useState({ waterEnabled: false, waterIntervalMinutes: 120, sleepEnabled: false, bedtime: "23:00", wakeTime: "07:00" });
+
+  async function loadSettings() {
+    try {
+      const sessionToken = localStorage.getItem("sessionToken");
+      if (!sessionToken) return;
+      const [g, r] = await Promise.all([
+        fetch("/api/analytics/goals", { headers: { Authorization: `Bearer ${sessionToken}` } }).then((r) => r.json()),
+        fetch("/api/analytics/reminders", { headers: { Authorization: `Bearer ${sessionToken}` } }).then((r) => r.json()),
+      ]);
+      if (g.success && g.goals) setGoals({
+        stepsTarget: g.goals.stepsTarget ?? goals.stepsTarget,
+        waterGlassesPerDay: g.goals.waterGlassesPerDay ?? goals.waterGlassesPerDay,
+        sleepHours: g.goals.sleepHours ?? goals.sleepHours,
+      });
+      if (r.success && r.reminders) setReminders({
+        waterEnabled: !!r.reminders.waterEnabled,
+        waterIntervalMinutes: r.reminders.waterIntervalMinutes ?? reminders.waterIntervalMinutes,
+        sleepEnabled: !!r.reminders.sleepEnabled,
+        bedtime: r.reminders.bedtime ?? reminders.bedtime,
+        wakeTime: r.reminders.wakeTime ?? reminders.wakeTime,
+      });
+    } catch {}
+  }
+
+  async function saveGoals() {
+    try {
+      setIsSaving(true);
+      const sessionToken = localStorage.getItem("sessionToken");
+      if (!sessionToken) return toast.error("Please login to save goals");
+      const res = await fetch("/api/analytics/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify(goals),
+      });
+      const data = await res.json();
+      if (data.success) toast.success("Goals saved"); else toast.error(data.message || "Failed to save goals");
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function saveReminders() {
+    try {
+      setIsSaving(true);
+      const sessionToken = localStorage.getItem("sessionToken");
+      if (!sessionToken) return toast.error("Please login to save reminders");
+      const res = await fetch("/api/analytics/reminders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify(reminders),
+      });
+      const data = await res.json();
+      if (data.success) toast.success("Reminders saved"); else toast.error(data.message || "Failed to save reminders");
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   const healthMetrics = [
     {
@@ -183,6 +251,63 @@ export default function HealthAnalytics() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Goals and Reminders */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center"><Target className="h-5 w-5 mr-2" /> Health Goals & Reminders</CardTitle>
+            <CardDescription>Set personal targets and wellness reminders</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold mb-3">Goals</h3>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm">Daily Steps Target</Label>
+                    <Input type="number" value={goals.stepsTarget} onChange={(e) => setGoals({ ...goals, stepsTarget: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Water Intake (glasses/day)</Label>
+                    <Input type="number" value={goals.waterGlassesPerDay} onChange={(e) => setGoals({ ...goals, waterGlassesPerDay: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Sleep Hours</Label>
+                    <Input type="number" value={goals.sleepHours} step="0.1" onChange={(e) => setGoals({ ...goals, sleepHours: Number(e.target.value) })} />
+                  </div>
+                  <Button onClick={saveGoals} disabled={isSaving}>Save Goals</Button>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-3">Reminders</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Water Reminders</Label>
+                    <Switch checked={reminders.waterEnabled} onCheckedChange={(v) => setReminders({ ...reminders, waterEnabled: !!v })} />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Water Interval (minutes)</Label>
+                    <Input type="number" value={reminders.waterIntervalMinutes} onChange={(e) => setReminders({ ...reminders, waterIntervalMinutes: Number(e.target.value) })} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Sleep Reminders</Label>
+                    <Switch checked={reminders.sleepEnabled} onCheckedChange={(v) => setReminders({ ...reminders, sleepEnabled: !!v })} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-sm">Bedtime</Label>
+                      <Input type="time" value={reminders.bedtime} onChange={(e) => setReminders({ ...reminders, bedtime: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Wake Time</Label>
+                      <Input type="time" value={reminders.wakeTime} onChange={(e) => setReminders({ ...reminders, wakeTime: e.target.value })} />
+                    </div>
+                  </div>
+                  <Button onClick={saveReminders} disabled={isSaving}>Save Reminders</Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         {/* Health Score Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {healthMetrics.map((metric, index) => (

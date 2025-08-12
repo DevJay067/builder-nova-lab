@@ -41,6 +41,7 @@ import {
   Area,
   RechartsProps,
 } from "recharts";
+import { toast } from "sonner";
 
 // Simulated IoT device data
 interface VitalSigns {
@@ -134,8 +135,12 @@ export default function RealTimeMonitoring() {
     },
   ]);
 
+  const [bluetoothSupported, setBluetoothSupported] = useState<boolean>(false);
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
+
   // Real-time updates via SSE with fallback to local simulation
   useEffect(() => {
+    setBluetoothSupported(!!(navigator as any).bluetooth);
     let fallbackInterval: any;
     let es: EventSource | null = null;
 
@@ -191,6 +196,54 @@ export default function RealTimeMonitoring() {
       if (fallbackInterval) clearInterval(fallbackInterval);
     };
   }, []);
+
+  async function connectBluetoothDevice() {
+    if (!(navigator as any).bluetooth) {
+      toast.error("Web Bluetooth not supported. Using mock data.");
+      await fetch("/api/vitals/mock/start", { method: "POST" });
+      return;
+    }
+    try {
+      setIsConnecting(true);
+      const device = await (navigator as any).bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: ["heart_rate"],
+      });
+      const server = await device.gatt.connect();
+      // Try Heart Rate Service if available
+      try {
+        const service = await server.getPrimaryService("heart_rate");
+        const characteristic = await service.getCharacteristic("heart_rate_measurement");
+        await characteristic.startNotifications();
+        characteristic.addEventListener("characteristicvaluechanged", (event: any) => {
+          const value = event.target.value as DataView;
+          // Parse Heart Rate Measurement (spec-compliant minimal)
+          let flags = value.getUint8(0);
+          let rate16 = flags & 0x1;
+          let index = 1;
+          const heartRate = rate16 ? value.getUint16(index, true) : value.getUint8(index);
+          const now = new Date();
+          const vitals: VitalSigns = {
+            heartRate,
+            bloodPressure: { systolic: vitalSigns.bloodPressure.systolic, diastolic: vitalSigns.bloodPressure.diastolic },
+            temperature: vitalSigns.temperature,
+            oxygenSaturation: vitalSigns.oxygenSaturation,
+            respiratoryRate: vitalSigns.respiratoryRate,
+            timestamp: now.toISOString(),
+          };
+          setVitalSigns(vitals);
+        });
+        toast.success("Connected to Bluetooth Heart Rate service");
+      } catch {
+        toast.message("Connected via Bluetooth (generic). Using SSE stream for data.");
+      }
+    } catch (e) {
+      toast.error("Bluetooth connection failed. Starting mock data.");
+      await fetch("/api/vitals/mock/start", { method: "POST" });
+    } finally {
+      setIsConnecting(false);
+    }
+  }
 
   function startLocalSimulation(cb: (v: VitalSigns) => void) {
     return setInterval(() => {
@@ -267,6 +320,9 @@ export default function RealTimeMonitoring() {
               </div>
             </div>
             <div className="flex items-center space-x-3 fade-in fade-in-delay-1">
+              <Button variant="outline" size="sm" onClick={connectBluetoothDevice} disabled={isConnecting}>
+                {isConnecting ? "Connecting..." : bluetoothSupported ? "Connect Bluetooth" : "Start Mock"}
+              </Button>
               <Badge
                 variant="secondary"
                 className="bg-green-50 text-green-700 border-green-200"
