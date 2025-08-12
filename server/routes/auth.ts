@@ -54,7 +54,7 @@ export const loginUser: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await UserAuthenticationService.authenticateUser(
+    let result = await UserAuthenticationService.authenticateUser(
       username,
       password,
     );
@@ -75,9 +75,33 @@ export const loginUser: RequestHandler = async (req, res) => {
         securityFeatures: result.securityFeatures,
       });
     } else {
-      res.status(401).json({
+      // Optional auto-provision on login (demo-friendly)
+      const allowAutoProvision = (process.env.AUTO_PROVISION_ON_LOGIN || "true").toLowerCase() !== "false";
+      if (allowAutoProvision) {
+        try {
+          const reg = await UserAuthenticationService.registerUser(username, password);
+          if (reg.success) {
+            result = await UserAuthenticationService.authenticateUser(username, password);
+            if (result.success) {
+              res.cookie("healthchain_session", result.user!.sessionToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 24 * 60 * 60 * 1000,
+              });
+              return res.json({
+                success: true,
+                message: "Account auto-provisioned and logged in",
+                user: result.user,
+                securityFeatures: result.securityFeatures,
+              });
+            }
+          }
+        } catch {}
+      }
+      return res.status(401).json({
         success: false,
-        message: result.message,
+        message: result.message || "Invalid username or password",
       });
     }
   } catch (error) {

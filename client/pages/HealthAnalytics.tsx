@@ -34,6 +34,7 @@ export default function HealthAnalytics() {
   const [goals, setGoals] = useState({ stepsTarget: 10000, waterGlassesPerDay: 8, sleepHours: 8 });
   const [reminders, setReminders] = useState({ waterEnabled: false, waterIntervalMinutes: 120, sleepEnabled: false, bedtime: "23:00", wakeTime: "07:00" });
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [savedType, setSavedType] = useState<"goals" | "reminders" | null>(null);
 
   async function loadSettings() {
     try {
@@ -65,6 +66,8 @@ export default function HealthAnalytics() {
   async function ensurePushSubscription() {
     try {
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") return;
       const reg = await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -96,6 +99,7 @@ export default function HealthAnalytics() {
       if (data.success) {
         toast.success("Goals saved");
         setSavedMessage("Goals updated successfully");
+        setSavedType("goals");
         await ensurePushSubscription();
       } else toast.error(data.message || "Failed to save goals");
     } catch {
@@ -119,6 +123,7 @@ export default function HealthAnalytics() {
       if (data.success) {
         toast.success("Reminders saved");
         setSavedMessage("Reminders updated successfully");
+        setSavedType("reminders");
         await ensurePushSubscription();
       } else toast.error(data.message || "Failed to save reminders");
     } catch {
