@@ -1,6 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL || "");
+function getSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    return null;
+  }
+  return neon(url);
+}
 
 export class SimpleDatabaseInit {
   /**
@@ -8,6 +14,12 @@ export class SimpleDatabaseInit {
    */
   static async initializeMedicalHistoryTable(): Promise<void> {
     try {
+      const sql = getSql();
+      if (!sql) {
+        console.log("ℹ️ DATABASE_URL not set. Skipping medical_history table initialization (using in-memory storage).");
+        return;
+      }
+
       console.log("🏥 Creating medical_history table...");
 
       // Create medical_history table for health records
@@ -44,6 +56,11 @@ export class SimpleDatabaseInit {
    */
   static async testConnection(): Promise<boolean> {
     try {
+      const sql = getSql();
+      if (!sql) {
+        console.log("ℹ️ DATABASE_URL not set. Skipping DB connectivity test.");
+        return false;
+      }
       await sql`SELECT 1 as test`;
       return true;
     } catch (error) {

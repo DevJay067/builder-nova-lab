@@ -201,11 +201,7 @@ class ProductionBlockchainService {
     // Layer 1: Encrypt with user hash (user-specific encryption)
     const userLayerKey = crypto.createHash("sha256").update(userHash).digest();
     const userIv = crypto.randomBytes(16);
-    const userCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      userLayerKey,
-      userIv,
-    );
+    const userCipher = crypto.createCipheriv("aes-256-gcm", userLayerKey, userIv);
     userCipher.setAAD(Buffer.from("user-layer"));
 
     let userEncrypted = userCipher.update(
@@ -220,11 +216,7 @@ class ProductionBlockchainService {
     // Layer 2: Encrypt with data hash (data-specific encryption)
     const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
     const dataIv = crypto.randomBytes(16);
-    const dataCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      dataLayerKey,
-      dataIv,
-    );
+    const dataCipher = crypto.createCipheriv("aes-256-gcm", dataLayerKey, dataIv);
     dataCipher.setAAD(Buffer.from("data-layer"));
 
     let dataEncrypted = dataCipher.update(userLayerData, "utf8", "hex");
@@ -238,7 +230,7 @@ class ProductionBlockchainService {
       .update(combinedHash)
       .digest();
     const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipherGCM(
+    const blockchainCipher = crypto.createCipheriv(
       "aes-256-gcm",
       blockchainLayerKey,
       blockchainIv,
@@ -284,7 +276,7 @@ class ProductionBlockchainService {
       const blockchainIv = Buffer.from(blockchainIvHex, "hex");
       const blockchainAuthTag = Buffer.from(blockchainAuthTagHex, "hex");
 
-      const blockchainDecipher = crypto.createDecipherGCM(
+      const blockchainDecipher = crypto.createDecipheriv(
         "aes-256-gcm",
         blockchainLayerKey,
         blockchainIv,
@@ -300,16 +292,11 @@ class ProductionBlockchainService {
       dataLayerData += blockchainDecipher.final("utf8");
 
       // Layer 2: Decrypt data layer
-      const dataLayerKey = crypto
-        .createHash("sha256")
-        .update(dataHash)
-        .digest();
-      const [dataIvHex, dataAuthTagHex, dataEncrypted] =
-        dataLayerData.split(":");
+      const [dataIvHex, dataAuthTagHex, dataEncrypted] = dataLayerData.split(":");
       const dataIv = Buffer.from(dataIvHex, "hex");
       const dataAuthTag = Buffer.from(dataAuthTagHex, "hex");
 
-      const dataDecipher = crypto.createDecipherGCM(
+      const dataDecipher = crypto.createDecipheriv(
         "aes-256-gcm",
         dataLayerKey,
         dataIv,
@@ -321,16 +308,11 @@ class ProductionBlockchainService {
       userLayerData += dataDecipher.final("utf8");
 
       // Layer 1: Decrypt user layer
-      const userLayerKey = crypto
-        .createHash("sha256")
-        .update(userHash)
-        .digest();
-      const [userIvHex, userAuthTagHex, userEncrypted] =
-        userLayerData.split(":");
+      const [userIvHex, userAuthTagHex, userEncrypted] = userLayerData.split(":");
       const userIv = Buffer.from(userIvHex, "hex");
       const userAuthTag = Buffer.from(userAuthTagHex, "hex");
 
-      const userDecipher = crypto.createDecipherGCM(
+      const userDecipher = crypto.createDecipheriv(
         "aes-256-gcm",
         userLayerKey,
         userIv,
@@ -338,15 +320,12 @@ class ProductionBlockchainService {
       userDecipher.setAAD(Buffer.from("user-layer"));
       userDecipher.setAuthTag(userAuthTag);
 
-      let decryptedData = userDecipher.update(userEncrypted, "hex", "utf8");
-      decryptedData += userDecipher.final("utf8");
-
-      return JSON.parse(decryptedData);
+      let decrypted = userDecipher.update(userEncrypted, "hex", "utf8");
+      decrypted += userDecipher.final("utf8");
+      return JSON.parse(decrypted);
     } catch (error) {
-      console.error("❌ Failed to decrypt health data:", error);
-      throw new Error(
-        "Failed to decrypt health data - invalid keys or corrupted data",
-      );
+      console.error("Decryption failed:", error);
+      throw new Error("Failed to decrypt health data");
     }
   }
 

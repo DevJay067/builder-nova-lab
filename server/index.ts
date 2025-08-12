@@ -224,6 +224,8 @@ export function createServer() {
   app.post("/api/auth/data-access", createDataAccess);
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
+  // Frontend expects this route to fetch all records for the authenticated user
+  app.get("/api/auth/data-access/records", verifyDataAccess);
 
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
