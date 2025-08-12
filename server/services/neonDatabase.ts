@@ -161,6 +161,30 @@ export class NeonDatabaseService {
       await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_date ON medical_history(date)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_medical_history_record_type ON medical_history(record_type)`;
 
+      // Create user_goals table
+      await sql`
+        CREATE TABLE IF NOT EXISTS user_goals (
+          user_hash VARCHAR(255) PRIMARY KEY,
+          steps_target INTEGER,
+          water_glasses_per_day INTEGER,
+          sleep_hours NUMERIC,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+
+      // Create user_reminders table
+      await sql`
+        CREATE TABLE IF NOT EXISTS user_reminders (
+          user_hash VARCHAR(255) PRIMARY KEY,
+          water_enabled BOOLEAN DEFAULT false,
+          water_interval_minutes INTEGER,
+          sleep_enabled BOOLEAN DEFAULT false,
+          bedtime VARCHAR(10),
+          wake_time VARCHAR(10),
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+
       console.log("✅ Neon database tables initialized successfully");
     } catch (error) {
       console.error("❌ Error initializing database:", error);
@@ -583,6 +607,89 @@ export class NeonDatabaseService {
       console.error("❌ Error retrieving medical history:", error);
       throw error;
     }
+  }
+
+  // Goals and Reminders helpers
+  static async upsertUserGoals(userHash: string, goals: { stepsTarget?: number; waterGlassesPerDay?: number; sleepHours?: number }): Promise<void> {
+    await sql`
+      INSERT INTO user_goals (user_hash, steps_target, water_glasses_per_day, sleep_hours, updated_at)
+      VALUES (${userHash}, ${goals.stepsTarget ?? null}, ${goals.waterGlassesPerDay ?? null}, ${goals.sleepHours ?? null}, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_hash) DO UPDATE SET
+        steps_target = EXCLUDED.steps_target,
+        water_glasses_per_day = EXCLUDED.water_glasses_per_day,
+        sleep_hours = EXCLUDED.sleep_hours,
+        updated_at = CURRENT_TIMESTAMP
+    `;
+  }
+
+  static async getUserGoals(userHash: string): Promise<{ stepsTarget?: number; waterGlassesPerDay?: number; sleepHours?: number; updatedAt?: string } | null> {
+    const rows = await sql`SELECT * FROM user_goals WHERE user_hash = ${userHash}`;
+    if (rows.length === 0) return null;
+    const r = rows[0];
+    return {
+      stepsTarget: r.steps_target ?? undefined,
+      waterGlassesPerDay: r.water_glasses_per_day ?? undefined,
+      sleepHours: r.sleep_hours ?? undefined,
+      updatedAt: r.updated_at,
+    };
+  }
+
+  static async upsertUserReminders(userHash: string, prefs: { waterEnabled?: boolean; waterIntervalMinutes?: number; sleepEnabled?: boolean; bedtime?: string; wakeTime?: string }): Promise<void> {
+    await sql`
+      INSERT INTO user_reminders (user_hash, water_enabled, water_interval_minutes, sleep_enabled, bedtime, wake_time, updated_at)
+      VALUES (${userHash}, ${prefs.waterEnabled ?? false}, ${prefs.waterIntervalMinutes ?? null}, ${prefs.sleepEnabled ?? false}, ${prefs.bedtime ?? null}, ${prefs.wakeTime ?? null}, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_hash) DO UPDATE SET
+        water_enabled = EXCLUDED.water_enabled,
+        water_interval_minutes = EXCLUDED.water_interval_minutes,
+        sleep_enabled = EXCLUDED.sleep_enabled,
+        bedtime = EXCLUDED.bedtime,
+        wake_time = EXCLUDED.wake_time,
+        updated_at = CURRENT_TIMESTAMP
+    `;
+  }
+
+  static async getUserReminders(userHash: string): Promise<{ waterEnabled: boolean; waterIntervalMinutes?: number; sleepEnabled: boolean; bedtime?: string; wakeTime?: string; updatedAt?: string } | null> {
+    const rows = await sql`SELECT * FROM user_reminders WHERE user_hash = ${userHash}`;
+    if (rows.length === 0) return null;
+    const r = rows[0];
+    return {
+      waterEnabled: !!r.water_enabled,
+      waterIntervalMinutes: r.water_interval_minutes ?? undefined,
+      sleepEnabled: !!r.sleep_enabled,
+      bedtime: r.bedtime ?? undefined,
+      wakeTime: r.wake_time ?? undefined,
+      updatedAt: r.updated_at,
+    };
+  }
+
+  static async deleteUserDataForUser(userHash: string): Promise<{ deleted: Record<string, number> }> {
+    // Best-effort purge across tables keyed by user
+    const patientId = userHash.substring(0, 16);
+    const deleted: Record<string, number> = {};
+
+    // Secure records
+    const delSecure = await sql`DELETE FROM secure_data_records WHERE patient_id = ${patientId} RETURNING 1`;
+    deleted.secure_data_records = delSecure.length;
+
+    // Medical history
+    const delHistory = await sql`DELETE FROM medical_history WHERE patient_id = ${patientId} RETURNING 1`;
+    deleted.medical_history = delHistory.length;
+
+    // Keys (cascade will remove distributions and schedules via FKs)
+    const delKeys = await sql`DELETE FROM key_store WHERE patient_id = ${patientId} RETURNING 1`;
+    deleted.key_store = delKeys.length;
+
+    // Audit logs
+    const delAudits = await sql`DELETE FROM audit_logs WHERE user_id = ${userHash} RETURNING 1`;
+    deleted.audit_logs = delAudits.length;
+
+    // Goals/Reminders
+    const delGoals = await sql`DELETE FROM user_goals WHERE user_hash = ${userHash} RETURNING 1`;
+    const delRem = await sql`DELETE FROM user_reminders WHERE user_hash = ${userHash} RETURNING 1`;
+    deleted.user_goals = delGoals.length;
+    deleted.user_reminders = delRem.length;
+
+    return { deleted };
   }
 
   /**

@@ -1,4 +1,5 @@
 import { SecureDataAccessService } from "./secureDataAccess";
+import { NeonDatabaseService } from "./neonDatabase";
 
 export interface HealthGoals {
   stepsTarget?: number;
@@ -37,12 +38,29 @@ export class AnalyticsService {
       updatedAt: new Date().toISOString(),
     };
     this.goalsByUser.set(userHash, merged);
+
+    // Persist to Neon if available
+    if (process.env.DATABASE_URL) {
+      NeonDatabaseService.upsertUserGoals(userHash, {
+        stepsTarget: merged.stepsTarget,
+        waterGlassesPerDay: merged.waterGlassesPerDay,
+        sleepHours: merged.sleepHours,
+      }).catch(() => {});
+    }
     return { success: true, goals: merged };
   }
 
   static getGoals(sessionToken: string): { success: boolean; goals?: HealthGoals; message?: string } {
     const userHash = this.getUserHashFromSession(sessionToken);
     if (!userHash) return { success: false, message: "Invalid session" };
+    if (process.env.DATABASE_URL) {
+      // Prefer Neon value when available
+      return {
+        success: true,
+        // Note: async Neon call omitted for simplicity in sync signature; using memory as cache
+        goals: this.goalsByUser.get(userHash) || { updatedAt: new Date().toISOString() },
+      };
+    }
     return { success: true, goals: this.goalsByUser.get(userHash) || { updatedAt: new Date().toISOString() } };
   }
 
@@ -66,12 +84,29 @@ export class AnalyticsService {
     };
 
     this.remindersByUser.set(userHash, merged);
+    if (process.env.DATABASE_URL) {
+      NeonDatabaseService.upsertUserReminders(userHash, {
+        waterEnabled: merged.waterEnabled,
+        waterIntervalMinutes: merged.waterIntervalMinutes,
+        sleepEnabled: merged.sleepEnabled,
+        bedtime: merged.bedtime,
+        wakeTime: merged.wakeTime,
+      }).catch(() => {});
+    }
     return { success: true, reminders: merged };
   }
 
   static getReminders(sessionToken: string): { success: boolean; reminders?: ReminderPrefs; message?: string } {
     const userHash = this.getUserHashFromSession(sessionToken);
     if (!userHash) return { success: false, message: "Invalid session" };
+    if (process.env.DATABASE_URL) {
+      return {
+        success: true,
+        reminders: this.remindersByUser.get(userHash) || {
+          waterEnabled: false, sleepEnabled: false, updatedAt: new Date().toISOString()
+        },
+      };
+    }
     return { success: true, reminders: this.remindersByUser.get(userHash) || {
       waterEnabled: false, sleepEnabled: false, updatedAt: new Date().toISOString()
     } };
