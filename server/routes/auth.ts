@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { UserAuthenticationService } from "../services/userAuthentication";
 import { NeonDatabaseService } from "../services/neonDatabase";
+import { SecureDataAccessService } from "../services/secureDataAccess";
 
 /**
  * Register a new user with production blockchain system
@@ -111,7 +112,7 @@ export const verifySession: RequestHandler = async (req, res) => {
       const rec = await NeonDatabaseService.getSession(sessionToken).catch(() => null);
       if (rec) {
         // Reconstruct minimal session in memory
-        (UserAuthenticationService as any).userSessions?.set?.(sessionToken, {
+        (SecureDataAccessService as any).userSessions?.set?.(sessionToken, {
           username: rec.username,
           userHash: rec.userHash,
           sessionToken,
