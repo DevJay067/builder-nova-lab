@@ -196,6 +196,17 @@ export class NeonDatabaseService {
         )
       `;
 
+      // Create user_sessions table
+      await sql`
+        CREATE TABLE IF NOT EXISTS user_sessions (
+          session_token VARCHAR(255) PRIMARY KEY,
+          user_hash VARCHAR(255) NOT NULL,
+          username VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          expires_at TIMESTAMP NOT NULL
+        )
+      `;
+
       console.log("✅ Neon database tables initialized successfully");
     } catch (error) {
       console.error("❌ Error initializing database:", error);
@@ -719,6 +730,32 @@ export class NeonDatabaseService {
   static async listPushSubscriptions(userHash: string): Promise<Array<{ endpoint: string; p256dh: string; auth: string }>> {
     const rows = await sql`SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_hash = ${userHash}`;
     return rows.map((r: any) => ({ endpoint: r.endpoint, p256dh: r.p256dh, auth: r.auth }));
+  }
+
+  // Session helpers
+  static async createSession(sessionToken: string, userHash: string, username: string, ttlHours = 24): Promise<void> {
+    const expiresAt = new Date(Date.now() + ttlHours * 60 * 60 * 1000).toISOString();
+    await sql`
+      INSERT INTO user_sessions (session_token, user_hash, username, expires_at)
+      VALUES (${sessionToken}, ${userHash}, ${username}, ${expiresAt})
+      ON CONFLICT (session_token) DO UPDATE SET expires_at = EXCLUDED.expires_at
+    `;
+  }
+
+  static async getSession(sessionToken: string): Promise<{ userHash: string; username: string; expiresAt: string } | null> {
+    const rows = await sql`SELECT user_hash, username, expires_at FROM user_sessions WHERE session_token = ${sessionToken}`;
+    if (rows.length === 0) return null;
+    const r = rows[0];
+    return { userHash: r.user_hash, username: r.username, expiresAt: r.expires_at };
+  }
+
+  static async deleteSession(sessionToken: string): Promise<void> {
+    await sql`DELETE FROM user_sessions WHERE session_token = ${sessionToken}`;
+  }
+
+  static async cleanupExpiredSessions(): Promise<number> {
+    const rows = await sql`DELETE FROM user_sessions WHERE expires_at < NOW() RETURNING 1`;
+    return rows.length;
   }
 
   /**

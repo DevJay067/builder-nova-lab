@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import { UserAuthenticationService } from "../services/userAuthentication";
+import { NeonDatabaseService } from "../services/neonDatabase";
 
 /**
  * Register a new user with production blockchain system
@@ -104,7 +105,20 @@ export const verifySession: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = UserAuthenticationService.verifySession(sessionToken);
+    let result = UserAuthenticationService.verifySession(sessionToken);
+    if (!result.valid && process.env.DATABASE_URL) {
+      // Try to hydrate from Neon
+      const rec = await NeonDatabaseService.getSession(sessionToken).catch(() => null);
+      if (rec) {
+        // Reconstruct minimal session in memory
+        (UserAuthenticationService as any).userSessions?.set?.(sessionToken, {
+          username: rec.username,
+          userHash: rec.userHash,
+          sessionToken,
+        });
+        result = UserAuthenticationService.verifySession(sessionToken);
+      }
+    }
 
     if (result.valid) {
       res.json({

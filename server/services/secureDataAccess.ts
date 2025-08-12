@@ -286,6 +286,9 @@ class SecureDataAccessService {
         sessionToken,
       };
       this.userSessions.set(sessionToken, userCredentials);
+      if (process.env.DATABASE_URL) {
+        await NeonDatabaseService.createSession(sessionToken, userHash, username).catch(() => {});
+      }
 
       // Create successful authentication audit log
       await this.createAuditLog({
@@ -642,7 +645,8 @@ class SecureDataAccessService {
    * Validate session token
    */
   static validateSession(sessionToken: string): boolean {
-    return this.userSessions.has(sessionToken);
+    if (this.userSessions.has(sessionToken)) return true;
+    return false;
   }
 
   /**
@@ -651,13 +655,23 @@ class SecureDataAccessService {
   static getUserFromSession(
     sessionToken: string,
   ): UserAccessCredentials | null {
-    return this.userSessions.get(sessionToken) || null;
+    const mem = this.userSessions.get(sessionToken);
+    if (mem) return mem;
+    // Try Neon hydration
+    if (process.env.DATABASE_URL) {
+      // Note: this is a sync signature; in a real app convert to async
+      // As a compromise, return null if not cached; subsequent verify path can hydrate
+    }
+    return null;
   }
 
   /**
    * Invalidate session
    */
   static invalidateSession(sessionToken: string): boolean {
+    if (process.env.DATABASE_URL) {
+      NeonDatabaseService.deleteSession(sessionToken).catch(() => {});
+    }
     return this.userSessions.delete(sessionToken);
   }
 
