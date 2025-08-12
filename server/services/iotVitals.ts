@@ -7,6 +7,8 @@ export interface VitalsPayload {
   oxygenSaturation: number;
   respiratoryRate: number;
   timestamp: string;
+  steps?: number;
+  battery?: number; // percentage 0-100
 }
 
 /**
@@ -30,6 +32,8 @@ export class IoTVitalsService {
       oxygenSaturation: payload.oxygenSaturation ?? this.latest.oxygenSaturation,
       respiratoryRate: payload.respiratoryRate ?? this.latest.respiratoryRate,
       timestamp: payload.timestamp ?? now,
+      steps: payload.steps ?? this.latest.steps,
+      battery: payload.battery ?? this.latest.battery,
     };
     this.latest = next;
     this.broadcast(next);
@@ -78,6 +82,8 @@ export class IoTVitalsService {
       oxygenSaturation: randomInt(97, 101),
       respiratoryRate: randomInt(14, 21),
       timestamp: now,
+      steps: randomInt(0, 200),
+      battery: randomInt(30, 101),
     };
   }
 }

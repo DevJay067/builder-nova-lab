@@ -51,6 +51,8 @@ interface VitalSigns {
   oxygenSaturation: number;
   respiratoryRate: number;
   timestamp: string;
+  steps?: number;
+  battery?: number;
 }
 
 interface Device {
@@ -157,15 +159,20 @@ export default function RealTimeMonitoring() {
             temperature: newVitals.temperature,
             oxygenSat: newVitals.oxygenSaturation,
             systolic: newVitals.bloodPressure.systolic,
+            steps: newVitals.steps ?? 0,
           },
         ].slice(-20),
       );
-      if (newVitals.heartRate > 100) {
+      // Critical alert detection (simplified)
+      const hr = newVitals.heartRate;
+      const bpSys = newVitals.bloodPressure.systolic;
+      const spo2 = newVitals.oxygenSaturation;
+      if (hr > 120 || bpSys > 160 || spo2 < 92) {
         setAlerts((prev) => [
           {
             id: Date.now(),
             type: "warning",
-            message: `Heart rate spike detected: ${newVitals.heartRate} BPM`,
+            message: `Unusual vitals detected (HR:${hr} BPM, BP:${bpSys} mmHg, SpO2:${spo2}%)`,
             timestamp: "Just now",
             severity: "high",
           },
@@ -232,6 +239,8 @@ export default function RealTimeMonitoring() {
             oxygenSaturation: vitalSigns.oxygenSaturation,
             respiratoryRate: vitalSigns.respiratoryRate,
             timestamp: now.toISOString(),
+            steps: vitalSigns.steps,
+            battery: vitalSigns.battery,
           };
           setVitalSigns(vitals);
         });
@@ -239,6 +248,14 @@ export default function RealTimeMonitoring() {
       } catch {
         toast.message("Connected via Bluetooth (generic). Using SSE stream for data.");
       }
+      // Optional: parse battery service if available
+      try {
+        const battService = await server.getPrimaryService(0x180f);
+        const battChar = await battService.getCharacteristic(0x2a19);
+        const battValue = await battChar.readValue();
+        const battery = battValue.getUint8(0);
+        setVitalSigns((prev) => ({ ...prev, battery }));
+      } catch {}
     } catch (e) {
       toast.error("Bluetooth connection failed. Starting mock data.");
       await fetch("/api/vitals/mock/start", { method: "POST" });
@@ -568,6 +585,14 @@ export default function RealTimeMonitoring() {
                         strokeWidth={2}
                         dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
                         name="Systolic BP (mmHg)"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="steps"
+                        stroke="#8b5cf6"
+                        strokeWidth={2}
+                        dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 4 }}
+                        name="Steps"
                       />
                     </LineChart>
                   </ResponsiveContainer>
