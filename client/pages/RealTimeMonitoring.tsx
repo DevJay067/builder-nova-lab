@@ -137,6 +137,7 @@ export default function RealTimeMonitoring() {
 
   const [bluetoothSupported, setBluetoothSupported] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const [btDeviceName, setBtDeviceName] = useState<string | null>(null);
 
   // Real-time updates via SSE with fallback to local simulation
   useEffect(() => {
@@ -209,6 +210,7 @@ export default function RealTimeMonitoring() {
         acceptAllDevices: true,
         optionalServices: ["heart_rate"],
       });
+      setBtDeviceName(device?.name || "Bluetooth Device");
       const server = await device.gatt.connect();
       // Try Heart Rate Service if available
       try {
@@ -243,6 +245,13 @@ export default function RealTimeMonitoring() {
     } finally {
       setIsConnecting(false);
     }
+  }
+
+  async function forgetBluetoothDevice() {
+    try {
+      setBtDeviceName(null);
+      toast.message("Bluetooth device unpaired. Using SSE/mock data.");
+    } catch {}
   }
 
   function startLocalSimulation(cb: (v: VitalSigns) => void) {
@@ -323,6 +332,12 @@ export default function RealTimeMonitoring() {
               <Button variant="outline" size="sm" onClick={connectBluetoothDevice} disabled={isConnecting}>
                 {isConnecting ? "Connecting..." : bluetoothSupported ? "Connect Bluetooth" : "Start Mock"}
               </Button>
+              {btDeviceName && (
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="text-slate-600">{btDeviceName}</Badge>
+                  <Button variant="ghost" size="sm" onClick={forgetBluetoothDevice}>Unpair</Button>
+                </div>
+              )}
               <Badge
                 variant="secondary"
                 className="bg-green-50 text-green-700 border-green-200"

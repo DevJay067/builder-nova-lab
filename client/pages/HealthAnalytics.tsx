@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,8 +39,8 @@ export default function HealthAnalytics() {
       const sessionToken = localStorage.getItem("sessionToken");
       if (!sessionToken) return;
       const [g, r] = await Promise.all([
-        fetch("/api/analytics/goals", { headers: { Authorization: `Bearer ${sessionToken}` } }).then((r) => r.json()),
-        fetch("/api/analytics/reminders", { headers: { Authorization: `Bearer ${sessionToken}` } }).then((r) => r.json()),
+        fetch("/api/analytics/goals", { headers: { Authorization: `Bearer ${sessionToken}`, "x-session-token": sessionToken } }).then((r) => r.json()),
+        fetch("/api/analytics/reminders", { headers: { Authorization: `Bearer ${sessionToken}`, "x-session-token": sessionToken } }).then((r) => r.json()),
       ]);
       if (g.success && g.goals) setGoals({
         stepsTarget: g.goals.stepsTarget ?? goals.stepsTarget,
@@ -57,6 +57,10 @@ export default function HealthAnalytics() {
     } catch {}
   }
 
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
   async function saveGoals() {
     try {
       setIsSaving(true);
@@ -64,7 +68,7 @@ export default function HealthAnalytics() {
       if (!sessionToken) return toast.error("Please login to save goals");
       const res = await fetch("/api/analytics/goals", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}`, "x-session-token": sessionToken },
         body: JSON.stringify(goals),
       });
       const data = await res.json();
@@ -83,7 +87,7 @@ export default function HealthAnalytics() {
       if (!sessionToken) return toast.error("Please login to save reminders");
       const res = await fetch("/api/analytics/reminders", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}`, "x-session-token": sessionToken },
         body: JSON.stringify(reminders),
       });
       const data = await res.json();
