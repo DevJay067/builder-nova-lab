@@ -33,6 +33,7 @@ export default function HealthAnalytics() {
   const [isSaving, setIsSaving] = useState(false);
   const [goals, setGoals] = useState({ stepsTarget: 10000, waterGlassesPerDay: 8, sleepHours: 8 });
   const [reminders, setReminders] = useState({ waterEnabled: false, waterIntervalMinutes: 120, sleepEnabled: false, bedtime: "23:00", wakeTime: "07:00" });
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   async function loadSettings() {
     try {
@@ -61,6 +62,26 @@ export default function HealthAnalytics() {
     loadSettings();
   }, []);
 
+  async function ensurePushSubscription() {
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        // Application Server Key should be provided for VAPID; placeholder here
+        const vapidPublicKey = (window as any).VAPID_PUBLIC_KEY || undefined;
+        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidPublicKey });
+      }
+      const sessionToken = localStorage.getItem("sessionToken");
+      if (!sessionToken || !sub) return;
+      await fetch("/api/analytics/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}`, "x-session-token": sessionToken },
+        body: JSON.stringify(sub.toJSON()),
+      });
+    } catch {}
+  }
+
   async function saveGoals() {
     try {
       setIsSaving(true);
@@ -72,7 +93,11 @@ export default function HealthAnalytics() {
         body: JSON.stringify(goals),
       });
       const data = await res.json();
-      if (data.success) toast.success("Goals saved"); else toast.error(data.message || "Failed to save goals");
+      if (data.success) {
+        toast.success("Goals saved");
+        setSavedMessage("Goals updated successfully");
+        await ensurePushSubscription();
+      } else toast.error(data.message || "Failed to save goals");
     } catch {
       toast.error("Network error");
     } finally {
@@ -91,7 +116,11 @@ export default function HealthAnalytics() {
         body: JSON.stringify(reminders),
       });
       const data = await res.json();
-      if (data.success) toast.success("Reminders saved"); else toast.error(data.message || "Failed to save reminders");
+      if (data.success) {
+        toast.success("Reminders saved");
+        setSavedMessage("Reminders updated successfully");
+        await ensurePushSubscription();
+      } else toast.error(data.message || "Failed to save reminders");
     } catch {
       toast.error("Network error");
     } finally {
@@ -262,6 +291,11 @@ export default function HealthAnalytics() {
             <CardDescription>Set personal targets and wellness reminders</CardDescription>
           </CardHeader>
           <CardContent>
+            {savedMessage && (
+              <div className="mb-4 p-3 rounded-lg bg-green-50 text-green-700 border border-green-200 text-sm">
+                {savedMessage}
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="font-semibold mb-3">Goals</h3>

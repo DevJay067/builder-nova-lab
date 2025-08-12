@@ -185,6 +185,17 @@ export class NeonDatabaseService {
         )
       `;
 
+      // Create push_subscriptions table
+      await sql`
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+          user_hash VARCHAR(255) NOT NULL,
+          endpoint TEXT PRIMARY KEY,
+          p256dh TEXT NOT NULL,
+          auth TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+
       console.log("✅ Neon database tables initialized successfully");
     } catch (error) {
       console.error("❌ Error initializing database:", error);
@@ -689,7 +700,25 @@ export class NeonDatabaseService {
     deleted.user_goals = delGoals.length;
     deleted.user_reminders = delRem.length;
 
+    // Push subscriptions
+    const delSubs = await sql`DELETE FROM push_subscriptions WHERE user_hash = ${userHash} RETURNING 1`;
+    deleted.push_subscriptions = delSubs.length;
+
     return { deleted };
+  }
+
+  // Push subscription helpers
+  static async upsertPushSubscription(userHash: string, sub: { endpoint: string; p256dh: string; auth: string }): Promise<void> {
+    await sql`
+      INSERT INTO push_subscriptions (user_hash, endpoint, p256dh, auth)
+      VALUES (${userHash}, ${sub.endpoint}, ${sub.p256dh}, ${sub.auth})
+      ON CONFLICT (endpoint) DO UPDATE SET user_hash = EXCLUDED.user_hash, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth
+    `;
+  }
+
+  static async listPushSubscriptions(userHash: string): Promise<Array<{ endpoint: string; p256dh: string; auth: string }>> {
+    const rows = await sql`SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_hash = ${userHash}`;
+    return rows.map((r: any) => ({ endpoint: r.endpoint, p256dh: r.p256dh, auth: r.auth }));
   }
 
   /**
