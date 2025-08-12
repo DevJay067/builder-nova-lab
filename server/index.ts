@@ -141,6 +141,9 @@ export function createServer() {
   const app = express();
 
   // Middleware
+  // Trust proxy for secure cookies and correct protocol detection (e.g., behind Netlify/NGINX)
+  app.set("trust proxy", 1);
+
   const allowedOrigins = [
     /^(http:\/\/|https:\/\/)localhost(:\d+)?$/,
     /^(http:\/\/|https:\/\/)127\.0\.0\.1(:\d+)?$/,
@@ -150,8 +153,8 @@ export function createServer() {
       origin: (origin, cb) => {
         if (!origin) return cb(null, true);
         if (process.env.NODE_ENV === "production") {
-          // In production allow same-origin only
-          return cb(null, true);
+          // In production, disable cross-origin requests
+          return cb(null, false);
         }
         if (allowedOrigins.some((re) => re.test(origin))) return cb(null, true);
         return cb(null, false);
@@ -168,8 +171,8 @@ export function createServer() {
     }),
   );
   app.use(cookieParser());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
   // Minimal hardening headers (subset of helmet)
   app.disable("x-powered-by");
@@ -178,6 +181,9 @@ export function createServer() {
     res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("Referrer-Policy", "no-referrer");
+    if (process.env.NODE_ENV === "production") {
+      res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+    }
     next();
   });
 
