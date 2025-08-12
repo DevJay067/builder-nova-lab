@@ -51,6 +51,13 @@ import {
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import {
+  streamVitals,
+  getLatestVitals,
+  updateVitals,
+  startMock,
+  stopMock,
+} from "./routes/iot";
 
 export function createServer() {
   // Initialize secure database on server startup
@@ -231,6 +238,13 @@ export function createServer() {
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
+
+  // IoT Vitals Streaming and Control
+  app.get("/api/vitals/stream", streamVitals);
+  app.get("/api/health/vitals", getLatestVitals);
+  app.post("/api/vitals/update", updateVitals);
+  app.post("/api/vitals/mock/start", startMock);
+  app.post("/api/vitals/mock/stop", stopMock);
 
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {

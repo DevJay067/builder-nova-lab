@@ -134,27 +134,16 @@ export default function RealTimeMonitoring() {
     },
   ]);
 
-  // Simulate real-time data updates
+  // Real-time updates via SSE with fallback to local simulation
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const newVitals: VitalSigns = {
-        heartRate: Math.floor(Math.random() * 20) + 65, // 65-85 BPM
-        bloodPressure: {
-          systolic: Math.floor(Math.random() * 20) + 110, // 110-130
-          diastolic: Math.floor(Math.random() * 15) + 70, // 70-85
-        },
-        temperature: Math.random() * 2 + 97.5, // 97.5-99.5°F
-        oxygenSaturation: Math.floor(Math.random() * 3) + 97, // 97-100%
-        respiratoryRate: Math.floor(Math.random() * 6) + 14, // 14-20 per minute
-        timestamp: now.toISOString(),
-      };
+    let fallbackInterval: any;
+    let es: EventSource | null = null;
 
+    const handleVitals = (newVitals: VitalSigns) => {
+      const now = new Date(newVitals.timestamp);
       setVitalSigns(newVitals);
-
-      // Update history (keep last 20 readings)
-      setVitalsHistory((prev) => {
-        const newHistory = [
+      setVitalsHistory((prev) =>
+        [
           ...prev,
           {
             time: now.toLocaleTimeString(),
@@ -163,12 +152,9 @@ export default function RealTimeMonitoring() {
             oxygenSat: newVitals.oxygenSaturation,
             systolic: newVitals.bloodPressure.systolic,
           },
-        ].slice(-20);
-        return newHistory;
-      });
-
-      // Simulate alert generation
-      if (newVitals.heartRate > 100 && Math.random() > 0.8) {
+        ].slice(-20),
+      );
+      if (newVitals.heartRate > 100) {
         setAlerts((prev) => [
           {
             id: Date.now(),
@@ -177,13 +163,51 @@ export default function RealTimeMonitoring() {
             timestamp: "Just now",
             severity: "high",
           },
-          ...prev.slice(0, 4), // Keep only 5 most recent alerts
+          ...prev.slice(0, 4),
         ]);
       }
-    }, 3000); // Update every 3 seconds
+    };
 
-    return () => clearInterval(interval);
+    try {
+      es = new EventSource("/api/vitals/stream");
+      es.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data);
+          if (data && data.heartRate) handleVitals(data);
+        } catch {}
+      };
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        // Fallback to local simulation
+        fallbackInterval = startLocalSimulation(handleVitals);
+      };
+    } catch {
+      fallbackInterval = startLocalSimulation(handleVitals);
+    }
+
+    return () => {
+      if (es) es.close();
+      if (fallbackInterval) clearInterval(fallbackInterval);
+    };
   }, []);
+
+  function startLocalSimulation(cb: (v: VitalSigns) => void) {
+    return setInterval(() => {
+      const now = new Date();
+      cb({
+        heartRate: Math.floor(Math.random() * 20) + 65,
+        bloodPressure: {
+          systolic: Math.floor(Math.random() * 20) + 110,
+          diastolic: Math.floor(Math.random() * 15) + 70,
+        },
+        temperature: Math.random() * 2 + 97.5,
+        oxygenSaturation: Math.floor(Math.random() * 3) + 97,
+        respiratoryRate: Math.floor(Math.random() * 6) + 14,
+        timestamp: now.toISOString(),
+      });
+    }, 3000);
+  }
 
   const getVitalStatus = (type: string, value: number) => {
     switch (type) {
