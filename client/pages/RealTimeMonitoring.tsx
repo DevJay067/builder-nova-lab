@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -144,6 +144,9 @@ export default function RealTimeMonitoring() {
   const [btDeviceName, setBtDeviceName] = useState<string | null>(null);
   const [useMock, setUseMock] = useState<boolean>(false);
   const [isMockRunning, setIsMockRunning] = useState<boolean>(false);
+  const [dataSource, setDataSource] = useState<"sse" | "mock" | "ble">("sse");
+  const esRef = useRef<EventSource | null>(null);
+  const simRef = useRef<any>(null);
 
   // Real-time updates via SSE with fallback to local simulation
   useEffect(() => {
@@ -187,7 +190,9 @@ export default function RealTimeMonitoring() {
 
     try {
       es = new EventSource("/api/vitals/stream");
+      esRef.current = es;
       es.onmessage = (evt) => {
+        if (dataSource !== "sse") return; // ignore when not using SSE
         try {
           const data = JSON.parse(evt.data);
           if (data && data.heartRate) handleVitals(data);
@@ -196,18 +201,24 @@ export default function RealTimeMonitoring() {
       es.onerror = () => {
         es?.close();
         es = null;
-        // Fallback to local simulation
-        fallbackInterval = startLocalSimulation(handleVitals);
+        if (dataSource === "sse") {
+          // Fallback to local simulation
+          fallbackInterval = startLocalSimulation(handleVitals);
+          simRef.current = fallbackInterval;
+        }
       };
     } catch {
-      fallbackInterval = startLocalSimulation(handleVitals);
+      if (dataSource === "sse") {
+        fallbackInterval = startLocalSimulation(handleVitals);
+        simRef.current = fallbackInterval;
+      }
     }
 
     return () => {
       if (es) es.close();
       if (fallbackInterval) clearInterval(fallbackInterval);
     };
-  }, []);
+  }, [dataSource]);
 
   async function connectBluetoothDevice() {
     if (!(navigator as any).bluetooth) {
@@ -217,6 +228,16 @@ export default function RealTimeMonitoring() {
     }
     try {
       setIsConnecting(true);
+      setDataSource("ble");
+      // Stop SSE and simulation
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+      if (simRef.current) {
+        clearInterval(simRef.current);
+        simRef.current = null;
+      }
       const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
         optionalServices: [
@@ -225,10 +246,16 @@ export default function RealTimeMonitoring() {
           0x1809, // health thermometer
           0x1822, // pulse oximeter
           0x180f, // battery service
+         0x1814, // running speed and cadence (steps estimate)
         ],
       });
       setBtDeviceName(device?.name || "Bluetooth Device");
       const server = await device.gatt.connect();
+      device.addEventListener("gattserverdisconnected", () => {
+        setBtDeviceName(null);
+        setDataSource("sse");
+        toast.message("Device disconnected. Resuming SSE");
+      });
 
       // Try Heart Rate Service if available
       try {
@@ -265,8 +292,7 @@ export default function RealTimeMonitoring() {
         await bpChar.startNotifications();
         bpChar.addEventListener("characteristicvaluechanged", (event: any) => {
           const dv = event.target.value as DataView;
-          // Simplified parse (systolic first float32 or SFLOAT depending on flags). Use fallback parse.
-          // Many devices send mmHg as SFLOAT in 2 bytes; for demo, read Uint8 positions.
+          // Simplified parse
           const systolic = dv.getUint8(1) || vitalSigns.bloodPressure.systolic;
           const diastolic = dv.getUint8(3) || vitalSigns.bloodPressure.diastolic;
           setVitalSigns((prev) => ({
@@ -284,13 +310,12 @@ export default function RealTimeMonitoring() {
         await tChar.startNotifications();
         tChar.addEventListener("characteristicvaluechanged", (event: any) => {
           const dv = event.target.value as DataView;
-          // Temperature in Celsius may be IEEE-11073 FLOAT; for demo, approximate from bytes
           const temp = 35 + (dv.getUint8(1) % 6) + Math.random();
           setVitalSigns((prev) => ({ ...prev, temperature: temp, timestamp: new Date().toISOString() }));
         });
       } catch {}
 
-      // Pulse Oximeter (0x1822) -> PLX Spot-check (0x2A5F) or Continuous (0x2A60)
+      // Pulse Oximeter (0x1822)
       try {
         const oxService = await server.getPrimaryService(0x1822);
         const plxChar = await oxService.getCharacteristic(0x2a60).catch(() => oxService.getCharacteristic(0x2a5f));
@@ -299,6 +324,22 @@ export default function RealTimeMonitoring() {
           const dv = event.target.value as DataView;
           const spo2 = dv.getUint8(1) || vitalSigns.oxygenSaturation;
           setVitalSigns((prev) => ({ ...prev, oxygenSaturation: spo2, timestamp: new Date().toISOString() }));
+        });
+      } catch {}
+
+      // Running Speed and Cadence (0x1814) -> RSC Measurement (0x2A53)
+      try {
+        const rscService = await server.getPrimaryService(0x1814);
+        const rscChar = await rscService.getCharacteristic(0x2a53);
+        await rscChar.startNotifications();
+        rscChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const dv = event.target.value as DataView;
+          const cadence = dv.getUint8(1) || 0; // very simplified
+          setVitalSigns((prev) => ({
+            ...prev,
+            steps: (prev.steps || 0) + Math.max(1, Math.round(cadence / 2)),
+            timestamp: new Date().toISOString(),
+          }));
         });
       } catch {}
 
@@ -321,6 +362,7 @@ export default function RealTimeMonitoring() {
   async function forgetBluetoothDevice() {
     try {
       setBtDeviceName(null);
+      setDataSource("sse");
       toast.message("Bluetooth device unpaired. Using SSE/mock data.");
     } catch {}
   }
@@ -330,6 +372,7 @@ export default function RealTimeMonitoring() {
       await fetch("/api/vitals/mock/start", { method: "POST" });
       setIsMockRunning(true);
       setUseMock(true);
+      setDataSource("mock");
       toast.success("Mock data started");
     } catch {}
   }
@@ -339,6 +382,7 @@ export default function RealTimeMonitoring() {
       await fetch("/api/vitals/mock/stop", { method: "POST" });
       setIsMockRunning(false);
       setUseMock(false);
+      setDataSource("sse");
       toast.message("Mock data stopped");
     } catch {}
   }
@@ -697,48 +741,30 @@ export default function RealTimeMonitoring() {
                 <CardDescription>IoT health monitoring devices</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {connectedDevices.map((device) => {
-                  const IconComponent = device.icon;
-                  return (
-                    <div
-                      key={device.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`p-2 rounded-lg ${
-                            device.status === "connected"
-                              ? "bg-green-100 text-green-600"
-                              : device.status === "syncing"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          <IconComponent className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{device.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {device.lastSync}
-                          </p>
-                        </div>
+                {btDeviceName ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-green-100 text-green-600">
+                        <Smartphone className="w-4 h-4" />
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="text-xs text-muted-foreground">
-                          {device.battery}%
-                        </div>
-                        <Progress value={device.battery} className="w-12 h-2" />
-                        {device.status === "connected" ? (
-                          <Wifi className="w-4 h-4 text-green-600" />
-                        ) : device.status === "syncing" ? (
-                          <Zap className="w-4 h-4 text-yellow-600 animate-pulse" />
-                        ) : (
-                          <WifiOff className="w-4 h-4 text-red-600" />
-                        )}
+                      <div>
+                        <p className="font-medium text-sm">{btDeviceName}</p>
+                        <p className="text-xs text-muted-foreground">Connected</p>
                       </div>
                     </div>
-                  );
-                })}
+                    <div className="flex items-center space-x-2">
+                      {typeof vitalSigns.battery === "number" && (
+                        <>
+                          <div className="text-xs text-muted-foreground">{vitalSigns.battery}%</div>
+                          <Progress value={vitalSigns.battery} className="w-12 h-2" />
+                        </>
+                      )}
+                      <Wifi className="w-4 h-4 text-green-600" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">No device connected</div>
+                )}
                 {typeof vitalSigns.battery === "number" && (
                   <div className="p-3 rounded-lg bg-gray-50 flex items-center justify-between">
                     <div className="text-sm">Watch Battery</div>
