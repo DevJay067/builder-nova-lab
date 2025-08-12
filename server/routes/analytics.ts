@@ -13,7 +13,14 @@ export const setGoals: RequestHandler = async (req, res) => {
 export const getGoals: RequestHandler = async (req, res) => {
   const sessionToken = (req.headers.authorization?.replace("Bearer ", "") || req.headers["x-session-token"]) as string;
   if (!sessionToken) return res.status(401).json({ success: false, message: "Auth required" });
-  res.json(AnalyticsService.getGoals(sessionToken));
+  try {
+    const userHash = (AnalyticsService as any).getUserHashFromSession(sessionToken);
+    if (process.env.DATABASE_URL && userHash) {
+      const g = await NeonDatabaseService.getUserGoals(userHash).catch(() => null);
+      if (g) return res.json({ success: true, goals: { stepsTarget: g.stepsTarget, waterGlassesPerDay: g.waterGlassesPerDay, sleepHours: g.sleepHours, updatedAt: g.updatedAt || new Date().toISOString() } });
+    }
+  } catch {}
+  return res.json(AnalyticsService.getGoals(sessionToken));
 };
 
 export const setReminders: RequestHandler = async (req, res) => {
@@ -27,7 +34,14 @@ export const setReminders: RequestHandler = async (req, res) => {
 export const getReminders: RequestHandler = async (req, res) => {
   const sessionToken = (req.headers.authorization?.replace("Bearer ", "") || req.headers["x-session-token"]) as string;
   if (!sessionToken) return res.status(401).json({ success: false, message: "Auth required" });
-  res.json(AnalyticsService.getReminders(sessionToken));
+  try {
+    const userHash = (AnalyticsService as any).getUserHashFromSession(sessionToken);
+    if (process.env.DATABASE_URL && userHash) {
+      const r = await NeonDatabaseService.getUserReminders(userHash).catch(() => null);
+      if (r) return res.json({ success: true, reminders: { waterEnabled: r.waterEnabled, waterIntervalMinutes: r.waterIntervalMinutes, sleepEnabled: r.sleepEnabled, bedtime: r.bedtime, wakeTime: r.wakeTime, updatedAt: r.updatedAt || new Date().toISOString() } });
+    }
+  } catch {}
+  return res.json(AnalyticsService.getReminders(sessionToken));
 };
 
 export const deleteAllMyData: RequestHandler = async (req, res) => {
