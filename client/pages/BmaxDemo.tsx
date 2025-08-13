@@ -21,6 +21,8 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle,
+  Image as ImageIcon,
+  Upload,
 } from "lucide-react";
 
 interface QueryEnhancement {
@@ -37,6 +39,11 @@ export default function BmaxDemo() {
   const [enhancement, setEnhancement] = useState<QueryEnhancement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [imageResult, setImageResult] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageModality, setImageModality] = useState("Chest X-ray");
+  const [imageNotes, setImageNotes] = useState("");
 
   useEffect(() => {
     checkAuthentication();
@@ -102,6 +109,37 @@ export default function BmaxDemo() {
       console.error("Error enhancing query:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const onSelectFile = async (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageDataUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const analyzeImage = async () => {
+    if (!imageDataUrl) return;
+    setImageLoading(true);
+    setImageResult(null);
+    try {
+      const response = await fetch("/api/ai/image/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataUrl, modality: imageModality, notes: imageNotes }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setImageResult(data.result);
+      } else {
+        setImageResult(`Error: ${data.error || "failed to analyze"}`);
+      }
+    } catch (e: any) {
+      setImageResult(`Error: ${e.message}`);
+    } finally {
+      setImageLoading(false);
     }
   };
 
@@ -212,6 +250,76 @@ export default function BmaxDemo() {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Image Analysis (Non‑diagnostic) */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <ImageIcon className="h-5 w-5 mr-2" />
+              Medical Image Insight (Non‑diagnostic)
+            </CardTitle>
+            <CardDescription>
+              Upload a medical image or select one from your records to get a plain‑language, non‑diagnostic summary.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-3 gap-3">
+              <div className="md:col-span-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => e.target.files?.[0] && onSelectFile(e.target.files[0])}
+                />
+              </div>
+              <div>
+                <select
+                  className="w-full border rounded px-2 py-2 text-sm bg-background"
+                  value={imageModality}
+                  onChange={(e) => setImageModality(e.target.value)}
+                >
+                  <option>Chest X-ray</option>
+                  <option>Brain MRI</option>
+                  <option>CT</option>
+                  <option>Ultrasound</option>
+                  <option>Skin</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <Input
+              placeholder="Optional notes (symptoms, context, ROI)"
+              value={imageNotes}
+              onChange={(e) => setImageNotes(e.target.value)}
+            />
+
+            {imageDataUrl && (
+              <div className="border rounded p-2">
+                <img src={imageDataUrl} alt="preview" className="max-h-64 object-contain mx-auto" />
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button onClick={analyzeImage} disabled={!imageDataUrl || imageLoading}>
+                {imageLoading ? "Analyzing..." : (
+                  <span className="inline-flex items-center"><Upload className="h-4 w-4 mr-2"/>Analyze</span>
+                )}
+              </Button>
+              <span className="text-xs text-muted-foreground self-center">
+                Non‑diagnostic educational output only
+              </span>
+            </div>
+
+            {imageResult && (
+              <div className="mt-3">
+                <p className="text-xs text-muted-foreground mb-1">Result (non‑diagnostic):</p>
+                <div className="border rounded p-3 text-sm whitespace-pre-wrap">
+                  {imageResult}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

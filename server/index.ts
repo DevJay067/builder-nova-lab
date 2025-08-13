@@ -51,6 +51,7 @@ import {
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import { analyzeMedicalImage } from "./routes/aiImage";
 
 export function createServer() {
   // Initialize secure database on server startup
@@ -229,6 +230,9 @@ export function createServer() {
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
+
+  // AI Image Analysis (non-diagnostic)
+  app.post("/api/ai/image/analyze", analyzeMedicalImage);
 
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
