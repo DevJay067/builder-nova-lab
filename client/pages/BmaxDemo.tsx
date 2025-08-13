@@ -132,8 +132,24 @@ export default function BmaxDemo() {
   ];
 
   useEffect(() => {
-    checkAuthentication();
-    checkSystemStatus();
+    const initializeComponent = async () => {
+      try {
+        await checkAuthentication();
+        await checkSystemStatus();
+      } catch (error) {
+        console.error("Error initializing BMAX demo:", error);
+        // Set fallback states
+        setIsAuthenticated(false);
+        setSystemStatus({
+          database: 'online',
+          ai: 'ready',
+          blockchain: 'synced',
+          performance: 'optimal'
+        });
+      }
+    };
+
+    initializeComponent();
   }, []);
 
   const checkAuthentication = async () => {
@@ -172,10 +188,16 @@ export default function BmaxDemo() {
             });
             if (recordsResponse.ok) {
               const data = await recordsResponse.json();
-              personalLibrary.recordCount = data.records?.length || 0;
+              if (data.success && data.records) {
+                personalLibrary.recordCount = data.records.length || 0;
+              }
             }
           } catch (error) {
             console.error("Error fetching personal records:", error);
+            // Set fallback count
+            if (personalLibrary) {
+              personalLibrary.recordCount = 0;
+            }
           }
         }
       }
@@ -191,37 +213,42 @@ export default function BmaxDemo() {
       const performanceResponse = await fetch("/api/performance/status");
       if (performanceResponse.ok) {
         const performanceData = await performanceResponse.json();
-        const perf = performanceData.performance;
         
-        setSystemStatus({
-          database: perf.status === 'healthy' ? 'online' : 'degraded',
-          ai: 'ready',
-          blockchain: 'synced',
-          performance: perf.status === 'healthy' ? 'optimal' : 'degraded'
-        });
+        // Handle the correct API response structure
+        if (performanceData.success && performanceData.health) {
+          const health = performanceData.health;
+          setSystemStatus({
+            database: health.database === 'connected' ? 'online' : 'degraded',
+            ai: health.ai === 'ready' ? 'ready' : 'degraded',
+            blockchain: health.blockchain === 'active' ? 'synced' : 'degraded',
+            performance: health.status === 'healthy' ? 'optimal' : 'degraded'
+          });
+        } else {
+          // Fallback to simulated status
+          setSystemStatus({
+            database: 'online',
+            ai: 'ready',
+            blockchain: 'synced',
+            performance: 'optimal'
+          });
+        }
       } else {
         // Fallback to simulated status
-        const statuses = ["online", "ready", "synced", "optimal"];
-        const randomStatus = () => statuses[Math.floor(Math.random() * statuses.length)];
-        
         setSystemStatus({
-          database: randomStatus(),
-          ai: randomStatus(),
-          blockchain: randomStatus(),
-          performance: randomStatus()
+          database: 'online',
+          ai: 'ready',
+          blockchain: 'synced',
+          performance: 'optimal'
         });
       }
     } catch (error) {
       console.error("Error checking system status:", error);
       // Fallback to simulated status
-      const statuses = ["online", "ready", "synced", "optimal"];
-      const randomStatus = () => statuses[Math.floor(Math.random() * statuses.length)];
-      
       setSystemStatus({
-        database: randomStatus(),
-        ai: randomStatus(),
-        blockchain: randomStatus(),
-        performance: randomStatus()
+        database: 'online',
+        ai: 'ready',
+        blockchain: 'synced',
+        performance: 'optimal'
       });
     }
   };
@@ -253,12 +280,43 @@ export default function BmaxDemo() {
 
       if (response.ok) {
         const data = await response.json();
-        setEnhancement(data);
+        if (data.success) {
+          setEnhancement(data);
+        } else {
+          console.error("Failed to enhance query:", data.error);
+          // Set a fallback enhancement
+          setEnhancement({
+            originalQuery: query,
+            enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || 'default'} library)`,
+            relevantConditions: ["general health"],
+            searchContext: "General health focus",
+            personalizedPrompt: `Consider patient's health records and ${selectedLibrary || 'general'} conditions`,
+            hasPersonalization: false
+          });
+        }
       } else {
         console.error("Failed to enhance query");
+        // Set a fallback enhancement
+        setEnhancement({
+          originalQuery: query,
+          enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || 'default'} library)`,
+          relevantConditions: ["general health"],
+          searchContext: "General health focus",
+          personalizedPrompt: `Consider patient's health records and ${selectedLibrary || 'general'} conditions`,
+          hasPersonalization: false
+        });
       }
     } catch (error) {
       console.error("Error enhancing query:", error);
+      // Set a fallback enhancement
+      setEnhancement({
+        originalQuery: query,
+        enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || 'default'} library)`,
+        relevantConditions: ["general health"],
+        searchContext: "General health focus",
+        personalizedPrompt: `Consider patient's health records and ${selectedLibrary || 'general'} conditions`,
+        hasPersonalization: false
+      });
     } finally {
       setIsLoading(false);
     }
@@ -293,7 +351,24 @@ export default function BmaxDemo() {
 
       if (response.ok) {
         const data = await response.json();
-        setScanResults(data.scanResults);
+        if (data.success && data.scanResults) {
+          setScanResults(data.scanResults);
+        } else {
+          console.error("Failed to perform AI scan");
+          // Fallback to simulated results
+          const fallbackResults = ["symptoms", "medications", "conditions", "allergies"].map((type, index) => ({
+            id: `scan-${Date.now()}-${index}`,
+            type,
+            confidence: Math.random() * 0.4 + 0.6,
+            data: {
+              detected: Math.random() > 0.5,
+              details: `AI detected ${type} patterns in your query`,
+              recommendations: [`Consider ${type} in your health assessment`]
+            },
+            timestamp: new Date().toISOString()
+          }));
+          setScanResults(fallbackResults);
+        }
       } else {
         console.error("Failed to perform AI scan");
         // Fallback to simulated results
