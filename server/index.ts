@@ -50,9 +50,23 @@ import {
   getPersonalizedMedicalContext,
   enhanceQueryWithContext,
   getPersonalizedInsights,
+  performAIScan,
 } from "./routes/personalizedContext";
 
 export function createServer() {
+  // Initialize performance optimizer
+  const initializePerformanceOptimizer = async () => {
+    try {
+      const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
+      await PerformanceOptimizerService.initialize();
+    } catch (error) {
+      console.error("Failed to initialize performance optimizer:", error);
+    }
+  };
+
+  // Initialize performance optimizer in background
+  initializePerformanceOptimizer();
+
   // Initialize secure database on server startup
   const initializeSecureSystem = async () => {
     try {
@@ -229,6 +243,7 @@ export function createServer() {
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
+  app.post("/api/medical-context/ai-scan", performAIScan);
 
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
@@ -245,6 +260,26 @@ export function createServer() {
           memory: process.memoryUsage(),
           timestamp: new Date().toISOString(),
         },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  // Performance Monitoring Endpoint
+  app.get("/api/performance/status", async (req, res) => {
+    try {
+      const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
+      const healthStatus = PerformanceOptimizerService.getHealthStatus();
+      
+      res.json({
+        success: true,
+        performance: healthStatus,
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       res.status(500).json({

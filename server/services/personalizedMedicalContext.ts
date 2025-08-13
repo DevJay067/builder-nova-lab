@@ -461,6 +461,7 @@ class PersonalizedMedicalContextService {
   static enhanceQueryWithMedicalContext(
     query: string,
     personalizedContext: PersonalizedContext,
+    selectedLibrary?: string,
   ): AIQueryEnhancement {
     if (!personalizedContext.hasData) {
       return {
@@ -494,14 +495,17 @@ class PersonalizedMedicalContextService {
       }
     });
 
-    // Create enhanced query
+    // Create enhanced query with library context
     let enhancedQuery = query;
     let searchContext = "";
 
+    // Add library-specific context
+    const libraryContext = this.getLibraryContext(selectedLibrary, query);
+    
     if (relevantConditions.length > 0) {
       const conditionsText = relevantConditions.join(", ");
-      enhancedQuery = `${query} in patient with ${conditionsText}`;
-      searchContext = `Patient has: ${conditionsText}`;
+      enhancedQuery = `${query} in patient with ${conditionsText}${libraryContext ? ` - search ${libraryContext}` : ''}`;
+      searchContext = `Patient has: ${conditionsText}${libraryContext ? ` | Library: ${libraryContext}` : ''}`;
     } else {
       // Add general medical context if no specific conditions are relevant
       const majorConditions = personalizedContext.medicalConditions
@@ -511,8 +515,11 @@ class PersonalizedMedicalContextService {
 
       if (majorConditions.length > 0) {
         const conditionsText = majorConditions.join(", ");
-        enhancedQuery = `${query} (patient has ${conditionsText})`;
-        searchContext = `Patient's medical history includes: ${conditionsText}`;
+        enhancedQuery = `${query} (patient has ${conditionsText})${libraryContext ? ` - search ${libraryContext}` : ''}`;
+        searchContext = `Patient's medical history includes: ${conditionsText}${libraryContext ? ` | Library: ${libraryContext}` : ''}`;
+      } else if (libraryContext) {
+        enhancedQuery = `${query} - search ${libraryContext}`;
+        searchContext = `Library: ${libraryContext}`;
       }
     }
 
@@ -530,6 +537,23 @@ class PersonalizedMedicalContextService {
       searchContext,
       personalizedPrompt,
     };
+  }
+
+  /**
+   * Get library-specific context for query enhancement
+   */
+  private static getLibraryContext(selectedLibrary?: string, query?: string): string {
+    if (!selectedLibrary) return "";
+
+    const libraryMap: { [key: string]: string } = {
+      pubmed: "PubMed medical research database",
+      who: "WHO clinical guidelines",
+      fda: "FDA drug safety database",
+      icd10: "ICD-10 diagnosis codes",
+      personal: "personal medical history"
+    };
+
+    return libraryMap[selectedLibrary] || "";
   }
 
   /**

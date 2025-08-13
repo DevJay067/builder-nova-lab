@@ -8,11 +8,83 @@ import {
 } from "@shared/api";
 import { BlockchainService } from "../services/blockchain";
 import { UserAuthenticationService } from "../services/userAuthentication";
+import { SecureDataAccessService } from "../services/secureDataAccess";
 import crypto from "crypto";
 
-// In-memory storage (in production, use a real database)
+// In-memory storage with caching for better performance
 const healthRecords: Map<string, HealthRecord[]> = new Map();
 const patientProfiles: Map<string, PatientProfile> = new Map();
+const recordCache: Map<string, { data: HealthRecord[]; timestamp: number }> = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Batch processing for better performance
+let pendingRecords: Array<{ record: HealthRecord; sessionToken: string }> = [];
+let batchProcessingTimeout: NodeJS.Timeout | null = null;
+
+/**
+ * Process records in batches for better performance
+ */
+const processBatchRecords = async () => {
+  if (pendingRecords.length === 0) return;
+
+  const batch = [...pendingRecords];
+  pendingRecords = [];
+
+  try {
+    console.log(`🔄 Processing batch of ${batch.length} records`);
+    
+    // Process records in parallel with limited concurrency
+    const batchPromises = batch.map(async ({ record, sessionToken }) => {
+      try {
+        // Store in secure system
+        await SecureDataAccessService.storeSecureHealthRecord(
+          sessionToken,
+          record.type,
+          record,
+          "patient"
+        );
+        
+        // Add to local cache
+        const patientRecords = healthRecords.get(record.patientId) || [];
+        patientRecords.push(record);
+        healthRecords.set(record.patientId, patientRecords);
+        
+        // Update cache
+        const cacheKey = `records_${record.patientId}`;
+        recordCache.set(cacheKey, {
+          data: patientRecords,
+          timestamp: Date.now()
+        });
+        
+        return { success: true, recordId: record.id };
+      } catch (error) {
+        console.error(`❌ Failed to process record ${record.id}:`, error);
+        return { success: false, recordId: record.id, error };
+      }
+    });
+
+    const results = await Promise.allSettled(batchPromises);
+    const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+    const failed = results.length - successful;
+    
+    console.log(`✅ Batch processed: ${successful} successful, ${failed} failed`);
+  } catch (error) {
+    console.error("❌ Batch processing failed:", error);
+  }
+};
+
+/**
+ * Schedule batch processing
+ */
+const scheduleBatchProcessing = () => {
+  if (batchProcessingTimeout) {
+    clearTimeout(batchProcessingTimeout);
+  }
+  
+  batchProcessingTimeout = setTimeout(() => {
+    processBatchRecords();
+  }, 1000); // Process after 1 second of inactivity
+};
 
 /**
  * Add comprehensive test data for demonstration
@@ -159,10 +231,22 @@ export const addTestData: RequestHandler = async (req, res) => {
 };
 
 /**
- * Create a new health record for a patient (integrated with secure system)
+ * Create a new health record for a patient (optimized for performance)
  */
 export const createHealthRecord: RequestHandler = async (req, res) => {
   try {
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies.healthchain_session ||
+      (req.headers["x-session-token"] as string);
+
+    if (!sessionToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
     const {
       type,
       title,
@@ -170,6 +254,14 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
       doctor,
       metadata,
     }: CreateHealthRecordRequest = req.body;
+
+    // Validate required fields
+    if (!type || !title || !description) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: type, title, description",
+      });
+    }
 
     // Get or create patient profile (simulate user authentication)
     const patientId =
@@ -207,24 +299,31 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
       updatedAt: currentDate,
     };
 
-    // Generate blockchain hash
-    healthRecord.blockchainHash =
-      BlockchainService.generateBlockchainHash(healthRecord);
+    // Add to batch processing queue for better performance
+    pendingRecords.push({ record: healthRecord, sessionToken });
+    scheduleBatchProcessing();
 
-    // Encrypt sensitive data
-    const encryptedData = BlockchainService.encryptHealthData(
-      { ...healthRecord, metadata },
-      patientProfile.encryptionKey,
-    );
-    healthRecord.encryptedData = encryptedData;
+    // Generate blockchain hash (non-blocking)
+    BlockchainService.generateBlockchainHash(healthRecord)
+      .then((hash) => {
+        healthRecord.blockchainHash = hash;
+        console.log(`✅ Blockchain hash generated for record ${recordId}`);
+      })
+      .catch((error) => {
+        console.error(`❌ Blockchain hash generation failed for record ${recordId}:`, error);
+      });
 
-    // Store on blockchain
-    const transaction = await BlockchainService.storeHealthRecord(healthRecord);
-
-    // Store in local database (simulated)
+    // Store in local database immediately for instant feedback
     const patientRecords = healthRecords.get(patientId) || [];
     patientRecords.unshift(healthRecord); // Add to beginning for chronological order
     healthRecords.set(patientId, patientRecords);
+
+    // Update cache
+    const cacheKey = `records_${patientId}`;
+    recordCache.set(cacheKey, {
+      data: patientRecords,
+      timestamp: Date.now()
+    });
 
     // Also store in secure Neon database
     try {
@@ -303,15 +402,52 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
       }
     }
 
+    // Check cache first for better performance
+    const cacheKey = `records_${userPatientId}`;
+    const cachedData = recordCache.get(cacheKey);
+    
+    if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
+      console.log(`📦 Returning cached records for patient ${userPatientId}`);
+      const response: GetHealthRecordsResponse = {
+        success: true,
+        records: cachedData.data,
+        total: cachedData.data.length,
+        fromCache: true,
+      };
+
+      // Add user info if authenticated
+      if (authenticatedUser) {
+        (response as any).userInfo = {
+          userId: authenticatedUser.id,
+          username: authenticatedUser.username,
+          name: `${authenticatedUser.firstName} ${authenticatedUser.lastName}`,
+          isAuthenticated: true,
+        };
+      } else {
+        (response as any).userInfo = {
+          isAuthenticated: false,
+          message: "Demo mode - using default patient data",
+        };
+      }
+
+      return res.json(response);
+    }
+
     // Get records from in-memory storage (backward compatibility)
     const memoryRecords = healthRecords.get(userPatientId) || [];
 
-    // Also get records from Neon database
+    // Also get records from Neon database (with timeout for better performance)
     let neonRecords = [];
     try {
       const { NeonDatabaseService } = await import("../services/neonDatabase");
-      const dbRecords =
-        await NeonDatabaseService.getMedicalHistory(userPatientId);
+      
+      // Add timeout to prevent hanging
+      const dbPromise = NeonDatabaseService.getMedicalHistory(userPatientId);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 5000)
+      );
+      
+      const dbRecords = await Promise.race([dbPromise, timeoutPromise]) as any[];
 
       // Convert database records to API format
       neonRecords = dbRecords.map((record) => ({
@@ -351,6 +487,12 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
         new Date(a.createdAt || a.date).getTime(),
     );
 
+    // Update cache
+    recordCache.set(cacheKey, {
+      data: uniqueRecords,
+      timestamp: Date.now()
+    });
+
     // Update patient last access
     const patientProfile = patientProfiles.get(userPatientId);
     if (patientProfile) {
@@ -362,6 +504,7 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
       success: true,
       records: uniqueRecords,
       total: uniqueRecords.length,
+      fromCache: false,
     };
 
     // Add user info if authenticated

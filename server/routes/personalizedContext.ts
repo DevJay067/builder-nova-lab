@@ -92,7 +92,7 @@ export const enhanceQueryWithContext: RequestHandler = async (req, res) => {
       req.cookies.healthchain_session ||
       (req.headers["x-session-token"] as string);
 
-    const { query } = req.body;
+    const { query, library } = req.body;
 
     if (!sessionToken) {
       return res.status(401).json({
@@ -108,7 +108,7 @@ export const enhanceQueryWithContext: RequestHandler = async (req, res) => {
       });
     }
 
-    console.log(`🔍 Enhancing query: "${query}" with medical context`);
+    console.log(`🔍 Enhancing query: "${query}" with medical context and library: ${library || 'default'}`);
 
     // Get personalized context
     const personalizedContext =
@@ -116,11 +116,12 @@ export const enhanceQueryWithContext: RequestHandler = async (req, res) => {
         sessionToken,
       );
 
-    // Enhance the query
+    // Enhance the query with library context
     const enhancement =
       PersonalizedMedicalContextService.enhanceQueryWithMedicalContext(
         query,
         personalizedContext,
+        library
       );
 
     console.log(`✅ Query enhanced: "${enhancement.enhancedQuery}"`);
@@ -133,6 +134,8 @@ export const enhanceQueryWithContext: RequestHandler = async (req, res) => {
       searchContext: enhancement.searchContext,
       personalizedPrompt: enhancement.personalizedPrompt,
       hasPersonalization: personalizedContext.hasData,
+      libraryUsed: library || 'default',
+      librariesSearched: getLibrariesForQuery(library),
     });
   } catch (error) {
     console.error("❌ Error enhancing query with context:", error);
@@ -141,6 +144,26 @@ export const enhanceQueryWithContext: RequestHandler = async (req, res) => {
       message: "Error enhancing query with medical context",
     });
   }
+};
+
+/**
+ * Get relevant libraries for a query
+ */
+const getLibrariesForQuery = (selectedLibrary?: string) => {
+  const allLibraries = [
+    { id: 'pubmed', name: 'PubMed Medical Database', relevance: 'high' },
+    { id: 'who', name: 'WHO Guidelines', relevance: 'medium' },
+    { id: 'fda', name: 'FDA Drug Database', relevance: 'high' },
+    { id: 'icd10', name: 'ICD-10 Codes', relevance: 'medium' },
+    { id: 'personal', name: 'Personal Medical History', relevance: 'high' }
+  ];
+
+  if (selectedLibrary) {
+    return allLibraries.filter(lib => lib.id === selectedLibrary);
+  }
+
+  // Return all libraries if none selected
+  return allLibraries;
 };
 
 /**
@@ -332,3 +355,220 @@ function generateHealthInsights(context: any): any[] {
 
   return insights;
 }
+
+/**
+ * AI Medical Scan endpoint
+ */
+export const performAIScan: RequestHandler = async (req, res) => {
+  try {
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies.healthchain_session ||
+      (req.headers["x-session-token"] as string);
+
+    const { query, scanTypes = ["symptoms", "medications", "conditions", "allergies"] } = req.body;
+
+    if (!sessionToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: "Query is required",
+      });
+    }
+
+    console.log(`🔍 Performing AI scan on query: "${query}"`);
+
+    // Get personalized context for enhanced scanning
+    const personalizedContext =
+      await PersonalizedMedicalContextService.createPersonalizedContext(
+        sessionToken,
+      );
+
+    // Perform AI scanning with different analysis types
+    const scanResults = await Promise.all(
+      scanTypes.map(async (scanType) => {
+        const result = await performScanAnalysis(query, scanType, personalizedContext);
+        return {
+          id: `scan-${Date.now()}-${scanType}`,
+          type: scanType,
+          confidence: result.confidence,
+          data: result.data,
+          timestamp: new Date().toISOString(),
+        };
+      })
+    );
+
+    console.log(`✅ AI scan completed with ${scanResults.length} results`);
+
+    res.json({
+      success: true,
+      query,
+      scanResults,
+      totalScans: scanResults.length,
+      hasPersonalization: personalizedContext.hasData,
+    });
+  } catch (error) {
+    console.error("❌ Error performing AI scan:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error performing AI scan",
+    });
+  }
+};
+
+/**
+ * Perform specific scan analysis
+ */
+const performScanAnalysis = async (
+  query: string,
+  scanType: string,
+  personalizedContext: any
+) => {
+  const queryLower = query.toLowerCase();
+  
+  switch (scanType) {
+    case "symptoms":
+      return analyzeSymptoms(queryLower, personalizedContext);
+    case "medications":
+      return analyzeMedications(queryLower, personalizedContext);
+    case "conditions":
+      return analyzeConditions(queryLower, personalizedContext);
+    case "allergies":
+      return analyzeAllergies(queryLower, personalizedContext);
+    default:
+      return {
+        confidence: 0.5,
+        data: {
+          detected: false,
+          details: `No analysis available for ${scanType}`,
+          recommendations: []
+        }
+      };
+  }
+};
+
+const analyzeSymptoms = (query: string, context: any) => {
+  const symptomKeywords = [
+    "dizzy", "dizziness", "headache", "pain", "fatigue", "tired",
+    "nausea", "vomiting", "fever", "cough", "shortness of breath",
+    "chest pain", "abdominal pain", "back pain"
+  ];
+  
+  const detectedSymptoms = symptomKeywords.filter(symptom => 
+    query.includes(symptom)
+  );
+  
+  const confidence = detectedSymptoms.length > 0 ? 0.8 : 0.3;
+  
+  return {
+    confidence,
+    data: {
+      detected: detectedSymptoms.length > 0,
+      details: detectedSymptoms.length > 0 
+        ? `Detected symptoms: ${detectedSymptoms.join(", ")}`
+        : "No specific symptoms detected in query",
+      recommendations: detectedSymptoms.length > 0 
+        ? ["Consider symptom severity assessment", "Monitor for related symptoms"]
+        : ["Query appears to be general health question"]
+    }
+  };
+};
+
+const analyzeMedications = (query: string, context: any) => {
+  const medicationKeywords = [
+    "medication", "medicine", "pill", "drug", "prescription",
+    "ibuprofen", "aspirin", "acetaminophen", "tylenol", "advil"
+  ];
+  
+  const detectedMedications = medicationKeywords.filter(med => 
+    query.includes(med)
+  );
+  
+  const confidence = detectedMedications.length > 0 ? 0.9 : 0.2;
+  
+  return {
+    confidence,
+    data: {
+      detected: detectedMedications.length > 0,
+      details: detectedMedications.length > 0 
+        ? `Medication-related query detected: ${detectedMedications.join(", ")}`
+        : "No medication-specific content detected",
+      recommendations: detectedMedications.length > 0 
+        ? ["Check for drug interactions", "Verify dosage recommendations"]
+        : ["Query may benefit from medication context"]
+    }
+  };
+};
+
+const analyzeConditions = (query: string, context: any) => {
+  const conditionKeywords = [
+    "diabetes", "hypertension", "asthma", "heart disease",
+    "cancer", "arthritis", "depression", "anxiety"
+  ];
+  
+  const detectedConditions = conditionKeywords.filter(condition => 
+    query.includes(condition)
+  );
+  
+  // Check against personal medical history
+  const personalConditions = context.medicalConditions?.map((c: any) => 
+    c.name.toLowerCase()
+  ) || [];
+  
+  const relevantPersonalConditions = personalConditions.filter((condition: string) =>
+    query.includes(condition)
+  );
+  
+  const confidence = (detectedConditions.length + relevantPersonalConditions.length) > 0 ? 0.85 : 0.4;
+  
+  return {
+    confidence,
+    data: {
+      detected: (detectedConditions.length + relevantPersonalConditions.length) > 0,
+      details: (detectedConditions.length + relevantPersonalConditions.length) > 0 
+        ? `Conditions mentioned: ${[...detectedConditions, ...relevantPersonalConditions].join(", ")}`
+        : "No specific medical conditions detected",
+      recommendations: (detectedConditions.length + relevantPersonalConditions.length) > 0 
+        ? ["Consider condition-specific advice", "Review treatment guidelines"]
+        : ["Query may benefit from condition context"]
+    }
+  };
+};
+
+const analyzeAllergies = (query: string, context: any) => {
+  const allergyKeywords = [
+    "allergy", "allergic", "reaction", "penicillin", "peanuts",
+    "shellfish", "latex", "pollen", "dust"
+  ];
+  
+  const detectedAllergies = allergyKeywords.filter(allergy => 
+    query.includes(allergy)
+  );
+  
+  // Check against personal allergies
+  const personalAllergies = context.allergies || [];
+  const relevantPersonalAllergies = personalAllergies.filter((allergy: string) =>
+    query.includes(allergy.toLowerCase())
+  );
+  
+  const confidence = (detectedAllergies.length + relevantPersonalAllergies.length) > 0 ? 0.9 : 0.2;
+  
+  return {
+    confidence,
+    data: {
+      detected: (detectedAllergies.length + relevantPersonalAllergies.length) > 0,
+      details: (detectedAllergies.length + relevantPersonalAllergies.length) > 0 
+        ? `Allergy-related content: ${[...detectedAllergies, ...relevantPersonalAllergies].join(", ")}`
+        : "No allergy-specific content detected",
+      recommendations: (detectedAllergies.length + relevantPersonalAllergies.length) > 0 
+        ? ["Consider allergy precautions", "Review medication safety"]
+        : ["Query may benefit from allergy screening"]
+    }
+  };
+};
