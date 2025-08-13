@@ -210,7 +210,7 @@ export default function HealthHistory() {
   const loadHealthRecords = async (sessionToken: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/auth/data-access/records", {
+      const response = await fetch("/api/health-records", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
@@ -222,14 +222,14 @@ export default function HealthHistory() {
         if (data.success && data.records) {
           const transformedRecords = data.records.map((record: any) => ({
             id: record.id,
-            type: record.recordType || record.type,
+            type: record.type,
             title: record.title,
             description: record.description,
             date: record.date,
             doctor: record.doctor,
-            isSecure: !!record.secureRecordId,
-            blockchainHash: record.secureRecordId,
-            metadata: record.metadata,
+            isSecure: !!record.blockchainHash,
+            blockchainHash: record.blockchainHash,
+            metadata: record.metadata || {},
           }));
 
           setRecords(transformedRecords);
@@ -267,7 +267,8 @@ export default function HealthHistory() {
         return;
       }
 
-      const response = await fetch("/api/auth/data-access", {
+      // Use the correct health records endpoint
+      const response = await fetch("/api/health-records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -276,13 +277,12 @@ export default function HealthHistory() {
         },
         body: JSON.stringify({
           type: newRecord.type,
-          data: {
-            title: newRecord.title,
-            description: newRecord.description,
-            date: newRecord.date,
-            doctor: newRecord.doctor,
-            metadata: newRecord.metadata,
-          },
+          title: newRecord.title,
+          description: newRecord.description,
+          date: newRecord.date,
+          doctor: newRecord.doctor,
+          patientId: "demo_patient",
+          metadata: newRecord.metadata,
         }),
       });
 
@@ -291,36 +291,32 @@ export default function HealthHistory() {
       if (result.success) {
         setMessage({
           type: "success",
-          text: "Health record saved securely to blockchain!",
+          text: "Health record saved successfully!",
         });
         setIsDialogOpen(false);
         setNewRecord({
           type: "",
           title: "",
           description: "",
-          date: new Date().toISOString().split("T")[0],
+          date: "",
           doctor: "",
-          metadata: {
-            weight: "",
-            height: "",
-            bloodPressure: "",
-            heartRate: "",
-            temperature: "",
-            notes: "",
-          },
+          metadata: {},
         });
-
-        // Reload records
+        
+        // Reload health records to show the new one
         await loadHealthRecords(sessionToken);
       } else {
         setMessage({
           type: "error",
-          text: result.message || "Failed to save record",
+          text: result.message || "Failed to save health record",
         });
       }
     } catch (error) {
       console.error("Error saving record:", error);
-      setMessage({ type: "error", text: "Network error. Please try again." });
+      setMessage({
+        type: "error",
+        text: "Network error while saving record",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -2,46 +2,7 @@ import type { Handler } from "@netlify/functions";
 
 // Enhanced in-memory storage with persistence simulation
 const demoData = {
-  healthRecords: [
-    {
-      id: "record_1",
-      patientId: "demo_patient",
-      date: "2024-01-15T10:00:00.000Z",
-      type: "checkup",
-      title: "Annual Physical Examination",
-      description: "Routine annual checkup with normal findings",
-      doctor: "Dr. Smith",
-      status: "completed",
-      blockchainHash: "hash_1705312800000",
-      metadata: {
-        weight: 75,
-        height: 175,
-        bloodPressure: "120/80",
-        heartRate: 72,
-        temperature: 36.8
-      },
-      createdAt: "2024-01-15T10:00:00.000Z",
-      updatedAt: "2024-01-15T10:00:00.000Z"
-    },
-    {
-      id: "record_2",
-      patientId: "demo_patient",
-      date: "2024-01-10T14:30:00.000Z",
-      type: "medication",
-      title: "Blood Pressure Medication Review",
-      description: "Review of current blood pressure medication effectiveness",
-      doctor: "Dr. Johnson",
-      status: "completed",
-      blockchainHash: "hash_1704892200000",
-      metadata: {
-        systolicBP: 140,
-        diastolicBP: 90,
-        medications: ["Lisinopril", "Amlodipine"]
-      },
-      createdAt: "2024-01-10T14:30:00.000Z",
-      updatedAt: "2024-01-10T14:30:00.000Z"
-    }
-  ],
+  healthRecords: [], // Start with empty records - let users create their own
   users: [
     {
       id: "demo_user",
@@ -311,18 +272,36 @@ const handleRequest = async (event: any) => {
       try {
         const { query, library } = JSON.parse(body || "{}");
         
+        // Get actual health records for context
+        const userRecords = demoData.healthRecords;
+        const recordCount = userRecords.length;
+        
+        // Extract relevant information from actual records
+        const conditions = userRecords
+          .filter(record => record.metadata && record.metadata.conditions)
+          .flatMap(record => record.metadata.conditions || []);
+        
+        const medications = userRecords
+          .filter(record => record.metadata && record.metadata.medications)
+          .flatMap(record => record.metadata.medications || []);
+        
+        const context = recordCount > 0 
+          ? `Patient has ${recordCount} health records with focus on ${library || 'general'} health`
+          : "Patient has no health records yet";
+        
         return createSuccessResponse({
           success: true,
           originalQuery: query,
           enhancedQuery: `Enhanced: ${query} (using ${library || 'default'} library)`,
-          context: "Patient has 3 health records with focus on cardiovascular health",
+          context: context,
           libraryUsed: library || "default",
           librariesSearched: ["cardiovascular", "general", "emergency"],
           confidence: 0.85,
-          relevantConditions: ["hypertension", "diabetes"],
-          searchContext: "Cardiovascular health focus",
-          personalizedPrompt: `Consider patient's history of ${library || 'cardiovascular'} conditions`,
-          hasPersonalization: true
+          relevantConditions: conditions.length > 0 ? conditions : ["general health"],
+          searchContext: `${library || 'General'} health focus`,
+          personalizedPrompt: `Consider patient's health records and ${library || 'general'} conditions`,
+          hasPersonalization: recordCount > 0,
+          recordCount: recordCount
         });
       } catch (error) {
         return createErrorResponse("Invalid request", 400);
@@ -333,18 +312,36 @@ const handleRequest = async (event: any) => {
       try {
         const { query, library } = JSON.parse(body || "{}");
         
+        // Get actual health records for context
+        const userRecords = demoData.healthRecords;
+        const recordCount = userRecords.length;
+        
+        // Extract relevant information from actual records
+        const conditions = userRecords
+          .filter(record => record.metadata && record.metadata.conditions)
+          .flatMap(record => record.metadata.conditions || []);
+        
+        const medications = userRecords
+          .filter(record => record.metadata && record.metadata.medications)
+          .flatMap(record => record.metadata.medications || []);
+        
+        const context = recordCount > 0 
+          ? `Patient has ${recordCount} health records with focus on ${library || 'general'} health`
+          : "Patient has no health records yet";
+        
         return createSuccessResponse({
           success: true,
           originalQuery: query,
           enhancedQuery: `Enhanced: ${query} (using ${library || 'default'} library)`,
-          context: "Patient has 3 health records with focus on cardiovascular health",
+          context: context,
           libraryUsed: library || "default",
           librariesSearched: ["cardiovascular", "general", "emergency"],
           confidence: 0.85,
-          relevantConditions: ["hypertension", "diabetes"],
-          searchContext: "Cardiovascular health focus",
-          personalizedPrompt: `Consider patient's history of ${library || 'cardiovascular'} conditions`,
-          hasPersonalization: true
+          relevantConditions: conditions.length > 0 ? conditions : ["general health"],
+          searchContext: `${library || 'General'} health focus`,
+          personalizedPrompt: `Consider patient's health records and ${library || 'general'} conditions`,
+          hasPersonalization: recordCount > 0,
+          recordCount: recordCount
         });
       } catch (error) {
         return createErrorResponse("Invalid request", 400);
@@ -352,47 +349,98 @@ const handleRequest = async (event: any) => {
     }
 
     if (path === "/api/medical-context/personalized" && httpMethod === "GET") {
+      // Get actual health records for personalized context
+      const userRecords = demoData.healthRecords;
+      const recordCount = userRecords.length;
+      
+      // Extract information from actual records
+      const conditions = userRecords
+        .filter(record => record.metadata && record.metadata.conditions)
+        .flatMap(record => record.metadata.conditions || []);
+      
+      const medications = userRecords
+        .filter(record => record.metadata && record.metadata.medications)
+        .flatMap(record => record.metadata.medications || []);
+      
+      const allergies = userRecords
+        .filter(record => record.metadata && record.metadata.allergies)
+        .flatMap(record => record.metadata.allergies || []);
+      
+      // Get latest vitals from records
+      const latestRecord = userRecords
+        .filter(record => record.metadata && record.metadata.vitals)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      
+      const vitals = latestRecord?.metadata?.vitals || {
+        weight: null,
+        height: null,
+        bloodPressure: null,
+        heartRate: null,
+        bloodType: null,
+        age: null,
+        gender: null,
+        lastUpdated: new Date().toISOString()
+      };
+      
       return createSuccessResponse({
         success: true,
-        hasData: true,
-        context: "Patient has cardiovascular history with hypertension and diabetes",
+        hasData: recordCount > 0,
+        context: recordCount > 0 
+          ? `Patient has ${recordCount} health records with ${conditions.length > 0 ? conditions.join(', ') : 'general health'} focus`
+          : "Patient has no health records yet",
         summary: {
-          totalRecords: demoData.healthRecords.length,
-          lastUpdate: new Date().toISOString(),
-          keyConditions: ["hypertension", "diabetes"],
-          medications: ["Lisinopril", "Amlodipine"],
-          allergies: ["penicillin"],
-          vitals: {
-            weight: 75,
-            height: 175,
-            bloodPressure: "140/90",
-            heartRate: "72",
-            bloodType: "O+",
-            age: 45,
-            gender: "male",
-            lastUpdated: new Date().toISOString()
-          }
+          totalRecords: recordCount,
+          lastUpdate: recordCount > 0 ? userRecords[userRecords.length - 1].updatedAt : new Date().toISOString(),
+          keyConditions: conditions.length > 0 ? conditions : ["general health"],
+          medications: medications.length > 0 ? medications : [],
+          allergies: allergies.length > 0 ? allergies : [],
+          vitals: vitals
         },
         patientId: "demo_patient",
-        dataSource: "health_records"
+        dataSource: recordCount > 0 ? "health_records" : "none"
       });
     }
 
     if (path === "/api/medical-context/insights" && httpMethod === "GET") {
+      // Get actual health records for insights
+      const userRecords = demoData.healthRecords;
+      const recordCount = userRecords.length;
+      
+      if (recordCount === 0) {
+        return createSuccessResponse({
+          success: true,
+          insights: [
+            "No health records available yet",
+            "Create your first health record to get personalized insights",
+            "Start by adding basic health information"
+          ],
+          recommendations: [
+            "Add your first health record",
+            "Include basic vitals and medical history",
+            "Regular updates will improve AI insights"
+          ],
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Generate insights based on actual records
+      const insights = [
+        `You have ${recordCount} health records in your profile`,
+        recordCount > 1 ? "Your health data is being tracked over time" : "Start building your health history",
+        "AI can now provide personalized recommendations based on your data"
+      ];
+      
+      const recommendations = [
+        "Continue adding health records regularly",
+        "Include detailed information for better AI analysis",
+        "Review your health trends periodically"
+      ];
+      
       return createSuccessResponse({
         success: true,
-        insights: [
-          "Blood pressure trending upward - consider medication adjustment",
-          "Weight stable over last 3 months - good progress",
-          "Heart rate within normal range",
-          "Consider adding exercise routine to improve cardiovascular health"
-        ],
-        recommendations: [
-          "Monitor blood pressure daily",
-          "Schedule cardiologist appointment",
-          "Increase physical activity",
-          "Review medication effectiveness"
-        ],
+        insights: insights,
+        recommendations: recommendations,
+        recordCount: recordCount,
         timestamp: new Date().toISOString()
       });
     }
@@ -402,24 +450,68 @@ const handleRequest = async (event: any) => {
       try {
         const { query, scanTypes } = JSON.parse(body || "{}");
         
-        const scanResults = (scanTypes || ["symptoms", "medications", "conditions", "allergies"]).map((type: string, index: number) => ({
-          id: `scan-${Date.now()}-${index}`,
-          type,
-          confidence: Math.random() * 0.4 + 0.6,
-          data: {
-            detected: Math.random() > 0.5,
-            details: `AI detected ${type} patterns in your query: "${query}"`,
-            recommendations: [`Consider ${type} in your health assessment`],
-            severity: Math.random() > 0.7 ? "high" : "medium"
-          },
-          timestamp: new Date().toISOString()
-        }));
+        // Get actual health records for context
+        const userRecords = demoData.healthRecords;
+        const recordCount = userRecords.length;
+        
+        // Extract information from actual records for better AI analysis
+        const conditions = userRecords
+          .filter(record => record.metadata && record.metadata.conditions)
+          .flatMap(record => record.metadata.conditions || []);
+        
+        const medications = userRecords
+          .filter(record => record.metadata && record.metadata.medications)
+          .flatMap(record => record.metadata.medications || []);
+        
+        const allergies = userRecords
+          .filter(record => record.metadata && record.metadata.allergies)
+          .flatMap(record => record.metadata.allergies || []);
+        
+        const scanResults = (scanTypes || ["symptoms", "medications", "conditions", "allergies"]).map((type: string, index: number) => {
+          let detected = false;
+          let details = `AI analyzed your query for ${type}`;
+          let recommendations = [`Consider ${type} in your health assessment`];
+          let severity = "medium";
+          
+          // Provide more relevant results based on actual health records
+          if (type === "conditions" && conditions.length > 0) {
+            detected = true;
+            details = `Found ${conditions.length} existing conditions: ${conditions.join(', ')}`;
+            recommendations = ["Monitor existing conditions", "Schedule follow-up appointments"];
+          } else if (type === "medications" && medications.length > 0) {
+            detected = true;
+            details = `Found ${medications.length} current medications: ${medications.join(', ')}`;
+            recommendations = ["Review medication interactions", "Check for side effects"];
+          } else if (type === "allergies" && allergies.length > 0) {
+            detected = true;
+            details = `Found ${allergies.length} known allergies: ${allergies.join(', ')}`;
+            recommendations = ["Avoid known allergens", "Carry emergency medication if needed"];
+          } else if (recordCount > 0) {
+            detected = Math.random() > 0.3; // Higher chance of detection if records exist
+            details = `AI analyzed your query against ${recordCount} health records for ${type}`;
+            recommendations = [`Review ${type} in your health records`, "Update your health profile"];
+          }
+          
+          return {
+            id: `scan-${Date.now()}-${index}`,
+            type,
+            confidence: Math.random() * 0.4 + 0.6,
+            data: {
+              detected: detected,
+              details: details,
+              recommendations: recommendations,
+              severity: severity
+            },
+            timestamp: new Date().toISOString()
+          };
+        });
         
         return createSuccessResponse({
           success: true,
           scanResults,
           query: query,
           totalScans: scanResults.length,
+          recordCount: recordCount,
           timestamp: new Date().toISOString()
         });
       } catch (error) {
