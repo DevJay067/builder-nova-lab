@@ -52,7 +52,7 @@ export default defineConfig({
         "@neondatabase/serverless",
         "serverless-http",
         "zod",
-        // React and related dependencies (should be external for server)
+        // Client-side dependencies that should not be bundled with server
         "react",
         "react-dom",
         "react-router-dom",
@@ -73,6 +73,7 @@ export default defineConfig({
         "react-resizable-panels",
         "recharts",
         "vaul",
+        "@tanstack/react-query",
         // Radix UI components
         "@radix-ui/react-accordion",
         "@radix-ui/react-alert-dialog",
@@ -101,6 +102,17 @@ export default defineConfig({
         "@radix-ui/react-toggle",
         "@radix-ui/react-toggle-group",
         "@radix-ui/react-tooltip",
+        "@react-three/drei",
+        "@react-three/fiber",
+        "three",
+        // Build tools
+        "vite",
+        "@vitejs/plugin-react-swc",
+        "typescript",
+        "postcss",
+        "autoprefixer",
+        "tailwindcss",
+        "tailwindcss-animate"
       ],
       output: {
         format: "es",
@@ -118,5 +130,17 @@ export default defineConfig({
   },
   define: {
     "process.env.NODE_ENV": '"production"',
+  },
+  // Prevent client-side code from being processed
+  optimizeDeps: {
+    exclude: [
+      "react", "react-dom", "react-router-dom", "lucide-react", 
+      "class-variance-authority", "clsx", "tailwind-merge",
+      "framer-motion", "sonner", "date-fns", "react-hook-form",
+      "@hookform/resolvers", "cmdk", "embla-carousel-react",
+      "input-otp", "next-themes", "react-day-picker",
+      "react-resizable-panels", "recharts", "vaul",
+      "@tanstack/react-query"
+    ],
   },
 });

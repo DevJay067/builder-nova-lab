@@ -54,20 +54,18 @@ import {
 } from "./routes/personalizedContext";
 
 export function createServer() {
-  // Initialize performance optimizer
+  // Initialize performance optimizer in background (non-blocking)
   const initializePerformanceOptimizer = async () => {
     try {
       const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
       await PerformanceOptimizerService.initialize();
     } catch (error) {
       console.error("Failed to initialize performance optimizer:", error);
+      // Don't fail the server startup
     }
   };
 
-  // Initialize performance optimizer in background
-  initializePerformanceOptimizer();
-
-  // Initialize secure database on server startup
+  // Initialize secure database on server startup (non-blocking)
   const initializeSecureSystem = async () => {
     try {
       console.log("🚀 Attempting to initialize secure healthcare system...");
@@ -112,36 +110,24 @@ export function createServer() {
         console.log("   The system will work in demo mode");
       }
 
-      // Try to initialize the main database system
+      // Try to initialize database
       try {
         const { DatabaseInitService } = await import("./services/initDatabase");
-        await DatabaseInitService.initializeSecureHealthcareDatabase();
-        console.log("✅ Secure healthcare database initialized successfully");
+        await DatabaseInitService.initializeDatabase();
+        console.log("✅ Database initialized successfully");
       } catch (dbError) {
-        console.log(
-          "⚠️  Secure database not available, trying simple initialization...",
-        );
-
-        // Try to create at least the essential medical_history table
-        try {
-          const { SimpleDatabaseInit } = await import(
-            "./services/simpleDatabaseInit"
-          );
-          await SimpleDatabaseInit.initializeMedicalHistoryTable();
-          console.log("✅ Essential medical history table created");
-        } catch (simpleError) {
-          console.log("⚠️  System will work with in-memory storage only");
-        }
+        console.log("⚠️ Database initialization failed, continuing...");
       }
+
+      console.log("✅ Secure healthcare system initialization completed");
     } catch (error) {
-      console.log(
-        "⚠️  Secure system initialization completed with some limitations",
-      );
-      console.log("   The application will continue to work in demo mode");
+      console.error("❌ Failed to initialize secure system:", error);
+      // Don't fail the server startup
     }
   };
 
-  // Run initialization (don't await to avoid blocking server start)
+  // Start initialization in background
+  initializePerformanceOptimizer();
   initializeSecureSystem();
 
   const app = express();

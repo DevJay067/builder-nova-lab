@@ -15,7 +15,25 @@ const getServerHandler = async () => {
       console.log("Server handler initialized successfully");
     } catch (error) {
       console.error("Failed to initialize server handler:", error);
-      throw error;
+      // Return a fallback handler instead of throwing
+      serverHandler = {
+        async (event: any, context: any) {
+          return {
+            statusCode: 503,
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Headers": "Content-Type, Authorization",
+              "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            },
+            body: JSON.stringify({
+              error: "Server initialization failed",
+              message: "The server is temporarily unavailable. Please try again later.",
+              timestamp: new Date().toISOString(),
+            }),
+          };
+        }
+      };
     }
   }
   return serverHandler;
@@ -46,7 +64,7 @@ export const handler: Handler = async (event, context) => {
         message:
           process.env.NODE_ENV === "development"
             ? error.message
-            : "Server error",
+            : "Server error occurred. Please try again later.",
         timestamp: new Date().toISOString(),
       }),
     };
