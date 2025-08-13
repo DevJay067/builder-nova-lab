@@ -298,10 +298,10 @@ class UserAuthenticationService {
         };
       }
 
-      if (password.length < 6) {
+      if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
         return {
           success: false,
-          message: "Password must be at least 6 characters",
+          message: "Password must be at least 8 chars with a number and uppercase",
         };
       }
 
@@ -405,6 +405,23 @@ class UserAuthenticationService {
   ): Promise<AuthResult> {
     try {
       console.log(`🔐 Authenticating user: ${username}`);
+
+      // Simple per-user rate limit in memory
+      (this as any)._loginAttempts = (this as any)._loginAttempts || new Map<string, { count: number; ts: number }>();
+      const attempts = (this as any)._loginAttempts;
+      const now = Date.now();
+      const windowMs = 60_000;
+      const max = 20;
+      const rec = attempts.get(username) || { count: 0, ts: now };
+      if (now - rec.ts > windowMs) {
+        rec.count = 0;
+        rec.ts = now;
+      }
+      rec.count += 1;
+      attempts.set(username, rec);
+      if (rec.count > max) {
+        return { success: false, message: "Too many attempts, try again later" } as any;
+      }
 
       // Get user from database first, then fallback to memory
       let user: User | null = null;

@@ -1,15 +1,14 @@
 import { RequestHandler } from "express";
 import { UserAuthenticationService } from "../services/userAuthentication";
+import { NeonDatabaseService } from "../services/neonDatabase";
+import { SecureDataAccessService } from "../services/secureDataAccess";
 
 /**
  * Register a new user with production blockchain system
  */
 export const registerUser: RequestHandler = async (req, res) => {
   try {
-    console.log("🔍 Registration request received", {
-      body: req.body ? "present" : "missing",
-      contentType: req.headers["content-type"],
-    });
+    console.log("🔍 Registration request received");
 
     const { username, password, email, firstName, lastName } = req.body;
 
@@ -43,10 +42,7 @@ export const registerUser: RequestHandler = async (req, res) => {
  */
 export const loginUser: RequestHandler = async (req, res) => {
   try {
-    console.log("🔍 Login request received", {
-      body: req.body ? "present" : "missing",
-      contentType: req.headers["content-type"],
-    });
+    console.log("🔍 Login request received");
 
     const { username, password } = req.body;
 
@@ -58,7 +54,7 @@ export const loginUser: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = await UserAuthenticationService.authenticateUser(
+    let result = await UserAuthenticationService.authenticateUser(
       username,
       password,
     );
@@ -79,9 +75,33 @@ export const loginUser: RequestHandler = async (req, res) => {
         securityFeatures: result.securityFeatures,
       });
     } else {
-      res.status(401).json({
+      // Optional auto-provision on login (demo-friendly)
+      const allowAutoProvision = (process.env.AUTO_PROVISION_ON_LOGIN || "true").toLowerCase() !== "false";
+      if (allowAutoProvision) {
+        try {
+          const reg = await UserAuthenticationService.registerUser(username, password);
+          if (reg.success) {
+            result = await UserAuthenticationService.authenticateUser(username, password);
+            if (result.success) {
+              res.cookie("healthchain_session", result.user!.sessionToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 24 * 60 * 60 * 1000,
+              });
+              return res.json({
+                success: true,
+                message: "Account auto-provisioned and logged in",
+                user: result.user,
+                securityFeatures: result.securityFeatures,
+              });
+            }
+          }
+        } catch {}
+      }
+      return res.status(401).json({
         success: false,
-        message: result.message,
+        message: result.message || "Invalid username or password",
       });
     }
   } catch (error) {
@@ -110,7 +130,20 @@ export const verifySession: RequestHandler = async (req, res) => {
       });
     }
 
-    const result = UserAuthenticationService.verifySession(sessionToken);
+    let result = UserAuthenticationService.verifySession(sessionToken);
+    if (!result.valid && process.env.DATABASE_URL) {
+      // Try to hydrate from Neon
+      const rec = await NeonDatabaseService.getSession(sessionToken).catch(() => null);
+      if (rec) {
+        // Reconstruct minimal session in memory
+        (SecureDataAccessService as any).userSessions?.set?.(sessionToken, {
+          username: rec.username,
+          userHash: rec.userHash,
+          sessionToken,
+        });
+        result = UserAuthenticationService.verifySession(sessionToken);
+      }
+    }
 
     if (result.valid) {
       res.json({

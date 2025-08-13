@@ -51,6 +51,15 @@ import {
   enhanceQueryWithContext,
   getPersonalizedInsights,
 } from "./routes/personalizedContext";
+import {
+  streamVitals,
+  getLatestVitals,
+  updateVitals,
+  startMock,
+  stopMock,
+} from "./routes/iot";
+import { setGoals, getGoals, setReminders, getReminders, deleteAllMyData, registerPushSubscription } from "./routes/analytics";
+import { ReminderScheduler } from "./services/reminderScheduler";
 
 export function createServer() {
   // Initialize secure database on server startup
@@ -129,14 +138,79 @@ export function createServer() {
 
   // Run initialization (don't await to avoid blocking server start)
   initializeSecureSystem();
+  // Start background reminder scheduler (no-op without VAPID/DATABASE_URL)
+  ReminderScheduler.start();
 
   const app = express();
 
   // Middleware
-  app.use(cors());
+  // Trust proxy for secure cookies and correct protocol detection (e.g., behind Netlify/NGINX)
+  app.set("trust proxy", 1);
+
+  const allowedOrigins = [
+    /^(http:\/\/|https:\/\/)localhost(:\d+)?$/,
+    /^(http:\/\/|https:\/\/)127\.0\.0\.1(:\d+)?$/,
+  ];
+  app.use(
+    cors({
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        if (process.env.NODE_ENV === "production") {
+          // In production, disable cross-origin requests
+          return cb(null, false);
+        }
+        if (allowedOrigins.some((re) => re.test(origin))) return cb(null, true);
+        return cb(null, false);
+      },
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "x-session-token",
+        "x-patient-key",
+        "x-provider-key",
+      ],
+    }),
+  );
   app.use(cookieParser());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+  // Minimal hardening headers (subset of helmet)
+  app.disable("x-powered-by");
+  app.use((_, res, next) => {
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    if (process.env.NODE_ENV === "production") {
+      res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+    }
+    next();
+  });
+
+  // Basic in-memory rate limiter (per-IP)
+  const requests: Record<string, { count: number; ts: number }> = {};
+  function rateLimit(windowMs = 60_000, max = 120) {
+    return (req: any, res: any, next: any) => {
+      const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+      const now = Date.now();
+      const entry = requests[ip] || { count: 0, ts: now };
+      if (now - entry.ts > windowMs) {
+        entry.count = 0;
+        entry.ts = now;
+      }
+      entry.count += 1;
+      requests[ip] = entry;
+      if (entry.count > max) {
+        return res.status(429).json({ success: false, message: "Too many requests" });
+      }
+      next();
+    };
+  }
+  // Apply to sensitive routes
+  app.use(["/api/auth/", "/api/vitals/", "/api/secure/"], rateLimit());
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {
@@ -224,11 +298,28 @@ export function createServer() {
   app.post("/api/auth/data-access", createDataAccess);
   app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
   app.get("/api/auth/stats", getAuthStats);
+  // Frontend expects this route to fetch all records for the authenticated user
+  app.get("/api/auth/data-access/records", verifyDataAccess);
 
   // Personalized Medical Context API Routes
   app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
   app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
   app.get("/api/medical-context/insights", getPersonalizedInsights);
+
+  // IoT Vitals Streaming and Control
+  app.get("/api/vitals/stream", streamVitals);
+  app.get("/api/health/vitals", getLatestVitals);
+  app.post("/api/vitals/update", updateVitals);
+  app.post("/api/vitals/mock/start", startMock);
+  app.post("/api/vitals/mock/stop", stopMock);
+
+  // Health Analytics (Goals and Reminders)
+  app.post("/api/analytics/goals", setGoals);
+  app.get("/api/analytics/goals", getGoals);
+  app.post("/api/analytics/reminders", setReminders);
+  app.get("/api/analytics/reminders", getReminders);
+  app.delete("/api/analytics/delete", deleteAllMyData);
+  app.post("/api/analytics/push/subscribe", registerPushSubscription);
 
   // Database Health Check Endpoint
   app.get("/api/health/database", async (req, res) => {
