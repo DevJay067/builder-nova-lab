@@ -89,6 +89,163 @@ const handleRequest = async (event: any) => {
     };
   }
 
+  // Auth endpoints
+  if (path === "/api/auth/verify" && httpMethod === "GET") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      },
+      body: JSON.stringify({
+        success: true,
+        authenticated: true,
+        user: {
+          id: "demo_user",
+          username: "demo_user",
+          email: "demo@example.com",
+          role: "patient"
+        },
+        timestamp: new Date().toISOString()
+      })
+    };
+  }
+
+  if (path === "/api/auth/login" && httpMethod === "POST") {
+    try {
+      const { username, password } = JSON.parse(body || "{}");
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: true,
+          message: "Login successful",
+          user: {
+            id: "demo_user",
+            username: username || "demo_user",
+            email: "demo@example.com",
+            role: "patient"
+          },
+          token: "demo_token_" + Date.now()
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: false,
+          error: "Invalid request body"
+        })
+      };
+    }
+  }
+
+  if (path === "/api/auth/register" && httpMethod === "POST") {
+    try {
+      const { username, email, password } = JSON.parse(body || "{}");
+      return {
+        statusCode: 201,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: true,
+          message: "Registration successful",
+          user: {
+            id: "new_user_" + Date.now(),
+            username: username || "new_user",
+            email: email || "new@example.com",
+            role: "patient"
+          }
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: false,
+          error: "Invalid request body"
+        })
+      };
+    }
+  }
+
+  if (path === "/api/auth/data-access" && httpMethod === "POST") {
+    try {
+      const { recordId, accessType } = JSON.parse(body || "{}");
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: true,
+          message: "Data access granted",
+          accessId: "access_" + Date.now(),
+          recordId: recordId || "demo_record",
+          accessType: accessType || "read",
+          expiresAt: new Date(Date.now() + 3600000).toISOString()
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: false,
+          error: "Invalid request body"
+        })
+      };
+    }
+  }
+
+  if (path === "/api/auth/data-access/records" && httpMethod === "GET") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      },
+      body: JSON.stringify({
+        success: true,
+        records: demoData.healthRecords,
+        total: demoData.healthRecords.length
+      })
+    };
+  }
+
   // Health records endpoints
   if (path === "/api/health-records" && httpMethod === "GET") {
     return {
@@ -160,7 +317,46 @@ const handleRequest = async (event: any) => {
     }
   }
 
-  // Medical context enhancement endpoint
+  // Medical context endpoints
+  if (path === "/api/medical-context/enhance-query" && httpMethod === "POST") {
+    try {
+      const { query, library } = JSON.parse(body || "{}");
+      
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: true,
+          enhancedQuery: `Enhanced: ${query} (using ${library || 'default'} library)`,
+          context: "Patient has 3 health records with focus on cardiovascular health",
+          libraryUsed: library || "default",
+          librariesSearched: ["cardiovascular", "general", "emergency"],
+          confidence: 0.85
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: false,
+          error: "Invalid request",
+          message: error.message
+        })
+      };
+    }
+  }
+
   if (path === "/api/medical-context/enhance" && httpMethod === "POST") {
     try {
       const { query, library } = JSON.parse(body || "{}");
@@ -198,6 +394,70 @@ const handleRequest = async (event: any) => {
         })
       };
     }
+  }
+
+  if (path === "/api/medical-context/personalized" && httpMethod === "GET") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      },
+      body: JSON.stringify({
+        success: true,
+        hasData: true,
+        context: "Patient has cardiovascular history with hypertension and diabetes",
+        summary: {
+          totalRecords: demoData.healthRecords.length,
+          lastUpdate: new Date().toISOString(),
+          keyConditions: ["hypertension", "diabetes"],
+          medications: ["aspirin", "beta-blocker"],
+          allergies: ["penicillin"],
+          vitals: {
+            weight: 75,
+            height: 175,
+            bloodPressure: "140/90",
+            heartRate: "72",
+            bloodType: "O+",
+            age: 45,
+            gender: "male",
+            lastUpdated: new Date().toISOString()
+          }
+        },
+        patientId: "demo_patient",
+        dataSource: "health_records"
+      })
+    };
+  }
+
+  if (path === "/api/medical-context/insights" && httpMethod === "GET") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      },
+      body: JSON.stringify({
+        success: true,
+        insights: [
+          "Blood pressure trending upward - consider medication adjustment",
+          "Weight stable over last 3 months - good progress",
+          "Heart rate within normal range",
+          "Consider adding exercise routine to improve cardiovascular health"
+        ],
+        recommendations: [
+          "Monitor blood pressure daily",
+          "Schedule cardiologist appointment",
+          "Increase physical activity",
+          "Review medication effectiveness"
+        ],
+        timestamp: new Date().toISOString()
+      })
+    };
   }
 
   // AI scan endpoint
@@ -248,6 +508,145 @@ const handleRequest = async (event: any) => {
     }
   }
 
+  // Secure data endpoints
+  if (path === "/api/secure/system/status" && httpMethod === "GET") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      },
+      body: JSON.stringify({
+        success: true,
+        status: "operational",
+        encryption: "active",
+        blockchain: "connected",
+        cache: "healthy",
+        uptime: Date.now() - demoData.systemStatus.uptime,
+        timestamp: new Date().toISOString()
+      })
+    };
+  }
+
+  if (path === "/api/secure/keys/generate" && httpMethod === "POST") {
+    try {
+      const { keyType, keySize } = JSON.parse(body || "{}");
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: true,
+          keyId: "key_" + Date.now(),
+          keyType: keyType || "AES-256",
+          keySize: keySize || 256,
+          publicKey: "demo_public_key_" + Date.now(),
+          privateKey: "demo_private_key_" + Date.now(),
+          createdAt: new Date().toISOString()
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: false,
+          error: "Invalid request body"
+        })
+      };
+    }
+  }
+
+  if (path === "/api/secure/data/store" && httpMethod === "POST") {
+    try {
+      const { data, encryptionKey } = JSON.parse(body || "{}");
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: true,
+          recordId: "secure_record_" + Date.now(),
+          encryptedData: "encrypted_" + btoa(JSON.stringify(data)),
+          hash: "hash_" + Date.now(),
+          timestamp: new Date().toISOString()
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: false,
+          error: "Invalid request body"
+        })
+      };
+    }
+  }
+
+  // Handle dynamic secure data retrieve endpoint
+  if (path.startsWith("/api/secure/data/retrieve/") && httpMethod === "POST") {
+    try {
+      const recordId = path.split("/").pop();
+      const { decryptionKey } = JSON.parse(body || "{}");
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: true,
+          recordId: recordId,
+          decryptedData: {
+            type: "medical_record",
+            content: "This is decrypted medical data",
+            patientId: "demo_patient",
+            timestamp: new Date().toISOString()
+          },
+          integrity: "verified",
+          timestamp: new Date().toISOString()
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+        body: JSON.stringify({
+          success: false,
+          error: "Invalid request body"
+        })
+      };
+    }
+  }
+
   // Default response for unknown endpoints
   return {
     statusCode: 404,
@@ -265,9 +664,21 @@ const handleRequest = async (event: any) => {
         "/api/health",
         "/api/demo",
         "/api/performance/status",
+        "/api/auth/verify",
+        "/api/auth/login",
+        "/api/auth/register",
+        "/api/auth/data-access",
+        "/api/auth/data-access/records",
         "/api/health-records",
+        "/api/medical-context/enhance-query",
         "/api/medical-context/enhance",
-        "/api/medical-context/ai-scan"
+        "/api/medical-context/personalized",
+        "/api/medical-context/insights",
+        "/api/medical-context/ai-scan",
+        "/api/secure/system/status",
+        "/api/secure/keys/generate",
+        "/api/secure/data/store",
+        "/api/secure/data/retrieve/:recordId"
       ],
       timestamp: new Date().toISOString()
     })
