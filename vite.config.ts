@@ -19,6 +19,45 @@ export default defineConfig(({ mode }) => ({
       input: {
         main: path.resolve(__dirname, "index.html"),
       },
+      external: [
+        // Node.js built-ins that should not be bundled
+        "fs",
+        "path",
+        "url",
+        "http",
+        "https",
+        "os",
+        "crypto",
+        "stream",
+        "util",
+        "events",
+        "buffer",
+        "querystring",
+        "child_process",
+        "zlib",
+        "net",
+        "tls",
+        "dns",
+        "assert",
+        "constants",
+        "domain",
+        "punycode",
+        "string_decoder",
+        "timers",
+        "tty",
+        "vm",
+        "worker_threads",
+        // Server-side dependencies that should not be bundled with client
+        "express",
+        "cors",
+        "cookie-parser",
+        "dotenv",
+        "bcrypt",
+        "bcryptjs",
+        "@neondatabase/serverless",
+        "serverless-http",
+        "zod",
+      ],
       output: {
         manualChunks: {
           vendor: ["react", "react-dom"],
@@ -43,6 +82,10 @@ export default defineConfig(({ mode }) => ({
       "@shared": path.resolve(__dirname, "./shared"),
     },
   },
+  // Prevent server-side code from being processed
+  optimizeDeps: {
+    exclude: ["fs", "path", "crypto", "os", "util", "events", "stream", "buffer"],
+  },
 }));
 
 function expressPlugin(): Plugin {
@@ -60,6 +103,16 @@ function expressPlugin(): Plugin {
           console.warn("Failed to load Express server:", error);
         });
       }
+    },
+    // Prevent server-side code from being processed during client build
+    transform(code, id) {
+      if (id.includes("/server/") && process.env.NODE_ENV === "production") {
+        return {
+          code: "// Server-side code excluded from client build",
+          map: null,
+        };
+      }
+      return null;
     },
   };
 }

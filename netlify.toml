@@ -1,11 +1,12 @@
 [build]
-  command = "npm run build"
+  command = "npm run build:netlify"
   functions = "netlify/functions"
   publish = "dist/spa"
 
 [build.environment]
   NODE_VERSION = "18"
   NODE_ENV = "production"
+  VITE_NODE_ENV = "production"
 
 [functions]
   external_node_modules = [
@@ -17,7 +18,30 @@
     "cors",
     "cookie-parser",
     "dotenv",
-    "zod"
+    "zod",
+    "fs",
+    "path",
+    "crypto",
+    "os",
+    "util",
+    "events",
+    "stream",
+    "buffer",
+    "querystring",
+    "child_process",
+    "zlib",
+    "net",
+    "tls",
+    "dns",
+    "assert",
+    "constants",
+    "domain",
+    "punycode",
+    "string_decoder",
+    "timers",
+    "tty",
+    "vm",
+    "worker_threads"
   ]
   node_bundler = "esbuild"
   included_files = ["server/**/*", "dist/server/**/*"]
