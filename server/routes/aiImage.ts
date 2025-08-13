@@ -22,7 +22,10 @@ function buildPrompt(modality?: string, notes?: string): string {
 }
 
 function toDataUrl(imageBase64?: string, imageDataUrl?: string): string | null {
-  if (imageDataUrl && imageDataUrl.startsWith("data:")) return imageDataUrl;
+  if (imageDataUrl) {
+    if (imageDataUrl.startsWith("data:")) return imageDataUrl;
+    if (imageDataUrl.startsWith("http://") || imageDataUrl.startsWith("https://")) return imageDataUrl;
+  }
   if (imageBase64) return `data:image/jpeg;base64,${imageBase64}`;
   return null;
 }

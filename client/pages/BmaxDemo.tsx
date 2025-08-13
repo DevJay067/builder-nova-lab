@@ -265,29 +265,33 @@ export default function BmaxDemo() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-3">
-              <div className="md:col-span-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && onSelectFile(e.target.files[0])}
-                />
-              </div>
-              <div>
-                <select
-                  className="w-full border rounded px-2 py-2 text-sm bg-background"
-                  value={imageModality}
-                  onChange={(e) => setImageModality(e.target.value)}
-                >
-                  <option>Chest X-ray</option>
-                  <option>Brain MRI</option>
-                  <option>CT</option>
-                  <option>Ultrasound</option>
-                  <option>Skin</option>
-                  <option>Other</option>
-                </select>
-              </div>
-            </div>
+                         <div className="grid md:grid-cols-3 gap-3">
+               <div className="md:col-span-2 space-y-2">
+                 <Input
+                   type="file"
+                   accept="image/*"
+                   onChange={(e) => e.target.files?.[0] && onSelectFile(e.target.files[0])}
+                 />
+                 <Input
+                   placeholder="Or paste an image URL (http/https)"
+                   onChange={(e) => setImageDataUrl(e.target.value || null)}
+                 />
+               </div>
+               <div>
+                 <select
+                   className="w-full border rounded px-2 py-2 text-sm bg-background"
+                   value={imageModality}
+                   onChange={(e) => setImageModality(e.target.value)}
+                 >
+                   <option>Chest X-ray</option>
+                   <option>Brain MRI</option>
+                   <option>CT</option>
+                   <option>Ultrasound</option>
+                   <option>Skin</option>
+                   <option>Other</option>
+                 </select>
+               </div>
+             </div>
 
             <Input
               placeholder="Optional notes (symptoms, context, ROI)"
