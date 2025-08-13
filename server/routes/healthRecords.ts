@@ -83,6 +83,21 @@ export const addTestData: RequestHandler = async (req, res) => {
             "Blood pressure improving with medication. Continue current dosage.",
         },
       },
+      {
+        type: "checkup" as const,
+        title: "Chest Radiograph",
+        description: "Posterior-Anterior chest X-ray for routine evaluation",
+        doctor: "Dr. Alex Kim",
+        metadata: {
+          age: 45,
+          gender: "female",
+          notes: "Mild cough reported. Please check right lower lobe.",
+          attachments: [
+            // Example public domain sample image URL (replace in real)
+            "https://upload.wikimedia.org/wikipedia/commons/0/09/Chest_Xray_PA_3-8-2010.png",
+          ],
+        },
+      },
     ];
 
     const createdRecords = [];
