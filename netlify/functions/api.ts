@@ -94,14 +94,17 @@ const validateSession = (headers: any) => {
   
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.substring(7);
-    return demoData.users.find(user => user.sessionToken === token);
+    const user = demoData.users.find(user => user.sessionToken === token);
+    if (user) return user;
   }
   
   if (sessionToken) {
-    return demoData.users.find(user => user.sessionToken === sessionToken);
+    const user = demoData.users.find(user => user.sessionToken === sessionToken);
+    if (user) return user;
   }
   
-  // For demo purposes, always return a valid user
+  // For demo purposes, always return a valid user even without token
+  // This ensures the app works seamlessly in demo mode
   return demoData.users[0];
 };
 
@@ -181,7 +184,13 @@ const handleRequest = async (event: any) => {
     if (path === "/api/auth/login" && httpMethod === "POST") {
       try {
         const { username, password } = JSON.parse(body || "{}");
+        
+        // For demo purposes, accept any login
         const user = demoData.users.find(u => u.username === username) || demoData.users[0];
+        
+        // Create a new session token
+        const sessionToken = "demo_session_" + Date.now();
+        user.sessionToken = sessionToken;
         
         return createSuccessResponse({
           success: true,
@@ -192,7 +201,8 @@ const handleRequest = async (event: any) => {
             email: user.email,
             role: user.role
           },
-          token: user.sessionToken,
+          token: sessionToken,
+          sessionToken: sessionToken,
           expiresAt: new Date(Date.now() + 3600000).toISOString()
         });
       } catch (error) {
@@ -208,7 +218,7 @@ const handleRequest = async (event: any) => {
           username: username || "new_user",
           email: email || "new@example.com",
           role: "patient",
-          sessionToken: "new_token_" + Date.now()
+          sessionToken: "new_session_" + Date.now()
         };
         
         demoData.users.push(newUser);
@@ -222,7 +232,8 @@ const handleRequest = async (event: any) => {
             email: newUser.email,
             role: newUser.role
           },
-          token: newUser.sessionToken
+          token: newUser.sessionToken,
+          sessionToken: newUser.sessionToken
         }, 201);
       } catch (error) {
         return createErrorResponse("Invalid request body", 400);
@@ -480,6 +491,47 @@ const handleRequest = async (event: any) => {
         });
       } catch (error) {
         return createErrorResponse("Invalid request body", 400);
+      }
+    }
+
+    // Demo auto-login endpoint for easier testing
+    if (path === "/api/auth/demo-login" && httpMethod === "POST") {
+      try {
+        const user = demoData.users[0];
+        const sessionToken = "demo_session_" + Date.now();
+        user.sessionToken = sessionToken;
+        
+        return createSuccessResponse({
+          success: true,
+          message: "Demo login successful",
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+          },
+          token: sessionToken,
+          sessionToken: sessionToken,
+          expiresAt: new Date(Date.now() + 3600000).toISOString()
+        });
+      } catch (error) {
+        return createErrorResponse("Demo login failed", 400);
+      }
+    }
+
+    if (path === "/api/auth/logout" && httpMethod === "POST") {
+      try {
+        const user = validateSession(headers);
+        if (user) {
+          user.sessionToken = null;
+        }
+        
+        return createSuccessResponse({
+          success: true,
+          message: "Logout successful"
+        });
+      } catch (error) {
+        return createErrorResponse("Logout failed", 400);
       }
     }
 

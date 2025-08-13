@@ -255,6 +255,47 @@ export default function Login() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    setMessage(null); // Clear previous messages
+    
+    try {
+      const response = await fetch("/api/auth/demo-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Store session data
+        localStorage.setItem("sessionToken", data.sessionToken);
+        localStorage.setItem("healthchain_user", JSON.stringify(data.user));
+        
+        // Set cookie
+        document.cookie = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; secure; samesite=strict`;
+        
+        // Redirect to dashboard or intended page
+        const redirectPath = localStorage.getItem("redirectAfterLogin") || "/dashboard";
+        localStorage.removeItem("redirectAfterLogin");
+        navigate(redirectPath);
+      } else {
+        const errorData = await response.json();
+        setMessage({ type: "error", text: errorData.message || "Demo login failed. Please try again." });
+      }
+    } catch (error) {
+      console.error("Demo login error:", error);
+      setMessage({
+        type: "error",
+        text: "Network error during demo login.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Show loading screen until component is properly initialized
   if (!isInitialized) {
     return (
@@ -478,6 +519,38 @@ export default function Login() {
                         <>
                           <LogIn className="w-4 h-4 mr-2" />
                           Sign In
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Demo Login Button */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border/50" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full btn-smooth"
+                      onClick={handleDemoLogin}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Demo Login...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Try Demo Mode
                         </>
                       )}
                     </Button>
