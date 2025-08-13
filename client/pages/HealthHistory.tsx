@@ -111,6 +111,7 @@ export default function HealthHistory() {
       heartRate: "",
       temperature: "",
       notes: "",
+      attachments: [] as string[],
     },
   });
 
@@ -307,6 +308,7 @@ export default function HealthHistory() {
             heartRate: "",
             temperature: "",
             notes: "",
+            attachments: [],
           },
         });
 
@@ -324,6 +326,21 @@ export default function HealthHistory() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImageCapture = async (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setNewRecord((prev) => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          attachments: [...(prev.metadata.attachments || []), dataUrl],
+        },
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const filteredRecords = records
@@ -677,6 +694,19 @@ export default function HealthHistory() {
                           rows={2}
                           className="focus-enhanced"
                         />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Attach Scan/Photo</Label>
+                        <Input type="file" accept="image/*" capture="environment" onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleImageCapture(f);
+                        }} />
+                        {newRecord.metadata.attachments && newRecord.metadata.attachments.length > 0 && (
+                          <div className="text-xs text-muted-foreground">{newRecord.metadata.attachments.length} attachment(s) added</div>
+                        )}
                       </div>
                     </div>
 
