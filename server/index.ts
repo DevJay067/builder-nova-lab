@@ -54,226 +54,230 @@ import {
 } from "./routes/personalizedContext";
 
 export function createServer() {
-  // Initialize performance optimizer in background (non-blocking)
-  const initializePerformanceOptimizer = async () => {
-    try {
-      const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
-      await PerformanceOptimizerService.initialize();
-    } catch (error) {
-      console.error("Failed to initialize performance optimizer:", error);
-      // Don't fail the server startup
-    }
-  };
-
-  // Initialize secure database on server startup (non-blocking)
-  const initializeSecureSystem = async () => {
-    try {
-      console.log("🚀 Attempting to initialize secure healthcare system...");
-
-      // Initialize production blockchain system
-      try {
-        const { ProductionBlockchainService } = await import(
-          "./services/productionBlockchain"
-        );
-        ProductionBlockchainService.initializeBlockchain();
-        console.log("✅ Production blockchain system initialized successfully");
-      } catch (blockchainError) {
-        console.log(
-          "⚠️ Production blockchain initialization failed, continuing...",
-        );
-      }
-
-      // Initialize secure data access system
-      try {
-        const { SecureDataAccessService } = await import(
-          "./services/secureDataAccess"
-        );
-        await SecureDataAccessService.initialize();
-        console.log("✅ Secure data access system initialized successfully");
-      } catch (secureError) {
-        console.log(
-          "⚠️ Secure data access system initialization failed, continuing...",
-        );
-      }
-
-      // Try to initialize user authentication system with production features
-      try {
-        const { UserAuthenticationService } = await import(
-          "./services/userAuthentication"
-        );
-        await UserAuthenticationService.initialize();
-        console.log("✅ User authentication system initialized successfully");
-      } catch (authError) {
-        console.log(
-          "⚠️  User authentication system not available, continuing without it",
-        );
-        console.log("   The system will work in demo mode");
-      }
-
-      // Try to initialize database
-      try {
-        const { DatabaseInitService } = await import("./services/initDatabase");
-        await DatabaseInitService.initializeDatabase();
-        console.log("✅ Database initialized successfully");
-      } catch (dbError) {
-        console.log("⚠️ Database initialization failed, continuing...");
-      }
-
-      console.log("✅ Secure healthcare system initialization completed");
-    } catch (error) {
-      console.error("❌ Failed to initialize secure system:", error);
-      // Don't fail the server startup
-    }
-  };
-
-  // Start initialization in background
-  initializePerformanceOptimizer();
-  initializeSecureSystem();
-
   const app = express();
 
-  // Middleware
-  app.use(cors());
+  // Basic middleware setup
+  app.use(cors({
+    origin: process.env.NODE_ENV === "production" 
+      ? ["https://your-app.netlify.app", "https://localhost:3000"] 
+      : true,
+    credentials: true,
+  }));
   app.use(cookieParser());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-  // Example API routes
-  app.get("/api/ping", (_req, res) => {
-    const ping = process.env.PING_MESSAGE ?? "ping";
-    res.json({ message: ping });
-  });
-
-  // Test endpoint for debugging
-  app.post("/api/test", (req, res) => {
-    console.log("🧪 Test endpoint hit", { body: req.body });
+  // Health check endpoint (always available)
+  app.get("/api/health", (req, res) => {
     res.json({
-      success: true,
-      received: req.body,
+      status: "ok",
       timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "development"
     });
   });
 
-  // Debug endpoint to check user existence
-  app.get("/api/debug/user/:username", async (req, res) => {
+  // Initialize services in background (non-blocking)
+  const initializeServices = async () => {
     try {
-      const { username } = req.params;
-      const { UserAuthenticationService } = await import(
-        "./services/userAuthentication"
-      );
+      console.log("🚀 Starting background service initialization...");
 
-      // Check both memory and database
-      const stats = UserAuthenticationService.getSystemStats();
+      // Initialize performance optimizer
+      try {
+        const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
+        await PerformanceOptimizerService.initialize();
+        console.log("✅ Performance optimizer initialized");
+      } catch (error) {
+        console.log("⚠️ Performance optimizer failed:", error.message);
+      }
 
-      res.json({
-        success: true,
-        username: username,
-        systemStats: stats,
-        timestamp: new Date().toISOString(),
-      });
+      // Initialize blockchain system
+      try {
+        const { ProductionBlockchainService } = await import("./services/productionBlockchain");
+        ProductionBlockchainService.initializeBlockchain();
+        console.log("✅ Blockchain system initialized");
+      } catch (error) {
+        console.log("⚠️ Blockchain system failed:", error.message);
+      }
+
+      // Initialize secure data access
+      try {
+        const { SecureDataAccessService } = await import("./services/secureDataAccess");
+        await SecureDataAccessService.initialize();
+        console.log("✅ Secure data access initialized");
+      } catch (error) {
+        console.log("⚠️ Secure data access failed:", error.message);
+      }
+
+      // Initialize user authentication
+      try {
+        const { UserAuthenticationService } = await import("./services/userAuthentication");
+        await UserAuthenticationService.initialize();
+        console.log("✅ User authentication initialized");
+      } catch (error) {
+        console.log("⚠️ User authentication failed:", error.message);
+      }
+
+      // Initialize database
+      try {
+        const { DatabaseInitService } = await import("./services/initDatabase");
+        await DatabaseInitService.initializeDatabase();
+        console.log("✅ Database initialized");
+      } catch (error) {
+        console.log("⚠️ Database failed:", error.message);
+      }
+
+      console.log("✅ Background initialization completed");
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      console.error("❌ Background initialization error:", error);
     }
+  };
+
+  // Start background initialization
+  initializeServices();
+
+  // Add routes with error handling
+  const addRoutes = async () => {
+    try {
+      // Health records routes
+      try {
+        app.post("/api/health-records", createHealthRecord);
+        app.get("/api/health-records", getHealthRecords);
+        app.get("/api/health-records/:id", getHealthRecord);
+        app.get("/api/medical-context", getMedicalContext);
+        app.get("/api/patient-profile", getPatientProfile);
+        app.get("/api/blockchain/verify", verifyPatientBlockchain);
+        app.get("/api/blockchain/stats", getBlockchainStats);
+        app.post("/api/test-data", addTestData);
+        app.post("/api/store-health-record", storeHealthRecordDirect);
+        console.log("✅ Health records routes added");
+      } catch (error) {
+        console.log("⚠️ Health records routes failed:", error.message);
+      }
+
+      // Secure data API routes
+      try {
+        app.post("/api/secure/generate-keys", generateSplitKeys);
+        app.post("/api/secure/store", storeSecureData);
+        app.get("/api/secure/retrieve", retrieveSecureData);
+        app.post("/api/secure/rotate-keys", rotateKeys);
+        app.get("/api/secure/verify", verifyDataIntegrity);
+        app.get("/api/secure/audit", getAuditLogs);
+        app.post("/api/secure/emergency-key", generateEmergencyKey);
+        app.get("/api/secure/status", getSystemStatus);
+        app.post("/api/secure/validate", validateKeyFragments);
+        console.log("✅ Secure data routes added");
+      } catch (error) {
+        console.log("⚠️ Secure data routes failed:", error.message);
+      }
+
+      // Database health routes
+      try {
+        app.get("/api/database/health", checkDatabaseHealth);
+        app.post("/api/database/init", initializeDatabase);
+        app.get("/api/database/test", testDatabaseConnection);
+        console.log("✅ Database routes added");
+      } catch (error) {
+        console.log("⚠️ Database routes failed:", error.message);
+      }
+
+      // Demo keys routes
+      try {
+        app.post("/api/demo/keys", generateDemoKeys);
+        app.get("/api/demo/keys", getDemoKeysInfo);
+        app.post("/api/demo/init", initializeDemoData);
+        console.log("✅ Demo routes added");
+      } catch (error) {
+        console.log("⚠️ Demo routes failed:", error.message);
+      }
+
+      // Auth routes
+      try {
+        app.post("/api/auth/register", registerUser);
+        app.post("/api/auth/login", loginUser);
+        app.get("/api/auth/verify", verifySession);
+        app.post("/api/auth/logout", logoutUser);
+        app.get("/api/auth/profile", getUserProfile);
+        app.post("/api/auth/data-access", createDataAccess);
+        app.get("/api/auth/data-access", verifyDataAccess);
+        app.get("/api/auth/stats", getAuthStats);
+        app.post("/api/auth/authenticate", authenticateUser);
+        console.log("✅ Auth routes added");
+      } catch (error) {
+        console.log("⚠️ Auth routes failed:", error.message);
+      }
+
+      // Personalized context routes
+      try {
+        app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
+        app.post("/api/medical-context/enhance", enhanceQueryWithContext);
+        app.get("/api/medical-context/insights", getPersonalizedInsights);
+        app.post("/api/medical-context/ai-scan", performAIScan);
+        console.log("✅ Personalized context routes added");
+      } catch (error) {
+        console.log("⚠️ Personalized context routes failed:", error.message);
+      }
+
+      // Demo route
+      try {
+        app.get("/api/demo", handleDemo);
+        console.log("✅ Demo route added");
+      } catch (error) {
+        console.log("⚠️ Demo route failed:", error.message);
+      }
+
+      // Performance status route
+      try {
+        app.get("/api/performance/status", async (req, res) => {
+          try {
+            const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
+            const metrics = PerformanceOptimizerService.getMetrics();
+            const health = PerformanceOptimizerService.getHealthStatus();
+            
+            res.json({
+              success: true,
+              metrics,
+              health,
+              timestamp: new Date().toISOString()
+            });
+          } catch (error) {
+            res.status(500).json({
+              success: false,
+              error: "Performance service unavailable",
+              message: error.message
+            });
+          }
+        });
+        console.log("✅ Performance status route added");
+      } catch (error) {
+        console.log("⚠️ Performance status route failed:", error.message);
+      }
+
+    } catch (error) {
+      console.error("❌ Route initialization error:", error);
+    }
+  };
+
+  // Add routes in background
+  addRoutes();
+
+  // Error handling middleware
+  app.use((error: any, req: any, res: any, next: any) => {
+    console.error("Express error:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      message: process.env.NODE_ENV === "development" ? error.message : "Something went wrong",
+      timestamp: new Date().toISOString()
+    });
   });
 
-  app.get("/api/demo", handleDemo);
-
-  // Health Records & Blockchain API Routes
-  app.post("/api/health-records", createHealthRecord);
-  app.get("/api/health-records", getHealthRecords);
-  app.get("/api/health-records/:recordId", getHealthRecord);
-  app.post("/api/health-records/store-direct", storeHealthRecordDirect);
-  app.get("/api/medical-context", getMedicalContext);
-  app.post("/api/add-test-data", addTestData);
-
-  // Patient & Blockchain Management
-  app.get("/api/patient/profile", getPatientProfile);
-  app.get("/api/patient/verify-blockchain", verifyPatientBlockchain);
-  app.get("/api/blockchain/stats", getBlockchainStats);
-
-  // Secure Data Access API Routes
-  app.post("/api/secure/keys/generate", generateSplitKeys);
-  app.post("/api/secure/data/store", storeSecureData);
-  app.post("/api/secure/data/retrieve/:recordId", retrieveSecureData);
-  app.post("/api/secure/keys/rotate/:keyId", rotateKeys);
-  app.get("/api/secure/data/verify/:recordId", verifyDataIntegrity);
-  app.get("/api/secure/audit/:recordId", getAuditLogs);
-  app.post("/api/secure/emergency/key", generateEmergencyKey);
-  app.get("/api/secure/system/status", getSystemStatus);
-  app.post("/api/secure/keys/validate", validateKeyFragments);
-
-  // Database Health & Management
-  app.get("/api/database/health", checkDatabaseHealth);
-  app.post("/api/database/initialize", initializeDatabase);
-  app.post("/api/database/test-connection", testDatabaseConnection);
-
-  // Demo Keys & Testing
-  app.post("/api/demo/keys/generate", generateDemoKeys);
-  app.get("/api/demo/keys/info", getDemoKeysInfo);
-  app.post("/api/demo/initialize", initializeDemoData);
-
-  // Authentication API Routes
-  app.post("/api/auth/register", registerUser);
-  app.post("/api/auth/login", loginUser);
-  app.get("/api/auth/verify", verifySession);
-  app.post("/api/auth/logout", logoutUser);
-  app.get("/api/auth/profile", getUserProfile);
-  app.post("/api/auth/data-access", createDataAccess);
-  app.get("/api/auth/data-access/:dataRecordId", verifyDataAccess);
-  app.get("/api/auth/stats", getAuthStats);
-
-  // Personalized Medical Context API Routes
-  app.get("/api/medical-context/personalized", getPersonalizedMedicalContext);
-  app.post("/api/medical-context/enhance-query", enhanceQueryWithContext);
-  app.get("/api/medical-context/insights", getPersonalizedInsights);
-  app.post("/api/medical-context/ai-scan", performAIScan);
-
-  // Database Health Check Endpoint
-  app.get("/api/health/database", async (req, res) => {
-    try {
-      const { DatabaseHealthService } = await import(
-        "./services/databaseHealthCheck"
-      );
-      const health = await DatabaseHealthService.checkHealth();
-      res.json({
-        success: true,
-        database: health,
-        server: {
-          uptime: process.uptime(),
-          memory: process.memoryUsage(),
-          timestamp: new Date().toISOString(),
-        },
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      });
-    }
-  });
-
-  // Performance Monitoring Endpoint
-  app.get("/api/performance/status", async (req, res) => {
-    try {
-      const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
-      const healthStatus = PerformanceOptimizerService.getHealthStatus();
-      
-      res.json({
-        success: true,
-        performance: healthStatus,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      });
-    }
+  // 404 handler
+  app.use("*", (req, res) => {
+    res.status(404).json({
+      error: "Not found",
+      message: "The requested endpoint does not exist",
+      path: req.originalUrl,
+      timestamp: new Date().toISOString()
+    });
   });
 
   return app;
