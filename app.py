@@ -140,9 +140,9 @@ def offline_basic_analysis(jpeg_bytes: bytes) -> str:
         return (
             "```\n"
             f"summary: grayscale image {w}x{h}, mean_intensity={mean_val:.1f}, min={min_val}, max={max_val}\n"
-            "possible_findings: [""general image features only; model offline""]\n"
+            "possible_findings: [\"general image features only; model offline\"]\n"
             "red_flags: []\n"
-            "triage_advice: [""This offline mode cannot assess risk. Consult a clinician for any concerns.""]\n"
+            "triage_advice: [\"This offline mode cannot assess risk. Consult a clinician for any concerns.\"]\n"
             "confidence: low\n"
             "```"
         )
