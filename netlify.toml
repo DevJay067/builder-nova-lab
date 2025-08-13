@@ -1,15 +1,26 @@
 [build]
-  command = "npm run build:client"
+  command = "npm run build"
   functions = "netlify/functions"
   publish = "dist/spa"
 
 [build.environment]
   NODE_VERSION = "18"
+  NODE_ENV = "production"
 
 [functions]
-  external_node_modules = ["express", "bcrypt", "@neondatabase/serverless", "serverless-http"]
+  external_node_modules = [
+    "express", 
+    "bcrypt", 
+    "bcryptjs",
+    "@neondatabase/serverless", 
+    "serverless-http",
+    "cors",
+    "cookie-parser",
+    "dotenv",
+    "zod"
+  ]
   node_bundler = "esbuild"
-  included_files = ["server/**/*"]
+  included_files = ["server/**/*", "dist/server/**/*"]
   
 [[redirects]]
   force = true

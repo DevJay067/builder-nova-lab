@@ -13,11 +13,17 @@ import {
  * encrypted healthcare data with blockchain immutability.
  */
 
-// Database connection
-const sql = neon(
-  process.env.DATABASE_URL ||
-    "postgresql://misty-glitter-69745686-user:default@ep-empty-frog-a5lp6eyz.us-east-2.aws.neon.tech/misty-glitter-69745686-db?sslmode=require",
-);
+// Database connection with fallback
+const getDatabaseUrl = () => {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.warn("⚠️ DATABASE_URL not set, using fallback connection");
+    return "postgresql://dummy:dummy@localhost/dummy";
+  }
+  return dbUrl;
+};
+
+const sql = neon(getDatabaseUrl());
 
 export class NeonDatabaseService {
   /**
