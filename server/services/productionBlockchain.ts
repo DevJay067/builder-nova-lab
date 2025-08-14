@@ -1,758 +1,496 @@
-import crypto from "crypto";
-import { HealthRecord, BlockchainTransaction } from "@shared/api";
-
-/**
- * Production-Level Blockchain Service with Split Key Cryptography
- *
- * This service implements a secure healthcare blockchain system with:
- * - Split key cryptography for enhanced security
- * - User hash + data hash combination for secure data access
- * - Production-ready blockchain immutability
- * - Advanced encryption with multiple key layers
- */
-
-export interface SplitKeyData {
-  userHash: string;
-  dataHash: string;
-  combinedHash: string;
-  splitKeyPairs: {
-    part1: string;
-    part2: string;
-    checksum: string;
-  };
-}
-
-export interface SecureHealthRecord extends HealthRecord {
-  splitKeyData: SplitKeyData;
-  encryptionLayers: {
-    userLayer: string;
-    dataLayer: string;
-    blockchainLayer: string;
-  };
-  accessControl: {
-    patientAccess: boolean;
-    providerAccess: boolean;
-    emergencyAccess: boolean;
-  };
-}
-
-export interface ProductionBlock {
-  blockNumber: number;
-  previousHash: string;
-  merkleRoot: string;
-  timestamp: string;
-  transactions: ProductionTransaction[];
-  nonce: number;
-  difficulty: number;
-  hash: string;
-  signature: string;
-}
+import crypto from 'crypto';
+import { EventEmitter } from 'events';
 
 export interface ProductionTransaction {
   id: string;
-  type: "CREATE" | "ACCESS" | "UPDATE" | "REVOKE";
-  patientId: string;
+  from: string;
+  to: string;
+  data: any;
   dataHash: string;
-  splitKeyReference: string;
-  encryptedPayload: string;
   timestamp: string;
   signature: string;
-  gasUsed: number;
-  validationProof: string;
+  nonce: number;
+  blockHash?: string;
 }
 
-class ProductionBlockchainService {
-  private static blockchain: ProductionBlock[] = [];
-  private static pendingTransactions: ProductionTransaction[] = [];
-  private static readonly DIFFICULTY = 4; // Adjustable mining difficulty
-  private static readonly BLOCK_TIME = 10000; // 10 seconds per block
-  private static readonly MAX_TRANSACTIONS_PER_BLOCK = 100;
+export interface ProductionBlock {
+  index: number;
+  timestamp: string;
+  transactions: ProductionTransaction[];
+  previousHash: string;
+  hash: string;
+  nonce: number;
+  merkleRoot: string;
+  difficulty: number;
+}
 
-  /**
-   * Initialize the blockchain with genesis block
-   */
-  static initializeBlockchain(): void {
-    if (this.blockchain.length === 0) {
-      const genesisBlock = this.createGenesisBlock();
-      this.blockchain.push(genesisBlock);
-      console.log("🚀 Production blockchain initialized with genesis block");
+export interface SplitKeySystem {
+  userHash: string;
+  dataHash: string;
+  combinedHash: string;
+  keyFragments: string[];
+  recoveryKeys: string[];
+  timestamp: string;
+}
+
+export interface BlockchainStats {
+  totalBlocks: number;
+  totalTransactions: number;
+  currentDifficulty: number;
+  averageBlockTime: number;
+  networkHashRate: number;
+  lastBlockHash: string;
+  chainIntegrity: boolean;
+}
+
+export class ProductionBlockchainService extends EventEmitter {
+  private static instance: ProductionBlockchainService;
+  private chain: ProductionBlock[] = [];
+  private pendingTransactions: ProductionTransaction[] = [];
+  private difficulty: number = 4;
+  private miningReward: number = 100;
+  private isMining: boolean = false;
+  private miningInterval: NodeJS.Timeout | null = null;
+  private splitKeyStore: Map<string, SplitKeySystem> = new Map();
+
+  public static getInstance(): ProductionBlockchainService {
+    if (!ProductionBlockchainService.instance) {
+      ProductionBlockchainService.instance = new ProductionBlockchainService();
     }
+    return ProductionBlockchainService.instance;
   }
 
-  /**
-   * Create genesis block
-   */
-  private static createGenesisBlock(): ProductionBlock {
-    const genesisData = {
-      blockNumber: 0,
-      previousHash: "0",
+  constructor() {
+    super();
+    this.initializeBlockchain();
+  }
+
+  private initializeBlockchain(): void {
+    // Create genesis block
+    const genesisBlock: ProductionBlock = {
+      index: 0,
       timestamp: new Date().toISOString(),
       transactions: [],
+      previousHash: '0',
+      hash: this.calculateBlockHash({
+        index: 0,
+        timestamp: new Date().toISOString(),
+        transactions: [],
+        previousHash: '0',
+        hash: '',
+        nonce: 0,
+        merkleRoot: '',
+        difficulty: this.difficulty
+      }),
       nonce: 0,
-      difficulty: this.DIFFICULTY,
+      merkleRoot: this.calculateMerkleRoot([]),
+      difficulty: this.difficulty
     };
 
-    const merkleRoot = this.calculateMerkleRoot([]);
-    const blockData = `${genesisData.blockNumber}${genesisData.previousHash}${merkleRoot}${genesisData.timestamp}${genesisData.difficulty}`;
-    const hash = this.calculateHash(blockData + genesisData.nonce);
-
-    return {
-      ...genesisData,
-      merkleRoot,
-      hash,
-      signature: this.signBlock(hash),
-    };
+    this.chain.push(genesisBlock);
+    console.log("🏗️ Genesis block created");
   }
 
-  /**
-   * Generate user hash from username and password
-   */
-  static generateUserHash(username: string, password: string): string {
-    const salt = crypto
-      .createHash("sha256")
-      .update(username)
-      .digest("hex")
-      .substring(0, 16);
-    const userKey = crypto.pbkdf2Sync(password, salt, 100000, 32, "sha256");
-    return crypto.createHash("sha256").update(userKey).digest("hex");
-  }
-
-  /**
-   * Generate data hash from health record
-   */
-  static generateDataHash(healthRecord: any): string {
-    const recordString = JSON.stringify({
-      type: healthRecord.type,
-      data: healthRecord.data,
-      timestamp: healthRecord.timestamp,
-      patientId: healthRecord.patientId,
-    });
-    return crypto.createHash("sha256").update(recordString).digest("hex");
-  }
-
-  /**
-   * Create split key system (User Hash + Data Hash = Combined Hash → Split)
-   */
-  static createSplitKeySystem(
-    userHash: string,
-    dataHash: string,
-  ): SplitKeyData {
-    // Combine user hash and data hash
-    const combinedHash = crypto
-      .createHash("sha256")
+  // Split-key cryptography system
+  createSplitKeySystem(userHash: string, dataHash: string): SplitKeySystem {
+    const combinedHash = crypto.createHash('sha256')
       .update(userHash + dataHash)
-      .digest("hex");
+      .digest('hex');
 
-    // Split the combined hash into two parts
-    const midPoint = combinedHash.length / 2;
-    const part1 = combinedHash.substring(0, midPoint);
-    const part2 = combinedHash.substring(midPoint);
+    // Generate key fragments
+    const keyFragments: string[] = [];
+    const recoveryKeys: string[] = [];
 
-    // Create checksum for integrity verification
-    const checksum = crypto
-      .createHash("sha256")
-      .update(part1 + part2)
-      .digest("hex")
-      .substring(0, 8);
+    for (let i = 0; i < 5; i++) {
+      keyFragments.push(crypto.randomBytes(32).toString('hex'));
+    }
 
-    return {
+    // Generate recovery keys
+    for (let i = 0; i < 3; i++) {
+      recoveryKeys.push(crypto.randomBytes(32).toString('hex'));
+    }
+
+    const splitKeySystem: SplitKeySystem = {
       userHash,
       dataHash,
       combinedHash,
-      splitKeyPairs: {
-        part1,
-        part2,
-        checksum,
-      },
+      keyFragments,
+      recoveryKeys,
+      timestamp: new Date().toISOString()
     };
+
+    this.splitKeyStore.set(combinedHash, splitKeySystem);
+    return splitKeySystem;
   }
 
-  /**
-   * Verify split key integrity
-   */
-  static verifySplitKey(splitKeyData: SplitKeyData): boolean {
-    const { part1, part2, checksum } = splitKeyData.splitKeyPairs;
-    const reconstructedHash = part1 + part2;
-
-    // Verify reconstruction matches original combined hash
-    if (reconstructedHash !== splitKeyData.combinedHash) {
-      return false;
-    }
-
-    // Verify checksum
-    const calculatedChecksum = crypto
-      .createHash("sha256")
-      .update(part1 + part2)
-      .digest("hex")
-      .substring(0, 8);
-
-    return calculatedChecksum === checksum;
+  // Multi-layer encryption
+  encryptHealthData(healthRecord: any, userHash: string, dataHash: string): string {
+    const splitKeySystem = this.createSplitKeySystem(userHash, dataHash);
+    
+    // Layer 1: User-specific encryption
+    const userKey = crypto.createHash('sha256').update(userHash).digest();
+    const userEncrypted = this.encryptWithKey(JSON.stringify(healthRecord), userKey);
+    
+    // Layer 2: Data-specific encryption
+    const dataKey = crypto.createHash('sha256').update(dataHash).digest();
+    const dataEncrypted = this.encryptWithKey(userEncrypted, dataKey);
+    
+    // Layer 3: Blockchain encryption
+    const blockchainKey = crypto.createHash('sha256').update(splitKeySystem.combinedHash).digest();
+    const blockchainEncrypted = this.encryptWithKey(dataEncrypted, blockchainKey);
+    
+    return blockchainEncrypted;
   }
 
-  /**
-   * Encrypt health data with multiple layers
-   */
-  static encryptHealthData(
-    healthRecord: any,
-    splitKeyData: SplitKeyData,
-  ): { encryptedData: string; encryptionLayers: any } {
-    const { userHash, dataHash, combinedHash } = splitKeyData;
-
-    // Layer 1: Encrypt with user hash (user-specific encryption)
-    const userLayerKey = crypto.createHash("sha256").update(userHash).digest();
-    const userIv = crypto.randomBytes(16);
-    const userCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      userLayerKey,
-      userIv,
-    );
-    userCipher.setAAD(Buffer.from("user-layer"));
-
-    let userEncrypted = userCipher.update(
-      JSON.stringify(healthRecord),
-      "utf8",
-      "hex",
-    );
-    userEncrypted += userCipher.final("hex");
-    const userAuthTag = userCipher.getAuthTag();
-    const userLayerData = `${userIv.toString("hex")}:${userAuthTag.toString("hex")}:${userEncrypted}`;
-
-    // Layer 2: Encrypt with data hash (data-specific encryption)
-    const dataLayerKey = crypto.createHash("sha256").update(dataHash).digest();
-    const dataIv = crypto.randomBytes(16);
-    const dataCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      dataLayerKey,
-      dataIv,
-    );
-    dataCipher.setAAD(Buffer.from("data-layer"));
-
-    let dataEncrypted = dataCipher.update(userLayerData, "utf8", "hex");
-    dataEncrypted += dataCipher.final("hex");
-    const dataAuthTag = dataCipher.getAuthTag();
-    const dataLayerData = `${dataIv.toString("hex")}:${dataAuthTag.toString("hex")}:${dataEncrypted}`;
-
-    // Layer 3: Encrypt with combined hash (blockchain-specific encryption)
-    const blockchainLayerKey = crypto
-      .createHash("sha256")
-      .update(combinedHash)
-      .digest();
-    const blockchainIv = crypto.randomBytes(16);
-    const blockchainCipher = crypto.createCipherGCM(
-      "aes-256-gcm",
-      blockchainLayerKey,
-      blockchainIv,
-    );
-    blockchainCipher.setAAD(Buffer.from("blockchain-layer"));
-
-    let blockchainEncrypted = blockchainCipher.update(
-      dataLayerData,
-      "utf8",
-      "hex",
-    );
-    blockchainEncrypted += blockchainCipher.final("hex");
-    const blockchainAuthTag = blockchainCipher.getAuthTag();
-    const finalEncryptedData = `${blockchainIv.toString("hex")}:${blockchainAuthTag.toString("hex")}:${blockchainEncrypted}`;
-
-    return {
-      encryptedData: finalEncryptedData,
-      encryptionLayers: {
-        userLayer: userLayerData,
-        dataLayer: dataLayerData,
-        blockchainLayer: finalEncryptedData,
-      },
-    };
+  private encryptWithKey(data: string, key: Buffer): string {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher('aes-256-gcm', key);
+    
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    const authTag = cipher.getAuthTag();
+    
+    return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
   }
 
-  /**
-   * Decrypt health data by reversing the encryption layers
-   */
-  static decryptHealthData(
-    encryptedData: string,
-    splitKeyData: SplitKeyData,
-  ): any {
-    try {
-      const { userHash, dataHash, combinedHash } = splitKeyData;
-
-      // Layer 3: Decrypt blockchain layer
-      const blockchainLayerKey = crypto
-        .createHash("sha256")
-        .update(combinedHash)
-        .digest();
-      const [blockchainIvHex, blockchainAuthTagHex, blockchainEncrypted] =
-        encryptedData.split(":");
-      const blockchainIv = Buffer.from(blockchainIvHex, "hex");
-      const blockchainAuthTag = Buffer.from(blockchainAuthTagHex, "hex");
-
-      const blockchainDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        blockchainLayerKey,
-        blockchainIv,
-      );
-      blockchainDecipher.setAAD(Buffer.from("blockchain-layer"));
-      blockchainDecipher.setAuthTag(blockchainAuthTag);
-
-      let dataLayerData = blockchainDecipher.update(
-        blockchainEncrypted,
-        "hex",
-        "utf8",
-      );
-      dataLayerData += blockchainDecipher.final("utf8");
-
-      // Layer 2: Decrypt data layer
-      const dataLayerKey = crypto
-        .createHash("sha256")
-        .update(dataHash)
-        .digest();
-      const [dataIvHex, dataAuthTagHex, dataEncrypted] =
-        dataLayerData.split(":");
-      const dataIv = Buffer.from(dataIvHex, "hex");
-      const dataAuthTag = Buffer.from(dataAuthTagHex, "hex");
-
-      const dataDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        dataLayerKey,
-        dataIv,
-      );
-      dataDecipher.setAAD(Buffer.from("data-layer"));
-      dataDecipher.setAuthTag(dataAuthTag);
-
-      let userLayerData = dataDecipher.update(dataEncrypted, "hex", "utf8");
-      userLayerData += dataDecipher.final("utf8");
-
-      // Layer 1: Decrypt user layer
-      const userLayerKey = crypto
-        .createHash("sha256")
-        .update(userHash)
-        .digest();
-      const [userIvHex, userAuthTagHex, userEncrypted] =
-        userLayerData.split(":");
-      const userIv = Buffer.from(userIvHex, "hex");
-      const userAuthTag = Buffer.from(userAuthTagHex, "hex");
-
-      const userDecipher = crypto.createDecipherGCM(
-        "aes-256-gcm",
-        userLayerKey,
-        userIv,
-      );
-      userDecipher.setAAD(Buffer.from("user-layer"));
-      userDecipher.setAuthTag(userAuthTag);
-
-      let decryptedData = userDecipher.update(userEncrypted, "hex", "utf8");
-      decryptedData += userDecipher.final("utf8");
-
-      return JSON.parse(decryptedData);
-    } catch (error) {
-      console.error("❌ Failed to decrypt health data:", error);
-      throw new Error(
-        "Failed to decrypt health data - invalid keys or corrupted data",
-      );
-    }
-  }
-
-  /**
-   * Store secure health record in blockchain
-   */
-  static async storeSecureHealthRecord(
-    healthRecord: any,
-    username: string,
-    password: string,
-  ): Promise<{
-    transaction: ProductionTransaction;
-    splitKeyData: SplitKeyData;
-    blockchainHash: string;
-  }> {
-    // Generate hashes
-    const userHash = this.generateUserHash(username, password);
-    const dataHash = this.generateDataHash(healthRecord);
-
-    // Create split key system
-    const splitKeyData = this.createSplitKeySystem(userHash, dataHash);
-
-    // Encrypt the health data
-    const { encryptedData, encryptionLayers } = this.encryptHealthData(
-      healthRecord,
-      splitKeyData,
-    );
-
-    // Create secure transaction
+  // Create new transaction
+  createTransaction(from: string, to: string, data: any): ProductionTransaction {
     const transaction: ProductionTransaction = {
-      id: crypto.randomBytes(16).toString("hex"),
-      type: "CREATE",
-      patientId: healthRecord.patientId || userHash.substring(0, 16),
-      dataHash: dataHash,
-      splitKeyReference: splitKeyData.combinedHash,
-      encryptedPayload: encryptedData,
+      id: crypto.randomUUID(),
+      from,
+      to,
+      data,
+      dataHash: this.calculateDataHash(data),
       timestamp: new Date().toISOString(),
-      signature: this.signTransaction(encryptedData),
-      gasUsed: this.calculateGasUsage(encryptedData),
-      validationProof: this.generateValidationProof(splitKeyData),
+      signature: '',
+      nonce: 0
     };
 
-    // Add to pending transactions
+    // Sign transaction
+    transaction.signature = this.signTransaction(transaction, from);
+    
     this.pendingTransactions.push(transaction);
+    this.emit('transactionCreated', transaction);
+    
+    return transaction;
+  }
 
-    // Mine block if enough transactions
-    if (this.pendingTransactions.length >= this.MAX_TRANSACTIONS_PER_BLOCK) {
-      await this.mineBlock();
+  // Sign transaction with digital signature
+  signTransaction(transaction: ProductionTransaction, privateKey: string): string {
+    const transactionData = JSON.stringify({
+      id: transaction.id,
+      from: transaction.from,
+      to: transaction.to,
+      data: transaction.data,
+      dataHash: transaction.dataHash,
+      timestamp: transaction.timestamp
+    });
+
+    const signature = crypto.createHmac('sha256', privateKey)
+      .update(transactionData)
+      .digest('hex');
+
+    return signature;
+  }
+
+  // Verify transaction signature
+  verifyTransactionSignature(transaction: ProductionTransaction, publicKey: string): boolean {
+    const transactionData = JSON.stringify({
+      id: transaction.id,
+      from: transaction.from,
+      to: transaction.to,
+      data: transaction.data,
+      dataHash: transaction.dataHash,
+      timestamp: transaction.timestamp
+    });
+
+    const expectedSignature = crypto.createHmac('sha256', publicKey)
+      .update(transactionData)
+      .digest('hex');
+
+    return transaction.signature === expectedSignature;
+  }
+
+  // Calculate Merkle root for data integrity
+  calculateMerkleRoot(transactions: ProductionTransaction[]): string {
+    if (transactions.length === 0) {
+      return crypto.createHash('sha256').update('empty').digest('hex');
     }
 
-    const blockchainHash = crypto
-      .createHash("sha256")
-      .update(transaction.id + transaction.encryptedPayload)
-      .digest("hex");
-
-    console.log(
-      `✅ Secure health record stored with blockchain hash: ${blockchainHash}`,
-    );
-
-    return {
-      transaction,
-      splitKeyData,
-      blockchainHash,
-    };
-  }
-
-  /**
-   * Retrieve secure health record from blockchain
-   */
-  static retrieveSecureHealthRecord(
-    username: string,
-    password: string,
-    dataIdentifier: string,
-  ): any | null {
-    try {
-      // Generate user hash
-      const userHash = this.generateUserHash(username, password);
-
-      // Search for transaction in blockchain
-      const transaction = this.findTransactionByIdentifier(
-        dataIdentifier,
-        userHash,
-      );
-
-      if (!transaction) {
-        console.log("❌ No matching transaction found for user");
-        return null;
-      }
-
-      // Reconstruct split key data
-      const splitKeyData = this.reconstructSplitKeyData(userHash, transaction);
-
-      // Verify split key integrity
-      if (!this.verifySplitKey(splitKeyData)) {
-        console.error("❌ Split key verification failed");
-        return null;
-      }
-
-      // Decrypt the health data
-      const decryptedData = this.decryptHealthData(
-        transaction.encryptedPayload,
-        splitKeyData,
-      );
-
-      console.log(`✅ Successfully retrieved secure health record for user`);
-      return decryptedData;
-    } catch (error) {
-      console.error("❌ Failed to retrieve secure health record:", error);
-      return null;
+    if (transactions.length === 1) {
+      return crypto.createHash('sha256').update(transactions[0].dataHash).digest('hex');
     }
+
+    const leaves = transactions.map(tx => tx.dataHash);
+    const merkleTree = this.buildMerkleTree(leaves);
+    
+    return merkleTree[merkleTree.length - 1][0];
   }
 
-  /**
-   * Find transaction by identifier and user
-   */
-  private static findTransactionByIdentifier(
-    identifier: string,
-    userHash: string,
-  ): ProductionTransaction | null {
-    for (const block of this.blockchain) {
-      for (const transaction of block.transactions) {
-        if (
-          (transaction.id === identifier ||
-            transaction.dataHash === identifier ||
-            transaction.splitKeyReference.includes(
-              userHash.substring(0, 16),
-            )) &&
-          transaction.patientId === userHash.substring(0, 16)
-        ) {
-          return transaction;
-        }
+  private buildMerkleTree(leaves: string[]): string[][] {
+    const tree: string[][] = [leaves];
+
+    while (tree[tree.length - 1].length > 1) {
+      const currentLevel = tree[tree.length - 1];
+      const nextLevel: string[] = [];
+
+      for (let i = 0; i < currentLevel.length; i += 2) {
+        const left = currentLevel[i];
+        const right = i + 1 < currentLevel.length ? currentLevel[i + 1] : left;
+        
+        const combined = crypto.createHash('sha256')
+          .update(left + right)
+          .digest('hex');
+        
+        nextLevel.push(combined);
       }
+
+      tree.push(nextLevel);
     }
-    return null;
+
+    return tree;
   }
 
-  /**
-   * Reconstruct split key data from transaction
-   */
-  private static reconstructSplitKeyData(
-    userHash: string,
-    transaction: ProductionTransaction,
-  ): SplitKeyData {
-    const dataHash = transaction.dataHash;
-    return this.createSplitKeySystem(userHash, dataHash);
-  }
-
-  /**
-   * Mine a new block
-   */
-  private static async mineBlock(): Promise<ProductionBlock> {
-    const previousBlock = this.blockchain[this.blockchain.length - 1];
-    const blockNumber = previousBlock.blockNumber + 1;
-    const timestamp = new Date().toISOString();
-    const transactions = [...this.pendingTransactions];
-    const merkleRoot = this.calculateMerkleRoot(transactions);
-
-    // Clear pending transactions
-    this.pendingTransactions = [];
-
-    // Mine the block (proof of work)
-    const { nonce, hash } = await this.proofOfWork(
-      blockNumber,
-      previousBlock.hash,
-      merkleRoot,
-      timestamp,
-      this.DIFFICULTY,
-    );
-
+  // Proof-of-work mining
+  async mineBlock(transactions: ProductionTransaction[], difficulty: number = this.difficulty): Promise<ProductionBlock> {
+    const previousBlock = this.getLatestBlock();
     const newBlock: ProductionBlock = {
-      blockNumber,
-      previousHash: previousBlock.hash,
-      merkleRoot,
-      timestamp,
+      index: previousBlock.index + 1,
+      timestamp: new Date().toISOString(),
       transactions,
-      nonce,
-      difficulty: this.DIFFICULTY,
-      hash,
-      signature: this.signBlock(hash),
+      previousHash: previousBlock.hash,
+      hash: '',
+      nonce: 0,
+      merkleRoot: this.calculateMerkleRoot(transactions),
+      difficulty
     };
 
-    this.blockchain.push(newBlock);
-    console.log(
-      `⛏️  Successfully mined block #${blockNumber} with ${transactions.length} transactions`,
-    );
-
-    return newBlock;
-  }
-
-  /**
-   * Proof of work mining algorithm
-   */
-  private static async proofOfWork(
-    blockNumber: number,
-    previousHash: string,
-    merkleRoot: string,
-    timestamp: string,
-    difficulty: number,
-  ): Promise<{ nonce: number; hash: string }> {
-    const target = "0".repeat(difficulty);
+    console.log(`⛏️ Mining block ${newBlock.index} with difficulty ${difficulty}...`);
+    
     let nonce = 0;
-    let hash = "";
+    let hash = '';
+    const target = '0'.repeat(difficulty);
 
     while (!hash.startsWith(target)) {
       nonce++;
-      const blockData = `${blockNumber}${previousHash}${merkleRoot}${timestamp}${difficulty}${nonce}`;
-      hash = this.calculateHash(blockData);
-
-      // Yield control periodically to prevent blocking
+      newBlock.nonce = nonce;
+      hash = this.calculateBlockHash(newBlock);
+      
       if (nonce % 10000 === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1));
+        this.emit('miningProgress', { blockIndex: newBlock.index, nonce, hash });
       }
     }
 
-    return { nonce, hash };
+    newBlock.hash = hash;
+    console.log(`✅ Block ${newBlock.index} mined! Hash: ${hash}`);
+    
+    return newBlock;
   }
 
-  /**
-   * Calculate Merkle root of transactions
-   */
-  private static calculateMerkleRoot(
-    transactions: ProductionTransaction[],
-  ): string {
-    if (transactions.length === 0) {
-      return crypto.createHash("sha256").update("empty").digest("hex");
+  // Calculate block hash
+  private calculateBlockHash(block: ProductionBlock): string {
+    const blockData = JSON.stringify({
+      index: block.index,
+      timestamp: block.timestamp,
+      transactions: block.transactions,
+      previousHash: block.previousHash,
+      nonce: block.nonce,
+      merkleRoot: block.merkleRoot,
+      difficulty: block.difficulty
+    });
+
+    return crypto.createHash('sha256').update(blockData).digest('hex');
+  }
+
+  // Add block to chain
+  addBlock(block: ProductionBlock): boolean {
+    // Verify block integrity
+    if (!this.isValidBlock(block)) {
+      console.error("❌ Invalid block detected");
+      return false;
     }
 
-    let hashes = transactions.map((tx) =>
-      crypto
-        .createHash("sha256")
-        .update(tx.id + tx.encryptedPayload)
-        .digest("hex"),
-    );
-
-    while (hashes.length > 1) {
-      const newHashes: string[] = [];
-
-      for (let i = 0; i < hashes.length; i += 2) {
-        const left = hashes[i];
-        const right = hashes[i + 1] || hashes[i]; // Use left hash if odd number
-        const combined = crypto
-          .createHash("sha256")
-          .update(left + right)
-          .digest("hex");
-        newHashes.push(combined);
-      }
-
-      hashes = newHashes;
-    }
-
-    return hashes[0];
-  }
-
-  /**
-   * Calculate hash using SHA-256
-   */
-  private static calculateHash(data: string): string {
-    return crypto.createHash("sha256").update(data).digest("hex");
-  }
-
-  /**
-   * Sign transaction
-   */
-  private static signTransaction(data: string): string {
-    return crypto
-      .createHmac("sha256", "healthcare-blockchain-secret")
-      .update(data)
-      .digest("hex");
-  }
-
-  /**
-   * Sign block
-   */
-  private static signBlock(hash: string): string {
-    return crypto
-      .createHmac("sha256", "healthcare-blockchain-block-secret")
-      .update(hash)
-      .digest("hex");
-  }
-
-  /**
-   * Calculate gas usage for transaction
-   */
-  private static calculateGasUsage(encryptedData: string): number {
-    const baseGas = 21000;
-    const dataGas = encryptedData.length * 16;
-    return baseGas + dataGas;
-  }
-
-  /**
-   * Generate validation proof
-   */
-  private static generateValidationProof(splitKeyData: SplitKeyData): string {
-    return crypto
-      .createHash("sha256")
-      .update(splitKeyData.combinedHash + splitKeyData.splitKeyPairs.checksum)
-      .digest("hex");
-  }
-
-  /**
-   * Get blockchain statistics
-   */
-  static getBlockchainStats(): {
-    totalBlocks: number;
-    totalTransactions: number;
-    pendingTransactions: number;
-    lastBlockHash: string;
-    difficulty: number;
-    averageBlockTime: number;
-  } {
-    const totalTransactions = this.blockchain.reduce(
-      (total, block) => total + block.transactions.length,
-      0,
-    );
-    const lastBlock = this.blockchain[this.blockchain.length - 1];
-
-    return {
-      totalBlocks: this.blockchain.length,
-      totalTransactions,
-      pendingTransactions: this.pendingTransactions.length,
-      lastBlockHash: lastBlock?.hash || "none",
-      difficulty: this.DIFFICULTY,
-      averageBlockTime: this.BLOCK_TIME,
-    };
-  }
-
-  /**
-   * Validate blockchain integrity
-   */
-  static validateBlockchain(): boolean {
-    for (let i = 1; i < this.blockchain.length; i++) {
-      const currentBlock = this.blockchain[i];
-      const previousBlock = this.blockchain[i - 1];
-
-      // Check if previous hash matches
-      if (currentBlock.previousHash !== previousBlock.hash) {
-        console.error(`❌ Invalid previous hash at block ${i}`);
-        return false;
-      }
-
-      // Recalculate and verify hash
-      const blockData = `${currentBlock.blockNumber}${currentBlock.previousHash}${currentBlock.merkleRoot}${currentBlock.timestamp}${currentBlock.difficulty}${currentBlock.nonce}`;
-      const calculatedHash = this.calculateHash(blockData);
-
-      if (currentBlock.hash !== calculatedHash) {
-        console.error(`❌ Invalid hash at block ${i}`);
-        return false;
-      }
-
-      // Check proof of work
-      if (!currentBlock.hash.startsWith("0".repeat(currentBlock.difficulty))) {
-        console.error(`❌ Invalid proof of work at block ${i}`);
-        return false;
-      }
-    }
-
-    console.log("✅ Blockchain integrity validated successfully");
+    this.chain.push(block);
+    this.emit('blockAdded', block);
+    
+    // Adjust difficulty based on mining time
+    this.adjustDifficulty();
+    
     return true;
   }
-}
 
-/**
- * Key Management Service for Split Keys
- */
-class KeyManagementService {
-  private static keyStore: Map<string, SplitKeyData> = new Map();
-
-  /**
-   * Store split key data securely
-   */
-  static storeSplitKeyData(
-    identifier: string,
-    splitKeyData: SplitKeyData,
-  ): void {
-    this.keyStore.set(identifier, splitKeyData);
+  // Validate block
+  private isValidBlock(block: ProductionBlock): boolean {
+    const previousBlock = this.getLatestBlock();
+    
+    // Check block index
+    if (block.index !== previousBlock.index + 1) {
+      return false;
+    }
+    
+    // Check previous hash
+    if (block.previousHash !== previousBlock.hash) {
+      return false;
+    }
+    
+    // Check block hash
+    const calculatedHash = this.calculateBlockHash(block);
+    if (block.hash !== calculatedHash) {
+      return false;
+    }
+    
+    // Check proof of work
+    const target = '0'.repeat(block.difficulty);
+    if (!block.hash.startsWith(target)) {
+      return false;
+    }
+    
+    // Verify Merkle root
+    const calculatedMerkleRoot = this.calculateMerkleRoot(block.transactions);
+    if (block.merkleRoot !== calculatedMerkleRoot) {
+      return false;
+    }
+    
+    return true;
   }
 
-  /**
-   * Retrieve split key data
-   */
-  static getSplitKeyData(identifier: string): SplitKeyData | null {
-    return this.keyStore.get(identifier) || null;
+  // Adjust mining difficulty
+  private adjustDifficulty(): void {
+    const lastBlock = this.getLatestBlock();
+    const previousBlock = this.chain[this.chain.length - 2];
+    
+    if (!previousBlock) return;
+    
+    const timeDiff = new Date(lastBlock.timestamp).getTime() - new Date(previousBlock.timestamp).getTime();
+    const targetTime = 60000; // 1 minute target
+    
+    if (timeDiff < targetTime / 2) {
+      this.difficulty++;
+    } else if (timeDiff > targetTime * 2) {
+      this.difficulty = Math.max(1, this.difficulty - 1);
+    }
   }
 
-  /**
-   * Remove split key data
-   */
-  static removeSplitKeyData(identifier: string): boolean {
-    return this.keyStore.delete(identifier);
+  // Start mining process
+  startMining(): void {
+    if (this.isMining) return;
+    
+    this.isMining = true;
+    console.log("🚀 Starting blockchain mining...");
+    
+    this.miningInterval = setInterval(async () => {
+      if (this.pendingTransactions.length > 0) {
+        const transactions = [...this.pendingTransactions];
+        this.pendingTransactions = [];
+        
+        try {
+          const newBlock = await this.mineBlock(transactions);
+          this.addBlock(newBlock);
+        } catch (error) {
+          console.error("❌ Mining error:", error);
+        }
+      }
+    }, 1000);
   }
 
-  /**
-   * Get key store statistics
-   */
-  static getKeyStoreStats(): { totalKeys: number; memoryUsage: string } {
+  // Stop mining process
+  stopMining(): void {
+    if (this.miningInterval) {
+      clearInterval(this.miningInterval);
+      this.miningInterval = null;
+    }
+    this.isMining = false;
+    console.log("⏹️ Mining stopped");
+  }
+
+  // Get blockchain statistics
+  getBlockchainStats(): BlockchainStats {
+    const totalBlocks = this.chain.length;
+    const totalTransactions = this.chain.reduce((sum, block) => sum + block.transactions.length, 0);
+    const lastBlock = this.getLatestBlock();
+    
+    // Calculate average block time
+    let totalTime = 0;
+    for (let i = 1; i < this.chain.length; i++) {
+      const currentTime = new Date(this.chain[i].timestamp).getTime();
+      const previousTime = new Date(this.chain[i - 1].timestamp).getTime();
+      totalTime += currentTime - previousTime;
+    }
+    const averageBlockTime = totalTime / (this.chain.length - 1);
+    
     return {
-      totalKeys: this.keyStore.size,
-      memoryUsage: `${(JSON.stringify([...this.keyStore.entries()]).length / 1024).toFixed(2)} KB`,
+      totalBlocks,
+      totalTransactions,
+      currentDifficulty: this.difficulty,
+      averageBlockTime,
+      networkHashRate: this.calculateHashRate(),
+      lastBlockHash: lastBlock.hash,
+      chainIntegrity: this.verifyChainIntegrity()
     };
   }
-}
 
-export { ProductionBlockchainService, KeyManagementService };
-export type {
-  SplitKeyData,
-  SecureHealthRecord,
-  ProductionBlock,
-  ProductionTransaction,
-};
+  // Calculate network hash rate
+  private calculateHashRate(): number {
+    // Simplified hash rate calculation
+    return this.difficulty * 1000; // Hashes per second estimate
+  }
+
+  // Verify entire chain integrity
+  verifyChainIntegrity(): boolean {
+    for (let i = 1; i < this.chain.length; i++) {
+      if (!this.isValidBlock(this.chain[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Get latest block
+  getLatestBlock(): ProductionBlock {
+    return this.chain[this.chain.length - 1];
+  }
+
+  // Get all blocks
+  getAllBlocks(): ProductionBlock[] {
+    return [...this.chain];
+  }
+
+  // Get pending transactions
+  getPendingTransactions(): ProductionTransaction[] {
+    return [...this.pendingTransactions];
+  }
+
+  // Calculate data hash
+  private calculateDataHash(data: any): string {
+    const dataString = JSON.stringify(data);
+    return crypto.createHash('sha256').update(dataString).digest('hex');
+  }
+
+  // Emergency key recovery
+  recoverSplitKey(combinedHash: string, recoveryKeys: string[]): SplitKeySystem | null {
+    const splitKeySystem = this.splitKeyStore.get(combinedHash);
+    if (!splitKeySystem) {
+      return null;
+    }
+
+    // Verify recovery keys
+    const validRecoveryKeys = splitKeySystem.recoveryKeys;
+    const providedKeys = new Set(recoveryKeys);
+    
+    const isValidRecovery = validRecoveryKeys.some(key => providedKeys.has(key));
+    
+    if (isValidRecovery) {
+      return splitKeySystem;
+    }
+    
+    return null;
+  }
+
+  // Initialize blockchain system
+  initializeBlockchain(): void {
+    console.log("🏗️ Initializing production blockchain system...");
+    this.startMining();
+    console.log("✅ Production blockchain system initialized");
+  }
+}

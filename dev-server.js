@@ -332,6 +332,221 @@ app.get("/api/performance/status", (req, res) => {
   });
 });
 
+// Medical scan analysis endpoints
+app.post("/api/medical-scan/analyze", (req, res) => {
+  try {
+    const { imageData, scanType, patientSymptoms, patientHistory } = req.body;
+    
+    if (!imageData) {
+      return res.status(400).json({
+        success: false,
+        message: "Image data is required"
+      });
+    }
+
+    // Simulate AI analysis
+    const analysisId = crypto.randomUUID();
+    const imageHash = crypto.createHash('sha256').update(imageData).digest('hex');
+    
+    // Generate mock analysis based on scan type
+    const analysis = generateMockAnalysis(scanType || 'general', patientSymptoms, patientHistory);
+    
+    const result = {
+      id: analysisId,
+      scanType: analysis.scanType,
+      confidence: analysis.confidence,
+      findings: analysis.findings,
+      diagnosis: analysis.diagnosis,
+      recommendations: analysis.recommendations,
+      riskLevel: analysis.riskLevel,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        imageHash,
+        processingTime: Math.floor(Math.random() * 2000) + 500,
+        aiModel: 'HealthChain-Medical-AI-v1.0',
+        version: '1.0.0'
+      }
+    };
+
+    res.json({
+      success: true,
+      message: "Medical scan analysis completed successfully",
+      result,
+      blockchainHash: crypto.createHash('sha256').update(JSON.stringify(result)).digest('hex'),
+      metadata: {
+        processingTime: result.metadata.processingTime,
+        aiModel: result.metadata.aiModel,
+        confidence: result.confidence,
+        riskLevel: result.riskLevel,
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Medical scan analysis failed",
+      error: error.message
+    });
+  }
+});
+
+app.get("/api/medical-scan/results", (req, res) => {
+  // Return mock scan results
+  const mockScans = [
+    {
+      id: "scan-001",
+      scanType: "xray",
+      confidence: 0.85,
+      riskLevel: "low",
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      findings: ["Normal chest X-ray appearance"],
+      diagnosis: ["Normal findings"]
+    },
+    {
+      id: "scan-002", 
+      scanType: "bloodwork",
+      confidence: 0.78,
+      riskLevel: "medium",
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      findings: ["Elevated blood glucose levels"],
+      diagnosis: ["Possible pre-diabetes"]
+    }
+  ];
+
+  res.json({
+    success: true,
+    scans: mockScans,
+    total: mockScans.length
+  });
+});
+
+app.get("/api/medical-scan/stats", (req, res) => {
+  res.json({
+    success: true,
+    stats: {
+      totalScans: 15,
+      scanTypes: {
+        xray: 5,
+        mri: 2,
+        ct: 3,
+        ultrasound: 1,
+        bloodwork: 3,
+        ecg: 1,
+        general: 0
+      },
+      riskLevels: {
+        low: 8,
+        medium: 4,
+        high: 2,
+        critical: 1
+      },
+      averageConfidence: 0.82,
+      recentScans: [
+        {
+          id: "scan-001",
+          scanType: "xray",
+          confidence: 0.85,
+          riskLevel: "low",
+          timestamp: new Date().toISOString()
+        }
+      ]
+    }
+  });
+});
+
+// Blockchain endpoints
+app.get("/api/blockchain/stats", (req, res) => {
+  res.json({
+    success: true,
+    stats: {
+      totalBlocks: 1250,
+      totalTransactions: 15420,
+      currentDifficulty: 4,
+      averageBlockTime: 60000,
+      networkHashRate: 4000,
+      lastBlockHash: "0x1234567890abcdef",
+      chainIntegrity: true
+    }
+  });
+});
+
+app.get("/api/blockchain/blocks", (req, res) => {
+  const mockBlocks = [
+    {
+      index: 1250,
+      timestamp: new Date().toISOString(),
+      transactions: 12,
+      previousHash: "0xabcdef1234567890",
+      hash: "0x1234567890abcdef",
+      nonce: 12345,
+      merkleRoot: "0xmerkle123456",
+      difficulty: 4
+    },
+    {
+      index: 1249,
+      timestamp: new Date(Date.now() - 60000).toISOString(),
+      transactions: 8,
+      previousHash: "0x9876543210fedcba",
+      hash: "0xabcdef1234567890",
+      nonce: 9876,
+      merkleRoot: "0xmerkle654321",
+      difficulty: 4
+    }
+  ];
+
+  res.json({
+    success: true,
+    blocks: mockBlocks,
+    total: mockBlocks.length
+  });
+});
+
+// Helper function to generate mock analysis
+function generateMockAnalysis(scanType, symptoms, history) {
+  const scanTypeLower = scanType.toLowerCase();
+  
+  if (scanTypeLower.includes('xray')) {
+    return {
+      scanType: 'xray',
+      confidence: 0.85,
+      findings: ['Normal chest X-ray appearance', 'Clear lung fields'],
+      diagnosis: ['Normal findings'],
+      recommendations: ['No immediate treatment required', 'Follow-up in 6 months'],
+      riskLevel: 'low'
+    };
+  }
+  
+  if (scanTypeLower.includes('blood') || scanTypeLower.includes('lab')) {
+    return {
+      scanType: 'bloodwork',
+      confidence: 0.78,
+      findings: ['Elevated blood glucose levels', 'Normal CBC'],
+      diagnosis: ['Possible pre-diabetes'],
+      recommendations: ['Endocrinology consultation', 'Blood glucose monitoring'],
+      riskLevel: 'medium'
+    };
+  }
+  
+  if (scanTypeLower.includes('mri')) {
+    return {
+      scanType: 'mri',
+      confidence: 0.92,
+      findings: ['Normal brain MRI', 'No mass lesions'],
+      diagnosis: ['Normal findings'],
+      recommendations: ['No immediate concerns'],
+      riskLevel: 'low'
+    };
+  }
+  
+  return {
+    scanType: 'general',
+    confidence: 0.65,
+    findings: ['Image requires medical professional review'],
+    diagnosis: ['Requires medical evaluation'],
+    recommendations: ['Consult with healthcare provider'],
+    riskLevel: 'medium'
+  };
+}
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error("Express error:", error);

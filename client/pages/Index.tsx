@@ -132,6 +132,17 @@ export default function Index() {
       gradient: "from-blue-500/20 to-cyan-500/20",
     },
     {
+      id: "medical-scan",
+      title: "Medical Scan AI Analysis",
+      description:
+        "AI-powered analysis of medical images with blockchain security and instant diagnosis.",
+      icon: Brain,
+      color: "bg-indigo-500",
+      route: "/medical-scan",
+      stats: "AI Diagnosis",
+      gradient: "from-indigo-500/20 to-purple-500/20",
+    },
+    {
       id: "analytics",
       title: "Health Analytics",
       description:
