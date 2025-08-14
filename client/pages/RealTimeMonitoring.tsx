@@ -39,7 +39,6 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  RechartsProps,
 } from "recharts";
 
 // Simulated IoT device data
@@ -134,12 +133,120 @@ export default function RealTimeMonitoring() {
     },
   ]);
 
+  const [bleConnected, setBleConnected] = useState(false);
+  const [bleDevice, setBleDevice] = useState<any | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const isWebBluetoothSupported =
+    typeof navigator !== "undefined" && "bluetooth" in navigator;
+
+  const handleHeartRateNotification = (event: any) => {
+    const characteristic = event.target as any;
+    const value: DataView | undefined = characteristic?.value;
+    if (!value) return;
+    const data = new DataView(value.buffer);
+    const flags = data.getUint8(0);
+    const hrIs16Bits = (flags & 0x1) === 0x1;
+    let index = 1;
+    const heartRate = hrIs16Bits
+      ? data.getUint16(index, true)
+      : data.getUint8(index);
+
+    setVitalSigns((prev) => ({
+      ...prev,
+      heartRate,
+      timestamp: new Date().toISOString(),
+    }));
+
+    setVitalsHistory((prev) => {
+      const now = new Date();
+      const newPoint = {
+        time: now.toLocaleTimeString(),
+        heartRate,
+        temperature: prev.length
+          ? prev[prev.length - 1].temperature
+          : vitalSigns.temperature,
+        oxygenSat: prev.length
+          ? prev[prev.length - 1].oxygenSat
+          : vitalSigns.oxygenSaturation,
+        systolic: prev.length
+          ? prev[prev.length - 1].systolic
+          : vitalSigns.bloodPressure.systolic,
+      };
+      return [...prev, newPoint].slice(-20);
+    });
+  };
+
+  const connectWearable = async () => {
+    if (!isWebBluetoothSupported) {
+      alert("Bluetooth not supported in this browser.");
+      return;
+    }
+    try {
+      setIsConnecting(true);
+             const device = await (navigator as any).bluetooth.requestDevice({
+        filters: [{ services: ["heart_rate"] }],
+        optionalServices: ["battery_service", "device_information"],
+      });
+
+      device.addEventListener("gattserverdisconnected", () => {
+        setBleConnected(false);
+        setBleDevice(null);
+      });
+
+      const server = await device.gatt!.connect();
+      const service = await server.getPrimaryService("heart_rate");
+      const characteristic = await service.getCharacteristic(
+        "heart_rate_measurement",
+      );
+      await characteristic.startNotifications();
+      characteristic.addEventListener(
+        "characteristicvaluechanged",
+        handleHeartRateNotification,
+      );
+
+      setBleConnected(true);
+      setBleDevice(device);
+      setConnectedDevices((prev) =>
+        prev.map((d) =>
+          d.id === "apple_watch"
+            ? { ...d, status: "connected", lastSync: "Just now" }
+            : d,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to connect wearable:", error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const disconnectWearable = () => {
+    try {
+      bleDevice?.gatt?.disconnect();
+    } catch (e) {
+      // ignore
+    } finally {
+      setBleConnected(false);
+      setBleDevice(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      try {
+        bleDevice?.gatt?.disconnect();
+      } catch (e) {
+        // ignore
+      }
+    };
+  }, [bleDevice]);
+
   // Simulate real-time data updates
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const newVitals: VitalSigns = {
-        heartRate: Math.floor(Math.random() * 20) + 65, // 65-85 BPM
+        heartRate: bleConnected ? vitalSigns.heartRate : Math.floor(Math.random() * 20) + 65, // don't override when BLE
         bloodPressure: {
           systolic: Math.floor(Math.random() * 20) + 110, // 110-130
           diastolic: Math.floor(Math.random() * 15) + 70, // 70-85
@@ -254,6 +361,30 @@ export default function RealTimeMonitoring() {
                 <Clock className="w-3 h-3 mr-1" />
                 {new Date().toLocaleTimeString()}
               </Badge>
+              {isWebBluetoothSupported && (
+                bleConnected ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={disconnectWearable}
+                    className="btn-smooth"
+                  >
+                    <Watch className="h-4 w-4 mr-2" />
+                    Disconnect
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={connectWearable}
+                    disabled={isConnecting}
+                    className="btn-smooth"
+                  >
+                    <Watch className="h-4 w-4 mr-2" />
+                    {isConnecting ? "Connecting..." : "Connect Watch"}
+                  </Button>
+                )
+              )}
             </div>
           </div>
         </div>
