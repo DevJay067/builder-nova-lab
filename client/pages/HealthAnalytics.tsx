@@ -472,6 +472,13 @@ export default function HealthAnalytics() {
                       <Button onClick={() => { showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`); saveQuickRecord({ type: "vitals", title: "Sleep Goal Set", metadata: { sleepHoursGoal } }); }}>Set Goal</Button>
                     </div>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Device alarm integration: On Android, you can add an alarm using
+                    <a className="underline ml-1" href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(':')[0])};S.minutes=${parseInt(bedtime.split(':')[1])};end`}>
+                      system alarm intent
+                    </a>
+                    . Support varies by device.
+                  </p>
                 </CardContent>
               </Card>
             </div>

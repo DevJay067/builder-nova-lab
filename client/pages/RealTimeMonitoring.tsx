@@ -418,6 +418,25 @@ export default function RealTimeMonitoring() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Device status (mobile-friendly) */}
+        {bleDeviceName && (
+          <div className="mb-4">
+            <Card className="shadow-colored border-border/50">
+              <CardContent className="flex items-center justify-between p-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-lg bg-blue-100 text-blue-700">
+                    <Watch className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">{bleDeviceName}</div>
+                    <div className="text-xs text-muted-foreground">Last update: {new Date(vitalSigns.timestamp).toLocaleTimeString()}</div>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="text-xs">BLE Connected</Badge>
+              </CardContent>
+            </Card>
+          </div>
+        )}
         {/* Alerts Section */}
         {alerts.length > 0 && (
           <div className="mb-8 space-y-3 fade-in">

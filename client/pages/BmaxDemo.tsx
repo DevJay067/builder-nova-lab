@@ -418,16 +418,12 @@ export default function BamxPro() {
                 </Button>
               </Link>
               <div className="flex items-center space-x-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg">
                   <Brain className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    B-max AI Demo
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Advanced Medical AI with Library Integration
-                  </p>
+                  <h1 className="text-xl font-bold text-foreground">Bmax Pro</h1>
+                  <p className="text-sm text-muted-foreground">Coming soon — see how medical data personalised...</p>
                 </div>
               </div>
             </div>
