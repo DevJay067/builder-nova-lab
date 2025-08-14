@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 // Database configuration
-export const DATABASE_URL = 'postgresql://neondb_owner:npg_TQh7kV1SKXeP@ep-tiny-butterfly-aewegd39-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+export const DATABASE_URL = 'postgresql://neondb_owner:npg_M8bk7FKumVEp@ep-hidden-tooth-aet6wf0b-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 
 // Create database connection
 export const db = neon(DATABASE_URL);
@@ -23,7 +23,7 @@ export async function initializeDatabase() {
 
     // Create users table
     await db`
-      CREATE TABLE IF NOT EXISTS ${TABLES.USERS} (
+      CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -43,7 +43,7 @@ export async function initializeDatabase() {
 
     // Create health records table
     await db`
-      CREATE TABLE IF NOT EXISTS ${TABLES.HEALTH_RECORDS} (
+      CREATE TABLE IF NOT EXISTS health_records (
         id SERIAL PRIMARY KEY,
         patient_id VARCHAR(255) NOT NULL,
         type VARCHAR(100) NOT NULL,
@@ -61,9 +61,9 @@ export async function initializeDatabase() {
 
     // Create medical scans table
     await db`
-      CREATE TABLE IF NOT EXISTS ${TABLES.MEDICAL_SCANS} (
+      CREATE TABLE IF NOT EXISTS medical_scans (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES ${TABLES.USERS}(id),
+        user_id INTEGER REFERENCES users(id),
         scan_type VARCHAR(50) NOT NULL,
         confidence DECIMAL(3,2),
         findings TEXT[],
@@ -81,9 +81,9 @@ export async function initializeDatabase() {
 
     // Create sessions table
     await db`
-      CREATE TABLE IF NOT EXISTS ${TABLES.SESSIONS} (
+      CREATE TABLE IF NOT EXISTS sessions (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES ${TABLES.USERS}(id),
+        user_id INTEGER REFERENCES users(id),
         session_token VARCHAR(255) UNIQUE NOT NULL,
         expires_at TIMESTAMP NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -93,7 +93,7 @@ export async function initializeDatabase() {
 
     // Create blockchain transactions table
     await db`
-      CREATE TABLE IF NOT EXISTS ${TABLES.BLOCKCHAIN_TRANSACTIONS} (
+      CREATE TABLE IF NOT EXISTS blockchain_transactions (
         id SERIAL PRIMARY KEY,
         transaction_id VARCHAR(255) UNIQUE NOT NULL,
         block_hash VARCHAR(255),
@@ -109,7 +109,7 @@ export async function initializeDatabase() {
 
     // Create split keys table
     await db`
-      CREATE TABLE IF NOT EXISTS ${TABLES.SPLIT_KEYS} (
+      CREATE TABLE IF NOT EXISTS split_keys (
         id SERIAL PRIMARY KEY,
         user_hash VARCHAR(255) NOT NULL,
         data_hash VARCHAR(255) NOT NULL,
@@ -144,10 +144,10 @@ export async function getDatabaseStats() {
   try {
     const stats = await db`
       SELECT 
-        (SELECT COUNT(*) FROM ${TABLES.USERS}) as user_count,
-        (SELECT COUNT(*) FROM ${TABLES.HEALTH_RECORDS}) as health_records_count,
-        (SELECT COUNT(*) FROM ${TABLES.MEDICAL_SCANS}) as medical_scans_count,
-        (SELECT COUNT(*) FROM ${TABLES.BLOCKCHAIN_TRANSACTIONS}) as blockchain_transactions_count
+        (SELECT COUNT(*) FROM users) as user_count,
+        (SELECT COUNT(*) FROM health_records) as health_records_count,
+        (SELECT COUNT(*) FROM medical_scans) as medical_scans_count,
+        (SELECT COUNT(*) FROM blockchain_transactions) as blockchain_transactions_count
     `;
     return stats[0];
   } catch (error) {
