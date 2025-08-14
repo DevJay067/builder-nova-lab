@@ -50,11 +50,22 @@ export default function Login() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     
-    // Test API connection on page load
+    // Test API connection on page load with retry
     const testConnection = async () => {
       try {
+        console.log('Testing API connection...');
         const isConnected = await testApiConnection();
+        console.log('API connection result:', isConnected);
         setApiStatus(isConnected ? 'connected' : 'disconnected');
+        
+        // If disconnected, try again after 2 seconds
+        if (!isConnected) {
+          setTimeout(async () => {
+            console.log('Retrying API connection...');
+            const retryConnected = await testApiConnection();
+            setApiStatus(retryConnected ? 'connected' : 'disconnected');
+          }, 2000);
+        }
       } catch (error) {
         console.error('API connection test failed:', error);
         setApiStatus('disconnected');
@@ -358,6 +369,16 @@ export default function Login() {
                   <>
                     <WifiOff className="h-3 w-3 text-red-500" />
                     <span className="text-red-600">API Disconnected</span>
+                    <button 
+                      onClick={async () => {
+                        setApiStatus('checking');
+                        const isConnected = await testApiConnection();
+                        setApiStatus(isConnected ? 'connected' : 'disconnected');
+                      }}
+                      className="ml-1 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      Retry
+                    </button>
                   </>
                 )}
               </div>

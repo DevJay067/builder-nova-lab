@@ -57,7 +57,10 @@ export async function apiRequest(
   };
 
   try {
+    console.log(`Making API request to: ${url}`);
     const response = await fetch(url, defaultOptions);
+    
+    console.log(`API response status: ${response.status} for ${url}`);
     
     // If the response is ok, return it
     if (response.ok) {
@@ -73,6 +76,7 @@ export async function apiRequest(
     
     return response;
   } catch (error) {
+    console.error(`Network error for ${url}:`, error);
     // Network error - retry if we have attempts left
     if (retryCount < API_CONFIG.RETRY_ATTEMPTS) {
       console.warn(`Network error, retrying... (${retryCount + 1}/${API_CONFIG.RETRY_ATTEMPTS})`);
@@ -126,10 +130,28 @@ export async function apiGet<T = any>(
 // Test API connection
 export async function testApiConnection(): Promise<boolean> {
   try {
-    const response = await apiGet(API_ENDPOINTS.HEALTH);
-    return response.status === 'ok';
+    console.log('Testing API connection to:', `${API_CONFIG.BASE_URL}${API_ENDPOINTS.HEALTH}`);
+    
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.HEALTH}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    console.log('API connection test response status:', response.status);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('API connection test response data:', data);
+      return data.status === 'ok';
+    }
+    
+    console.log('API connection test failed - response not ok');
+    return false;
   } catch (error) {
-    console.error('API connection test failed:', error);
+    console.error('API connection test failed with error:', error);
     return false;
   }
 }
