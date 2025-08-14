@@ -67,7 +67,7 @@ interface ScanResult {
   timestamp: string;
 }
 
-export default function BmaxDemo() {
+export default function BamxPro() {
   const [query, setQuery] = useState("");
   const [enhancement, setEnhancement] = useState<QueryEnhancement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,6 +81,7 @@ export default function BmaxDemo() {
     blockchain: "synced",
     performance: "optimal"
   });
+  const [personalRecordCount, setPersonalRecordCount] = useState<number>(0);
 
   // Available medical libraries
   const medicalLibraries: MedicalLibrary[] = [
@@ -127,7 +128,7 @@ export default function BmaxDemo() {
       category: "Personal",
       source: "Your Records",
       lastUpdated: new Date().toISOString().split('T')[0],
-      recordCount: 0
+      recordCount: personalRecordCount
     }
   ];
 
@@ -137,7 +138,7 @@ export default function BmaxDemo() {
         await checkAuthentication();
         await checkSystemStatus();
       } catch (error) {
-        console.error("Error initializing BMAX demo:", error);
+        console.error("Error initializing BAMX Pro:", error);
         // Set fallback states
         setIsAuthenticated(false);
         setSystemStatus({
@@ -160,50 +161,27 @@ export default function BmaxDemo() {
           .split("; ")
           .find((row) => row.startsWith("healthchain_session="))
           ?.split("=")[1];
+      setIsAuthenticated(!!sessionToken);
 
-      if (!sessionToken) {
-        setIsAuthenticated(false);
-        return;
-      }
-
-      const response = await fetch("/api/auth/verify", {
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-          "x-session-token": sessionToken,
-        },
-      });
-
-      setIsAuthenticated(response.ok);
-      
-      // Update personal library count if authenticated
-      if (response.ok) {
-        const personalLibrary = medicalLibraries.find(lib => lib.id === "personal");
-        if (personalLibrary) {
-          try {
-            const recordsResponse = await fetch("/api/health-records", {
-              headers: {
-                Authorization: `Bearer ${sessionToken}`,
-                "x-session-token": sessionToken,
-              },
-            });
-            if (recordsResponse.ok) {
-              const data = await recordsResponse.json();
-              if (data.success && data.records) {
-                personalLibrary.recordCount = data.records.length || 0;
-              }
-            }
-          } catch (error) {
-            console.error("Error fetching personal records:", error);
-            // Set fallback count
-            if (personalLibrary) {
-              personalLibrary.recordCount = 0;
+      // Load personal records count if authenticated
+      if (sessionToken) {
+        try {
+          const recordsResponse = await fetch("/api/health-records", {
+            headers: { Authorization: `Bearer ${sessionToken}`, "x-session-token": sessionToken },
+          });
+          if (recordsResponse.ok) {
+            const data = await recordsResponse.json();
+            if (data.success && Array.isArray(data.records)) {
+              setPersonalRecordCount(data.records.length);
             }
           }
-        }
+        } catch {}
+      } else {
+        setPersonalRecordCount(0);
       }
     } catch (error) {
-      console.error("Error checking authentication:", error);
       setIsAuthenticated(false);
+      setPersonalRecordCount(0);
     }
   };
 
