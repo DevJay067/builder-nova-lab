@@ -134,55 +134,117 @@ export default function RealTimeMonitoring() {
     },
   ]);
 
-  // Simulate real-time data updates
+  // Attempt SSE connection; fallback to simulation
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const newVitals: VitalSigns = {
-        heartRate: Math.floor(Math.random() * 20) + 65, // 65-85 BPM
-        bloodPressure: {
-          systolic: Math.floor(Math.random() * 20) + 110, // 110-130
-          diastolic: Math.floor(Math.random() * 15) + 70, // 70-85
-        },
-        temperature: Math.random() * 2 + 97.5, // 97.5-99.5°F
-        oxygenSaturation: Math.floor(Math.random() * 3) + 97, // 97-100%
-        respiratoryRate: Math.floor(Math.random() * 6) + 14, // 14-20 per minute
-        timestamp: now.toISOString(),
-      };
+    let simulateInterval: any = null;
+    let eventSource: EventSource | null = null;
 
-      setVitalSigns(newVitals);
-
-      // Update history (keep last 20 readings)
-      setVitalsHistory((prev) => {
-        const newHistory = [
-          ...prev,
-          {
-            time: now.toLocaleTimeString(),
-            heartRate: newVitals.heartRate,
-            temperature: newVitals.temperature,
-            oxygenSat: newVitals.oxygenSaturation,
-            systolic: newVitals.bloodPressure.systolic,
+    function startSimulation() {
+      if (simulateInterval) return;
+      simulateInterval = setInterval(() => {
+        const now = new Date();
+        const newVitals: VitalSigns = {
+          heartRate: Math.floor(Math.random() * 20) + 65,
+          bloodPressure: {
+            systolic: Math.floor(Math.random() * 20) + 110,
+            diastolic: Math.floor(Math.random() * 15) + 70,
           },
-        ].slice(-20);
-        return newHistory;
+          temperature: Math.random() * 2 + 97.5,
+          oxygenSaturation: Math.floor(Math.random() * 3) + 97,
+          respiratoryRate: Math.floor(Math.random() * 6) + 14,
+          timestamp: now.toISOString(),
+        };
+        setVitalSigns(newVitals);
+        setVitalsHistory((prev) => {
+          const newHistory = [
+            ...prev,
+            {
+              time: now.toLocaleTimeString(),
+              heartRate: newVitals.heartRate,
+              temperature: newVitals.temperature,
+              oxygenSat: newVitals.oxygenSaturation,
+              systolic: newVitals.bloodPressure.systolic,
+            },
+          ].slice(-20);
+          return newHistory;
+        });
+        if (newVitals.heartRate > 100 && Math.random() > 0.8) {
+          setAlerts((prev) => [
+            {
+              id: Date.now(),
+              type: "warning",
+              message: `Heart rate spike detected: ${newVitals.heartRate} BPM`,
+              timestamp: "Just now",
+              severity: "high",
+            },
+            ...prev.slice(0, 4),
+          ]);
+        }
+      }, 3000);
+    }
+
+    function stopSimulation() {
+      if (simulateInterval) {
+        clearInterval(simulateInterval);
+        simulateInterval = null;
+      }
+    }
+
+    try {
+      const token = localStorage.getItem("sessionToken");
+      const url = token
+        ? `/api/iot/stream?token=${encodeURIComponent(token)}`
+        : "/api/iot/stream?simulate=true";
+      eventSource = new EventSource(url);
+
+      eventSource.addEventListener("vitals", (evt: MessageEvent) => {
+        try {
+          const payload = JSON.parse((evt as any).data || (evt as any).detail || "{}");
+          const now = new Date(payload.timestamp || new Date().toISOString());
+          const heartRate = payload?.metrics?.heartRate ?? vitalSigns.heartRate;
+          const spo2 = payload?.metrics?.spo2 ?? vitalSigns.oxygenSaturation;
+          const updated: VitalSigns = {
+            heartRate,
+            bloodPressure: vitalSigns.bloodPressure,
+            temperature: vitalSigns.temperature,
+            oxygenSaturation: spo2,
+            respiratoryRate: vitalSigns.respiratoryRate,
+            timestamp: now.toISOString(),
+          };
+          setVitalSigns(updated);
+          setVitalsHistory((prev) => [
+            ...prev,
+            {
+              time: now.toLocaleTimeString(),
+              heartRate: updated.heartRate,
+              temperature: updated.temperature,
+              oxygenSat: updated.oxygenSaturation,
+              systolic: updated.bloodPressure.systolic,
+            },
+          ].slice(-20));
+        } catch {
+          // ignore parse errors
+        }
       });
 
-      // Simulate alert generation
-      if (newVitals.heartRate > 100 && Math.random() > 0.8) {
-        setAlerts((prev) => [
-          {
-            id: Date.now(),
-            type: "warning",
-            message: `Heart rate spike detected: ${newVitals.heartRate} BPM`,
-            timestamp: "Just now",
-            severity: "high",
-          },
-          ...prev.slice(0, 4), // Keep only 5 most recent alerts
-        ]);
-      }
-    }, 3000); // Update every 3 seconds
+      eventSource.addEventListener("ready", () => {
+        stopSimulation();
+      });
 
-    return () => clearInterval(interval);
+      eventSource.onerror = () => {
+        // fallback
+        startSimulation();
+      };
+    } catch {
+      startSimulation();
+    }
+
+    return () => {
+      stopSimulation();
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
   }, []);
 
   const getVitalStatus = (type: string, value: number) => {

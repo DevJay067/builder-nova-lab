@@ -277,8 +277,8 @@ export default function Login() {
         // Set cookie
         document.cookie = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; secure; samesite=strict`;
         
-        // Redirect to dashboard or intended page
-        const redirectPath = localStorage.getItem("redirectAfterLogin") || "/dashboard";
+        // Redirect to intended page or home
+        const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
         localStorage.removeItem("redirectAfterLogin");
         navigate(redirectPath);
       } else {
