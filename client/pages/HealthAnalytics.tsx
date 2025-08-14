@@ -120,7 +120,7 @@ export default function HealthAnalytics() {
           .find((row) => row.startsWith("healthchain_session="))
           ?.split("=")[1];
       if (!sessionToken) return;
-      await fetch("/api/health-records", {
+      await fetch("/api/store-health-record", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,9 +128,9 @@ export default function HealthAnalytics() {
           "x-session-token": sessionToken,
         },
         body: JSON.stringify({
-          type: record.type,
+          recordType: record.type || "goal",
           title: record.title,
-          description: record.description || "",
+          description: record.description || "Auto-created goal record",
           date: new Date().toISOString().split("T")[0],
           doctor: "",
           metadata: record.metadata || {},
