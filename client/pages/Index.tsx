@@ -99,15 +99,16 @@ export default function Index() {
       highlight: true,
     },
     {
-      id: "bmax-demo",
-      title: "B-max AI Demo",
+      id: "bmax-pro",
+      title: "B-max Pro",
       description:
-        "See how medical history personalizes AI responses. Test query enhancement with your health data.",
+        "Advanced capabilities with personalized AI and medical library integration.",
       icon: Sparkles,
       color: "bg-purple-500",
-      route: "/bmax-demo",
-      stats: "Interactive Demo",
+      route: "/bmax-pro",
+      stats: "Coming Soon",
       gradient: "from-purple-500/20 to-indigo-500/20",
+      comingSoon: true,
     },
     {
       id: "history",
@@ -420,6 +421,14 @@ export default function Index() {
                         >
                           <Zap className="w-3 h-3 mr-1" />
                           Emergency
+                        </Badge>
+                      )}
+                      {feature.comingSoon && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-yellow-100 text-yellow-700 border-yellow-200"
+                        >
+                          Coming Soon
                         </Badge>
                       )}
                     </div>

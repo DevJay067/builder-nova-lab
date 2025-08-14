@@ -10,9 +10,9 @@ import { useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BmaxAI from "./pages/BmaxAI";
-import BmaxDemo from "./pages/BmaxDemo";
-
-import HealthHistory from "./pages/HealthHistory";
+import BmaxPro from "./pages/BmaxPro";
+ 
+ import HealthHistory from "./pages/HealthHistory";
 import FirstAid from "./pages/FirstAid";
 import HealthAnalytics from "./pages/HealthAnalytics";
 import Legal from "./pages/Legal";
@@ -54,7 +54,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/bmax" element={<BmaxAI />} />
-              <Route path="/bmax-demo" element={<BmaxDemo />} />
+              <Route path="/bmax-pro" element={<BmaxPro />} />
               <Route
                 path="/history"
                 element={
