@@ -119,7 +119,7 @@ export default function BmaxAI() {
         return;
       }
 
-      const authResponse = await fetch("/api/auth/verify", {
+              const authResponse = await fetch("http://localhost:3001/api/auth/verify", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
@@ -145,7 +145,7 @@ export default function BmaxAI() {
 
   const loadPersonalizedContext = async (sessionToken: string) => {
     try {
-      const response = await fetch("/api/medical-context/personalized", {
+              const response = await fetch("http://localhost:3001/api/medical-context/personalized", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
@@ -163,7 +163,7 @@ export default function BmaxAI() {
 
   const loadHealthInsights = async (sessionToken: string) => {
     try {
-      const response = await fetch("/api/medical-context/insights", {
+              const response = await fetch("http://localhost:3001/api/medical-context/insights", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,

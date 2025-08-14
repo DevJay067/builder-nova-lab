@@ -97,10 +97,22 @@ function expressPlugin(): Plugin {
       if (process.env.NODE_ENV !== "production") {
         import("./server").then(({ createServer }) => {
           const app = createServer();
+          
           // Add Express app as middleware to Vite dev server
-          server.middlewares.use(app);
+          server.middlewares.use((req, res, next) => {
+            // Check if this is an API request
+            if (req.url?.startsWith('/api')) {
+              // Forward API requests to Express app
+              app(req, res, next);
+            } else {
+              // Let Vite handle non-API routes
+              next();
+            }
+          });
+          
+          console.log("✅ Express server loaded successfully");
         }).catch((error) => {
-          console.warn("Failed to load Express server:", error);
+          console.error("❌ Failed to load Express server:", error);
         });
       }
     },

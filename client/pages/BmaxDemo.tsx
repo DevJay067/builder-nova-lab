@@ -166,7 +166,7 @@ export default function BmaxDemo() {
         return;
       }
 
-      const response = await fetch("/api/auth/verify", {
+              const response = await fetch("http://localhost:3001/api/auth/verify", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
@@ -180,7 +180,7 @@ export default function BmaxDemo() {
         const personalLibrary = medicalLibraries.find(lib => lib.id === "personal");
         if (personalLibrary) {
           try {
-            const recordsResponse = await fetch("/api/health-records", {
+            const recordsResponse = await fetch("http://localhost:3001/api/health-records", {
               headers: {
                 Authorization: `Bearer ${sessionToken}`,
                 "x-session-token": sessionToken,
@@ -210,7 +210,7 @@ export default function BmaxDemo() {
   const checkSystemStatus = async () => {
     try {
       // Check performance status
-      const performanceResponse = await fetch("/api/performance/status");
+              const performanceResponse = await fetch("http://localhost:3001/api/performance/status");
       if (performanceResponse.ok) {
         const performanceData = await performanceResponse.json();
         
@@ -265,7 +265,7 @@ export default function BmaxDemo() {
           .find((row) => row.startsWith("healthchain_session="))
           ?.split("=")[1];
 
-      const response = await fetch("/api/medical-context/enhance-query", {
+              const response = await fetch("http://localhost:3001/api/medical-context/enhance-query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -336,7 +336,7 @@ export default function BmaxDemo() {
           .find((row) => row.startsWith("healthchain_session="))
           ?.split("=")[1];
 
-      const response = await fetch("/api/medical-context/ai-scan", {
+              const response = await fetch("http://localhost:3001/api/medical-context/ai-scan", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

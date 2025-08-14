@@ -61,7 +61,7 @@ export default function ProtectedRoute({
       }
 
       // Verify session with server
-      const response = await fetch("/api/auth/verify", {
+      const response = await fetch("http://localhost:3001/api/auth/verify", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
@@ -217,7 +217,7 @@ export function AuthenticatedRedirect({
     try {
       const sessionToken = localStorage.getItem("sessionToken");
       if (sessionToken) {
-        const response = await fetch("/api/auth/verify", {
+        const response = await fetch("http://localhost:3001/api/auth/verify", {
           headers: {
             Authorization: `Bearer ${sessionToken}`,
             "x-session-token": sessionToken,
