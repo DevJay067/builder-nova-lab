@@ -238,18 +238,18 @@ export default function RealTimeMonitoring() {
               heartRate,
               timestamp: now.toISOString(),
             };
+            setVitalsHistory((prevHist) => [
+              ...prevHist,
+              {
+                time: now.toLocaleTimeString(),
+                heartRate: updated.heartRate,
+                temperature: updated.temperature,
+                oxygenSat: updated.oxygenSaturation,
+                systolic: updated.bloodPressure.systolic,
+              },
+            ].slice(-50));
             return updated;
           });
-          setVitalsHistory((prev) => [
-            ...prev,
-            {
-              time: now.toLocaleTimeString(),
-              heartRate,
-              temperature: vitalSigns.temperature,
-              oxygenSat: vitalSigns.oxygenSaturation,
-              systolic: vitalSigns.bloodPressure.systolic,
-            },
-          ].slice(-50));
 
           // Optional cloud ingest
           if (uploadToCloud) {
@@ -292,17 +292,20 @@ export default function RealTimeMonitoring() {
 
           if (typeof spo2 === "number" && spo2 > 0 && spo2 <= 100) {
             const now = new Date();
-            setVitalSigns((prev) => ({ ...prev, oxygenSaturation: spo2, timestamp: now.toISOString() }));
-            setVitalsHistory((prev) => [
-              ...prev,
-              {
-                time: now.toLocaleTimeString(),
-                heartRate: vitalSigns.heartRate,
-                temperature: vitalSigns.temperature,
-                oxygenSat: spo2,
-                systolic: vitalSigns.bloodPressure.systolic,
-              },
-            ].slice(-50));
+            setVitalSigns((prev) => {
+              const updated = { ...prev, oxygenSaturation: spo2, timestamp: now.toISOString() };
+              setVitalsHistory((prevHist) => [
+                ...prevHist,
+                {
+                  time: now.toLocaleTimeString(),
+                  heartRate: updated.heartRate,
+                  temperature: updated.temperature,
+                  oxygenSat: updated.oxygenSaturation,
+                  systolic: updated.bloodPressure.systolic,
+                },
+              ].slice(-50));
+              return updated;
+            });
 
             if (uploadToCloud) {
               const token = localStorage.getItem("sessionToken");
