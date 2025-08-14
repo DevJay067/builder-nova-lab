@@ -89,6 +89,18 @@
       ]
     },
     {
+      "name": "B-max Pro",
+      "short_name": "B-max Pro",
+      "description": "Preview the upcoming Pro features",
+      "url": "/bmax-pro",
+      "icons": [
+        {
+          "src": "/icons/ai-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
       "name": "Health Monitoring",
       "short_name": "Monitoring",
       "description": "Real-time health monitoring dashboard",

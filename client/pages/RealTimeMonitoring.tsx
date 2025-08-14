@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,6 +68,14 @@ interface Device {
 }
 
 export default function RealTimeMonitoring() {
+  const [isBleSupported, setIsBleSupported] = useState<boolean>(typeof navigator !== "undefined" && "bluetooth" in navigator);
+  const [isConnectingWatch, setIsConnectingWatch] = useState(false);
+  const [isWatchConnected, setIsWatchConnected] = useState(false);
+  const [watchDeviceName, setWatchDeviceName] = useState<string>("");
+  const [latestWatchHeartRate, setLatestWatchHeartRate] = useState<number | null>(null);
+  const watchCharacteristicRef = useRef<any>(null);
+  const watchDeviceRef = useRef<any>(null);
+
   const [vitalSigns, setVitalSigns] = useState<VitalSigns>({
     heartRate: 72,
     bloodPressure: { systolic: 120, diastolic: 80 },
@@ -134,19 +142,20 @@ export default function RealTimeMonitoring() {
     },
   ]);
 
-  // Simulate real-time data updates
+  // Real-time data updates; heart rate uses watch if available
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
+      const currentHeart = latestWatchHeartRate ?? (Math.floor(Math.random() * 20) + 65);
       const newVitals: VitalSigns = {
-        heartRate: Math.floor(Math.random() * 20) + 65, // 65-85 BPM
+        heartRate: currentHeart,
         bloodPressure: {
-          systolic: Math.floor(Math.random() * 20) + 110, // 110-130
-          diastolic: Math.floor(Math.random() * 15) + 70, // 70-85
+          systolic: Math.floor(Math.random() * 20) + 110,
+          diastolic: Math.floor(Math.random() * 15) + 70,
         },
-        temperature: Math.random() * 2 + 97.5, // 97.5-99.5°F
-        oxygenSaturation: Math.floor(Math.random() * 3) + 97, // 97-100%
-        respiratoryRate: Math.floor(Math.random() * 6) + 14, // 14-20 per minute
+        temperature: Math.random() * 2 + 97.5,
+        oxygenSaturation: Math.floor(Math.random() * 3) + 97,
+        respiratoryRate: Math.floor(Math.random() * 6) + 14,
         timestamp: now.toISOString(),
       };
 
@@ -177,13 +186,84 @@ export default function RealTimeMonitoring() {
             timestamp: "Just now",
             severity: "high",
           },
-          ...prev.slice(0, 4), // Keep only 5 most recent alerts
+          ...prev.slice(0, 4),
         ]);
       }
-    }, 3000); // Update every 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
+  }, [latestWatchHeartRate]);
+
+  useEffect(() => {
+    setIsBleSupported(typeof navigator !== "undefined" && "bluetooth" in navigator);
   }, []);
+
+  const parseHeartRate = (dataView: DataView): number => {
+    const flags = dataView.getUint8(0);
+    const is16Bits = (flags & 0x1) === 1;
+    return is16Bits ? dataView.getUint16(1, true) : dataView.getUint8(1);
+  };
+
+  const handleHeartRateChanged = (event: any) => {
+    try {
+      const value: DataView = event.target.value;
+      const hr = parseHeartRate(value);
+      setLatestWatchHeartRate(hr);
+    } catch (e) {
+      console.error("Failed to parse heart rate", e);
+    }
+  };
+
+  const onWatchDisconnected = () => {
+    setIsWatchConnected(false);
+    setWatchDeviceName("");
+    setLatestWatchHeartRate(null);
+    try {
+      if (watchCharacteristicRef.current) {
+        watchCharacteristicRef.current.removeEventListener("characteristicvaluechanged", handleHeartRateChanged);
+      }
+    } catch {}
+  };
+
+  const connectWatch = async () => {
+    if (!("bluetooth" in navigator)) return;
+    try {
+      setIsConnectingWatch(true);
+      const device: any = await (navigator as any).bluetooth.requestDevice({
+        filters: [{ services: [0x180D] }],
+        optionalServices: [0x180D],
+      });
+      watchDeviceRef.current = device;
+      device.addEventListener("gattserverdisconnected", onWatchDisconnected);
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService(0x180D);
+      const characteristic = await service.getCharacteristic(0x2A37);
+      watchCharacteristicRef.current = characteristic;
+      await characteristic.startNotifications();
+      characteristic.addEventListener("characteristicvaluechanged", handleHeartRateChanged);
+      setIsWatchConnected(true);
+      setWatchDeviceName(device.name || "Heart Rate Device");
+    } catch (error) {
+      console.error("Failed to connect to watch", error);
+    } finally {
+      setIsConnectingWatch(false);
+    }
+  };
+
+  const disconnectWatch = async () => {
+    try {
+      if (watchCharacteristicRef.current) {
+        watchCharacteristicRef.current.removeEventListener("characteristicvaluechanged", handleHeartRateChanged);
+      }
+      if (watchDeviceRef.current && watchDeviceRef.current.gatt && watchDeviceRef.current.gatt.connected) {
+        await watchDeviceRef.current.gatt.disconnect();
+      }
+    } catch (e) {
+      console.error("Failed to disconnect watch", e);
+    } finally {
+      onWatchDisconnected();
+    }
+  };
 
   const getVitalStatus = (type: string, value: number) => {
     switch (type) {
@@ -254,6 +334,30 @@ export default function RealTimeMonitoring() {
                 <Clock className="w-3 h-3 mr-1" />
                 {new Date().toLocaleTimeString()}
               </Badge>
+              {isWatchConnected && (
+                <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
+                  <Watch className="w-3 h-3 mr-1" />
+                  Watch Live
+                </Badge>
+              )}
+              {!isBleSupported && (
+                <Badge variant="outline" className="text-slate-600">
+                  <WifiOff className="w-3 h-3 mr-1" />
+                  BLE Unsupported
+                </Badge>
+              )}
+              {isBleSupported && (
+                <Button
+                  variant={isWatchConnected ? "outline" : "default"}
+                  size="sm"
+                  onClick={isWatchConnected ? disconnectWatch : connectWatch}
+                  disabled={isConnectingWatch}
+                  className="btn-smooth"
+                >
+                  <Watch className="w-4 h-4 mr-2" />
+                  {isWatchConnected ? "Disconnect" : isConnectingWatch ? "Connecting..." : "Connect Watch"}
+                </Button>
+              )}
             </div>
           </div>
         </div>

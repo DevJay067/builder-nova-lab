@@ -67,7 +67,7 @@ interface ScanResult {
   timestamp: string;
 }
 
-export default function BmaxDemo() {
+export default function BmaxPro() {
   const [query, setQuery] = useState("");
   const [enhancement, setEnhancement] = useState<QueryEnhancement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -137,7 +137,7 @@ export default function BmaxDemo() {
         await checkAuthentication();
         await checkSystemStatus();
       } catch (error) {
-        console.error("Error initializing BMAX demo:", error);
+        console.error("Error initializing BMAX Pro:", error);
         // Set fallback states
         setIsAuthenticated(false);
         setSystemStatus({
@@ -445,7 +445,7 @@ export default function BmaxDemo() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">
-                    B-max AI Demo
+                    B-max Pro
                   </h1>
                   <p className="text-sm text-muted-foreground">
                     Advanced Medical AI with Library Integration
@@ -456,7 +456,7 @@ export default function BmaxDemo() {
             <div className="flex items-center space-x-2">
               <Badge variant="secondary" className="text-xs">
                 <Sparkles className="h-3 w-3 mr-1" />
-                Enhanced Demo
+                Pro Preview
               </Badge>
             </div>
           </div>
@@ -595,7 +595,7 @@ export default function BmaxDemo() {
               Test Query Enhancement
             </CardTitle>
             <CardDescription>
-              Enter a health question to see how B-max AI enhances it with medical libraries and your history.
+              Enter a health question to see how B-max Pro enhances it with medical libraries and your history.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -789,7 +789,7 @@ export default function BmaxDemo() {
                     {enhancement.searchContext}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Additional context provided to B-max AI for personalized
+                    Additional context provided to B-max Pro for personalized
                     recommendations
                   </p>
                 </CardContent>
@@ -811,7 +811,7 @@ export default function BmaxDemo() {
                   </pre>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  This is the complete prompt sent to B-max AI, including your
+                  This is the complete prompt sent to B-max Pro, including your
                   medical context
                 </p>
               </CardContent>
@@ -823,7 +823,7 @@ export default function BmaxDemo() {
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="text-lg">
-              How Enhanced B-max AI Works
+              How B-max Pro Works
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -875,7 +875,7 @@ export default function BmaxDemo() {
               <Brain className="h-4 w-4" />
               <AlertDescription>
                 <strong>Enhanced Example:</strong> When you ask "I'm feeling dizzy" with diabetes in your history, 
-                B-max AI searches medical libraries for diabetic dizziness causes, scans for related symptoms, 
+                B-max Pro searches medical libraries for diabetic dizziness causes, scans for related symptoms, 
                 and provides targeted advice about blood sugar monitoring and diabetic complications.
               </AlertDescription>
             </Alert>
@@ -887,7 +887,7 @@ export default function BmaxDemo() {
           <CardContent className="text-center py-6">
             <Brain className="h-12 w-12 mx-auto mb-4 text-primary" />
             <h3 className="text-lg font-semibold mb-2">
-              Ready to Try Enhanced B-max AI?
+              Ready to Try B-max Pro?
             </h3>
             <p className="text-muted-foreground mb-4">
               Experience the most advanced medical AI with library integration and personalized scanning.

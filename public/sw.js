@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
   "/index.html",
   "/manifest.json",
   "/bmax",
+  "/bmax-pro",
   "/monitoring",
   "/first-aid",
   "/login",
