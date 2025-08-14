@@ -77,6 +77,15 @@ export function createServer() {
     });
   });
 
+  // Simple test endpoint for development
+  app.get("/api/test", (req, res) => {
+    res.json({
+      success: true,
+      message: "API is working!",
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Initialize services in background (non-blocking)
   const initializeServices = async () => {
     try {
@@ -139,6 +148,8 @@ export function createServer() {
   // Add routes with error handling
   const addRoutes = async () => {
     try {
+      console.log("🔄 Adding API routes...");
+
       // Health records routes
       try {
         app.post("/api/health-records", createHealthRecord);
@@ -155,7 +166,7 @@ export function createServer() {
         console.log("⚠️ Health records routes failed:", error.message);
       }
 
-      // Secure data API routes
+      // Secure data routes
       try {
         app.post("/api/secure/generate-keys", generateSplitKeys);
         app.post("/api/secure/store", storeSecureData);
@@ -171,7 +182,7 @@ export function createServer() {
         console.log("⚠️ Secure data routes failed:", error.message);
       }
 
-      // Database health routes
+      // Database routes
       try {
         app.get("/api/database/health", checkDatabaseHealth);
         app.post("/api/database/init", initializeDatabase);
@@ -253,6 +264,8 @@ export function createServer() {
       } catch (error) {
         console.log("⚠️ Performance status route failed:", error.message);
       }
+
+      console.log("✅ All routes added successfully");
 
     } catch (error) {
       console.error("❌ Route initialization error:", error);

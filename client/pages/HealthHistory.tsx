@@ -185,7 +185,7 @@ export default function HealthHistory() {
         return;
       }
 
-      const authResponse = await fetch("/api/auth/verify", {
+              const authResponse = await fetch("http://localhost:3001/api/auth/verify", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
@@ -210,7 +210,7 @@ export default function HealthHistory() {
   const loadHealthRecords = async (sessionToken: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/health-records", {
+      const response = await fetch("http://localhost:3001/api/health-records", {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken,
@@ -268,7 +268,7 @@ export default function HealthHistory() {
       }
 
       // Use the correct health records endpoint
-      const response = await fetch("/api/health-records", {
+      const response = await fetch("http://localhost:3001/api/health-records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
