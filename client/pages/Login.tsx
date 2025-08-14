@@ -28,7 +28,10 @@ import {
   Loader2,
   Sparkles,
   Stethoscope,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
+import { apiPost, API_ENDPOINTS, testApiConnection } from "@/config/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -41,10 +44,25 @@ export default function Login() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
   // Page load animation and initialization
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    // Test API connection on page load
+    const testConnection = async () => {
+      try {
+        const isConnected = await testApiConnection();
+        setApiStatus(isConnected ? 'connected' : 'disconnected');
+      } catch (error) {
+        console.error('API connection test failed:', error);
+        setApiStatus('disconnected');
+      }
+    };
+    
+    testConnection();
+    
     // Small delay to ensure page is properly initialized
     const timer = setTimeout(() => {
       setIsInitialized(true);
@@ -124,18 +142,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3001/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: loginForm.email,
-          password: loginForm.password,
-        }),
+      const result = await apiPost(API_ENDPOINTS.LOGIN, {
+        username: loginForm.email,
+        password: loginForm.password,
       });
-
-      const result = await response.json();
 
       if (result.success) {
         const userData = {
@@ -164,21 +174,13 @@ export default function Login() {
       } else {
         // Provide more helpful error messages
         let errorMessage = result.message || "Login failed";
-
-        if (response.status === 401) {
-          errorMessage =
-            "Invalid username or password. If you created an account yesterday, you may need to register again due to system updates.";
-        } else if (response.status === 500) {
-          errorMessage = "Server error. Please try again in a moment.";
-        }
-
         setMessage({ type: "error", text: errorMessage });
       }
     } catch (error) {
       console.error("Login error:", error);
       setMessage({
         type: "error",
-        text: "Network error. Please check your connection and try again.",
+        text: "Network error during login. Please check your connection and try again.",
       });
     } finally {
       setIsLoading(false);
@@ -260,44 +262,32 @@ export default function Login() {
     setMessage(null); // Clear previous messages
     
     try {
-      const response = await fetch("http://localhost:3001/api/auth/demo-login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const data = await apiPost(API_ENDPOINTS.DEMO_LOGIN, {});
+      
+      // Store session data
+      localStorage.setItem("sessionToken", data.user.sessionToken);
+      localStorage.setItem("healthchain_user", JSON.stringify(data.user));
+      
+      // Set cookie
+      document.cookie = `healthchain_session=${data.user.sessionToken}; path=/; max-age=3600; secure; samesite=strict`;
+      
+      // Show success message for judge demo
+      setMessage({
+        type: "success",
+        text: "🎉 Judge Demo Access Granted! Welcome to the elevated demo environment with full permissions.",
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Store session data
-        localStorage.setItem("sessionToken", data.sessionToken);
-        localStorage.setItem("healthchain_user", JSON.stringify(data.user));
-        
-        // Set cookie
-        document.cookie = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; secure; samesite=strict`;
-        
-        // Show success message for judge demo
-        setMessage({
-          type: "success",
-          text: "🎉 Judge Demo Access Granted! Welcome to the elevated demo environment with full permissions.",
-        });
-
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          const redirectPath = localStorage.getItem("redirectAfterLogin") || "/dashboard";
-          localStorage.removeItem("redirectAfterLogin");
-          navigate(redirectPath);
-        }, 2000);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: "error", text: errorData.message || "Judge demo login failed. Please try again." });
-      }
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        const redirectPath = localStorage.getItem("redirectAfterLogin") || "/dashboard";
+        localStorage.removeItem("redirectAfterLogin");
+        navigate(redirectPath);
+      }, 2000);
     } catch (error) {
       console.error("Demo login error:", error);
       setMessage({
         type: "error",
-        text: "Network error during judge demo login. Please check your connection.",
+        text: "Network error during judge demo login. Please check your connection and try again.",
       });
     } finally {
       setIsLoading(false);
@@ -349,6 +339,27 @@ export default function Login() {
                 <span className="hidden sm:inline font-medium">
                   Secure Login
                 </span>
+              </div>
+              {/* API Status Indicator */}
+              <div className="flex items-center space-x-1 text-xs">
+                {apiStatus === 'checking' && (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin text-yellow-500" />
+                    <span className="text-yellow-600">Checking API...</span>
+                  </>
+                )}
+                {apiStatus === 'connected' && (
+                  <>
+                    <Wifi className="h-3 w-3 text-green-500" />
+                    <span className="text-green-600">API Connected</span>
+                  </>
+                )}
+                {apiStatus === 'disconnected' && (
+                  <>
+                    <WifiOff className="h-3 w-3 text-red-500" />
+                    <span className="text-red-600">API Disconnected</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
