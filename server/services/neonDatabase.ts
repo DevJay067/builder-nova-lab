@@ -617,4 +617,21 @@ export class NeonDatabaseService {
       };
     }
   }
+
+  /**
+   * Delete a medical history record for a given patient
+   */
+  static async deleteMedicalHistory(recordId: string, patientId: string): Promise<boolean> {
+    try {
+      const result = await sql`
+        DELETE FROM medical_history
+        WHERE id = ${recordId} AND patient_id = ${patientId}
+      `;
+      console.log(`🗑️ Deleted medical history record: ${recordId} for patient ${patientId}`);
+      return true;
+    } catch (error) {
+      console.error("❌ Error deleting medical history:", error);
+      return false;
+    }
+  }
 }

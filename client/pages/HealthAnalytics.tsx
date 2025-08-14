@@ -106,6 +106,39 @@ export default function HealthAnalytics() {
     } catch {}
   };
 
+  const saveQuickRecord = async (record: {
+    type: string;
+    title: string;
+    description?: string;
+    metadata?: any;
+  }) => {
+    try {
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
+      if (!sessionToken) return;
+      await fetch("/api/health-records", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+        body: JSON.stringify({
+          type: record.type,
+          title: record.title,
+          description: record.description || "",
+          date: new Date().toISOString().split("T")[0],
+          doctor: "",
+          metadata: record.metadata || {},
+        }),
+      });
+    } catch {}
+  };
+
   // Hydration timer management
   const clearHydrationInterval = () => {
     if (hydrationIntervalRef.current) {
@@ -348,42 +381,8 @@ export default function HealthAnalytics() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Health Score Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {healthMetrics.map((metric, index) => (
-            <Card key={index} className="relative overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
-                  <div className={`flex items-center text-xs ${
-                    metric.trend === 'up' ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {metric.trend === 'up' ? 
-                      <TrendingUp className="h-3 w-3 mr-1" /> : 
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    }
-                    {metric.change}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-end space-x-2">
-                    <span className="text-2xl font-bold">{metric.value}</span>
-                    <span className="text-sm text-muted-foreground">/{metric.target}</span>
-                  </div>
-                  <Progress 
-                    value={(metric.value / metric.target) * 100} 
-                    className="h-2"
-                  />
-                  <p className="text-xs text-muted-foreground">{metric.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Tabs defaultValue="insights" className="space-y-6">
+        {/* Goals at top */}
+        <Tabs defaultValue="goals" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="insights" className="flex items-center space-x-2">
               <Zap className="h-4 w-4" />
@@ -402,6 +401,81 @@ export default function HealthAnalytics() {
               <span>Goals & Reminders</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Goals & Reminders at top */}
+          <TabsContent value="goals" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Hydration Goal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Droplets className="h-5 w-5 mr-2 text-blue-600" />
+                    Hydration
+                  </CardTitle>
+                  <CardDescription>Set your daily water goal and reminders</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="water-goal">Daily Goal (glasses)</Label>
+                      <Input id="water-goal" type="number" min={1} value={waterGoal} onChange={(e) => setWaterGoal(parseInt(e.target.value || "0"))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="water-consumed">Consumed</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input id="water-consumed" type="number" min={0} value={waterConsumed} onChange={(e) => setWaterConsumed(parseInt(e.target.value || "0"))} />
+                        <Button variant="outline" onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}>+1</Button>
+                      </div>
+                    </div>
+                  </div>
+                  <Progress value={Math.min(100, (waterConsumed / Math.max(1, waterGoal)) * 100)} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                      <Label htmlFor="notify-water">Notifications</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" onClick={() => { startHydrationTimer(60); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed } }); }}>Remind in 60m</Button>
+                      <Button onClick={() => { startHydrationTimer(30); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed } }); }}>Remind in 30m</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sleep Goal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-purple-600" />
+                    Sleep
+                  </CardTitle>
+                  <CardDescription>Set sleep goals and bedtime reminders</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="sleep-goal">Goal (hours)</Label>
+                      <Input id="sleep-goal" type="number" min={1} value={sleepHoursGoal} onChange={(e) => setSleepHoursGoal(parseInt(e.target.value || "0"))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="bedtime">Bedtime</Label>
+                      <Input id="bedtime" type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="notify-sleep" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                      <Label htmlFor="notify-sleep">Notifications</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" onClick={() => { scheduleTonightSleepReminder(); saveQuickRecord({ type: "vitals", title: "Sleep Reminder Set", metadata: { bedtime, sleepHoursGoal } }); }}>Remind at Bedtime</Button>
+                      <Button onClick={() => { showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`); saveQuickRecord({ type: "vitals", title: "Sleep Goal Set", metadata: { sleepHoursGoal } }); }}>Set Goal</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* AI Insights Tab */}
           <TabsContent value="insights" className="space-y-6">
@@ -572,81 +646,6 @@ export default function HealthAnalytics() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Goals & Reminders */}
-          <TabsContent value="goals" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Hydration Goal */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Droplets className="h-5 w-5 mr-2 text-blue-600" />
-                    Hydration
-                  </CardTitle>
-                  <CardDescription>Set your daily water goal and reminders</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 items-end">
-                    <div>
-                      <Label htmlFor="water-goal">Daily Goal (glasses)</Label>
-                      <Input id="water-goal" type="number" min={1} value={waterGoal} onChange={(e) => setWaterGoal(parseInt(e.target.value || "0"))} />
-                    </div>
-                    <div>
-                      <Label htmlFor="water-consumed">Consumed</Label>
-                      <div className="flex items-center space-x-2">
-                        <Input id="water-consumed" type="number" min={0} value={waterConsumed} onChange={(e) => setWaterConsumed(parseInt(e.target.value || "0"))} />
-                        <Button variant="outline" onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}>+1</Button>
-                      </div>
-                    </div>
-                  </div>
-                  <Progress value={Math.min(100, (waterConsumed / Math.max(1, waterGoal)) * 100)} />
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
-                      <Label htmlFor="notify-water">Notifications</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" onClick={() => startHydrationTimer(60)}>Remind in 60m</Button>
-                      <Button onClick={() => startHydrationTimer(30)}>Remind in 30m</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Sleep Goal */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-purple-600" />
-                    Sleep
-                  </CardTitle>
-                  <CardDescription>Set sleep goals and bedtime reminders</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 items-end">
-                    <div>
-                      <Label htmlFor="sleep-goal">Goal (hours)</Label>
-                      <Input id="sleep-goal" type="number" min={1} value={sleepHoursGoal} onChange={(e) => setSleepHoursGoal(parseInt(e.target.value || "0"))} />
-                    </div>
-                    <div>
-                      <Label htmlFor="bedtime">Bedtime</Label>
-                      <Input id="bedtime" type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch id="notify-sleep" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
-                      <Label htmlFor="notify-sleep">Notifications</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" onClick={scheduleTonightSleepReminder}>Remind at Bedtime</Button>
-                      <Button onClick={() => showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`)}>Set Goal</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
       </div>

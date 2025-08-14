@@ -150,6 +150,8 @@ export function createServer() {
         app.get("/api/blockchain/stats", getBlockchainStats);
         app.post("/api/test-data", addTestData);
         app.post("/api/store-health-record", storeHealthRecordDirect);
+        const { deleteHealthRecord } = await import("./routes/healthRecords");
+        app.delete("/api/health-records/:id", deleteHealthRecord);
         console.log("✅ Health records routes added");
       } catch (error) {
         console.log("⚠️ Health records routes failed:", error.message);

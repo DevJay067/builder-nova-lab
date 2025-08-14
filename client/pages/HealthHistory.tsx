@@ -281,7 +281,6 @@ export default function HealthHistory() {
           description: newRecord.description,
           date: newRecord.date,
           doctor: newRecord.doctor,
-          patientId: "demo_patient",
           metadata: newRecord.metadata,
         }),
       });
@@ -319,6 +318,40 @@ export default function HealthHistory() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const deleteRecord = async (recordId: string) => {
+    try {
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
+
+      if (!sessionToken) {
+        setMessage({ type: "error", text: "Please log in to delete records" });
+        return;
+      }
+
+      const response = await fetch(`/api/health-records/${recordId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setRecords((prev) => prev.filter((r) => r.id !== recordId));
+        setMessage({ type: "success", text: "Record deleted" });
+      } else {
+        setMessage({ type: "error", text: result.error || "Failed to delete record" });
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Network error while deleting record" });
     }
   };
 
@@ -986,6 +1019,9 @@ export default function HealthHistory() {
                                     (rt) => rt.value === record.type,
                                   )?.label || record.type}
                                 </Badge>
+                                <Button variant="ghost" size="icon" onClick={() => deleteRecord(record.id)} title="Delete record">
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                </Button>
                               </div>
                             </div>
 
