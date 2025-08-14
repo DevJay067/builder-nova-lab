@@ -277,19 +277,27 @@ export default function Login() {
         // Set cookie
         document.cookie = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; secure; samesite=strict`;
         
-        // Redirect to dashboard or intended page
-        const redirectPath = localStorage.getItem("redirectAfterLogin") || "/dashboard";
-        localStorage.removeItem("redirectAfterLogin");
-        navigate(redirectPath);
+        // Show success message for judge demo
+        setMessage({
+          type: "success",
+          text: "🎉 Judge Demo Access Granted! Welcome to the elevated demo environment with full permissions.",
+        });
+
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          const redirectPath = localStorage.getItem("redirectAfterLogin") || "/dashboard";
+          localStorage.removeItem("redirectAfterLogin");
+          navigate(redirectPath);
+        }, 2000);
       } else {
         const errorData = await response.json();
-        setMessage({ type: "error", text: errorData.message || "Demo login failed. Please try again." });
+        setMessage({ type: "error", text: errorData.message || "Judge demo login failed. Please try again." });
       }
     } catch (error) {
       console.error("Demo login error:", error);
       setMessage({
         type: "error",
-        text: "Network error during demo login.",
+        text: "Network error during judge demo login. Please check your connection.",
       });
     } finally {
       setIsLoading(false);
@@ -538,22 +546,28 @@ export default function Login() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full btn-smooth"
+                      className="w-full btn-smooth border-primary/30 bg-primary/5 hover:bg-primary/10"
                       onClick={handleDemoLogin}
                       disabled={isLoading}
                     >
                       {isLoading ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Demo Login...
+                          Judge Demo Login...
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 mr-2" />
-                          Try Demo Mode
+                          Judge Demo Access
                         </>
                       )}
                     </Button>
+                    
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">
+                        <strong>For Judges:</strong> Access demo environment with elevated permissions
+                      </p>
+                    </div>
                   </form>
                 </CardContent>
               </TabsContent>
@@ -818,6 +832,27 @@ export default function Login() {
                 </CardContent>
               </TabsContent>
             </Tabs>
+          </Card>
+
+          {/* Judge Demo Notice */}
+          <Card className="mt-6 border-blue-200 bg-blue-50 fade-in fade-in-delay-1">
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
+                  <Sparkles className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium text-blue-800 mb-1">
+                    🏆 Judge Demo Access
+                  </p>
+                  <p className="text-blue-700 leading-relaxed">
+                    Judges can access a special demo environment with elevated permissions, 
+                    allowing you to explore all features including analytics, full record access, 
+                    and advanced blockchain functionality.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
           </Card>
 
           {/* Security Notice */}

@@ -165,6 +165,31 @@ export default function Index() {
       stats: "HIPAA Compliant",
       gradient: "from-blue-500/20 to-cyan-500/20",
     },
+    ...(isAuthenticated && user?.role === "judge" ? [
+      {
+        id: "judge-analytics",
+        title: "Judge Analytics Dashboard",
+        description:
+          "Advanced analytics and insights with elevated permissions for comprehensive system evaluation.",
+        icon: TrendingUp,
+        color: "bg-purple-500",
+        route: "/analytics",
+        stats: "Elevated Access",
+        gradient: "from-purple-500/20 to-indigo-500/20",
+        highlight: true,
+      },
+      {
+        id: "judge-records",
+        title: "Full Record Access",
+        description:
+          "Complete access to all health records and blockchain data for comprehensive evaluation.",
+        icon: Users,
+        color: "bg-indigo-500",
+        route: "/history",
+        stats: "Full Access",
+        gradient: "from-indigo-500/20 to-blue-500/20",
+      }
+    ] : []),
   ];
 
   const stats = [
@@ -241,14 +266,28 @@ export default function Index() {
                     <span className="text-sm font-medium text-foreground">
                       {user?.username || "User"}
                     </span>
+                    {user?.role === "judge" && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
+                        🏆 Judge
+                      </Badge>
+                    )}
                   </div>
                   <Badge
                     variant="secondary"
                     className="hidden sm:flex items-center space-x-1 bg-green-50 text-green-700 border-green-200"
                   >
                     <CheckCircle className="w-3 h-3" />
-                    <span>Blockchain Secured</span>
+                    <span>{user?.demoMode ? "Demo Mode" : "Blockchain Secured"}</span>
                   </Badge>
+                  {user?.role === "judge" && (
+                    <Badge
+                      variant="secondary"
+                      className="hidden sm:flex items-center space-x-1 bg-purple-50 text-purple-700 border-purple-200"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Elevated Access</span>
+                    </Badge>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -364,6 +403,32 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Judge Demo Banner */}
+      {isAuthenticated && user?.role === "judge" && (
+        <section className="py-8 bg-gradient-to-r from-blue-50 to-purple-50 border-y border-blue-200">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-center space-x-4 fade-in">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="text-center sm:text-left">
+                  <h3 className="text-lg font-bold text-blue-800">
+                    🏆 Judge Demo Environment
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    You have elevated permissions to explore all features including analytics, full record access, and advanced blockchain functionality.
+                  </p>
+                </div>
+              </div>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                Demo Mode Active
+              </Badge>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Enhanced Features Section */}
       <section className="py-20 bg-muted/30 relative overflow-hidden">

@@ -45,6 +45,7 @@ import {
   verifyDataAccess,
   getAuthStats,
   authenticateUser,
+  demoLogin,
 } from "./routes/auth";
 import {
   getPersonalizedMedicalContext,
@@ -194,6 +195,7 @@ export function createServer() {
       try {
         app.post("/api/auth/register", registerUser);
         app.post("/api/auth/login", loginUser);
+        app.post("/api/auth/demo-login", demoLogin);
         app.get("/api/auth/verify", verifySession);
         app.post("/api/auth/logout", logoutUser);
         app.get("/api/auth/profile", getUserProfile);

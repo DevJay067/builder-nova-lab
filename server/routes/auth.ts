@@ -351,3 +351,68 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * Demo login for judges - provides a pre-configured demo account
+ */
+export const demoLogin: RequestHandler = async (req, res) => {
+  try {
+    console.log("🔍 Demo login request received for judges");
+
+    // Create a demo user with judge permissions
+    const demoUser = {
+      id: "demo-judge-001",
+      username: "demo_judge",
+      email: "judge@healthchain.demo",
+      firstName: "Demo",
+      lastName: "Judge",
+      role: "judge",
+      permissions: ["view_all_records", "access_analytics", "demo_mode"],
+      userHash: "demo-judge-hash-" + Date.now(),
+      sessionToken: "demo-session-" + Math.random().toString(36).substring(2, 15),
+      secureSystemActivated: true,
+      lastLogin: new Date().toISOString(),
+      demoMode: true,
+      demoFeatures: {
+        canViewAllRecords: true,
+        canAccessAnalytics: true,
+        canPerformDemoActions: true,
+        hasElevatedPermissions: true
+      }
+    };
+
+    // Set session cookie
+    res.cookie("healthchain_session", demoUser.sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour for demo sessions
+    });
+
+    console.log("✅ Demo login successful for judge");
+
+    res.json({
+      success: true,
+      message: "Demo login successful! Welcome to the judge demo environment.",
+      user: demoUser,
+      securityFeatures: {
+        demoMode: true,
+        elevatedPermissions: true,
+        sessionDuration: "1 hour",
+        features: demoUser.demoFeatures
+      },
+      demoInfo: {
+        role: "Judge",
+        permissions: demoUser.permissions,
+        features: demoUser.demoFeatures,
+        note: "This is a demo environment with elevated permissions for demonstration purposes."
+      }
+    });
+  } catch (error) {
+    console.error("Error in demo login:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error during demo login",
+    });
+  }
+};
