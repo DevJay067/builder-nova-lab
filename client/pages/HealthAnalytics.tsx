@@ -21,11 +21,176 @@ import {
   PieChart,
   LineChart,
   Zap,
-  Shield
+  Shield,
+  Droplets
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useEffect, useRef } from "react";
 
 export default function HealthAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
+
+  // Goals & Reminders state
+  const [waterGoal, setWaterGoal] = useState<number>(() => {
+    const v = localStorage.getItem("health_water_goal");
+    return v ? parseInt(v) : 8;
+  });
+  const [waterConsumed, setWaterConsumed] = useState<number>(() => {
+    const v = localStorage.getItem("health_water_consumed");
+    return v ? parseInt(v) : 0;
+  });
+  const [sleepHoursGoal, setSleepHoursGoal] = useState<number>(() => {
+    const v = localStorage.getItem("health_sleep_goal_hours");
+    return v ? parseInt(v) : 8;
+  });
+  const [bedtime, setBedtime] = useState<string>(() => {
+    return localStorage.getItem("health_bedtime") || "22:30";
+  });
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
+    const v = localStorage.getItem("health_notifications_enabled");
+    return v ? v === "true" : true;
+  });
+
+  const [hydrationEndAt, setHydrationEndAt] = useState<number | null>(() => {
+    const v = localStorage.getItem("health_hydration_end_at");
+    return v ? parseInt(v) : null;
+  });
+  const [sleepReminderAt, setSleepReminderAt] = useState<number | null>(() => {
+    const v = localStorage.getItem("health_sleep_reminder_at");
+    return v ? parseInt(v) : null;
+  });
+  const hydrationIntervalRef = useRef<any>(null);
+  const sleepIntervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    localStorage.setItem("health_water_goal", String(waterGoal));
+  }, [waterGoal]);
+
+  useEffect(() => {
+    localStorage.setItem("health_water_consumed", String(waterConsumed));
+  }, [waterConsumed]);
+
+  useEffect(() => {
+    localStorage.setItem("health_sleep_goal_hours", String(sleepHoursGoal));
+  }, [sleepHoursGoal]);
+
+  useEffect(() => {
+    localStorage.setItem("health_bedtime", bedtime);
+  }, [bedtime]);
+
+  useEffect(() => {
+    localStorage.setItem("health_notifications_enabled", String(notificationsEnabled));
+    if (notificationsEnabled && Notification && Notification.permission !== "granted") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, [notificationsEnabled]);
+
+  const showLocalNotification = async (title: string, body: string) => {
+    try {
+      if (!notificationsEnabled) return;
+      if (Notification && Notification.permission === "granted") {
+        const reg = await navigator.serviceWorker?.ready;
+        if (reg && reg.showNotification) {
+          await reg.showNotification(title, {
+            body,
+            icon: "/icons/icon-192x192.png",
+            vibrate: [200, 100, 200],
+            data: { url: "/analytics" },
+          });
+          return;
+        }
+        new Notification(title, { body });
+      }
+    } catch {}
+  };
+
+  // Hydration timer management
+  const clearHydrationInterval = () => {
+    if (hydrationIntervalRef.current) {
+      clearInterval(hydrationIntervalRef.current);
+      hydrationIntervalRef.current = null;
+    }
+  };
+
+  const startHydrationTimer = (minutes: number) => {
+    const endAt = Date.now() + minutes * 60 * 1000;
+    setHydrationEndAt(endAt);
+    localStorage.setItem("health_hydration_end_at", String(endAt));
+    clearHydrationInterval();
+    hydrationIntervalRef.current = setInterval(() => {
+      if (Date.now() >= endAt) {
+        clearHydrationInterval();
+        setHydrationEndAt(null);
+        localStorage.removeItem("health_hydration_end_at");
+        showLocalNotification("Hydration Reminder", "Time to drink water 💧");
+      }
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (hydrationEndAt && hydrationEndAt > Date.now()) {
+      startHydrationTimer(Math.ceil((hydrationEndAt - Date.now()) / 60000));
+    } else if (hydrationEndAt && hydrationEndAt <= Date.now()) {
+      // overdue
+      setHydrationEndAt(null);
+      localStorage.removeItem("health_hydration_end_at");
+      showLocalNotification("Hydration Reminder", "Time to drink water 💧");
+    }
+    return () => clearHydrationInterval();
+  }, []);
+
+  // Sleep reminder management
+  const clearSleepInterval = () => {
+    if (sleepIntervalRef.current) {
+      clearInterval(sleepIntervalRef.current);
+      sleepIntervalRef.current = null;
+    }
+  };
+
+  const scheduleTonightSleepReminder = () => {
+    const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
+    const now = new Date();
+    const target = new Date();
+    target.setHours(hh, mm, 0, 0);
+    if (target.getTime() <= now.getTime()) {
+      target.setDate(target.getDate() + 1);
+    }
+    const endAt = target.getTime();
+    setSleepReminderAt(endAt);
+    localStorage.setItem("health_sleep_reminder_at", String(endAt));
+    clearSleepInterval();
+    sleepIntervalRef.current = setInterval(() => {
+      if (Date.now() >= endAt) {
+        clearSleepInterval();
+        setSleepReminderAt(null);
+        localStorage.removeItem("health_sleep_reminder_at");
+        showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+      }
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (sleepReminderAt && sleepReminderAt > Date.now()) {
+      const minutes = Math.ceil((sleepReminderAt - Date.now()) / 60000);
+      // reschedule
+      clearSleepInterval();
+      sleepIntervalRef.current = setInterval(() => {
+        if (Date.now() >= sleepReminderAt) {
+          clearSleepInterval();
+          setSleepReminderAt(null);
+          localStorage.removeItem("health_sleep_reminder_at");
+          showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+        }
+      }, 1000);
+    } else if (sleepReminderAt && sleepReminderAt <= Date.now()) {
+      setSleepReminderAt(null);
+      localStorage.removeItem("health_sleep_reminder_at");
+      showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+    }
+    return () => clearSleepInterval();
+  }, []);
 
   const healthMetrics = [
     {
@@ -219,7 +384,7 @@ export default function HealthAnalytics() {
         </div>
 
         <Tabs defaultValue="insights" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="insights" className="flex items-center space-x-2">
               <Zap className="h-4 w-4" />
               <span>Insights</span>
@@ -231,6 +396,10 @@ export default function HealthAnalytics() {
             <TabsTrigger value="predictions" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
               <span>Risk Analysis</span>
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="flex items-center space-x-2">
+              <Target className="h-4 w-4" />
+              <span>Goals & Reminders</span>
             </TabsTrigger>
           </TabsList>
 
@@ -403,6 +572,81 @@ export default function HealthAnalytics() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Goals & Reminders */}
+          <TabsContent value="goals" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Hydration Goal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Droplets className="h-5 w-5 mr-2 text-blue-600" />
+                    Hydration
+                  </CardTitle>
+                  <CardDescription>Set your daily water goal and reminders</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="water-goal">Daily Goal (glasses)</Label>
+                      <Input id="water-goal" type="number" min={1} value={waterGoal} onChange={(e) => setWaterGoal(parseInt(e.target.value || "0"))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="water-consumed">Consumed</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input id="water-consumed" type="number" min={0} value={waterConsumed} onChange={(e) => setWaterConsumed(parseInt(e.target.value || "0"))} />
+                        <Button variant="outline" onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}>+1</Button>
+                      </div>
+                    </div>
+                  </div>
+                  <Progress value={Math.min(100, (waterConsumed / Math.max(1, waterGoal)) * 100)} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                      <Label htmlFor="notify-water">Notifications</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" onClick={() => startHydrationTimer(60)}>Remind in 60m</Button>
+                      <Button onClick={() => startHydrationTimer(30)}>Remind in 30m</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sleep Goal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-purple-600" />
+                    Sleep
+                  </CardTitle>
+                  <CardDescription>Set sleep goals and bedtime reminders</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="sleep-goal">Goal (hours)</Label>
+                      <Input id="sleep-goal" type="number" min={1} value={sleepHoursGoal} onChange={(e) => setSleepHoursGoal(parseInt(e.target.value || "0"))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="bedtime">Bedtime</Label>
+                      <Input id="bedtime" type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="notify-sleep" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                      <Label htmlFor="notify-sleep">Notifications</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" onClick={scheduleTonightSleepReminder}>Remind at Bedtime</Button>
+                      <Button onClick={() => showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`)}>Set Goal</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
