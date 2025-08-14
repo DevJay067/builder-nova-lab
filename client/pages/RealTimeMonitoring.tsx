@@ -41,6 +41,8 @@ import {
   Area,
   RechartsProps,
 } from "recharts";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Simulated IoT device data
 interface VitalSigns {
@@ -78,61 +80,15 @@ export default function RealTimeMonitoring() {
   });
 
   const [vitalsHistory, setVitalsHistory] = useState<any[]>([]);
-  const [connectedDevices, setConnectedDevices] = useState<Device[]>([
-    {
-      id: "apple_watch",
-      name: "Apple Watch Series 9",
-      type: "smartwatch",
-      status: "connected",
-      battery: 85,
-      lastSync: "2 minutes ago",
-      icon: Watch,
-    },
-    {
-      id: "fitbit_charge",
-      name: "Fitbit Charge 6",
-      type: "fitness_tracker",
-      status: "connected",
-      battery: 62,
-      lastSync: "5 minutes ago",
-      icon: Activity,
-    },
-    {
-      id: "omron_bp",
-      name: "Omron Blood Pressure Monitor",
-      type: "blood_pressure",
-      status: "syncing",
-      battery: 45,
-      lastSync: "1 hour ago",
-      icon: Heart,
-    },
-    {
-      id: "pulse_ox",
-      name: "Masimo Pulse Oximeter",
-      type: "pulse_oximeter",
-      status: "disconnected",
-      battery: 20,
-      lastSync: "3 hours ago",
-      icon: Droplets,
-    },
-  ]);
+  const [connectedDevices, setConnectedDevices] = useState<Device[]>([]);
 
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      type: "warning",
-      message: "Heart rate elevated above normal range (>100 BPM)",
-      timestamp: "2 minutes ago",
-      severity: "medium",
-    },
-    {
-      id: 2,
-      type: "info",
-      message: "Fitbit sync completed successfully",
-      timestamp: "5 minutes ago",
-      severity: "low",
-    },
-  ]);
+  const [alerts, setAlerts] = useState([] as any[]);
+
+  const [useDemo, setUseDemo] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
+  const [uploadToCloud, setUploadToCloud] = useState(true);
+  const isBLESupported = typeof navigator !== "undefined" && !!(navigator as any).bluetooth;
 
   // Attempt SSE connection; fallback to simulation
   useEffect(() => {
@@ -168,18 +124,6 @@ export default function RealTimeMonitoring() {
           ].slice(-20);
           return newHistory;
         });
-        if (newVitals.heartRate > 100 && Math.random() > 0.8) {
-          setAlerts((prev) => [
-            {
-              id: Date.now(),
-              type: "warning",
-              message: `Heart rate spike detected: ${newVitals.heartRate} BPM`,
-              timestamp: "Just now",
-              severity: "high",
-            },
-            ...prev.slice(0, 4),
-          ]);
-        }
       }, 3000);
     }
 
@@ -192,51 +136,57 @@ export default function RealTimeMonitoring() {
 
     try {
       const token = localStorage.getItem("sessionToken");
-      const url = token
-        ? `/api/iot/stream?token=${encodeURIComponent(token)}`
-        : "/api/iot/stream?simulate=true";
-      eventSource = new EventSource(url);
+      const url = useDemo
+        ? `/api/iot/stream?simulate=true`
+        : token
+          ? `/api/iot/stream?token=${encodeURIComponent(token)}`
+          : "";
 
-      eventSource.addEventListener("vitals", (evt: MessageEvent) => {
-        try {
-          const payload = JSON.parse((evt as any).data || (evt as any).detail || "{}");
-          const now = new Date(payload.timestamp || new Date().toISOString());
-          const heartRate = payload?.metrics?.heartRate ?? vitalSigns.heartRate;
-          const spo2 = payload?.metrics?.spo2 ?? vitalSigns.oxygenSaturation;
-          const updated: VitalSigns = {
-            heartRate,
-            bloodPressure: vitalSigns.bloodPressure,
-            temperature: vitalSigns.temperature,
-            oxygenSaturation: spo2,
-            respiratoryRate: vitalSigns.respiratoryRate,
-            timestamp: now.toISOString(),
-          };
-          setVitalSigns(updated);
-          setVitalsHistory((prev) => [
-            ...prev,
-            {
-              time: now.toLocaleTimeString(),
-              heartRate: updated.heartRate,
-              temperature: updated.temperature,
-              oxygenSat: updated.oxygenSaturation,
-              systolic: updated.bloodPressure.systolic,
-            },
-          ].slice(-20));
-        } catch {
-          // ignore parse errors
-        }
-      });
+      if (!url) {
+        // no session and not in demo -> no SSE
+      } else {
+        eventSource = new EventSource(url);
 
-      eventSource.addEventListener("ready", () => {
-        stopSimulation();
-      });
+        eventSource.addEventListener("vitals", (evt: MessageEvent) => {
+          try {
+            const payload = JSON.parse((evt as any).data || (evt as any).detail || "{}");
+            const now = new Date(payload.timestamp || new Date().toISOString());
+            const heartRate = payload?.metrics?.heartRate ?? vitalSigns.heartRate;
+            const spo2 = payload?.metrics?.spo2 ?? vitalSigns.oxygenSaturation;
+            const updated: VitalSigns = {
+              heartRate,
+              bloodPressure: vitalSigns.bloodPressure,
+              temperature: vitalSigns.temperature,
+              oxygenSaturation: spo2,
+              respiratoryRate: vitalSigns.respiratoryRate,
+              timestamp: now.toISOString(),
+            };
+            setVitalSigns(updated);
+            setVitalsHistory((prev) => [
+              ...prev,
+              {
+                time: now.toLocaleTimeString(),
+                heartRate: updated.heartRate,
+                temperature: updated.temperature,
+                oxygenSat: updated.oxygenSaturation,
+                systolic: updated.bloodPressure.systolic,
+              },
+            ].slice(-20));
+          } catch {}
+        });
 
-      eventSource.onerror = () => {
-        // fallback
-        startSimulation();
-      };
+        eventSource.addEventListener("ready", () => {
+          stopSimulation();
+        });
+
+        eventSource.onerror = () => {
+          if (useDemo) startSimulation();
+        };
+      }
+
+      if (useDemo) startSimulation();
     } catch {
-      startSimulation();
+      if (useDemo) startSimulation();
     }
 
     return () => {
@@ -245,7 +195,138 @@ export default function RealTimeMonitoring() {
         eventSource.close();
       }
     };
-  }, []);
+  }, [useDemo]);
+
+  // Web Bluetooth: connect and stream heart rate (and optional SpO2)
+  const connectBluetooth = async () => {
+    try {
+      if (!isBLESupported) return;
+      setIsConnecting(true);
+      const device = await (navigator as any).bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [0x180D, 0x1822], // Heart Rate, Pulse Oximeter
+      });
+      setBleDeviceName(device?.name || "Unknown Device");
+      setConnectedDevices([
+        {
+          id: device.id || "ble-device",
+          name: device.name || "Bluetooth Health Device",
+          type: "smartwatch",
+          status: "connected",
+          battery: 0,
+          lastSync: "Just now",
+          icon: Watch,
+        },
+      ]);
+
+      const server = await device.gatt.connect();
+
+      // Heart Rate service
+      try {
+        const hrService = await server.getPrimaryService(0x180D);
+        const hrChar = await hrService.getCharacteristic(0x2A37);
+        await hrChar.startNotifications();
+        hrChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const value: DataView = event.target.value;
+          const flags = value.getUint8(0);
+          const hr16 = flags & 0x01;
+          const heartRate = hr16 ? value.getUint16(1, true) : value.getUint8(1);
+          const now = new Date();
+          setVitalSigns((prev) => {
+            const updated = {
+              ...prev,
+              heartRate,
+              timestamp: now.toISOString(),
+            };
+            return updated;
+          });
+          setVitalsHistory((prev) => [
+            ...prev,
+            {
+              time: now.toLocaleTimeString(),
+              heartRate,
+              temperature: vitalSigns.temperature,
+              oxygenSat: vitalSigns.oxygenSaturation,
+              systolic: vitalSigns.bloodPressure.systolic,
+            },
+          ].slice(-50));
+
+          // Optional cloud ingest
+          if (uploadToCloud) {
+            const token = localStorage.getItem("sessionToken");
+            if (token) {
+              fetch("/api/iot/ingest", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                  deviceId: device.id,
+                  deviceType: "bluetooth_health",
+                  metrics: { heartRate },
+                }),
+              }).catch(() => {});
+            }
+          }
+        });
+      } catch {}
+
+      // Pulse Oximeter service (best-effort)
+      try {
+        const plxService = await server.getPrimaryService(0x1822);
+        // Continuous Measurement 0x2A5F
+        const plxChar = await plxService.getCharacteristic(0x2A5F);
+        await plxChar.startNotifications();
+        plxChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const dv: DataView = event.target.value;
+          // Try to parse SpO2 from first SFLOAT after flags
+          const spo2 = (() => {
+            if (dv.byteLength >= 3) {
+              const raw = dv.getUint16(1, true);
+              // IEEE-11073 16-bit SFLOAT (mantissa 12-bit signed, exponent 4-bit signed)
+              const mantissa = ((raw & 0x0FFF) << 20) >> 20; // sign extend 12-bit
+              const exp = ((raw >> 12) & 0x000F) >= 0x0008 ? ((raw >> 12) | 0xFFF0) : (raw >> 12);
+              const value = mantissa * Math.pow(10, exp);
+              return Math.round(value);
+            }
+            return undefined;
+          })();
+
+          if (typeof spo2 === "number" && spo2 > 0 && spo2 <= 100) {
+            const now = new Date();
+            setVitalSigns((prev) => ({ ...prev, oxygenSaturation: spo2, timestamp: now.toISOString() }));
+            setVitalsHistory((prev) => [
+              ...prev,
+              {
+                time: now.toLocaleTimeString(),
+                heartRate: vitalSigns.heartRate,
+                temperature: vitalSigns.temperature,
+                oxygenSat: spo2,
+                systolic: vitalSigns.bloodPressure.systolic,
+              },
+            ].slice(-50));
+
+            if (uploadToCloud) {
+              const token = localStorage.getItem("sessionToken");
+              if (token) {
+                fetch("/api/iot/ingest", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({
+                    deviceId: device.id,
+                    deviceType: "pulse_oximeter",
+                    metrics: { spo2 },
+                  }),
+                }).catch(() => {});
+              }
+            }
+          }
+        });
+      } catch {}
+    } catch (e) {
+      // noop
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   const getVitalStatus = (type: string, value: number) => {
     switch (type) {
@@ -316,6 +397,18 @@ export default function RealTimeMonitoring() {
                 <Clock className="w-3 h-3 mr-1" />
                 {new Date().toLocaleTimeString()}
               </Badge>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="demo-mode" className="text-xs text-slate-600">Demo Mode</Label>
+                <Switch id="demo-mode" checked={useDemo} onCheckedChange={setUseDemo} />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="cloud-upload" className="text-xs text-slate-600">Upload to Cloud</Label>
+                <Switch id="cloud-upload" checked={uploadToCloud} onCheckedChange={setUploadToCloud} />
+              </div>
+              <Button size="sm" className="btn-smooth" onClick={connectBluetooth} disabled={!isBLESupported || isConnecting}>
+                <Watch className="w-4 h-4 mr-2" />
+                {isConnecting ? "Connecting..." : bleDeviceName ? "Reconnect" : "Connect Device"}
+              </Button>
             </div>
           </div>
         </div>
