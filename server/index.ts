@@ -260,7 +260,9 @@ export function createServer() {
   };
 
   // Add routes in background
-  addRoutes();
+  addRoutes().catch(error => {
+    console.error("❌ Failed to add routes:", error);
+  });
 
   // Error handling middleware
   app.use((error: any, req: any, res: any, next: any) => {
