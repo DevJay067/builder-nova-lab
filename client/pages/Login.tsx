@@ -342,6 +342,22 @@ export default function Login() {
                   Secure Login
                 </span>
               </div>
+              <Button
+                onClick={handleDemoLogin}
+                disabled={isLoading}
+                variant="outline"
+                size="sm"
+                className="btn-smooth border-green-200 text-green-700 hover:bg-green-50"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-1" />
+                    Demo
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -363,6 +379,44 @@ export default function Login() {
                 Access your secure blockchain-powered healthcare platform
               </CardDescription>
             </CardHeader>
+          </Card>
+
+          {/* Demo Login Card - Prominent for Judges */}
+          <Card className="mb-6 shadow-colored border-green-200 bg-green-50/50 fade-in fade-in-delay-1">
+            <CardHeader className="text-center pb-4">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/25">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-xl font-bold text-green-800">
+                🚀 Quick Demo Access
+              </CardTitle>
+              <CardDescription className="text-green-700">
+                Try the full application instantly with demo credentials
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Button
+                onClick={handleDemoLogin}
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg shadow-green-500/25 btn-smooth"
+                size="lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Loading Demo...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Start Demo Mode
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-green-600 mt-2">
+                No registration required • Full access to all features
+              </p>
+            </CardContent>
           </Card>
 
           {/* Message Alert */}
