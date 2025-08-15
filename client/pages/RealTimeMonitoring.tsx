@@ -28,6 +28,7 @@ import {
   Smartphone,
   Watch,
   Brain,
+  Bug,
 } from "lucide-react";
 import {
   LineChart,
