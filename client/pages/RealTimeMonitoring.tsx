@@ -44,6 +44,7 @@ import {
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import IoTDebugPanel from "@/components/IoTDebugPanel";
 
 // Simulated IoT device data
 interface VitalSigns {
@@ -145,6 +146,7 @@ export default function RealTimeMonitoring() {
   const [useMock, setUseMock] = useState<boolean>(false);
   const [isMockRunning, setIsMockRunning] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<"sse" | "mock" | "ble">("sse");
+  const [showDebugPanel, setShowDebugPanel] = useState<boolean>(false);
   const esRef = useRef<EventSource | null>(null);
   const simRef = useRef<any>(null);
 
@@ -477,6 +479,14 @@ export default function RealTimeMonitoring() {
                 <Label htmlFor="use-mock" className="text-xs text-slate-600">Mock</Label>
                 <Switch id="use-mock" checked={useMock} onCheckedChange={(v) => (v ? startMockStream() : stopMockStream())} />
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+              >
+                <Bug className="w-4 h-4 mr-2" />
+                Debug
+              </Button>
               <Badge
                 variant="secondary"
                 className="bg-green-50 text-green-700 border-green-200"
@@ -524,6 +534,13 @@ export default function RealTimeMonitoring() {
                 </AlertDescription>
               </Alert>
             ))}
+          </div>
+        )}
+
+        {/* Debug Panel */}
+        {showDebugPanel && (
+          <div className="mb-8 fade-in">
+            <IoTDebugPanel />
           </div>
         )}
 
