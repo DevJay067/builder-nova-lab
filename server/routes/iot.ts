@@ -66,10 +66,11 @@ export const iotStream: RequestHandler = (req, res) => {
       const now = new Date().toISOString();
       const heartRate = Math.floor(Math.random() * 20) + 65;
       const spo2 = Math.floor(Math.random() * 3) + 97;
+      const steps = Math.floor(Math.random() * 20) + 1000;
       const payload = {
         type: "iot_vitals",
         timestamp: now,
-        metrics: { heartRate, spo2 },
+        metrics: { heartRate, spo2, steps },
         device: { id: "demo_device", type: "simulator" },
       };
       try {
@@ -99,18 +100,17 @@ export const ingestIoTData: RequestHandler = async (req, res) => {
       targetSessionToken,
     } = req.body || {};
 
-    // Basic validation
-    if (!metrics || (metrics.heartRate == null && metrics.spo2 == null)) {
-      return res.status(400).json({ success: false, message: "Missing vitals: heartRate or spo2 required" });
+    // Basic validation - allow any supported metric
+    const supportedKeys = ["heartRate", "spo2", "steps", "calories", "distance"];
+    const hasAnyMetric = metrics && typeof metrics === "object" && supportedKeys.some((k) => typeof metrics[k] === "number");
+    if (!hasAnyMetric) {
+      return res.status(400).json({ success: false, message: "Missing metrics: provide at least one of heartRate, spo2, steps, calories, distance" });
     }
 
     const event = {
       type: "iot_vitals",
       timestamp: timestamp || new Date().toISOString(),
-      metrics: {
-        heartRate: typeof metrics.heartRate === "number" ? metrics.heartRate : undefined,
-        spo2: typeof metrics.spo2 === "number" ? metrics.spo2 : undefined,
-      },
+      metrics: Object.fromEntries(Object.entries(metrics).filter(([k,v]) => supportedKeys.includes(k) && typeof v === "number")),
       device: { id: deviceId || "unknown", type: deviceType || "unknown" },
     };
 
@@ -128,8 +128,7 @@ export const ingestIoTData: RequestHandler = async (req, res) => {
         await SecureDataAccessService.storeHealthRecord(sessionToken, {
           type: "iot_vitals",
           data: {
-            heartRate: event.metrics.heartRate,
-            oxygenSaturation: event.metrics.spo2,
+            ...event.metrics,
             device: event.device,
           },
           timestamp: event.timestamp,

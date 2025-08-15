@@ -52,6 +52,9 @@ interface VitalSigns {
   oxygenSaturation: number;
   respiratoryRate: number;
   timestamp: string;
+  steps?: number;
+  calories?: number;
+  distance?: number;
 }
 
 interface Device {
@@ -153,6 +156,9 @@ export default function RealTimeMonitoring() {
             const now = new Date(payload.timestamp || new Date().toISOString());
             const heartRate = payload?.metrics?.heartRate ?? vitalSigns.heartRate;
             const spo2 = payload?.metrics?.spo2 ?? vitalSigns.oxygenSaturation;
+            const steps = payload?.metrics?.steps;
+            const calories = payload?.metrics?.calories;
+            const distance = payload?.metrics?.distance;
             const updated: VitalSigns = {
               heartRate,
               bloodPressure: vitalSigns.bloodPressure,
@@ -160,6 +166,9 @@ export default function RealTimeMonitoring() {
               oxygenSaturation: spo2,
               respiratoryRate: vitalSigns.respiratoryRate,
               timestamp: now.toISOString(),
+              steps,
+              calories,
+              distance,
             };
             setVitalSigns(updated);
             setVitalsHistory((prev) => [
@@ -170,6 +179,7 @@ export default function RealTimeMonitoring() {
                 temperature: updated.temperature,
                 oxygenSat: updated.oxygenSaturation,
                 systolic: updated.bloodPressure.systolic,
+                steps: updated.steps,
               },
             ].slice(-20));
           } catch {}
@@ -593,6 +603,26 @@ export default function RealTimeMonitoring() {
               </div>
             </CardContent>
           </Card>
+          {/* Steps */}
+          <Card className="card-hover shadow-colored border-border/50 fade-in fade-in-delay-4">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Activity className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="text-sm font-medium">Steps</CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold mb-2 text-slate-800">
+                {vitalSigns.steps ?? 0}
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <TrendingUp className="w-4 h-4 mr-1 text-purple-600" />
+                Today’s steps
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Charts and Device Status */}
@@ -651,6 +681,16 @@ export default function RealTimeMonitoring() {
                         dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
                         name="Systolic BP (mmHg)"
                       />
+                      {vitalsHistory.some((d) => typeof d.steps === "number") && (
+                        <Line
+                          type="monotone"
+                          dataKey="steps"
+                          stroke="#8b5cf6"
+                          strokeWidth={2}
+                          dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 3 }}
+                          name="Steps"
+                        />
+                      )}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
