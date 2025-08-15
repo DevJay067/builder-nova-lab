@@ -52,6 +52,10 @@ export default function HealthAnalytics() {
     const v = localStorage.getItem("health_notifications_enabled");
     return v ? v === "true" : true;
   });
+  const [hydrationRepeat, setHydrationRepeat] = useState<boolean>(() => {
+    const v = localStorage.getItem("health_hydration_repeat");
+    return v ? v === "true" : true;
+  });
 
   const [hydrationEndAt, setHydrationEndAt] = useState<number | null>(() => {
     const v = localStorage.getItem("health_hydration_end_at");
@@ -86,6 +90,10 @@ export default function HealthAnalytics() {
       Notification.requestPermission().catch(() => {});
     }
   }, [notificationsEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem("health_hydration_repeat", String(hydrationRepeat));
+  }, [hydrationRepeat]);
 
   const showLocalNotification = async (title: string, body: string) => {
     try {
@@ -157,7 +165,11 @@ export default function HealthAnalytics() {
         clearHydrationInterval();
         setHydrationEndAt(null);
         localStorage.removeItem("health_hydration_end_at");
-        showLocalNotification("Hydration Reminder", "Time to drink water 💧");
+        showLocalNotification("Hydration Reminder", "It's water time! 💧");
+        if (hydrationRepeat) {
+          // auto-repeat
+          startHydrationTimer(minutes);
+        }
       }
     }, 1000);
   };
@@ -169,7 +181,7 @@ export default function HealthAnalytics() {
       // overdue
       setHydrationEndAt(null);
       localStorage.removeItem("health_hydration_end_at");
-      showLocalNotification("Hydration Reminder", "Time to drink water 💧");
+      showLocalNotification("Hydration Reminder", "It's water time! 💧");
     }
     return () => clearHydrationInterval();
   }, []);
@@ -433,10 +445,15 @@ export default function HealthAnalytics() {
                     <div className="flex items-center space-x-2">
                       <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
                       <Label htmlFor="notify-water">Notifications</Label>
+                      <div className="flex items-center space-x-2 ml-3">
+                        <Switch id="repeat-water" checked={hydrationRepeat} onCheckedChange={setHydrationRepeat} />
+                        <Label htmlFor="repeat-water">Repeat</Label>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" onClick={() => { startHydrationTimer(60); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed } }); }}>Remind in 60m</Button>
-                      <Button onClick={() => { startHydrationTimer(30); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed } }); }}>Remind in 30m</Button>
+                      <Button variant="outline" onClick={() => { startHydrationTimer(5); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "5m" } }); }}>5m</Button>
+                      <Button variant="outline" onClick={() => { startHydrationTimer(30); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "30m" } }); }}>30m</Button>
+                      <Button onClick={() => { startHydrationTimer(60); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "60m" } }); }}>60m</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -471,6 +488,13 @@ export default function HealthAnalytics() {
                       <Button variant="outline" onClick={() => { scheduleTonightSleepReminder(); saveQuickRecord({ type: "vitals", title: "Sleep Reminder Set", metadata: { bedtime, sleepHoursGoal } }); }}>Remind at Bedtime</Button>
                       <Button onClick={() => { showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`); saveQuickRecord({ type: "vitals", title: "Sleep Goal Set", metadata: { sleepHoursGoal } }); }}>Set Goal</Button>
                     </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(':')[0])};S.minutes=${parseInt(bedtime.split(':')[1])};end`}
+                    >
+                      <Button variant="secondary">Add Alarm in Clock App (Android)</Button>
+                    </a>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Device alarm integration: On Android, you can add an alarm using
