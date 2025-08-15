@@ -17,7 +17,8 @@ const demoData = {
     version: "1.0.0",
     environment: "netlify",
     lastHealthCheck: new Date().toISOString()
-  }
+  },
+  iot: {} as Record<string, any>
 };
 
 // Helper function to get CORS headers
@@ -226,6 +227,51 @@ const handleRequest = async (event: any) => {
       });
     }
 
+    // IoT ingest and latest endpoints (phone bridge)
+    if (path === "/api/iot/ingest" && httpMethod === "POST") {
+      try {
+        const user = validateSession(headers);
+        const { deviceId, deviceType, timestamp, metrics } = JSON.parse(body || "{}");
+        const ts = timestamp || new Date().toISOString();
+        const supportedKeys = ["heartRate", "spo2", "steps", "calories", "distance"];
+        const filtered = Object.fromEntries(Object.entries(metrics || {}).filter(([k,v]) => supportedKeys.includes(k) && typeof v === "number"));
+        const event = { type: "iot_vitals", timestamp: ts, metrics: filtered, device: { id: deviceId || "phone_bridge", type: deviceType || "bridge" } };
+        (demoData.iot as any)[user.id] = { last: event };
+        // Also append to demo records for visibility
+        demoData.healthRecords.push({
+          id: `iot_${Date.now()}`,
+          patientId: user.id,
+          date: ts,
+          type: "iot_vitals",
+          title: "IoT Vitals Update",
+          description: "Vitals ingested via phone bridge",
+          doctor: "",
+          status: "completed",
+          blockchainHash: `hash_${Date.now()}`,
+          metadata: event.metrics,
+          createdAt: ts,
+          updatedAt: ts
+        });
+        return createSuccessResponse({ success: true });
+      } catch (error) {
+        return createErrorResponse("Invalid request body", 400);
+      }
+    }
+
+    if (path === "/api/iot/latest" && httpMethod === "GET") {
+      const user = validateSession(headers);
+      const last = (demoData.iot as any)[user.id]?.last || null;
+      return createSuccessResponse({ success: true, last });
+    }
+
+    // Notifications schedule endpoints (ack only)
+    if (path === "/api/notifications/hydration" && httpMethod === "POST") {
+      return createSuccessResponse({ success: true });
+    }
+    if (path === "/api/notifications/bedtime" && httpMethod === "POST") {
+      return createSuccessResponse({ success: true });
+    }
+
     // Health records endpoints
     if (path === "/api/health-records" && httpMethod === "GET") {
       return createSuccessResponse({
@@ -325,23 +371,26 @@ const handleRequest = async (event: any) => {
           .filter(record => record.metadata && record.metadata.medications)
           .flatMap(record => record.metadata.medications || []);
         
-        const context = recordCount > 0 
-          ? `Patient has ${recordCount} health records with focus on ${library || 'general'} health`
-          : "Patient has no health records yet";
-        
         return createSuccessResponse({
           success: true,
-          originalQuery: query,
-          enhancedQuery: `Enhanced: ${query} (using ${library || 'default'} library)`,
-          context: context,
-          libraryUsed: library || "default",
-          librariesSearched: ["cardiovascular", "general", "emergency"],
-          confidence: 0.85,
-          relevantConditions: conditions.length > 0 ? conditions : ["general health"],
-          searchContext: `${library || 'General'} health focus`,
-          personalizedPrompt: `Consider patient's health records and ${library || 'general'} conditions`,
-          hasPersonalization: recordCount > 0,
-          recordCount: recordCount
+          insights: [
+            {
+              type: "cardiovascular",
+              title: "Heart Health Status",
+              description: "Your heart rate is within normal range.",
+              recommendations: ["Maintain regular exercise", "Monitor heart rate variability"],
+              librariesSearched: ["cardiovascular", "general", "emergency"],
+              recordCount: recordCount
+            },
+            {
+              type: "general",
+              title: "General Health Overview",
+              description: "Stay hydrated and maintain balanced nutrition.",
+              recommendations: ["Drink more water", "Get 7-8 hours of sleep"],
+              librariesSearched: ["cardiovascular", "general", "emergency"],
+              recordCount: recordCount
+            }
+          ]
         });
       } catch (error) {
         return createErrorResponse("Invalid request", 400);
@@ -641,6 +690,10 @@ const handleRequest = async (event: any) => {
         "/api/auth/data-access",
         "/api/auth/data-access/records",
         "/api/health-records",
+        "/api/iot/ingest",
+        "/api/iot/latest",
+        "/api/notifications/hydration",
+        "/api/notifications/bedtime",
         "/api/medical-context/enhance-query",
         "/api/medical-context/enhance",
         "/api/medical-context/personalized",
