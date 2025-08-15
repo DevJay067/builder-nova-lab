@@ -114,6 +114,23 @@ export default function HealthAnalytics() {
     } catch {}
   };
 
+  // Notifications SSE
+  useEffect(() => {
+    const token = localStorage.getItem("sessionToken");
+    if (!token) return;
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+      es.addEventListener("hydration", (e: MessageEvent) => {
+        showLocalNotification("Hydration Reminder", "It's water time! 💧");
+      });
+      es.addEventListener("bedtime", (e: MessageEvent) => {
+        showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+      });
+    } catch {}
+    return () => { es?.close(); };
+  }, []);
+
   const saveQuickRecord = async (record: {
     type: string;
     title: string;
@@ -451,9 +468,24 @@ export default function HealthAnalytics() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" onClick={() => { startHydrationTimer(5); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "5m" } }); }}>5m</Button>
-                      <Button variant="outline" onClick={() => { startHydrationTimer(30); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "30m" } }); }}>30m</Button>
-                      <Button onClick={() => { startHydrationTimer(60); saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "60m" } }); }}>60m</Button>
+                      <Button variant="outline" onClick={async () => {
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 5, repeat: hydrationRepeat }) });
+                        startHydrationTimer(5);
+                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "5m" } });
+                      }}>5m</Button>
+                      <Button variant="outline" onClick={async () => {
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 30, repeat: hydrationRepeat }) });
+                        startHydrationTimer(30);
+                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "30m" } });
+                      }}>30m</Button>
+                      <Button onClick={async () => {
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 60, repeat: hydrationRepeat }) });
+                        startHydrationTimer(60);
+                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "60m" } });
+                      }}>60m</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -485,7 +517,13 @@ export default function HealthAnalytics() {
                       <Label htmlFor="notify-sleep">Notifications</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" onClick={() => { scheduleTonightSleepReminder(); saveQuickRecord({ type: "vitals", title: "Sleep Reminder Set", metadata: { bedtime, sleepHoursGoal } }); }}>Remind at Bedtime</Button>
+                      <Button variant="outline" onClick={async () => {
+                        const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/bedtime", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ hour: hh, minute: mm, repeat: true }) });
+                        scheduleTonightSleepReminder();
+                        saveQuickRecord({ type: "vitals", title: "Sleep Reminder Set", metadata: { bedtime, sleepHoursGoal } });
+                      }}>Remind at Bedtime</Button>
                       <Button onClick={() => { showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`); saveQuickRecord({ type: "vitals", title: "Sleep Goal Set", metadata: { sleepHoursGoal } }); }}>Set Goal</Button>
                     </div>
                   </div>

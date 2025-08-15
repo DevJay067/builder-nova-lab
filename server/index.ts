@@ -239,6 +239,17 @@ export function createServer() {
         console.log("⚠️ IoT routes failed:", error.message);
       }
 
+      // Notifications routes
+      try {
+        const { notificationsStream, scheduleHydration, scheduleBedtime } = await import("./routes/notifications");
+        app.get("/api/notifications/stream", notificationsStream);
+        app.post("/api/notifications/hydration", scheduleHydration);
+        app.post("/api/notifications/bedtime", scheduleBedtime);
+        console.log("✅ Notifications routes added");
+      } catch (error) {
+        console.log("⚠️ Notifications routes failed:", error.message);
+      }
+
       // Performance status route
       try {
         app.get("/api/performance/status", async (req, res) => {
