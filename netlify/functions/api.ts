@@ -1,4 +1,5 @@
 import type { Handler } from "@netlify/functions";
+import { signupHandler, loginHandler, syncDataHandler, recentHandler, historyHandler } from "../../server/health/controllers";
 
 // Enhanced in-memory storage with persistence simulation
 const demoData = {
@@ -77,6 +78,23 @@ const handleRequest = async (event: any) => {
   console.log(`Handling request: ${httpMethod} ${path}`);
 
   try {
+    // Health backend routes (Mongo/JWT) - mounted under /api/data and /api/auth
+    if (path === "/api/auth/signup" && httpMethod === "POST") {
+      return await signupHandler(event, {} as any) as any;
+    }
+    if (path === "/api/auth/login" && httpMethod === "POST") {
+      return await loginHandler(event, {} as any) as any;
+    }
+    if (path === "/api/data/sync" && httpMethod === "POST") {
+      return await syncDataHandler(event, {} as any) as any;
+    }
+    if (path === "/api/data/recent" && httpMethod === "GET") {
+      return await recentHandler(event, {} as any) as any;
+    }
+    if (path === "/api/data/history" && httpMethod === "GET") {
+      return await historyHandler(event, {} as any) as any;
+    }
+
     // Health check endpoint
     if (path === "/api/health" && httpMethod === "GET") {
       return createSuccessResponse({
@@ -702,11 +720,16 @@ const handleRequest = async (event: any) => {
         "/api/secure/system/status",
         "/api/secure/keys/generate",
         "/api/secure/data/store",
-        "/api/secure/data/retrieve/:recordId"
+        "/api/secure/data/retrieve/:recordId",
+        "/api/auth/signup",
+        "/api/auth/login",
+        "/api/data/sync",
+        "/api/data/recent",
+        "/api/data/history",
       ]
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Request handling error:", error);
     return createErrorResponse("Internal server error", 500, {
       message: error.message,
@@ -738,19 +761,19 @@ export const handler: Handler = async (event, context) => {
     const result = await handleRequest(event);
     
     console.log("Request handled successfully:", {
-      statusCode: result.statusCode,
+      statusCode: (result as any).statusCode,
       path: event.path
     });
     
-    return result;
+    return result as any;
     
-  } catch (error) {
+  } catch (error: any) {
     console.error("Netlify function error:", error);
     console.error("Error details:", {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      code: error.code
+      code: (error as any).code
     });
 
     return createErrorResponse("Server error occurred. Please try again later.", 500, {

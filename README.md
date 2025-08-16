@@ -324,6 +324,26 @@ Hands-free health management:
    - Show full app functionality
    - Demonstrate data sync when reconnected
 
+## Health API (Wearable sync)
+New endpoints via Netlify Functions (MongoDB required):
+- POST `/api/auth/signup` → { email, password, name? }
+- POST `/api/auth/login` → { email, password }
+- POST `/api/data/sync` → { userId, timestamp, heartRate?, steps?, calories?, sleepData? } (Bearer token required)
+- GET `/api/data/recent?userId=...` (Bearer token)
+- GET `/api/data/history?userId=...&page=1&limit=50` (Bearer token)
+
+Env variables (Netlify Site → Environment variables):
+- `MONGO_URI` (Atlas recommended)
+- `JWT_SECRET` (strong secret)
+- `JWT_EXPIRES_IN` (e.g. 7d)
+
+Example curl:
+```bash
+curl -X POST https://<site>.netlify.app/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"Password123!","name":"John"}'
+```
+
 ## 🎖️ Awards & Recognition Potential
 
 ### **Technical Innovation Awards**
