@@ -32,3 +32,14 @@ uvicorn app.main:app --reload
 - Smart alarm tied to sleep stages
 - Rate limiting & CORS
 - JSON logging
+
+## Deploy to Render
+- Create a new Web Service from this repo or import `render.yaml` as a Blueprint
+- Set `GOOGLE_MAPS_API_KEY` in environment variables
+- Render will provision Postgres and Redis per `render.yaml`
+
+## Netlify setup (proxy to backend)
+- Add `netlify.toml` to your web app repo, or copy from this repo
+- Replace `YOUR-RENDER-BACKEND.onrender.com` with your Render service hostname
+- Calls from your frontend to `/api/...` will be proxied to the backend
+- WebSocket proxy available at `/ws` -> backend `/ws`

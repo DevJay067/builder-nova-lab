@@ -1,0 +1,23 @@
+[build]
+	command = ""
+	publish = "."
+
+# Proxy API routes to backend
+[[redirects]]
+	from = "/api/*"
+	to = "https://YOUR-RENDER-BACKEND.onrender.com/:splat"
+	status = 200
+	force = true
+
+# Proxy WebSocket to backend (Netlify proxying WebSockets may vary by region)
+[[redirects]]
+	from = "/ws"
+	to = "wss://YOUR-RENDER-BACKEND.onrender.com/ws"
+	status = 200
+	force = true
+
+[[headers]]
+	for = "/ws"
+	[headers.values]
+		Connection = "upgrade"
+		Upgrade = "websocket"

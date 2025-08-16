@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: health-backend
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 2
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 43200
+      - key: DATABASE_URL
+        fromDatabase: health-db
+        property: connectionString
+      - key: REDIS_URL
+        fromService: health-redis
+        property: connectionString
+      - key: RATE_LIMIT_REDIS_URL
+        fromService: health-redis
+        property: connectionString
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+    autoDeploy: true
+
+databases:
+  - name: health-db
+    plan: starter
+
+services:
+  - type: redis
+    name: health-redis
+    plan: starter
