@@ -652,6 +652,7 @@ export default function RealTimeMonitoring() {
               <div className="text-3xl font-bold mb-2 text-slate-800">
                 {vitalSigns.steps ?? 0}
               </div>
+              <Progress value={(vitalSigns.steps ?? 0) / 10000 * 100} className="mb-2 h-2" />
               <div className="flex items-center text-sm text-muted-foreground">
                 <TrendingUp className="w-4 h-4 mr-1 text-purple-600" />
                 Today’s steps
