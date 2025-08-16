@@ -355,7 +355,7 @@ export default function HealthHistory() {
     }
   };
 
-  const filteredRecords = records
+  const filteredRecords = (records || [])
     .filter((record) => {
       if (!record) return false;
 
