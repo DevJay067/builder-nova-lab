@@ -84,6 +84,202 @@ export default function FirstAid() {
     { name: "Mental Health Crisis", number: "9152987821", type: "mental" }
   ];
 
+  // Offline hospital data for emergency situations
+  const fallbackHospitals = [
+    {
+      id: "fallback-1",
+      name: "City General Hospital",
+      address: "123 Main Street, City Center",
+      phone: "+1-555-0123",
+      rating: 4.5,
+      specialties: ["Emergency Care", "Trauma Center", "ICU"],
+      distance: "2.1 km",
+      isOpen: true,
+      emergencyServices: true,
+      coordinates: { lat: 40.7128, lng: -74.0060 }
+    },
+    {
+      id: "fallback-2",
+      name: "Regional Medical Center",
+      address: "456 Health Ave, Medical District",
+      phone: "+1-555-0456",
+      rating: 4.2,
+      specialties: ["Cardiology", "Emergency Care", "Surgery"],
+      distance: "3.8 km",
+      isOpen: true,
+      emergencyServices: true,
+      coordinates: { lat: 40.7589, lng: -73.9851 }
+    },
+    {
+      id: "fallback-3",
+      name: "Community Emergency Clinic",
+      address: "789 Care Blvd, Westside",
+      phone: "+1-555-0789",
+      rating: 4.0,
+      specialties: ["Emergency Care", "Urgent Care", "Radiology"],
+      distance: "5.2 km",
+      isOpen: true,
+      emergencyServices: true,
+      coordinates: { lat: 40.7831, lng: -73.9712 }
+    },
+    {
+      id: "fallback-4",
+      name: "Metro Health Institute",
+      address: "321 Wellness St, Downtown",
+      phone: "+1-555-0321",
+      rating: 4.7,
+      specialties: ["Emergency Care", "Pediatrics", "Maternity"],
+      distance: "4.5 km",
+      isOpen: false,
+      emergencyServices: true,
+      coordinates: { lat: 40.7505, lng: -73.9934 }
+    }
+  ];
+
+  // Check network connectivity and quality
+  const checkNetworkQuality = () => {
+    if (!navigator.onLine) {
+      setNetworkQuality("offline");
+      setIsOfflineMode(true);
+      return;
+    }
+
+    const connection = (navigator as any).connection;
+    if (connection) {
+      const effectiveType = connection.effectiveType;
+      if (effectiveType === "slow-2g" || effectiveType === "2g") {
+        setNetworkQuality("poor");
+      } else if (effectiveType === "3g") {
+        setNetworkQuality("medium");
+      } else {
+        setNetworkQuality("good");
+      }
+    }
+  };
+
+  // Get user's current location
+  const getCurrentLocation = () => {
+    setIsLoadingLocation(true);
+
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by this browser");
+      setIsLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+        setUserLocation(location);
+        setIsLoadingLocation(false);
+
+        // Try to fetch nearby hospitals
+        if (!isOfflineMode && networkQuality !== "poor") {
+          fetchNearbyHospitals(location);
+        } else {
+          // Use fallback data
+          setHospitals(fallbackHospitals);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setIsLoadingLocation(false);
+
+        // Use fallback location (City Center) and hospitals
+        const fallbackLocation = { lat: 40.7128, lng: -74.0060, accuracy: null };
+        setUserLocation(fallbackLocation);
+        setHospitals(fallbackHospitals);
+
+        alert("Could not get your location. Showing nearby hospitals for City Center.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    );
+  };
+
+  // Calculate distance between two points
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Fetch nearby hospitals (simulated API call)
+  const fetchNearbyHospitals = async (location) => {
+    setLoadingHospitals(true);
+
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // In a real app, this would call a hospital/places API
+      // For demo, we'll use the fallback data with calculated distances
+      const hospitalData = fallbackHospitals.map(hospital => ({
+        ...hospital,
+        distance: `${calculateDistance(
+          location.lat,
+          location.lng,
+          hospital.coordinates.lat,
+          hospital.coordinates.lng
+        ).toFixed(1)} km`
+      })).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+      setHospitals(hospitalData);
+    } catch (error) {
+      console.error("Error fetching hospitals:", error);
+      // Fallback to static data
+      setHospitals(fallbackHospitals);
+    } finally {
+      setLoadingHospitals(false);
+    }
+  };
+
+  // Open directions to hospital
+  const openDirections = (hospital) => {
+    const destination = `${hospital.coordinates.lat},${hospital.coordinates.lng}`;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+    window.open(url, '_blank');
+  };
+
+  // Check network quality on mount
+  useEffect(() => {
+    checkNetworkQuality();
+
+    // Listen for network changes
+    const handleOnline = () => {
+      setIsOfflineMode(false);
+      checkNetworkQuality();
+    };
+
+    const handleOffline = () => {
+      setIsOfflineMode(true);
+      setNetworkQuality("offline");
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const firstAidConditions = [
     {
       id: 1,
