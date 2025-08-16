@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Activity, 
-  ArrowLeft, 
+import {
+  Activity,
+  ArrowLeft,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -22,7 +28,7 @@ import {
   LineChart,
   Zap,
   Shield,
-  Droplets
+  Droplets,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,10 +54,12 @@ export default function HealthAnalytics() {
   const [bedtime, setBedtime] = useState<string>(() => {
     return localStorage.getItem("health_bedtime") || "22:30";
   });
-  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
-    const v = localStorage.getItem("health_notifications_enabled");
-    return v ? v === "true" : true;
-  });
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
+    () => {
+      const v = localStorage.getItem("health_notifications_enabled");
+      return v ? v === "true" : true;
+    },
+  );
   const [hydrationRepeat, setHydrationRepeat] = useState<boolean>(() => {
     const v = localStorage.getItem("health_hydration_repeat");
     return v ? v === "true" : true;
@@ -85,8 +93,15 @@ export default function HealthAnalytics() {
   }, [bedtime]);
 
   useEffect(() => {
-    localStorage.setItem("health_notifications_enabled", String(notificationsEnabled));
-    if (notificationsEnabled && Notification && Notification.permission !== "granted") {
+    localStorage.setItem(
+      "health_notifications_enabled",
+      String(notificationsEnabled),
+    );
+    if (
+      notificationsEnabled &&
+      Notification &&
+      Notification.permission !== "granted"
+    ) {
       Notification.requestPermission().catch(() => {});
     }
   }, [notificationsEnabled]);
@@ -120,7 +135,9 @@ export default function HealthAnalytics() {
     if (!token) return;
     let es: EventSource | null = null;
     try {
-      es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+      es = new EventSource(
+        `/api/notifications/stream?token=${encodeURIComponent(token)}`,
+      );
       es.addEventListener("hydration", (e: MessageEvent) => {
         showLocalNotification("Hydration Reminder", "It's water time! 💧");
       });
@@ -128,7 +145,9 @@ export default function HealthAnalytics() {
         showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
       });
     } catch {}
-    return () => { es?.close(); };
+    return () => {
+      es?.close();
+    };
   }, []);
 
   const saveQuickRecord = async (record: {
@@ -261,7 +280,7 @@ export default function HealthAnalytics() {
       target: 90,
       trend: "up",
       change: "+3.2%",
-      description: "Based on your recent health data and AI analysis"
+      description: "Based on your recent health data and AI analysis",
     },
     {
       title: "Cardiovascular Health",
@@ -269,7 +288,7 @@ export default function HealthAnalytics() {
       target: 85,
       trend: "up",
       change: "+2.1%",
-      description: "Heart rate, blood pressure, and activity trends"
+      description: "Heart rate, blood pressure, and activity trends",
     },
     {
       title: "Mental Wellness",
@@ -277,7 +296,7 @@ export default function HealthAnalytics() {
       target: 80,
       trend: "down",
       change: "-1.5%",
-      description: "Stress levels, sleep quality, and mood tracking"
+      description: "Stress levels, sleep quality, and mood tracking",
     },
     {
       title: "Preventive Care",
@@ -285,8 +304,8 @@ export default function HealthAnalytics() {
       target: 100,
       trend: "up",
       change: "+5.0%",
-      description: "Checkups, screenings, and vaccination status"
-    }
+      description: "Checkups, screenings, and vaccination status",
+    },
   ];
 
   const insights = [
@@ -294,34 +313,38 @@ export default function HealthAnalytics() {
       type: "positive",
       icon: CheckCircle,
       title: "Improved Sleep Pattern",
-      description: "Your sleep quality has improved by 15% this month. Keep maintaining your bedtime routine.",
+      description:
+        "Your sleep quality has improved by 15% this month. Keep maintaining your bedtime routine.",
       importance: "medium",
-      action: "Continue current sleep schedule"
+      action: "Continue current sleep schedule",
     },
     {
       type: "warning",
       icon: AlertCircle,
       title: "Hydration Alert",
-      description: "Water intake is below recommended levels. Consider increasing daily fluid consumption.",
+      description:
+        "Water intake is below recommended levels. Consider increasing daily fluid consumption.",
       importance: "high",
-      action: "Increase water intake to 8 glasses daily"
+      action: "Increase water intake to 8 glasses daily",
     },
     {
       type: "positive",
       icon: Award,
       title: "Exercise Goal Achieved",
-      description: "You've met your weekly exercise target for 3 consecutive weeks. Excellent progress!",
+      description:
+        "You've met your weekly exercise target for 3 consecutive weeks. Excellent progress!",
       importance: "low",
-      action: "Maintain current activity level"
+      action: "Maintain current activity level",
     },
     {
       type: "neutral",
       icon: Target,
       title: "Nutrition Balance",
-      description: "Your protein intake is optimal, but consider adding more fiber-rich foods to your diet.",
+      description:
+        "Your protein intake is optimal, but consider adding more fiber-rich foods to your diet.",
       importance: "medium",
-      action: "Add 2 servings of vegetables daily"
-    }
+      action: "Add 2 servings of vegetables daily",
+    },
   ];
 
   const riskFactors = [
@@ -329,37 +352,45 @@ export default function HealthAnalytics() {
       factor: "Hypertension Risk",
       level: "low",
       probability: 12,
-      description: "Based on family history and current lifestyle"
+      description: "Based on family history and current lifestyle",
     },
     {
       factor: "Diabetes Risk",
       level: "moderate",
       probability: 25,
-      description: "Consider dietary modifications and regular monitoring"
+      description: "Consider dietary modifications and regular monitoring",
     },
     {
       factor: "Heart Disease Risk",
       level: "low",
       probability: 8,
-      description: "Excellent cardiovascular health indicators"
-    }
+      description: "Excellent cardiovascular health indicators",
+    },
   ];
 
   const getInsightColor = (type: string) => {
     switch (type) {
-      case 'positive': return 'border-l-success bg-success/5';
-      case 'warning': return 'border-l-warning bg-warning/5';
-      case 'neutral': return 'border-l-info bg-info/5';
-      default: return 'border-l-muted bg-muted/5';
+      case "positive":
+        return "border-l-success bg-success/5";
+      case "warning":
+        return "border-l-warning bg-warning/5";
+      case "neutral":
+        return "border-l-info bg-info/5";
+      default:
+        return "border-l-muted bg-muted/5";
     }
   };
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'low': return 'bg-success text-success-foreground';
-      case 'moderate': return 'bg-warning text-warning-foreground';
-      case 'high': return 'bg-destructive text-destructive-foreground';
-      default: return 'bg-muted text-muted-foreground';
+      case "low":
+        return "bg-success text-success-foreground";
+      case "moderate":
+        return "bg-warning text-warning-foreground";
+      case "high":
+        return "bg-destructive text-destructive-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -381,8 +412,12 @@ export default function HealthAnalytics() {
                   <Activity className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Health Analytics</h1>
-                  <p className="text-sm text-muted-foreground">AI-Powered Insights</p>
+                  <h1 className="text-xl font-bold text-foreground">
+                    Health Analytics
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    AI-Powered Insights
+                  </p>
                 </div>
               </div>
             </div>
@@ -431,7 +466,19 @@ export default function HealthAnalytics() {
                   className="h-16 flex-col space-y-1"
                   onClick={async () => {
                     const token = localStorage.getItem("sessionToken");
-                    if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 30, repeat: hydrationRepeat }) });
+                    if (token)
+                      await fetch("/api/notifications/hydration", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                          "x-session-token": token,
+                        },
+                        body: JSON.stringify({
+                          minutes: 30,
+                          repeat: hydrationRepeat,
+                        }),
+                      });
                     startHydrationTimer(30);
                   }}
                 >
@@ -446,22 +493,34 @@ export default function HealthAnalytics() {
         {/* Goals at top */}
         <Tabs defaultValue="goals" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-full sm:max-w-2xl h-12 sm:h-11">
-            <TabsTrigger value="insights" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+            <TabsTrigger
+              value="insights"
+              className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3"
+            >
               <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Insights</span>
               <span className="sm:hidden">Insights</span>
             </TabsTrigger>
-            <TabsTrigger value="trends" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+            <TabsTrigger
+              value="trends"
+              className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3"
+            >
               <LineChart className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Trends</span>
               <span className="sm:hidden">Trends</span>
             </TabsTrigger>
-            <TabsTrigger value="predictions" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+            <TabsTrigger
+              value="predictions"
+              className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3"
+            >
               <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Risk Analysis</span>
               <span className="sm:hidden">Risk</span>
             </TabsTrigger>
-            <TabsTrigger value="goals" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+            <TabsTrigger
+              value="goals"
+              className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3"
+            >
               <Target className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Goals & Reminders</span>
               <span className="sm:hidden">Goals</span>
@@ -478,35 +537,53 @@ export default function HealthAnalytics() {
                     <Droplets className="h-5 w-5 mr-2 text-blue-600" />
                     Hydration
                   </CardTitle>
-                  <CardDescription>Set your daily water goal and reminders</CardDescription>
+                  <CardDescription>
+                    Set your daily water goal and reminders
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="water-goal" className="text-sm font-medium">Daily Goal (glasses)</Label>
+                      <Label
+                        htmlFor="water-goal"
+                        className="text-sm font-medium"
+                      >
+                        Daily Goal (glasses)
+                      </Label>
                       <Input
                         id="water-goal"
                         type="number"
                         min={1}
                         value={waterGoal}
-                        onChange={(e) => setWaterGoal(parseInt(e.target.value || "0"))}
+                        onChange={(e) =>
+                          setWaterGoal(parseInt(e.target.value || "0"))
+                        }
                         className="h-12 sm:h-10 text-base sm:text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="water-consumed" className="text-sm font-medium">Consumed Today</Label>
+                      <Label
+                        htmlFor="water-consumed"
+                        className="text-sm font-medium"
+                      >
+                        Consumed Today
+                      </Label>
                       <div className="flex items-center space-x-2">
                         <Input
                           id="water-consumed"
                           type="number"
                           min={0}
                           value={waterConsumed}
-                          onChange={(e) => setWaterConsumed(parseInt(e.target.value || "0"))}
+                          onChange={(e) =>
+                            setWaterConsumed(parseInt(e.target.value || "0"))
+                          }
                           className="h-12 sm:h-10 text-base sm:text-sm"
                         />
                         <Button
                           variant="outline"
-                          onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}
+                          onClick={() =>
+                            setWaterConsumed((v) => Math.min(v + 1, 99))
+                          }
                           className="h-12 sm:h-10 px-4 sm:px-3 text-base sm:text-sm font-medium"
                         >
                           +1
@@ -514,17 +591,40 @@ export default function HealthAnalytics() {
                       </div>
                     </div>
                   </div>
-                  <Progress value={Math.min(100, (waterConsumed / Math.max(1, waterGoal)) * 100)} />
+                  <Progress
+                    value={Math.min(
+                      100,
+                      (waterConsumed / Math.max(1, waterGoal)) * 100,
+                    )}
+                  />
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                         <div className="flex items-center space-x-2">
-                          <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
-                          <Label htmlFor="notify-water" className="text-sm font-medium">Notifications</Label>
+                          <Switch
+                            id="notify-water"
+                            checked={notificationsEnabled}
+                            onCheckedChange={setNotificationsEnabled}
+                          />
+                          <Label
+                            htmlFor="notify-water"
+                            className="text-sm font-medium"
+                          >
+                            Notifications
+                          </Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Switch id="repeat-water" checked={hydrationRepeat} onCheckedChange={setHydrationRepeat} />
-                          <Label htmlFor="repeat-water" className="text-sm font-medium">Repeat</Label>
+                          <Switch
+                            id="repeat-water"
+                            checked={hydrationRepeat}
+                            onCheckedChange={setHydrationRepeat}
+                          />
+                          <Label
+                            htmlFor="repeat-water"
+                            className="text-sm font-medium"
+                          >
+                            Repeat
+                          </Label>
                         </div>
                       </div>
                     </div>
@@ -533,9 +633,29 @@ export default function HealthAnalytics() {
                         variant="outline"
                         onClick={async () => {
                           const token = localStorage.getItem("sessionToken");
-                          if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 5, repeat: hydrationRepeat }) });
+                          if (token)
+                            await fetch("/api/notifications/hydration", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                                "x-session-token": token,
+                              },
+                              body: JSON.stringify({
+                                minutes: 5,
+                                repeat: hydrationRepeat,
+                              }),
+                            });
                           startHydrationTimer(5);
-                          saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "5m" } });
+                          saveQuickRecord({
+                            type: "vitals",
+                            title: "Hydration Reminder Set",
+                            metadata: {
+                              goal: waterGoal,
+                              consumed: waterConsumed,
+                              interval: "5m",
+                            },
+                          });
                         }}
                         className="h-12 sm:h-10 text-base sm:text-sm font-medium"
                       >
@@ -545,9 +665,29 @@ export default function HealthAnalytics() {
                         variant="outline"
                         onClick={async () => {
                           const token = localStorage.getItem("sessionToken");
-                          if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 30, repeat: hydrationRepeat }) });
+                          if (token)
+                            await fetch("/api/notifications/hydration", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                                "x-session-token": token,
+                              },
+                              body: JSON.stringify({
+                                minutes: 30,
+                                repeat: hydrationRepeat,
+                              }),
+                            });
                           startHydrationTimer(30);
-                          saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "30m" } });
+                          saveQuickRecord({
+                            type: "vitals",
+                            title: "Hydration Reminder Set",
+                            metadata: {
+                              goal: waterGoal,
+                              consumed: waterConsumed,
+                              interval: "30m",
+                            },
+                          });
                         }}
                         className="h-12 sm:h-10 text-base sm:text-sm font-medium"
                       >
@@ -556,9 +696,29 @@ export default function HealthAnalytics() {
                       <Button
                         onClick={async () => {
                           const token = localStorage.getItem("sessionToken");
-                          if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 60, repeat: hydrationRepeat }) });
+                          if (token)
+                            await fetch("/api/notifications/hydration", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                                "x-session-token": token,
+                              },
+                              body: JSON.stringify({
+                                minutes: 60,
+                                repeat: hydrationRepeat,
+                              }),
+                            });
                           startHydrationTimer(60);
-                          saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "60m" } });
+                          saveQuickRecord({
+                            type: "vitals",
+                            title: "Hydration Reminder Set",
+                            metadata: {
+                              goal: waterGoal,
+                              consumed: waterConsumed,
+                              interval: "60m",
+                            },
+                          });
                         }}
                         className="h-12 sm:h-10 text-base sm:text-sm font-medium"
                       >
@@ -576,45 +736,108 @@ export default function HealthAnalytics() {
                     <Calendar className="h-5 w-5 mr-2 text-purple-600" />
                     Sleep
                   </CardTitle>
-                  <CardDescription>Set sleep goals and bedtime reminders</CardDescription>
+                  <CardDescription>
+                    Set sleep goals and bedtime reminders
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 items-end">
                     <div>
                       <Label htmlFor="sleep-goal">Goal (hours)</Label>
-                      <Input id="sleep-goal" type="number" min={1} value={sleepHoursGoal} onChange={(e) => setSleepHoursGoal(parseInt(e.target.value || "0"))} />
+                      <Input
+                        id="sleep-goal"
+                        type="number"
+                        min={1}
+                        value={sleepHoursGoal}
+                        onChange={(e) =>
+                          setSleepHoursGoal(parseInt(e.target.value || "0"))
+                        }
+                      />
                     </div>
                     <div>
                       <Label htmlFor="bedtime">Bedtime</Label>
-                      <Input id="bedtime" type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} />
+                      <Input
+                        id="bedtime"
+                        type="time"
+                        value={bedtime}
+                        onChange={(e) => setBedtime(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Switch id="notify-sleep" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                      <Switch
+                        id="notify-sleep"
+                        checked={notificationsEnabled}
+                        onCheckedChange={setNotificationsEnabled}
+                      />
                       <Label htmlFor="notify-sleep">Notifications</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" onClick={async () => {
-                        const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
-                        const token = localStorage.getItem("sessionToken");
-                        if (token) await fetch("/api/notifications/bedtime", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ hour: hh, minute: mm, repeat: true }) });
-                        scheduleTonightSleepReminder();
-                        saveQuickRecord({ type: "vitals", title: "Sleep Reminder Set", metadata: { bedtime, sleepHoursGoal } });
-                      }}>Remind at Bedtime</Button>
-                      <Button onClick={() => { showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`); saveQuickRecord({ type: "vitals", title: "Sleep Goal Set", metadata: { sleepHoursGoal } }); }}>Set Goal</Button>
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          const [hh, mm] = bedtime
+                            .split(":")
+                            .map((x) => parseInt(x));
+                          const token = localStorage.getItem("sessionToken");
+                          if (token)
+                            await fetch("/api/notifications/bedtime", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                                "x-session-token": token,
+                              },
+                              body: JSON.stringify({
+                                hour: hh,
+                                minute: mm,
+                                repeat: true,
+                              }),
+                            });
+                          scheduleTonightSleepReminder();
+                          saveQuickRecord({
+                            type: "vitals",
+                            title: "Sleep Reminder Set",
+                            metadata: { bedtime, sleepHoursGoal },
+                          });
+                        }}
+                      >
+                        Remind at Bedtime
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          showLocalNotification(
+                            "Sleep Goal",
+                            `Target ${sleepHoursGoal} hours tonight`,
+                          );
+                          saveQuickRecord({
+                            type: "vitals",
+                            title: "Sleep Goal Set",
+                            metadata: { sleepHoursGoal },
+                          });
+                        }}
+                      >
+                        Set Goal
+                      </Button>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <a
-                      href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(':')[0])};S.minutes=${parseInt(bedtime.split(':')[1])};end`}
+                      href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(":")[0])};S.minutes=${parseInt(bedtime.split(":")[1])};end`}
                     >
-                      <Button variant="secondary">Add Alarm in Clock App (Android)</Button>
+                      <Button variant="secondary">
+                        Add Alarm in Clock App (Android)
+                      </Button>
                     </a>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Device alarm integration: On Android, you can add an alarm using
-                    <a className="underline ml-1" href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(':')[0])};S.minutes=${parseInt(bedtime.split(':')[1])};end`}>
+                    Device alarm integration: On Android, you can add an alarm
+                    using
+                    <a
+                      className="underline ml-1"
+                      href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(":")[0])};S.minutes=${parseInt(bedtime.split(":")[1])};end`}
+                    >
                       system alarm intent
                     </a>
                     . Support varies by device.
@@ -633,28 +856,44 @@ export default function HealthAnalytics() {
                   AI-Generated Health Insights
                 </CardTitle>
                 <CardDescription>
-                  Personalized recommendations based on your health data analysis
+                  Personalized recommendations based on your health data
+                  analysis
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {insights.map((insight, index) => {
                   const IconComponent = insight.icon;
                   return (
-                    <Card key={index} className={`border-l-4 ${getInsightColor(insight.type)}`}>
+                    <Card
+                      key={index}
+                      className={`border-l-4 ${getInsightColor(insight.type)}`}
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <IconComponent className={`h-5 w-5 ${
-                              insight.type === 'positive' ? 'text-success' :
-                              insight.type === 'warning' ? 'text-warning' :
-                              'text-info'
-                            }`} />
+                            <IconComponent
+                              className={`h-5 w-5 ${
+                                insight.type === "positive"
+                                  ? "text-success"
+                                  : insight.type === "warning"
+                                    ? "text-warning"
+                                    : "text-info"
+                              }`}
+                            />
                             <div>
                               <h3 className="font-semibold">{insight.title}</h3>
-                              <p className="text-sm text-muted-foreground">{insight.description}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {insight.description}
+                              </p>
                             </div>
                           </div>
-                          <Badge variant={insight.importance === 'high' ? 'destructive' : 'secondary'}>
+                          <Badge
+                            variant={
+                              insight.importance === "high"
+                                ? "destructive"
+                                : "secondary"
+                            }
+                          >
                             {insight.importance}
                           </Badge>
                         </div>
@@ -689,17 +928,42 @@ export default function HealthAnalytics() {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { activity: "Steps", value: 8500, target: 10000, unit: "steps" },
-                      { activity: "Sleep", value: 7.2, target: 8, unit: "hours" },
-                      { activity: "Water", value: 6, target: 8, unit: "glasses" },
-                      { activity: "Exercise", value: 4, target: 5, unit: "days/week" }
+                      {
+                        activity: "Steps",
+                        value: 8500,
+                        target: 10000,
+                        unit: "steps",
+                      },
+                      {
+                        activity: "Sleep",
+                        value: 7.2,
+                        target: 8,
+                        unit: "hours",
+                      },
+                      {
+                        activity: "Water",
+                        value: 6,
+                        target: 8,
+                        unit: "glasses",
+                      },
+                      {
+                        activity: "Exercise",
+                        value: 4,
+                        target: 5,
+                        unit: "days/week",
+                      },
                     ].map((item, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>{item.activity}</span>
-                          <span>{item.value} / {item.target} {item.unit}</span>
+                          <span>
+                            {item.value} / {item.target} {item.unit}
+                          </span>
                         </div>
-                        <Progress value={(item.value / item.target) * 100} className="h-2" />
+                        <Progress
+                          value={(item.value / item.target) * 100}
+                          className="h-2"
+                        />
                       </div>
                     ))}
                   </div>
@@ -716,13 +980,23 @@ export default function HealthAnalytics() {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { category: "Physical Health", score: 85, color: "bg-primary" },
-                      { category: "Mental Health", score: 78, color: "bg-accent" },
+                      {
+                        category: "Physical Health",
+                        score: 85,
+                        color: "bg-primary",
+                      },
+                      {
+                        category: "Mental Health",
+                        score: 78,
+                        color: "bg-accent",
+                      },
                       { category: "Nutrition", score: 82, color: "bg-success" },
-                      { category: "Prevention", score: 95, color: "bg-info" }
+                      { category: "Prevention", score: 95, color: "bg-info" },
                     ].map((item, index) => (
                       <div key={index} className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                        <div
+                          className={`w-3 h-3 rounded-full ${item.color}`}
+                        ></div>
                         <div className="flex-1">
                           <div className="flex justify-between text-sm">
                             <span>{item.category}</span>
@@ -747,7 +1021,8 @@ export default function HealthAnalytics() {
                   Predictive Risk Analysis
                 </CardTitle>
                 <CardDescription>
-                  AI-powered risk assessment based on your health data and lifestyle factors
+                  AI-powered risk assessment based on your health data and
+                  lifestyle factors
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -763,10 +1038,14 @@ export default function HealthAnalytics() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
                           <span>Risk Probability</span>
-                          <span className="font-semibold">{risk.probability}%</span>
+                          <span className="font-semibold">
+                            {risk.probability}%
+                          </span>
                         </div>
                         <Progress value={risk.probability} className="h-2" />
-                        <p className="text-sm text-muted-foreground">{risk.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {risk.description}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -781,15 +1060,16 @@ export default function HealthAnalytics() {
                     <Brain className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-1">Personalized Prevention Plan</h3>
+                    <h3 className="font-semibold mb-1">
+                      Personalized Prevention Plan
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      Based on your risk analysis, we've created a customized prevention plan 
-                      to help you maintain optimal health and reduce future health risks.
+                      Based on your risk analysis, we've created a customized
+                      prevention plan to help you maintain optimal health and
+                      reduce future health risks.
                     </p>
                   </div>
-                  <Button>
-                    View Plan
-                  </Button>
+                  <Button>View Plan</Button>
                 </div>
               </CardContent>
             </Card>

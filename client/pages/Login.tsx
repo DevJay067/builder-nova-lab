@@ -315,7 +315,7 @@ export default function Login() {
       } else {
         setMessage({
           type: "error",
-          text: data.message || "Demo login failed. Please try again."
+          text: data.message || "Demo login failed. Please try again.",
         });
       }
     } catch (error) {

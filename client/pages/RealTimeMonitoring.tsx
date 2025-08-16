@@ -91,20 +91,23 @@ export default function RealTimeMonitoring() {
   const [connectedDevices, setConnectedDevices] = useState<Device[]>([]);
 
   const [alerts, setAlerts] = useState([] as any[]);
-  const [chartType, setChartType] = useState<'line' | 'area' | 'radial'>('line');
+  const [chartType, setChartType] = useState<"line" | "area" | "radial">(
+    "line",
+  );
   const [showPredictions, setShowPredictions] = useState(false);
   const [devicePerformance, setDevicePerformance] = useState({
     accuracy: 95,
     batteryLevel: 78,
     signalStrength: 85,
-    dataQuality: 92
+    dataQuality: 92,
   });
 
   const [useDemo, setUseDemo] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
   const [uploadToCloud, setUploadToCloud] = useState(true);
-  const isBLESupported = typeof navigator !== "undefined" && !!(navigator as any).bluetooth;
+  const isBLESupported =
+    typeof navigator !== "undefined" && !!(navigator as any).bluetooth;
 
   // Attempt SSE connection; fallback to simulation
   useEffect(() => {
@@ -125,8 +128,12 @@ export default function RealTimeMonitoring() {
           oxygenSaturation: Math.floor(Math.random() * 3) + 97,
           respiratoryRate: Math.floor(Math.random() * 6) + 14,
           timestamp: now.toISOString(),
-          steps: vitalSigns.steps ? vitalSigns.steps + Math.floor(Math.random() * 50) + 10 : Math.floor(Math.random() * 5000) + 2000,
-          calories: vitalSigns.calories ? vitalSigns.calories + Math.floor(Math.random() * 15) + 5 : Math.floor(Math.random() * 800) + 400,
+          steps: vitalSigns.steps
+            ? vitalSigns.steps + Math.floor(Math.random() * 50) + 10
+            : Math.floor(Math.random() * 5000) + 2000,
+          calories: vitalSigns.calories
+            ? vitalSigns.calories + Math.floor(Math.random() * 15) + 5
+            : Math.floor(Math.random() * 800) + 400,
         };
         setVitalSigns(newVitals);
         setVitalsHistory((prev) => {
@@ -167,9 +174,12 @@ export default function RealTimeMonitoring() {
 
         eventSource.addEventListener("vitals", (evt: MessageEvent) => {
           try {
-            const payload = JSON.parse((evt as any).data || (evt as any).detail || "{}");
+            const payload = JSON.parse(
+              (evt as any).data || (evt as any).detail || "{}",
+            );
             const now = new Date(payload.timestamp || new Date().toISOString());
-            const heartRate = payload?.metrics?.heartRate ?? vitalSigns.heartRate;
+            const heartRate =
+              payload?.metrics?.heartRate ?? vitalSigns.heartRate;
             const spo2 = payload?.metrics?.spo2 ?? vitalSigns.oxygenSaturation;
             const steps = payload?.metrics?.steps;
             const calories = payload?.metrics?.calories;
@@ -186,17 +196,19 @@ export default function RealTimeMonitoring() {
               distance,
             };
             setVitalSigns(updated);
-            setVitalsHistory((prev) => [
-              ...prev,
-              {
-                time: now.toLocaleTimeString(),
-                heartRate: updated.heartRate,
-                temperature: updated.temperature,
-                oxygenSat: updated.oxygenSaturation,
-                systolic: updated.bloodPressure.systolic,
-                steps: updated.steps,
-              },
-            ].slice(-20));
+            setVitalsHistory((prev) =>
+              [
+                ...prev,
+                {
+                  time: now.toLocaleTimeString(),
+                  heartRate: updated.heartRate,
+                  temperature: updated.temperature,
+                  oxygenSat: updated.oxygenSaturation,
+                  systolic: updated.bloodPressure.systolic,
+                  steps: updated.steps,
+                },
+              ].slice(-20),
+            );
           } catch {}
         });
 
@@ -229,7 +241,7 @@ export default function RealTimeMonitoring() {
       setIsConnecting(true);
       const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: [0x180D, 0x1822], // Heart Rate, Pulse Oximeter
+        optionalServices: [0x180d, 0x1822], // Heart Rate, Pulse Oximeter
       });
       setBleDeviceName(device?.name || "Unknown Device");
       setConnectedDevices([
@@ -248,8 +260,8 @@ export default function RealTimeMonitoring() {
 
       // Heart Rate service
       try {
-        const hrService = await server.getPrimaryService(0x180D);
-        const hrChar = await hrService.getCharacteristic(0x2A37);
+        const hrService = await server.getPrimaryService(0x180d);
+        const hrChar = await hrService.getCharacteristic(0x2a37);
         await hrChar.startNotifications();
         hrChar.addEventListener("characteristicvaluechanged", (event: any) => {
           const value: DataView = event.target.value;
@@ -263,16 +275,18 @@ export default function RealTimeMonitoring() {
               heartRate,
               timestamp: now.toISOString(),
             };
-            setVitalsHistory((prevHist) => [
-              ...prevHist,
-              {
-                time: now.toLocaleTimeString(),
-                heartRate: updated.heartRate,
-                temperature: updated.temperature,
-                oxygenSat: updated.oxygenSaturation,
-                systolic: updated.bloodPressure.systolic,
-              },
-            ].slice(-50));
+            setVitalsHistory((prevHist) =>
+              [
+                ...prevHist,
+                {
+                  time: now.toLocaleTimeString(),
+                  heartRate: updated.heartRate,
+                  temperature: updated.temperature,
+                  oxygenSat: updated.oxygenSaturation,
+                  systolic: updated.bloodPressure.systolic,
+                },
+              ].slice(-50),
+            );
             return updated;
           });
 
@@ -282,7 +296,10 @@ export default function RealTimeMonitoring() {
             if (token) {
               fetch("/api/iot/ingest", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                   deviceId: device.id,
                   deviceType: "bluetooth_health",
@@ -298,7 +315,7 @@ export default function RealTimeMonitoring() {
       try {
         const plxService = await server.getPrimaryService(0x1822);
         // Continuous Measurement 0x2A5F
-        const plxChar = await plxService.getCharacteristic(0x2A5F);
+        const plxChar = await plxService.getCharacteristic(0x2a5f);
         await plxChar.startNotifications();
         plxChar.addEventListener("characteristicvaluechanged", (event: any) => {
           const dv: DataView = event.target.value;
@@ -307,8 +324,11 @@ export default function RealTimeMonitoring() {
             if (dv.byteLength >= 3) {
               const raw = dv.getUint16(1, true);
               // IEEE-11073 16-bit SFLOAT (mantissa 12-bit signed, exponent 4-bit signed)
-              const mantissa = ((raw & 0x0FFF) << 20) >> 20; // sign extend 12-bit
-              const exp = ((raw >> 12) & 0x000F) >= 0x0008 ? ((raw >> 12) | 0xFFF0) : (raw >> 12);
+              const mantissa = ((raw & 0x0fff) << 20) >> 20; // sign extend 12-bit
+              const exp =
+                ((raw >> 12) & 0x000f) >= 0x0008
+                  ? (raw >> 12) | 0xfff0
+                  : raw >> 12;
               const value = mantissa * Math.pow(10, exp);
               return Math.round(value);
             }
@@ -318,17 +338,23 @@ export default function RealTimeMonitoring() {
           if (typeof spo2 === "number" && spo2 > 0 && spo2 <= 100) {
             const now = new Date();
             setVitalSigns((prev) => {
-              const updated = { ...prev, oxygenSaturation: spo2, timestamp: now.toISOString() };
-              setVitalsHistory((prevHist) => [
-                ...prevHist,
-                {
-                  time: now.toLocaleTimeString(),
-                  heartRate: updated.heartRate,
-                  temperature: updated.temperature,
-                  oxygenSat: updated.oxygenSaturation,
-                  systolic: updated.bloodPressure.systolic,
-                },
-              ].slice(-50));
+              const updated = {
+                ...prev,
+                oxygenSaturation: spo2,
+                timestamp: now.toISOString(),
+              };
+              setVitalsHistory((prevHist) =>
+                [
+                  ...prevHist,
+                  {
+                    time: now.toLocaleTimeString(),
+                    heartRate: updated.heartRate,
+                    temperature: updated.temperature,
+                    oxygenSat: updated.oxygenSaturation,
+                    systolic: updated.bloodPressure.systolic,
+                  },
+                ].slice(-50),
+              );
               return updated;
             });
 
@@ -337,7 +363,10 @@ export default function RealTimeMonitoring() {
               if (token) {
                 fetch("/api/iot/ingest", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
                   body: JSON.stringify({
                     deviceId: device.id,
                     deviceType: "pulse_oximeter",
@@ -396,13 +425,20 @@ export default function RealTimeMonitoring() {
             {/* Top Row: Back button and title */}
             <div className="flex items-center justify-between">
               <Link to="/">
-                <Button variant="ghost" size="sm" className="btn-smooth h-10 px-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="btn-smooth h-10 px-3"
+                >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   <span className="text-sm">Back</span>
                 </Button>
               </Link>
               <div className="flex items-center space-x-2">
-                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                <Badge
+                  variant="secondary"
+                  className="bg-green-50 text-green-700 border-green-200 text-xs"
+                >
                   <div className="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></div>
                   Live
                 </Badge>
@@ -415,7 +451,9 @@ export default function RealTimeMonitoring() {
                 <Activity className="h-4 w-4" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-slate-800">Real-time Monitoring</h1>
+                <h1 className="text-lg font-bold text-slate-800">
+                  Real-time Monitoring
+                </h1>
                 <p className="text-xs text-slate-600">Live Health Data</p>
               </div>
             </div>
@@ -423,19 +461,37 @@ export default function RealTimeMonitoring() {
             {/* Controls Row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center justify-between bg-muted/30 rounded-lg p-2">
-                <Label htmlFor="demo-mode-mobile" className="text-xs font-medium">Demo</Label>
-                <Switch id="demo-mode-mobile" checked={useDemo} onCheckedChange={setUseDemo} />
+                <Label
+                  htmlFor="demo-mode-mobile"
+                  className="text-xs font-medium"
+                >
+                  Demo
+                </Label>
+                <Switch
+                  id="demo-mode-mobile"
+                  checked={useDemo}
+                  onCheckedChange={setUseDemo}
+                />
               </div>
               <div className="flex items-center justify-between bg-muted/30 rounded-lg p-2">
-                <Label htmlFor="predictions-mobile" className="text-xs font-medium">AI</Label>
-                <Switch id="predictions-mobile" checked={showPredictions} onCheckedChange={setShowPredictions} />
+                <Label
+                  htmlFor="predictions-mobile"
+                  className="text-xs font-medium"
+                >
+                  AI
+                </Label>
+                <Switch
+                  id="predictions-mobile"
+                  checked={showPredictions}
+                  onCheckedChange={setShowPredictions}
+                />
               </div>
             </div>
 
             {/* Chart Controls and Connect Button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1">
-                {['line', 'area', 'radial'].map((type) => (
+                {["line", "area", "radial"].map((type) => (
                   <Button
                     key={type}
                     variant={chartType === type ? "default" : "ghost"}
@@ -443,9 +499,13 @@ export default function RealTimeMonitoring() {
                     onClick={() => setChartType(type as any)}
                     className="h-8 w-8 p-0"
                   >
-                    {type === 'line' ? <Activity className="w-3 h-3" /> :
-                     type === 'area' ? <TrendingUp className="w-3 h-3" /> :
-                     <Brain className="w-3 h-3" />}
+                    {type === "line" ? (
+                      <Activity className="w-3 h-3" />
+                    ) : type === "area" ? (
+                      <TrendingUp className="w-3 h-3" />
+                    ) : (
+                      <Brain className="w-3 h-3" />
+                    )}
                   </Button>
                 ))}
               </div>
@@ -456,7 +516,11 @@ export default function RealTimeMonitoring() {
                 disabled={!isBLESupported || isConnecting}
               >
                 <Watch className="w-4 h-4 mr-2" />
-                {isConnecting ? "Connecting..." : bleDeviceName ? "Reconnect" : "Connect"}
+                {isConnecting
+                  ? "Connecting..."
+                  : bleDeviceName
+                    ? "Reconnect"
+                    : "Connect"}
               </Button>
             </div>
           </div>
@@ -497,19 +561,43 @@ export default function RealTimeMonitoring() {
                 {new Date().toLocaleTimeString()}
               </Badge>
               <div className="flex items-center space-x-2">
-                <Label htmlFor="demo-mode" className="text-xs text-slate-600">Demo Mode</Label>
-                <Switch id="demo-mode" checked={useDemo} onCheckedChange={setUseDemo} />
+                <Label htmlFor="demo-mode" className="text-xs text-slate-600">
+                  Demo Mode
+                </Label>
+                <Switch
+                  id="demo-mode"
+                  checked={useDemo}
+                  onCheckedChange={setUseDemo}
+                />
               </div>
               <div className="flex items-center space-x-2">
-                <Label htmlFor="cloud-upload" className="text-xs text-slate-600">Upload to Cloud</Label>
-                <Switch id="cloud-upload" checked={uploadToCloud} onCheckedChange={setUploadToCloud} />
+                <Label
+                  htmlFor="cloud-upload"
+                  className="text-xs text-slate-600"
+                >
+                  Upload to Cloud
+                </Label>
+                <Switch
+                  id="cloud-upload"
+                  checked={uploadToCloud}
+                  onCheckedChange={setUploadToCloud}
+                />
               </div>
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-predictions" className="text-xs text-slate-600">AI Predictions</Label>
-                <Switch id="show-predictions" checked={showPredictions} onCheckedChange={setShowPredictions} />
+                <Label
+                  htmlFor="show-predictions"
+                  className="text-xs text-slate-600"
+                >
+                  AI Predictions
+                </Label>
+                <Switch
+                  id="show-predictions"
+                  checked={showPredictions}
+                  onCheckedChange={setShowPredictions}
+                />
               </div>
               <div className="flex items-center space-x-1">
-                {['line', 'area', 'radial'].map((type) => (
+                {["line", "area", "radial"].map((type) => (
                   <Button
                     key={type}
                     variant={chartType === type ? "default" : "ghost"}
@@ -517,15 +605,28 @@ export default function RealTimeMonitoring() {
                     onClick={() => setChartType(type as any)}
                     className="text-xs px-2"
                   >
-                    {type === 'line' ? <Activity className="w-3 h-3" /> :
-                     type === 'area' ? <TrendingUp className="w-3 h-3" /> :
-                     <Brain className="w-3 h-3" />}
+                    {type === "line" ? (
+                      <Activity className="w-3 h-3" />
+                    ) : type === "area" ? (
+                      <TrendingUp className="w-3 h-3" />
+                    ) : (
+                      <Brain className="w-3 h-3" />
+                    )}
                   </Button>
                 ))}
               </div>
-              <Button size="sm" className="btn-smooth" onClick={connectBluetooth} disabled={!isBLESupported || isConnecting}>
+              <Button
+                size="sm"
+                className="btn-smooth"
+                onClick={connectBluetooth}
+                disabled={!isBLESupported || isConnecting}
+              >
                 <Watch className="w-4 h-4 mr-2" />
-                {isConnecting ? "Connecting..." : bleDeviceName ? "Reconnect" : "Connect Device"}
+                {isConnecting
+                  ? "Connecting..."
+                  : bleDeviceName
+                    ? "Reconnect"
+                    : "Connect Device"}
               </Button>
             </div>
           </div>
@@ -544,10 +645,15 @@ export default function RealTimeMonitoring() {
                   </div>
                   <div>
                     <div className="text-sm font-medium">{bleDeviceName}</div>
-                    <div className="text-xs text-muted-foreground">Last update: {new Date(vitalSigns.timestamp).toLocaleTimeString()}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Last update:{" "}
+                      {new Date(vitalSigns.timestamp).toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-xs">BLE Connected</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  BLE Connected
+                </Badge>
               </CardContent>
             </Card>
           </div>
@@ -716,8 +822,11 @@ export default function RealTimeMonitoring() {
                   <Activity className="w-5 h-5 text-purple-600" />
                   <CardTitle className="text-sm font-medium">Steps</CardTitle>
                 </div>
-                <Badge variant="outline" className="text-xs text-purple-600 border-purple-200">
-                  {((vitalSigns.steps ?? 0) / 10000 * 100).toFixed(0)}%
+                <Badge
+                  variant="outline"
+                  className="text-xs text-purple-600 border-purple-200"
+                >
+                  {(((vitalSigns.steps ?? 0) / 10000) * 100).toFixed(0)}%
                 </Badge>
               </div>
             </CardHeader>
@@ -725,7 +834,10 @@ export default function RealTimeMonitoring() {
               <div className="text-3xl font-bold mb-2 text-slate-800">
                 {vitalSigns.steps ?? 0}
               </div>
-              <Progress value={(vitalSigns.steps ?? 0) / 10000 * 100} className="mb-2 h-2" />
+              <Progress
+                value={((vitalSigns.steps ?? 0) / 10000) * 100}
+                className="mb-2 h-2"
+              />
               <div className="flex items-center text-sm text-muted-foreground">
                 <TrendingUp className="w-4 h-4 mr-1 text-purple-600" />
                 Today’s steps
@@ -739,10 +851,15 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Zap className="w-5 h-5 text-orange-600" />
-                  <CardTitle className="text-sm font-medium">Calories</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Calories
+                  </CardTitle>
                 </div>
-                <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">
-                  {((vitalSigns.calories ?? 0) / 2000 * 100).toFixed(0)}%
+                <Badge
+                  variant="outline"
+                  className="text-xs text-orange-600 border-orange-200"
+                >
+                  {(((vitalSigns.calories ?? 0) / 2000) * 100).toFixed(0)}%
                 </Badge>
               </div>
             </CardHeader>
@@ -751,7 +868,10 @@ export default function RealTimeMonitoring() {
                 {vitalSigns.calories ?? 0}
                 <span className="text-lg text-muted-foreground ml-1">cal</span>
               </div>
-              <Progress value={(vitalSigns.calories ?? 0) / 2000 * 100} className="mb-2 h-2" />
+              <Progress
+                value={((vitalSigns.calories ?? 0) / 2000) * 100}
+                className="mb-2 h-2"
+              />
               <div className="flex items-center text-sm text-muted-foreground">
                 <TrendingUp className="w-4 h-4 mr-1 text-orange-600" />
                 Goal: 2,000 calories
@@ -765,9 +885,14 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Smartphone className="w-5 h-5 text-cyan-600" />
-                  <CardTitle className="text-sm font-medium">Device Performance</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Device Performance
+                  </CardTitle>
                 </div>
-                <Badge variant="outline" className="text-xs text-cyan-600 border-cyan-200">
+                <Badge
+                  variant="outline"
+                  className="text-xs text-cyan-600 border-cyan-200"
+                >
                   {devicePerformance.accuracy}%
                 </Badge>
               </div>
@@ -775,15 +900,24 @@ export default function RealTimeMonitoring() {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">Accuracy</span>
-                  <span className="text-sm font-medium">{devicePerformance.accuracy}%</span>
+                  <span className="text-xs text-muted-foreground">
+                    Accuracy
+                  </span>
+                  <span className="text-sm font-medium">
+                    {devicePerformance.accuracy}%
+                  </span>
                 </div>
                 <Progress value={devicePerformance.accuracy} className="h-1" />
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Signal</span>
-                  <span className="text-sm font-medium">{devicePerformance.signalStrength}%</span>
+                  <span className="text-sm font-medium">
+                    {devicePerformance.signalStrength}%
+                  </span>
                 </div>
-                <Progress value={devicePerformance.signalStrength} className="h-1" />
+                <Progress
+                  value={devicePerformance.signalStrength}
+                  className="h-1"
+                />
               </div>
             </CardContent>
           </Card>
@@ -806,27 +940,54 @@ export default function RealTimeMonitoring() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-lg bg-white/60 border border-indigo-100">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-indigo-700">Stress Level</span>
-                      <Badge variant="outline" className="text-xs text-indigo-600">Low</Badge>
+                      <span className="text-sm font-medium text-indigo-700">
+                        Stress Level
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-xs text-indigo-600"
+                      >
+                        Low
+                      </Badge>
                     </div>
                     <Progress value={25} className="mb-2 h-2" />
-                    <p className="text-xs text-slate-600">Your current vitals indicate a relaxed state</p>
+                    <p className="text-xs text-slate-600">
+                      Your current vitals indicate a relaxed state
+                    </p>
                   </div>
                   <div className="p-4 rounded-lg bg-white/60 border border-green-100">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-green-700">Health Score</span>
-                      <Badge variant="outline" className="text-xs text-green-600">Excellent</Badge>
+                      <span className="text-sm font-medium text-green-700">
+                        Health Score
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-xs text-green-600"
+                      >
+                        Excellent
+                      </Badge>
                     </div>
                     <Progress value={88} className="mb-2 h-2" />
-                    <p className="text-xs text-slate-600">All vitals within optimal ranges</p>
+                    <p className="text-xs text-slate-600">
+                      All vitals within optimal ranges
+                    </p>
                   </div>
                   <div className="p-4 rounded-lg bg-white/60 border border-yellow-100">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-yellow-700">Activity Recommendation</span>
-                      <Badge variant="outline" className="text-xs text-yellow-600">Moderate</Badge>
+                      <span className="text-sm font-medium text-yellow-700">
+                        Activity Recommendation
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-xs text-yellow-600"
+                      >
+                        Moderate
+                      </Badge>
                     </div>
                     <Progress value={65} className="mb-2 h-2" />
-                    <p className="text-xs text-slate-600">Consider light exercise to boost activity</p>
+                    <p className="text-xs text-slate-600">
+                      Consider light exercise to boost activity
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -851,7 +1012,7 @@ export default function RealTimeMonitoring() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    {chartType === 'line' ? (
+                    {chartType === "line" ? (
                       <LineChart data={vitalsHistory}>
                         <CartesianGrid
                           strokeDasharray="3 3"
@@ -891,7 +1052,9 @@ export default function RealTimeMonitoring() {
                           dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
                           name="Systolic BP (mmHg)"
                         />
-                        {vitalsHistory.some((d) => typeof d.steps === "number") && (
+                        {vitalsHistory.some(
+                          (d) => typeof d.steps === "number",
+                        ) && (
                           <Line
                             type="monotone"
                             dataKey="steps"
@@ -902,9 +1065,12 @@ export default function RealTimeMonitoring() {
                           />
                         )}
                       </LineChart>
-                    ) : chartType === 'area' ? (
+                    ) : chartType === "area" ? (
                       <AreaChart data={vitalsHistory}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          className="opacity-30"
+                        />
                         <XAxis dataKey="time" className="text-xs" />
                         <YAxis className="text-xs" />
                         <Tooltip
@@ -938,35 +1104,63 @@ export default function RealTimeMonitoring() {
                           <div className="relative">
                             <ResponsiveContainer width="100%" height={150}>
                               <RadialBarChart
-                                data={[{ name: 'Heart Rate', value: (vitalSigns.heartRate / 120) * 100, fill: '#ef4444' }]}
+                                data={[
+                                  {
+                                    name: "Heart Rate",
+                                    value: (vitalSigns.heartRate / 120) * 100,
+                                    fill: "#ef4444",
+                                  },
+                                ]}
                                 startAngle={90}
                                 endAngle={450}
                                 innerRadius="60%"
                                 outerRadius="90%"
                               >
-                                <RadialBar dataKey="value" cornerRadius={10} fill="#ef4444" />
+                                <RadialBar
+                                  dataKey="value"
+                                  cornerRadius={10}
+                                  fill="#ef4444"
+                                />
                               </RadialBarChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex items-center justify-center flex-col">
-                              <div className="text-2xl font-bold text-red-600">{vitalSigns.heartRate}</div>
-                              <div className="text-xs text-muted-foreground">BPM</div>
+                              <div className="text-2xl font-bold text-red-600">
+                                {vitalSigns.heartRate}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                BPM
+                              </div>
                             </div>
                           </div>
                           <div className="relative">
                             <ResponsiveContainer width="100%" height={150}>
                               <RadialBarChart
-                                data={[{ name: 'Oxygen', value: vitalSigns.oxygenSaturation, fill: '#3b82f6' }]}
+                                data={[
+                                  {
+                                    name: "Oxygen",
+                                    value: vitalSigns.oxygenSaturation,
+                                    fill: "#3b82f6",
+                                  },
+                                ]}
                                 startAngle={90}
                                 endAngle={450}
                                 innerRadius="60%"
                                 outerRadius="90%"
                               >
-                                <RadialBar dataKey="value" cornerRadius={10} fill="#3b82f6" />
+                                <RadialBar
+                                  dataKey="value"
+                                  cornerRadius={10}
+                                  fill="#3b82f6"
+                                />
                               </RadialBarChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex items-center justify-center flex-col">
-                              <div className="text-2xl font-bold text-blue-600">{vitalSigns.oxygenSaturation}</div>
-                              <div className="text-xs text-muted-foreground">%</div>
+                              <div className="text-2xl font-bold text-blue-600">
+                                {vitalSigns.oxygenSaturation}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                %
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -995,8 +1189,14 @@ export default function RealTimeMonitoring() {
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
                       <Watch className="w-8 h-8 text-gray-400" />
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">No devices connected</p>
-                    <Button size="sm" onClick={connectBluetooth} disabled={!isBLESupported}>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      No devices connected
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={connectBluetooth}
+                      disabled={!isBLESupported}
+                    >
                       <Smartphone className="w-4 h-4 mr-2" />
                       Connect Device
                     </Button>
@@ -1032,7 +1232,10 @@ export default function RealTimeMonitoring() {
                           <div className="text-xs text-muted-foreground">
                             {device.battery}%
                           </div>
-                          <Progress value={device.battery} className="w-12 h-2" />
+                          <Progress
+                            value={device.battery}
+                            className="w-12 h-2"
+                          />
                           {device.status === "connected" ? (
                             <Wifi className="w-4 h-4 text-green-600" />
                           ) : device.status === "syncing" ? (
@@ -1060,18 +1263,29 @@ export default function RealTimeMonitoring() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Data Quality</span>
+                    <span className="text-sm text-muted-foreground">
+                      Data Quality
+                    </span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">{devicePerformance.dataQuality}%</span>
+                      <span className="text-sm font-medium">
+                        {devicePerformance.dataQuality}%
+                      </span>
                       <CheckCircle className="w-4 h-4 text-green-600" />
                     </div>
                   </div>
-                  <Progress value={devicePerformance.dataQuality} className="h-2" />
+                  <Progress
+                    value={devicePerformance.dataQuality}
+                    className="h-2"
+                  />
 
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Battery Level</span>
+                    <span className="text-sm text-muted-foreground">
+                      Battery Level
+                    </span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">{devicePerformance.batteryLevel}%</span>
+                      <span className="text-sm font-medium">
+                        {devicePerformance.batteryLevel}%
+                      </span>
                       {devicePerformance.batteryLevel > 50 ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />
                       ) : (
@@ -1079,16 +1293,27 @@ export default function RealTimeMonitoring() {
                       )}
                     </div>
                   </div>
-                  <Progress value={devicePerformance.batteryLevel} className="h-2" />
+                  <Progress
+                    value={devicePerformance.batteryLevel}
+                    className="h-2"
+                  />
 
                   <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-border/50">
                     <div className="text-center">
-                      <div className="text-lg font-bold text-green-600">99.2%</div>
-                      <div className="text-xs text-muted-foreground">Uptime</div>
+                      <div className="text-lg font-bold text-green-600">
+                        99.2%
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Uptime
+                      </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">42ms</div>
-                      <div className="text-xs text-muted-foreground">Latency</div>
+                      <div className="text-lg font-bold text-blue-600">
+                        42ms
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Latency
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -55,7 +55,14 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/bmax" element={<BmaxAI />} />
               <Route path="/bmax-pro" element={<BmaxDemo />} />
-              <Route path="/signin" element={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground p-6">Sign-in development: coming soon</div>} />
+              <Route
+                path="/signin"
+                element={
+                  <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground p-6">
+                    Sign-in development: coming soon
+                  </div>
+                }
+              />
               <Route
                 path="/history"
                 element={

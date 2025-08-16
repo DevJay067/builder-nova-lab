@@ -11,7 +11,9 @@ try {
   if (process.env.DATABASE_URL) {
     sql = neon(process.env.DATABASE_URL);
   } else {
-    console.warn("⚠️ DATABASE_URL not configured - database features will be limited");
+    console.warn(
+      "⚠️ DATABASE_URL not configured - database features will be limited",
+    );
   }
 } catch (error) {
   console.error("❌ Failed to initialize database connection:", error.message);
@@ -38,7 +40,9 @@ export class DatabaseHealthService {
 
       // Check if database connection is available
       if (!sql) {
-        throw new Error("Database connection not initialized - DATABASE_URL not configured");
+        throw new Error(
+          "Database connection not initialized - DATABASE_URL not configured",
+        );
       }
 
       // Simple connectivity test
