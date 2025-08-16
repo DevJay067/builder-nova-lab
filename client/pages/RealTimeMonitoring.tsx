@@ -835,7 +835,7 @@ export default function RealTimeMonitoring() {
         )}
 
         {/* Charts and Device Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Vital Signs Chart */}
           <div className="lg:col-span-2">
             <Card className="shadow-colored border-border/50 fade-in fade-in-delay-4">
