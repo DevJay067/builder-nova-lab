@@ -91,6 +91,14 @@ export default function RealTimeMonitoring() {
   const [connectedDevices, setConnectedDevices] = useState<Device[]>([]);
 
   const [alerts, setAlerts] = useState([] as any[]);
+  const [chartType, setChartType] = useState<'line' | 'area' | 'radial'>('line');
+  const [showPredictions, setShowPredictions] = useState(false);
+  const [devicePerformance, setDevicePerformance] = useState({
+    accuracy: 95,
+    batteryLevel: 78,
+    signalStrength: 85,
+    dataQuality: 92
+  });
 
   const [useDemo, setUseDemo] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
