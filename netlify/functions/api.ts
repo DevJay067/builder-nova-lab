@@ -95,6 +95,56 @@ const handleRequest = async (event: any) => {
       return await historyHandler(event, {} as any) as any;
     }
 
+    // Nearby hospitals endpoint
+    if (path === "/api/places/nearby" && httpMethod === "GET") {
+      try {
+        const url = new URL(event.rawUrl);
+        const lat = parseFloat(url.searchParams.get("lat") || "0");
+        const lng = parseFloat(url.searchParams.get("lng") || "0");
+        const radius = parseInt(url.searchParams.get("radius") || "5000", 10);
+        if (!lat || !lng) return createErrorResponse("lat and lng are required", 400);
+
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+        if (apiKey) {
+          const gUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=hospital&key=${apiKey}`;
+          const resp = await fetch(gUrl);
+          const data = await resp.json();
+          const items = (data.results || []).map((r: any) => ({
+            id: r.place_id,
+            name: r.name,
+            lat: r.geometry?.location?.lat,
+            lng: r.geometry?.location?.lng,
+            address: r.vicinity || r.formatted_address,
+            rating: r.rating,
+            userRatingsTotal: r.user_ratings_total,
+            openNow: r.opening_hours?.open_now,
+            mapsUrl: r.place_id ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name)}&query_place_id=${r.place_id}` : `https://www.google.com/maps?q=${r.geometry?.location?.lat},${r.geometry?.location?.lng}`,
+          }));
+          return createSuccessResponse({ success: true, provider: "google", items });
+        } else {
+          // Overpass fallback
+          const overpassQuery = `data=${encodeURIComponent(`[out:json][timeout:10];(node["amenity"="hospital"](around:${radius},${lat},${lng});way["amenity"="hospital"](around:${radius},${lat},${lng});relation["amenity"="hospital"](around:${radius},${lat},${lng}););out center tags 30;`)}
+`;
+          const resp = await fetch(`https://overpass-api.de/api/interpreter?${overpassQuery}`);
+          const data = await resp.json();
+          const items = (data.elements || []).map((e: any) => ({
+            id: `${e.type}/${e.id}`,
+            name: e.tags?.name || "Hospital",
+            lat: e.lat || e.center?.lat,
+            lng: e.lon || e.center?.lon,
+            address: [e.tags?.addr_street, e.tags?.addr_housenumber, e.tags?.addr_city].filter(Boolean).join(" ") || e.tags?.address,
+            rating: null,
+            userRatingsTotal: null,
+            openNow: null,
+            mapsUrl: `https://www.google.com/maps?q=${(e.lat || e.center?.lat)},${(e.lon || e.center?.lon)}`,
+          }));
+          return createSuccessResponse({ success: true, provider: "overpass", items });
+        }
+      } catch (error: any) {
+        return createErrorResponse("Failed to fetch nearby places", 500, { message: error.message });
+      }
+    }
+
     // Health check endpoint
     if (path === "/api/health" && httpMethod === "GET") {
       return createSuccessResponse({

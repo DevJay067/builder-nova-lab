@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,9 @@ import {
 export default function FirstAid() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCondition, setSelectedCondition] = useState(null);
+  const [nearbyHospitals, setNearbyHospitals] = useState<any[]>([]);
+  const [locError, setLocError] = useState<string | null>(null);
+  const [locLoading, setLocLoading] = useState(false);
 
   const openYouTubeTutorial = (youtubeUrl: string) => {
     console.log('Opening YouTube tutorial:', youtubeUrl);
@@ -192,6 +195,35 @@ export default function FirstAid() {
     )
   );
 
+  useEffect(() => {
+    setLocLoading(true);
+    if (!navigator.geolocation) {
+      setLocError("Geolocation is not supported");
+      setLocLoading(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const res = await fetch(`/api/places/nearby?lat=${lat}&lng=${lng}&radius=8000`);
+          const json = await res.json();
+          if (json?.items) setNearbyHospitals(json.items);
+        } catch (e) {
+          setLocError("Failed to load nearby hospitals");
+        } finally {
+          setLocLoading(false);
+        }
+      },
+      (err) => {
+        setLocError(err.message || "Location permission denied");
+        setLocLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-destructive/5">
       {/* Header */}
@@ -261,6 +293,51 @@ export default function FirstAid() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Nearby Hospitals */}
+        <Card className="mb-4 sm:mb-8">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="flex items-center text-base sm:text-lg">
+              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
+              Hospitals Near You
+            </CardTitle>
+            <CardDescription>Find the nearest hospital in an emergency</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {locLoading && (
+              <p className="text-sm text-muted-foreground">Finding nearby hospitals...</p>
+            )}
+            {locError && (
+              <p className="text-sm text-destructive">{locError}</p>
+            )}
+            {!locLoading && !locError && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {nearbyHospitals.slice(0, 6).map((h, idx) => (
+                  <div key={idx} className="p-3 sm:p-4 bg-card rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 mr-2">
+                        <p className="font-semibold text-xs sm:text-sm truncate">{h.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{h.address || "Address not available"}</p>
+                        {typeof h.rating === 'number' && (
+                          <p className="text-xs text-muted-foreground">Rating: {h.rating} ({h.userRatingsTotal || 0})</p>
+                        )}
+                        {h.openNow != null && (
+                          <p className="text-xs text-muted-foreground">Open now: {h.openNow ? 'Yes' : 'No'}</p>
+                        )}
+                      </div>
+                      <a href={h.mapsUrl} target="_blank" rel="noreferrer" aria-label="Open in maps">
+                        <Button size="sm" variant="outline" className="h-9">Open Map</Button>
+                      </a>
+                    </div>
+                  </div>
+                ))}
+                {nearbyHospitals.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No hospitals found nearby.</p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
