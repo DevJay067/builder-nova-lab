@@ -778,56 +778,127 @@ export default function RealTimeMonitoring() {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={vitalsHistory}>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        className="opacity-30"
-                      />
-                      <XAxis dataKey="time" className="text-xs" />
-                      <YAxis className="text-xs" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255, 255, 255, 0.95)",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="heartRate"
-                        stroke="#ef4444"
-                        strokeWidth={2}
-                        dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
-                        name="Heart Rate (BPM)"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="oxygenSat"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-                        name="Oxygen Saturation (%)"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="systolic"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-                        name="Systolic BP (mmHg)"
-                      />
-                      {vitalsHistory.some((d) => typeof d.steps === "number") && (
+                    {chartType === 'line' ? (
+                      <LineChart data={vitalsHistory}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          className="opacity-30"
+                        />
+                        <XAxis dataKey="time" className="text-xs" />
+                        <YAxis className="text-xs" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
                         <Line
                           type="monotone"
-                          dataKey="steps"
-                          stroke="#8b5cf6"
+                          dataKey="heartRate"
+                          stroke="#ef4444"
                           strokeWidth={2}
-                          dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 3 }}
-                          name="Steps"
+                          dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
+                          name="Heart Rate (BPM)"
                         />
-                      )}
-                    </LineChart>
+                        <Line
+                          type="monotone"
+                          dataKey="oxygenSat"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
+                          name="Oxygen Saturation (%)"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="systolic"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                          name="Systolic BP (mmHg)"
+                        />
+                        {vitalsHistory.some((d) => typeof d.steps === "number") && (
+                          <Line
+                            type="monotone"
+                            dataKey="steps"
+                            stroke="#8b5cf6"
+                            strokeWidth={2}
+                            dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 3 }}
+                            name="Steps"
+                          />
+                        )}
+                      </LineChart>
+                    ) : chartType === 'area' ? (
+                      <AreaChart data={vitalsHistory}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis dataKey="time" className="text-xs" />
+                        <YAxis className="text-xs" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="heartRate"
+                          stroke="#ef4444"
+                          fill="#fef2f2"
+                          strokeWidth={2}
+                          name="Heart Rate (BPM)"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="oxygenSat"
+                          stroke="#3b82f6"
+                          fill="#eff6ff"
+                          strokeWidth={2}
+                          name="Oxygen Saturation (%)"
+                        />
+                      </AreaChart>
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="grid grid-cols-2 gap-8 w-full max-w-md">
+                          <div className="relative">
+                            <ResponsiveContainer width="100%" height={150}>
+                              <RadialBarChart
+                                data={[{ name: 'Heart Rate', value: (vitalSigns.heartRate / 120) * 100, fill: '#ef4444' }]}
+                                startAngle={90}
+                                endAngle={450}
+                                innerRadius="60%"
+                                outerRadius="90%"
+                              >
+                                <RadialBar dataKey="value" cornerRadius={10} fill="#ef4444" />
+                              </RadialBarChart>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex items-center justify-center flex-col">
+                              <div className="text-2xl font-bold text-red-600">{vitalSigns.heartRate}</div>
+                              <div className="text-xs text-muted-foreground">BPM</div>
+                            </div>
+                          </div>
+                          <div className="relative">
+                            <ResponsiveContainer width="100%" height={150}>
+                              <RadialBarChart
+                                data={[{ name: 'Oxygen', value: vitalSigns.oxygenSaturation, fill: '#3b82f6' }]}
+                                startAngle={90}
+                                endAngle={450}
+                                innerRadius="60%"
+                                outerRadius="90%"
+                              >
+                                <RadialBar dataKey="value" cornerRadius={10} fill="#3b82f6" />
+                              </RadialBarChart>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex items-center justify-center flex-col">
+                              <div className="text-2xl font-bold text-blue-600">{vitalSigns.oxygenSaturation}</div>
+                              <div className="text-xs text-muted-foreground">%</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </ResponsiveContainer>
                 </div>
               </CardContent>
