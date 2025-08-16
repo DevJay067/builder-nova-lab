@@ -174,6 +174,43 @@ function expressPlugin(): Plugin {
           }
         });
 
+        // Add basic health records endpoint
+        server.middlewares.use('/api/health-records', (req, res, next) => {
+          const authHeader = req.headers.authorization;
+          const sessionHeader = req.headers['x-session-token'];
+          const sessionToken = authHeader?.replace('Bearer ', '') || sessionHeader;
+
+          res.setHeader('Content-Type', 'application/json');
+
+          if (!sessionToken || !sessionToken.startsWith('demo_')) {
+            res.statusCode = 401;
+            res.end(JSON.stringify({ success: false, message: "Authentication required" }));
+            return;
+          }
+
+          if (req.method === 'GET') {
+            // Return mock health records for demo
+            res.statusCode = 200;
+            res.end(JSON.stringify({
+              success: true,
+              records: [
+                { id: "1", type: "checkup", date: "2024-01-15", data: { weight: "70kg", height: "175cm" } },
+                { id: "2", type: "blood_test", date: "2024-02-10", data: { cholesterol: "180mg/dL" } }
+              ]
+            }));
+          } else if (req.method === 'POST') {
+            // Mock saving a health record
+            res.statusCode = 201;
+            res.end(JSON.stringify({
+              success: true,
+              message: "Health record saved successfully",
+              recordId: `demo_record_${Date.now()}`
+            }));
+          } else {
+            next();
+          }
+        });
+
         console.log("✅ Direct API routes added to Vite server");
 
         import("./server").then(({ createServer }) => {
