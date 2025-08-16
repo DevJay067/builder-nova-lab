@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "netlify:serve": "netlify dev",
     "lint": "echo \"No lint configured\""
   },
   "engines": {
@@ -27,6 +28,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1",
     "morgan": "^1.10.0",
+    "serverless-http": "^3.2.0",
     "socket.io": "^4.7.5",
     "xss-clean": "^0.1.1"
   },

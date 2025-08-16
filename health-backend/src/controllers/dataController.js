@@ -53,7 +53,7 @@ const syncData = async (req, res) => {
 		await setCachedRecent(redis, value.userId, record);
 
 		const io = req.app.get('io');
-		io.to(`user:${value.userId}`).emit('health:update', record);
+		if (io && io.to) io.to(`user:${value.userId}`).emit('health:update', record);
 
 		return res.status(201).json({ success: true, id: record._id.toString() });
 	} catch (err) {

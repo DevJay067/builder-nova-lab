@@ -140,3 +140,47 @@ Response example (recent):
   }
 }
 ```
+
+### Deploy to Netlify (Serverless)
+- What you get: same Express app running as a Netlify Function at `/.netlify/functions/api/*` with all routes and middlewares.
+
+Steps:
+1) Push this repo to GitHub
+2) In Netlify, New site from Git → connect repo
+3) Build settings:
+   - Base directory: `health-backend`
+   - Build command: `npm install`
+   - Publish directory: `health-backend` (or repo root if deploying only the backend folder)
+   - Functions directory: auto from `netlify.toml`
+4) Environment variables (Site settings → Environment variables):
+   - `JWT_SECRET` = strong secret
+   - `JWT_EXPIRES_IN` = `7d`
+   - `CORS_ORIGIN` = your frontend origins, e.g. `https://your-frontend.netlify.app`
+   - `MONGO_URI` = your MongoDB Atlas connection string (srv or standard)
+   - `REDIS_URL` = optional; if omitted, set `REDIS_USE_MEMORY=1`
+   - `REDIS_USE_MEMORY` = `1` (recommended for initial testing)
+   - `PAYLOAD_ENC_SECRET` = 64 hex chars if using payload encryption
+5) Deploy
+
+Endpoints on Netlify:
+- `/api/*` → `/.netlify/functions/api/api/*`
+- `/health` → `/.netlify/functions/api/health`
+
+Local serverless dev:
+```bash
+npm install -g netlify-cli
+netlify dev
+# or
+npm run netlify:serve
+```
+
+MongoDB Atlas quick setup:
+- Create free/shared cluster in Atlas
+- Create DB user and password
+- Allow Access from Anywhere (0.0.0.0/0) or specify Netlify egress IPs
+- Get connection string: `mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/health?retryWrites=true&w=majority&appName=<name>`
+- Set as `MONGO_URI` env var in Netlify
+
+Caveats:
+- WebSockets: Netlify Functions are HTTP-only; Socket.io emissions are disabled in serverless mode. For real-time in production, deploy the Node server (e.g., Render/Fly/Heroku) or use a managed WebSocket service (Pusher/Ably) and plug into the same flows.
+- Caching: In serverless mode with `REDIS_USE_MEMORY=1`, cache is per-invocation and not shared. Use a hosted Redis (e.g., Upstash/Redis Cloud) to persist cache across invocations.
