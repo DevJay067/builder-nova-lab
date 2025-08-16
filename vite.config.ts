@@ -95,6 +95,51 @@ function expressPlugin(): Plugin {
     configureServer(server) {
       // Only import and configure Express during development
       if (process.env.NODE_ENV !== "production") {
+        // Add simple API routes directly to Vite dev server
+        server.middlewares.use('/api/auth/demo-login', (req, res, next) => {
+          if (req.method === 'POST') {
+            const demoSessionToken = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const demoUser = {
+              id: "demo_user_id",
+              username: "demo_user",
+              userHash: "demo_hash_" + Math.random().toString(36).substr(2, 9),
+              sessionToken: demoSessionToken,
+              firstName: "Demo",
+              lastName: "User",
+              email: "demo@example.com",
+              secureSystemActivated: true,
+            };
+
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Set-Cookie', `healthchain_session=${demoSessionToken}; Path=/; Max-Age=3600; SameSite=Strict`);
+            res.statusCode = 200;
+            res.end(JSON.stringify({
+              success: true,
+              message: "Demo login successful (direct mode)",
+              user: demoUser,
+              sessionToken: demoSessionToken,
+            }));
+          } else {
+            next();
+          }
+        });
+
+        server.middlewares.use('/api/health', (req, res, next) => {
+          if (req.method === 'GET') {
+            res.setHeader('Content-Type', 'application/json');
+            res.statusCode = 200;
+            res.end(JSON.stringify({
+              status: "ok",
+              mode: "direct",
+              timestamp: new Date().toISOString(),
+            }));
+          } else {
+            next();
+          }
+        });
+
+        console.log("✅ Direct API routes added to Vite server");
+
         import("./server").then(({ createServer }) => {
           console.log("🚀 Loading Express server...");
           const app = createServer();
