@@ -430,7 +430,7 @@ export default function BamxPro() {
             <div className="flex items-center space-x-2">
               <Badge variant="secondary" className="text-xs">
                 <Sparkles className="h-3 w-3 mr-1" />
-                Enhanced Demo
+                Enhanced Pro
               </Badge>
             </div>
           </div>
