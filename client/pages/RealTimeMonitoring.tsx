@@ -431,6 +431,25 @@ export default function RealTimeMonitoring() {
                 <Label htmlFor="cloud-upload" className="text-xs text-slate-600">Upload to Cloud</Label>
                 <Switch id="cloud-upload" checked={uploadToCloud} onCheckedChange={setUploadToCloud} />
               </div>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="show-predictions" className="text-xs text-slate-600">AI Predictions</Label>
+                <Switch id="show-predictions" checked={showPredictions} onCheckedChange={setShowPredictions} />
+              </div>
+              <div className="flex items-center space-x-1">
+                {['line', 'area', 'radial'].map((type) => (
+                  <Button
+                    key={type}
+                    variant={chartType === type ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setChartType(type as any)}
+                    className="text-xs px-2"
+                  >
+                    {type === 'line' ? <Activity className="w-3 h-3" /> :
+                     type === 'area' ? <TrendingUp className="w-3 h-3" /> :
+                     <Brain className="w-3 h-3" />}
+                  </Button>
+                ))}
+              </div>
               <Button size="sm" className="btn-smooth" onClick={connectBluetooth} disabled={!isBLESupported || isConnecting}>
                 <Watch className="w-4 h-4 mr-2" />
                 {isConnecting ? "Connecting..." : bleDeviceName ? "Reconnect" : "Connect Device"}
