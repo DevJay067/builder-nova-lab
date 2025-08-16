@@ -4,7 +4,7 @@ from sqlalchemy import select
 from ..db import get_session
 from ..models import User
 from ..schemas import UserCreate, UserOut, Token
-from ..security import get_password_hash, verify_password, create_access_token
+from ..security import get_password_hash, verify_password, create_access_token, create_scoped_token
 
 router = APIRouter()
 
@@ -27,4 +27,14 @@ async def login(payload: UserCreate, db: AsyncSession = Depends(get_session)):
 	if not user or not verify_password(payload.password, user.password_hash):
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 	token = create_access_token(subject=user.email)
+	return Token(access_token=token)
+
+@router.post("/ingest-token", response_model=Token)
+async def mint_ingest_token(payload: UserCreate, db: AsyncSession = Depends(get_session)):
+	# allow same creds to mint a scoped token for device ingestion
+	res = await db.execute(select(User).where(User.email == payload.email))
+	user = res.scalar_one_or_none()
+	if not user or not verify_password(payload.password, user.password_hash):
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+	token = create_scoped_token(subject=user.email, scope="ingest", expires_minutes=1440)
 	return Token(access_token=token)
