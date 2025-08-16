@@ -402,3 +402,10 @@ curl -H 'Authorization: Bearer TOKEN' 'http://localhost:3000/api/data/recent?use
 # Nearby hospitals
 curl 'http://localhost:3000/api/emergency/nearby-hospitals?lat=37.7749&lng=-122.4194'
 ```
+
+### Netlify deployment
+- Set build: `npm run build:netlify`, publish: `dist/spa`.
+- Redirects in `netlify.toml` route `/api/*` to `/.netlify/functions/api/*`.
+- Function entry: `netlify/functions/api.ts` wraps the Express app.
+- Required env vars in Netlify dashboard: `MONGODB_URI`, `JWT_SECRET`, `ENCRYPTION_KEY`, `GOOGLE_MAPS_API_KEY`, `REDIS_URL`, `CORS_ORIGINS`.
+- Test after deploy: `https://<your-site>.netlify.app/.netlify/functions/api/health` and `https://<your-site>.netlify.app/api/health` (via redirect).
