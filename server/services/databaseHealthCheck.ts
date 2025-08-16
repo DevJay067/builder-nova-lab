@@ -36,6 +36,11 @@ export class DatabaseHealthService {
     try {
       console.log("🔍 Checking database health...");
 
+      // Check if database connection is available
+      if (!sql) {
+        throw new Error("Database connection not initialized - DATABASE_URL not configured");
+      }
+
       // Simple connectivity test
       const result = await sql`SELECT 1 as health_check`;
 
