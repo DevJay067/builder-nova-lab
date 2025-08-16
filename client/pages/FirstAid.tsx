@@ -480,8 +480,9 @@ export default function FirstAid() {
         </Card>
 
         <Tabs defaultValue="conditions" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md h-10 sm:h-11">
+          <TabsList className="grid w-full grid-cols-3 max-w-lg h-10 sm:h-11">
             <TabsTrigger value="conditions" className="text-sm">Conditions</TabsTrigger>
+            <TabsTrigger value="hospitals" className="text-sm">Hospitals</TabsTrigger>
             <TabsTrigger value="quick-guide" className="text-sm">Quick Guide</TabsTrigger>
           </TabsList>
 
