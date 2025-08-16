@@ -258,7 +258,7 @@ export default function Login() {
   const handleDemoLogin = async () => {
     setIsLoading(true);
     setMessage(null); // Clear previous messages
-    
+
     try {
       const response = await fetch("/api/auth/demo-login", {
         method: "POST",
@@ -267,23 +267,26 @@ export default function Login() {
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        
+      // Parse response data first, then check success
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         // Store session data
         localStorage.setItem("sessionToken", data.sessionToken);
         localStorage.setItem("healthchain_user", JSON.stringify(data.user));
-        
+
         // Set cookie
         document.cookie = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; secure; samesite=strict`;
-        
+
         // Redirect to intended page or home
         const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
         localStorage.removeItem("redirectAfterLogin");
         navigate(redirectPath);
       } else {
-        const errorData = await response.json();
-        setMessage({ type: "error", text: errorData.message || "Demo login failed. Please try again." });
+        setMessage({
+          type: "error",
+          text: data.message || "Demo login failed. Please try again."
+        });
       }
     } catch (error) {
       console.error("Demo login error:", error);
