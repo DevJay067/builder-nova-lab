@@ -409,9 +409,42 @@ export default function HealthAnalytics() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        {/* Mobile Quick Actions */}
+        <div className="sm:hidden mb-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="h-16 flex-col space-y-1"
+                  onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}
+                >
+                  <Droplets className="h-5 w-5 text-blue-600" />
+                  <span className="text-xs">Add Water</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-16 flex-col space-y-1"
+                  onClick={async () => {
+                    const token = localStorage.getItem("sessionToken");
+                    if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 30, repeat: hydrationRepeat }) });
+                    startHydrationTimer(30);
+                  }}
+                >
+                  <Clock className="h-5 w-5 text-green-600" />
+                  <span className="text-xs">Set Reminder</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Goals at top */}
-        <Tabs defaultValue="goals" className="space-y-6">
+        <Tabs defaultValue="goals" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-full sm:max-w-2xl h-12 sm:h-11">
             <TabsTrigger value="insights" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
               <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
