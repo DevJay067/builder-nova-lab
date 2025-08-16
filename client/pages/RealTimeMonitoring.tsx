@@ -532,7 +532,7 @@ export default function RealTimeMonitoring() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Device status (mobile-friendly) */}
         {bleDeviceName && (
           <div className="mb-4">
