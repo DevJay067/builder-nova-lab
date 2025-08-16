@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..deps import get_current_user
@@ -18,6 +18,8 @@ async def ingest_sample(payload: WatchSampleIn, db: AsyncSession = Depends(get_s
 		spo2_percent=payload.spo2_percent,
 		steps=payload.steps,
 		calories=payload.calories,
+		rssi_dbm=payload.rssi_dbm,
+		connection_quality=payload.connection_quality,
 		raw=payload.raw,
 	)
 	db.add(sample)
@@ -30,6 +32,8 @@ async def ingest_sample(payload: WatchSampleIn, db: AsyncSession = Depends(get_s
 		"spo2_percent": sample.spo2_percent,
 		"steps": sample.steps,
 		"calories": sample.calories,
+		"rssi_dbm": sample.rssi_dbm,
+		"connection_quality": sample.connection_quality,
 	})
 	return sample
 
@@ -38,3 +42,53 @@ async def list_samples(limit: int = 100, db: AsyncSession = Depends(get_session)
 	q = select(WatchSample).where(WatchSample.user_id == user.id).order_by(WatchSample.timestamp.desc()).limit(limit)
 	res = await db.execute(q)
 	return list(res.scalars().all())
+
+@router.websocket("/stream")
+async def watch_stream(ws: WebSocket, token: str):
+	# Phone connects with token; each message is a JSON WatchSampleIn
+	await ws.accept()
+	from ..security import decode_token
+	from ..db import get_session as _get_session
+	from ..models import User as _User
+	from sqlalchemy import select as _select
+	from datetime import datetime
+	try:
+		email = decode_token(token)
+		# Create a new DB session per websocket for simplicity
+		async for message in ws.iter_text():
+			import json
+			payload = json.loads(message)
+			async for db in _get_session():
+				res = await db.execute(_select(_User).where(_User.email == email))
+				user = res.scalar_one_or_none()
+				if user is None:
+					await ws.close()
+					return
+				sample = WatchSample(
+					user_id=user.id,
+					timestamp=datetime.fromisoformat(payload.get("timestamp")),
+					heart_rate_bpm=payload.get("heart_rate_bpm"),
+					spo2_percent=payload.get("spo2_percent"),
+					steps=payload.get("steps"),
+					calories=payload.get("calories"),
+					rssi_dbm=payload.get("rssi_dbm"),
+					connection_quality=payload.get("connection_quality"),
+					raw=payload.get("raw"),
+				)
+				db.add(sample)
+				await db.commit()
+				await db.refresh(sample)
+				await publish_user_event(user.id, "watch.sample", {
+					"id": sample.id,
+					"timestamp": sample.timestamp.isoformat(),
+					"heart_rate_bpm": sample.heart_rate_bpm,
+					"spo2_percent": sample.spo2_percent,
+					"steps": sample.steps,
+					"calories": sample.calories,
+					"rssi_dbm": sample.rssi_dbm,
+					"connection_quality": sample.connection_quality,
+				})
+	except WebSocketDisconnect:
+		return
+	except Exception:
+		await ws.close()

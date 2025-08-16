@@ -22,6 +22,8 @@ class WatchSampleIn(BaseModel):
 	spo2_percent: float | None = None
 	steps: int | None = None
 	calories: float | None = None
+	rssi_dbm: float | None = None
+	connection_quality: int | None = None
 	raw: dict | None = None
 
 class WatchSampleOut(WatchSampleIn):

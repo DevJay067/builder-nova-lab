@@ -24,6 +24,8 @@ class WatchSample(Base):
 	spo2_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
 	steps: Mapped[int | None] = mapped_column(Integer, nullable=True)
 	calories: Mapped[float | None] = mapped_column(Float, nullable=True)
+	rssi_dbm: Mapped[float | None] = mapped_column(Float, nullable=True)
+	connection_quality: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 0-100
 	raw: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 	user: Mapped[User] = relationship(back_populates="samples")
