@@ -1,3 +1,7 @@
+databases:
+  - name: health-db
+    plan: starter
+
 services:
   - type: web
     name: health-backend
@@ -25,11 +29,6 @@ services:
         sync: false
     autoDeploy: true
 
-databases:
-  - name: health-db
-    plan: starter
-
-services:
   - type: redis
     name: health-redis
     plan: starter
