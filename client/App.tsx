@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BmaxAI from "./pages/BmaxAI";
-import BamxPro from "./pages/BmaxDemo";
+import BmaxDemo from "./pages/BmaxDemo";
 
 import HealthHistory from "./pages/HealthHistory";
 import FirstAid from "./pages/FirstAid";
