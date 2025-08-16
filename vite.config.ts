@@ -96,11 +96,58 @@ function expressPlugin(): Plugin {
       // Only import and configure Express during development
       if (process.env.NODE_ENV !== "production") {
         import("./server").then(({ createServer }) => {
+          console.log("🚀 Loading Express server...");
           const app = createServer();
           // Add Express app as middleware to Vite dev server
           server.middlewares.use(app);
+          console.log("✅ Express server loaded successfully");
         }).catch((error) => {
-          console.warn("Failed to load Express server:", error);
+          console.error("❌ Failed to load Express server:", error);
+          // Create a minimal fallback server for API routes
+          const express = require('express');
+          const fallbackApp = express();
+          fallbackApp.use(express.json());
+
+          // Add basic demo login route as fallback
+          fallbackApp.post('/api/auth/demo-login', (req, res) => {
+            const demoSessionToken = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const demoUser = {
+              id: "demo_user_id",
+              username: "demo_user",
+              userHash: "demo_hash_" + Math.random().toString(36).substr(2, 9),
+              sessionToken: demoSessionToken,
+              firstName: "Demo",
+              lastName: "User",
+              email: "demo@example.com",
+              secureSystemActivated: true,
+            };
+
+            res.cookie("healthchain_session", demoSessionToken, {
+              httpOnly: true,
+              secure: false,
+              sameSite: "strict",
+              maxAge: 60 * 60 * 1000,
+            });
+
+            res.json({
+              success: true,
+              message: "Demo login successful (fallback mode)",
+              user: demoUser,
+              sessionToken: demoSessionToken,
+            });
+          });
+
+          // Add health check
+          fallbackApp.get('/api/health', (req, res) => {
+            res.json({
+              status: "ok",
+              mode: "fallback",
+              timestamp: new Date().toISOString(),
+            });
+          });
+
+          server.middlewares.use(fallbackApp);
+          console.log("⚠️ Using fallback Express server");
         });
       }
     },
