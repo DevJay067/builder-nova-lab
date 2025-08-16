@@ -4,7 +4,7 @@
   publish = "dist/spa"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   NODE_ENV = "production"
   VITE_NODE_ENV = "production"
 
