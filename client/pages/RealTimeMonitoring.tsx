@@ -388,10 +388,81 @@ export default function RealTimeMonitoring() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50 page-transition">
-      {/* Enhanced Header */}
+      {/* Enhanced Header - Mobile Optimized */}
       <header className="border-b border-border/40 glass backdrop-blur-xl sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          {/* Mobile: Stacked Layout */}
+          <div className="flex flex-col space-y-3 sm:hidden">
+            {/* Top Row: Back button and title */}
+            <div className="flex items-center justify-between">
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="btn-smooth h-10 px-3">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Back</span>
+                </Button>
+              </Link>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                  <div className="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></div>
+                  Live
+                </Badge>
+              </div>
+            </div>
+
+            {/* Title Row */}
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-600 text-white">
+                <Activity className="h-4 w-4" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-slate-800">Real-time Monitoring</h1>
+                <p className="text-xs text-slate-600">Live Health Data</p>
+              </div>
+            </div>
+
+            {/* Controls Row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between bg-muted/30 rounded-lg p-2">
+                <Label htmlFor="demo-mode-mobile" className="text-xs font-medium">Demo</Label>
+                <Switch id="demo-mode-mobile" checked={useDemo} onCheckedChange={setUseDemo} />
+              </div>
+              <div className="flex items-center justify-between bg-muted/30 rounded-lg p-2">
+                <Label htmlFor="predictions-mobile" className="text-xs font-medium">AI</Label>
+                <Switch id="predictions-mobile" checked={showPredictions} onCheckedChange={setShowPredictions} />
+              </div>
+            </div>
+
+            {/* Chart Controls and Connect Button */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1">
+                {['line', 'area', 'radial'].map((type) => (
+                  <Button
+                    key={type}
+                    variant={chartType === type ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setChartType(type as any)}
+                    className="h-8 w-8 p-0"
+                  >
+                    {type === 'line' ? <Activity className="w-3 h-3" /> :
+                     type === 'area' ? <TrendingUp className="w-3 h-3" /> :
+                     <Brain className="w-3 h-3" />}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                size="sm"
+                className="btn-smooth h-10 px-4 text-sm"
+                onClick={connectBluetooth}
+                disabled={!isBLESupported || isConnecting}
+              >
+                <Watch className="w-4 h-4 mr-2" />
+                {isConnecting ? "Connecting..." : bleDeviceName ? "Reconnect" : "Connect"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Desktop: Original Layout */}
+          <div className="hidden sm:flex items-center justify-between">
             <div className="flex items-center space-x-4 fade-in">
               <Link to="/">
                 <Button variant="ghost" size="sm" className="btn-smooth">
