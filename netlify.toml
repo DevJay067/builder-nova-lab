@@ -56,3 +56,6 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# To allow your domain to call the backend, set CORS_ORIGINS env var in your deploy
+# e.g., CORS_ORIGINS = "https://www.your-domain.com,https://app.your-domain.com"

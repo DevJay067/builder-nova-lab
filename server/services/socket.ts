@@ -3,9 +3,16 @@ import { Server } from "socket.io";
 
 let io: Server | null = null;
 
+function getAllowedOrigins() {
+  const env = process.env.CORS_ORIGINS;
+  if (!env) return process.env.NODE_ENV === "production" ? ["https://your-app.netlify.app"] : true;
+  const list = env.split(",").map((s) => s.trim()).filter(Boolean);
+  return list.length ? list : true;
+}
+
 export function initSocket(server: HttpServer) {
   io = new Server(server, {
-    cors: { origin: process.env.NODE_ENV === "production" ? ["https://your-app.netlify.app", "https://localhost:3000"] : true },
+    cors: { origin: getAllowedOrigins() },
     transports: ["websocket", "polling"],
   });
 

@@ -61,14 +61,23 @@ import { nearbyHospitals, triggerSOS } from "./routes/emergency";
 import { scheduleSleepAlarm } from "./routes/sleep";
 import { signup as jwtSignup, login as jwtLogin, me as jwtMe } from "./routes/jwtAuth";
 
+function getAllowedOrigins() {
+  const env = process.env.CORS_ORIGINS;
+  if (!env) {
+    return process.env.NODE_ENV === "production"
+      ? ["https://your-app.netlify.app"]
+      : true;
+  }
+  const list = env.split(",").map((s) => s.trim()).filter(Boolean);
+  return list.length ? list : true;
+}
+
 export function createServer() {
   const app = express();
 
   // Basic middleware setup
   app.use(cors({
-    origin: process.env.NODE_ENV === "production" 
-      ? ["https://your-app.netlify.app", "https://localhost:3000"] 
-      : true,
+    origin: getAllowedOrigins(),
     credentials: true,
   }));
   app.use(cookieParser());
