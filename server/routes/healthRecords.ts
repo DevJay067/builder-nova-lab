@@ -918,8 +918,54 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
     console.error("❌ Error storing health record directly:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to store health record: " + error.message,
+      error: "Failed to store health record: " + (error as Error).message,
     });
+  }
+};
+
+/**
+ * Delete health record for authenticated user
+ */
+export const deleteHealthRecord: RequestHandler = async (req, res) => {
+  try {
+    const recordId = req.params.id;
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies?.healthchain_session ||
+      (req.headers["x-session-token"] as string);
+
+    if (!sessionToken) {
+      return res.status(401).json({ success: false, error: "Authentication required" });
+    }
+
+    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
+    if (!sessionResult.valid) {
+      return res.status(401).json({ success: false, error: sessionResult.error });
+    }
+
+    const user = sessionResult.user!;
+    const { NeonDatabaseService } = await import("../services/neonDatabase");
+    const ok = await NeonDatabaseService.deleteMedicalHistory(recordId, user.id);
+    if (!ok) {
+      return res.status(400).json({ success: false, error: "Failed to delete record" });
+    }
+
+    // Best-effort: create audit log via secure data service
+    try {
+      const { SecureDataAccessService } = await import("../services/secureDataAccess");
+      await (SecureDataAccessService as any).createAuditLog?.({
+        action: "delete",
+        userId: user.userHash,
+        userRole: "patient",
+        success: true,
+        details: { action: "health_record_delete", recordId },
+      });
+    } catch {}
+
+    return res.json({ success: true, message: "Record deleted" });
+  } catch (error) {
+    console.error("❌ Error deleting health record:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
 

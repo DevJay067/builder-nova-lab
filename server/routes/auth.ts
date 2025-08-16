@@ -163,6 +163,63 @@ export const logoutUser: RequestHandler = async (req, res) => {
 };
 
 /**
+ * Demo login (idempotent): ensures a demo user exists and returns a session
+ */
+export const demoLogin: RequestHandler = async (req, res) => {
+  try {
+    const demoUsername = "demo_user";
+    const demoPassword = "demo_pass_123";
+    const demoEmail = "demo@example.com";
+
+    // Try to register the demo user (ignore if already exists)
+    try {
+      await UserAuthenticationService.registerUser(
+        demoUsername,
+        demoPassword,
+        demoEmail,
+        { firstName: "Demo", lastName: "User" },
+      );
+    } catch (e) {
+      // Non-fatal for demo; continue to authenticate
+    }
+
+    // Authenticate demo user
+    const result = await UserAuthenticationService.authenticateUser(
+      demoUsername,
+      demoPassword,
+    );
+
+    if (!result.success || !result.user?.sessionToken) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to establish demo session",
+      });
+    }
+
+    // Set session cookie
+    res.cookie("healthchain_session", result.user.sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
+
+    return res.json({
+      success: true,
+      message: "Demo login successful",
+      user: result.user,
+      sessionToken: result.user.sessionToken,
+    });
+  } catch (error) {
+    console.error("Error during demo login:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during demo login",
+    });
+  }
+};
+
+/**
  * Get current user profile
  */
 export const getUserProfile: RequestHandler = async (req, res) => {

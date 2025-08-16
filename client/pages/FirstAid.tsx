@@ -253,9 +253,11 @@ export default function FirstAid() {
                     <p className="font-semibold text-xs sm:text-sm truncate">{contact.name}</p>
                     <p className="text-xl sm:text-2xl font-bold text-destructive">{contact.number}</p>
                   </div>
-                  <Button size="sm" variant="destructive" className="ml-2 h-10 w-10 p-0">
-                    <Phone className="h-4 w-4" />
-                  </Button>
+                  <a href={`tel:${contact.number}`} className="ml-2" aria-label={`Call ${contact.name}`}>
+                    <Button size="sm" variant="destructive" className="h-10 w-10 p-0">
+                      <Phone className="h-4 w-4" />
+                    </Button>
+                  </a>
                 </div>
               ))}
             </div>

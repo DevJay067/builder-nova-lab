@@ -41,6 +41,8 @@ import {
   Area,
   RechartsProps,
 } from "recharts";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Simulated IoT device data
 interface VitalSigns {
@@ -50,6 +52,9 @@ interface VitalSigns {
   oxygenSaturation: number;
   respiratoryRate: number;
   timestamp: string;
+  steps?: number;
+  calories?: number;
+  distance?: number;
 }
 
 interface Device {
@@ -78,112 +83,263 @@ export default function RealTimeMonitoring() {
   });
 
   const [vitalsHistory, setVitalsHistory] = useState<any[]>([]);
-  const [connectedDevices, setConnectedDevices] = useState<Device[]>([
-    {
-      id: "apple_watch",
-      name: "Apple Watch Series 9",
-      type: "smartwatch",
-      status: "connected",
-      battery: 85,
-      lastSync: "2 minutes ago",
-      icon: Watch,
-    },
-    {
-      id: "fitbit_charge",
-      name: "Fitbit Charge 6",
-      type: "fitness_tracker",
-      status: "connected",
-      battery: 62,
-      lastSync: "5 minutes ago",
-      icon: Activity,
-    },
-    {
-      id: "omron_bp",
-      name: "Omron Blood Pressure Monitor",
-      type: "blood_pressure",
-      status: "syncing",
-      battery: 45,
-      lastSync: "1 hour ago",
-      icon: Heart,
-    },
-    {
-      id: "pulse_ox",
-      name: "Masimo Pulse Oximeter",
-      type: "pulse_oximeter",
-      status: "disconnected",
-      battery: 20,
-      lastSync: "3 hours ago",
-      icon: Droplets,
-    },
-  ]);
+  const [connectedDevices, setConnectedDevices] = useState<Device[]>([]);
 
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      type: "warning",
-      message: "Heart rate elevated above normal range (>100 BPM)",
-      timestamp: "2 minutes ago",
-      severity: "medium",
-    },
-    {
-      id: 2,
-      type: "info",
-      message: "Fitbit sync completed successfully",
-      timestamp: "5 minutes ago",
-      severity: "low",
-    },
-  ]);
+  const [alerts, setAlerts] = useState([] as any[]);
 
-  // Simulate real-time data updates
+  const [useDemo, setUseDemo] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
+  const [uploadToCloud, setUploadToCloud] = useState(true);
+  const isBLESupported = typeof navigator !== "undefined" && !!(navigator as any).bluetooth;
+
+  // Attempt SSE connection; fallback to simulation
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const newVitals: VitalSigns = {
-        heartRate: Math.floor(Math.random() * 20) + 65, // 65-85 BPM
-        bloodPressure: {
-          systolic: Math.floor(Math.random() * 20) + 110, // 110-130
-          diastolic: Math.floor(Math.random() * 15) + 70, // 70-85
-        },
-        temperature: Math.random() * 2 + 97.5, // 97.5-99.5°F
-        oxygenSaturation: Math.floor(Math.random() * 3) + 97, // 97-100%
-        respiratoryRate: Math.floor(Math.random() * 6) + 14, // 14-20 per minute
-        timestamp: now.toISOString(),
-      };
+    let simulateInterval: any = null;
+    let eventSource: EventSource | null = null;
 
-      setVitalSigns(newVitals);
-
-      // Update history (keep last 20 readings)
-      setVitalsHistory((prev) => {
-        const newHistory = [
-          ...prev,
-          {
-            time: now.toLocaleTimeString(),
-            heartRate: newVitals.heartRate,
-            temperature: newVitals.temperature,
-            oxygenSat: newVitals.oxygenSaturation,
-            systolic: newVitals.bloodPressure.systolic,
+    function startSimulation() {
+      if (simulateInterval) return;
+      simulateInterval = setInterval(() => {
+        const now = new Date();
+        const newVitals: VitalSigns = {
+          heartRate: Math.floor(Math.random() * 20) + 65,
+          bloodPressure: {
+            systolic: Math.floor(Math.random() * 20) + 110,
+            diastolic: Math.floor(Math.random() * 15) + 70,
           },
-        ].slice(-20);
-        return newHistory;
-      });
+          temperature: Math.random() * 2 + 97.5,
+          oxygenSaturation: Math.floor(Math.random() * 3) + 97,
+          respiratoryRate: Math.floor(Math.random() * 6) + 14,
+          timestamp: now.toISOString(),
+        };
+        setVitalSigns(newVitals);
+        setVitalsHistory((prev) => {
+          const newHistory = [
+            ...prev,
+            {
+              time: now.toLocaleTimeString(),
+              heartRate: newVitals.heartRate,
+              temperature: newVitals.temperature,
+              oxygenSat: newVitals.oxygenSaturation,
+              systolic: newVitals.bloodPressure.systolic,
+            },
+          ].slice(-20);
+          return newHistory;
+        });
+      }, 3000);
+    }
 
-      // Simulate alert generation
-      if (newVitals.heartRate > 100 && Math.random() > 0.8) {
-        setAlerts((prev) => [
-          {
-            id: Date.now(),
-            type: "warning",
-            message: `Heart rate spike detected: ${newVitals.heartRate} BPM`,
-            timestamp: "Just now",
-            severity: "high",
-          },
-          ...prev.slice(0, 4), // Keep only 5 most recent alerts
-        ]);
+    function stopSimulation() {
+      if (simulateInterval) {
+        clearInterval(simulateInterval);
+        simulateInterval = null;
       }
-    }, 3000); // Update every 3 seconds
+    }
 
-    return () => clearInterval(interval);
-  }, []);
+    try {
+      const token = localStorage.getItem("sessionToken");
+      const url = useDemo
+        ? `/api/iot/stream?simulate=true`
+        : token
+          ? `/api/iot/stream?token=${encodeURIComponent(token)}`
+          : "";
+
+      if (!url) {
+        // no session and not in demo -> no SSE
+      } else {
+        eventSource = new EventSource(url);
+
+        eventSource.addEventListener("vitals", (evt: MessageEvent) => {
+          try {
+            const payload = JSON.parse((evt as any).data || (evt as any).detail || "{}");
+            const now = new Date(payload.timestamp || new Date().toISOString());
+            const heartRate = payload?.metrics?.heartRate ?? vitalSigns.heartRate;
+            const spo2 = payload?.metrics?.spo2 ?? vitalSigns.oxygenSaturation;
+            const steps = payload?.metrics?.steps;
+            const calories = payload?.metrics?.calories;
+            const distance = payload?.metrics?.distance;
+            const updated: VitalSigns = {
+              heartRate,
+              bloodPressure: vitalSigns.bloodPressure,
+              temperature: vitalSigns.temperature,
+              oxygenSaturation: spo2,
+              respiratoryRate: vitalSigns.respiratoryRate,
+              timestamp: now.toISOString(),
+              steps,
+              calories,
+              distance,
+            };
+            setVitalSigns(updated);
+            setVitalsHistory((prev) => [
+              ...prev,
+              {
+                time: now.toLocaleTimeString(),
+                heartRate: updated.heartRate,
+                temperature: updated.temperature,
+                oxygenSat: updated.oxygenSaturation,
+                systolic: updated.bloodPressure.systolic,
+                steps: updated.steps,
+              },
+            ].slice(-20));
+          } catch {}
+        });
+
+        eventSource.addEventListener("ready", () => {
+          stopSimulation();
+        });
+
+        eventSource.onerror = () => {
+          if (useDemo) startSimulation();
+        };
+      }
+
+      if (useDemo) startSimulation();
+    } catch {
+      if (useDemo) startSimulation();
+    }
+
+    return () => {
+      stopSimulation();
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [useDemo]);
+
+  // Web Bluetooth: connect and stream heart rate (and optional SpO2)
+  const connectBluetooth = async () => {
+    try {
+      if (!isBLESupported) return;
+      setIsConnecting(true);
+      const device = await (navigator as any).bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [0x180D, 0x1822], // Heart Rate, Pulse Oximeter
+      });
+      setBleDeviceName(device?.name || "Unknown Device");
+      setConnectedDevices([
+        {
+          id: device.id || "ble-device",
+          name: device.name || "Bluetooth Health Device",
+          type: "smartwatch",
+          status: "connected",
+          battery: 0,
+          lastSync: "Just now",
+          icon: Watch,
+        },
+      ]);
+
+      const server = await device.gatt.connect();
+
+      // Heart Rate service
+      try {
+        const hrService = await server.getPrimaryService(0x180D);
+        const hrChar = await hrService.getCharacteristic(0x2A37);
+        await hrChar.startNotifications();
+        hrChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const value: DataView = event.target.value;
+          const flags = value.getUint8(0);
+          const hr16 = flags & 0x01;
+          const heartRate = hr16 ? value.getUint16(1, true) : value.getUint8(1);
+          const now = new Date();
+          setVitalSigns((prev) => {
+            const updated = {
+              ...prev,
+              heartRate,
+              timestamp: now.toISOString(),
+            };
+            setVitalsHistory((prevHist) => [
+              ...prevHist,
+              {
+                time: now.toLocaleTimeString(),
+                heartRate: updated.heartRate,
+                temperature: updated.temperature,
+                oxygenSat: updated.oxygenSaturation,
+                systolic: updated.bloodPressure.systolic,
+              },
+            ].slice(-50));
+            return updated;
+          });
+
+          // Optional cloud ingest
+          if (uploadToCloud) {
+            const token = localStorage.getItem("sessionToken");
+            if (token) {
+              fetch("/api/iot/ingest", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                  deviceId: device.id,
+                  deviceType: "bluetooth_health",
+                  metrics: { heartRate },
+                }),
+              }).catch(() => {});
+            }
+          }
+        });
+      } catch {}
+
+      // Pulse Oximeter service (best-effort)
+      try {
+        const plxService = await server.getPrimaryService(0x1822);
+        // Continuous Measurement 0x2A5F
+        const plxChar = await plxService.getCharacteristic(0x2A5F);
+        await plxChar.startNotifications();
+        plxChar.addEventListener("characteristicvaluechanged", (event: any) => {
+          const dv: DataView = event.target.value;
+          // Try to parse SpO2 from first SFLOAT after flags
+          const spo2 = (() => {
+            if (dv.byteLength >= 3) {
+              const raw = dv.getUint16(1, true);
+              // IEEE-11073 16-bit SFLOAT (mantissa 12-bit signed, exponent 4-bit signed)
+              const mantissa = ((raw & 0x0FFF) << 20) >> 20; // sign extend 12-bit
+              const exp = ((raw >> 12) & 0x000F) >= 0x0008 ? ((raw >> 12) | 0xFFF0) : (raw >> 12);
+              const value = mantissa * Math.pow(10, exp);
+              return Math.round(value);
+            }
+            return undefined;
+          })();
+
+          if (typeof spo2 === "number" && spo2 > 0 && spo2 <= 100) {
+            const now = new Date();
+            setVitalSigns((prev) => {
+              const updated = { ...prev, oxygenSaturation: spo2, timestamp: now.toISOString() };
+              setVitalsHistory((prevHist) => [
+                ...prevHist,
+                {
+                  time: now.toLocaleTimeString(),
+                  heartRate: updated.heartRate,
+                  temperature: updated.temperature,
+                  oxygenSat: updated.oxygenSaturation,
+                  systolic: updated.bloodPressure.systolic,
+                },
+              ].slice(-50));
+              return updated;
+            });
+
+            if (uploadToCloud) {
+              const token = localStorage.getItem("sessionToken");
+              if (token) {
+                fetch("/api/iot/ingest", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({
+                    deviceId: device.id,
+                    deviceType: "pulse_oximeter",
+                    metrics: { spo2 },
+                  }),
+                }).catch(() => {});
+              }
+            }
+          }
+        });
+      } catch {}
+    } catch (e) {
+      // noop
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   const getVitalStatus = (type: string, value: number) => {
     switch (type) {
@@ -254,12 +410,43 @@ export default function RealTimeMonitoring() {
                 <Clock className="w-3 h-3 mr-1" />
                 {new Date().toLocaleTimeString()}
               </Badge>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="demo-mode" className="text-xs text-slate-600">Demo Mode</Label>
+                <Switch id="demo-mode" checked={useDemo} onCheckedChange={setUseDemo} />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="cloud-upload" className="text-xs text-slate-600">Upload to Cloud</Label>
+                <Switch id="cloud-upload" checked={uploadToCloud} onCheckedChange={setUploadToCloud} />
+              </div>
+              <Button size="sm" className="btn-smooth" onClick={connectBluetooth} disabled={!isBLESupported || isConnecting}>
+                <Watch className="w-4 h-4 mr-2" />
+                {isConnecting ? "Connecting..." : bleDeviceName ? "Reconnect" : "Connect Device"}
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Device status (mobile-friendly) */}
+        {bleDeviceName && (
+          <div className="mb-4">
+            <Card className="shadow-colored border-border/50">
+              <CardContent className="flex items-center justify-between p-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-lg bg-blue-100 text-blue-700">
+                    <Watch className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">{bleDeviceName}</div>
+                    <div className="text-xs text-muted-foreground">Last update: {new Date(vitalSigns.timestamp).toLocaleTimeString()}</div>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="text-xs">BLE Connected</Badge>
+              </CardContent>
+            </Card>
+          </div>
+        )}
         {/* Alerts Section */}
         {alerts.length > 0 && (
           <div className="mb-8 space-y-3 fade-in">
@@ -416,6 +603,26 @@ export default function RealTimeMonitoring() {
               </div>
             </CardContent>
           </Card>
+          {/* Steps */}
+          <Card className="card-hover shadow-colored border-border/50 fade-in fade-in-delay-4">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Activity className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="text-sm font-medium">Steps</CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold mb-2 text-slate-800">
+                {vitalSigns.steps ?? 0}
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <TrendingUp className="w-4 h-4 mr-1 text-purple-600" />
+                Today’s steps
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Charts and Device Status */}
@@ -474,6 +681,16 @@ export default function RealTimeMonitoring() {
                         dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
                         name="Systolic BP (mmHg)"
                       />
+                      {vitalsHistory.some((d) => typeof d.steps === "number") && (
+                        <Line
+                          type="monotone"
+                          dataKey="steps"
+                          stroke="#8b5cf6"
+                          strokeWidth={2}
+                          dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 3 }}
+                          name="Steps"
+                        />
+                      )}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

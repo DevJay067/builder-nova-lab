@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BmaxAI from "./pages/BmaxAI";
-import BmaxDemo from "./pages/BmaxDemo";
+import BamxPro from "./pages/BmaxDemo";
 
 import HealthHistory from "./pages/HealthHistory";
 import FirstAid from "./pages/FirstAid";
@@ -54,7 +54,8 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/bmax" element={<BmaxAI />} />
-              <Route path="/bmax-demo" element={<BmaxDemo />} />
+              <Route path="/bmax-demo" element={<BamxPro />} />
+              <Route path="/signin" element={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground p-6">Sign-in development: coming soon</div>} />
               <Route
                 path="/history"
                 element={
@@ -66,6 +67,14 @@ const App = () => {
               <Route path="/first-aid" element={<FirstAid />} />
               <Route
                 path="/analytics"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <HealthAnalytics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/health-analytics"
                 element={
                   <ProtectedRoute requireAuth={true}>
                     <HealthAnalytics />

@@ -21,11 +21,238 @@ import {
   PieChart,
   LineChart,
   Zap,
-  Shield
+  Shield,
+  Droplets
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useEffect, useRef } from "react";
 
 export default function HealthAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
+
+  // Goals & Reminders state
+  const [waterGoal, setWaterGoal] = useState<number>(() => {
+    const v = localStorage.getItem("health_water_goal");
+    return v ? parseInt(v) : 8;
+  });
+  const [waterConsumed, setWaterConsumed] = useState<number>(() => {
+    const v = localStorage.getItem("health_water_consumed");
+    return v ? parseInt(v) : 0;
+  });
+  const [sleepHoursGoal, setSleepHoursGoal] = useState<number>(() => {
+    const v = localStorage.getItem("health_sleep_goal_hours");
+    return v ? parseInt(v) : 8;
+  });
+  const [bedtime, setBedtime] = useState<string>(() => {
+    return localStorage.getItem("health_bedtime") || "22:30";
+  });
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
+    const v = localStorage.getItem("health_notifications_enabled");
+    return v ? v === "true" : true;
+  });
+  const [hydrationRepeat, setHydrationRepeat] = useState<boolean>(() => {
+    const v = localStorage.getItem("health_hydration_repeat");
+    return v ? v === "true" : true;
+  });
+
+  const [hydrationEndAt, setHydrationEndAt] = useState<number | null>(() => {
+    const v = localStorage.getItem("health_hydration_end_at");
+    return v ? parseInt(v) : null;
+  });
+  const [sleepReminderAt, setSleepReminderAt] = useState<number | null>(() => {
+    const v = localStorage.getItem("health_sleep_reminder_at");
+    return v ? parseInt(v) : null;
+  });
+  const hydrationIntervalRef = useRef<any>(null);
+  const sleepIntervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    localStorage.setItem("health_water_goal", String(waterGoal));
+  }, [waterGoal]);
+
+  useEffect(() => {
+    localStorage.setItem("health_water_consumed", String(waterConsumed));
+  }, [waterConsumed]);
+
+  useEffect(() => {
+    localStorage.setItem("health_sleep_goal_hours", String(sleepHoursGoal));
+  }, [sleepHoursGoal]);
+
+  useEffect(() => {
+    localStorage.setItem("health_bedtime", bedtime);
+  }, [bedtime]);
+
+  useEffect(() => {
+    localStorage.setItem("health_notifications_enabled", String(notificationsEnabled));
+    if (notificationsEnabled && Notification && Notification.permission !== "granted") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, [notificationsEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem("health_hydration_repeat", String(hydrationRepeat));
+  }, [hydrationRepeat]);
+
+  const showLocalNotification = async (title: string, body: string) => {
+    try {
+      if (!notificationsEnabled) return;
+      if (Notification && Notification.permission === "granted") {
+        const reg = await navigator.serviceWorker?.ready;
+        if (reg && reg.showNotification) {
+          await reg.showNotification(title, {
+            body,
+            icon: "/icons/icon-192x192.png",
+            vibrate: [200, 100, 200],
+            data: { url: "/analytics" },
+          });
+          return;
+        }
+        new Notification(title, { body });
+      }
+    } catch {}
+  };
+
+  // Notifications SSE
+  useEffect(() => {
+    const token = localStorage.getItem("sessionToken");
+    if (!token) return;
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+      es.addEventListener("hydration", (e: MessageEvent) => {
+        showLocalNotification("Hydration Reminder", "It's water time! 💧");
+      });
+      es.addEventListener("bedtime", (e: MessageEvent) => {
+        showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+      });
+    } catch {}
+    return () => { es?.close(); };
+  }, []);
+
+  const saveQuickRecord = async (record: {
+    type: string;
+    title: string;
+    description?: string;
+    metadata?: any;
+  }) => {
+    try {
+      const sessionToken =
+        localStorage.getItem("sessionToken") ||
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("healthchain_session="))
+          ?.split("=")[1];
+      if (!sessionToken) return;
+      await fetch("/api/store-health-record", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionToken}`,
+          "x-session-token": sessionToken,
+        },
+        body: JSON.stringify({
+          recordType: record.type || "goal",
+          title: record.title,
+          description: record.description || "Auto-created goal record",
+          date: new Date().toISOString().split("T")[0],
+          doctor: "",
+          metadata: record.metadata || {},
+        }),
+      });
+    } catch {}
+  };
+
+  // Hydration timer management
+  const clearHydrationInterval = () => {
+    if (hydrationIntervalRef.current) {
+      clearInterval(hydrationIntervalRef.current);
+      hydrationIntervalRef.current = null;
+    }
+  };
+
+  const startHydrationTimer = (minutes: number) => {
+    const endAt = Date.now() + minutes * 60 * 1000;
+    setHydrationEndAt(endAt);
+    localStorage.setItem("health_hydration_end_at", String(endAt));
+    clearHydrationInterval();
+    hydrationIntervalRef.current = setInterval(() => {
+      if (Date.now() >= endAt) {
+        clearHydrationInterval();
+        setHydrationEndAt(null);
+        localStorage.removeItem("health_hydration_end_at");
+        showLocalNotification("Hydration Reminder", "It's water time! 💧");
+        if (hydrationRepeat) {
+          // auto-repeat
+          startHydrationTimer(minutes);
+        }
+      }
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (hydrationEndAt && hydrationEndAt > Date.now()) {
+      startHydrationTimer(Math.ceil((hydrationEndAt - Date.now()) / 60000));
+    } else if (hydrationEndAt && hydrationEndAt <= Date.now()) {
+      // overdue
+      setHydrationEndAt(null);
+      localStorage.removeItem("health_hydration_end_at");
+      showLocalNotification("Hydration Reminder", "It's water time! 💧");
+    }
+    return () => clearHydrationInterval();
+  }, []);
+
+  // Sleep reminder management
+  const clearSleepInterval = () => {
+    if (sleepIntervalRef.current) {
+      clearInterval(sleepIntervalRef.current);
+      sleepIntervalRef.current = null;
+    }
+  };
+
+  const scheduleTonightSleepReminder = () => {
+    const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
+    const now = new Date();
+    const target = new Date();
+    target.setHours(hh, mm, 0, 0);
+    if (target.getTime() <= now.getTime()) {
+      target.setDate(target.getDate() + 1);
+    }
+    const endAt = target.getTime();
+    setSleepReminderAt(endAt);
+    localStorage.setItem("health_sleep_reminder_at", String(endAt));
+    clearSleepInterval();
+    sleepIntervalRef.current = setInterval(() => {
+      if (Date.now() >= endAt) {
+        clearSleepInterval();
+        setSleepReminderAt(null);
+        localStorage.removeItem("health_sleep_reminder_at");
+        showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+      }
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (sleepReminderAt && sleepReminderAt > Date.now()) {
+      const minutes = Math.ceil((sleepReminderAt - Date.now()) / 60000);
+      // reschedule
+      clearSleepInterval();
+      sleepIntervalRef.current = setInterval(() => {
+        if (Date.now() >= sleepReminderAt) {
+          clearSleepInterval();
+          setSleepReminderAt(null);
+          localStorage.removeItem("health_sleep_reminder_at");
+          showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+        }
+      }, 1000);
+    } else if (sleepReminderAt && sleepReminderAt <= Date.now()) {
+      setSleepReminderAt(null);
+      localStorage.removeItem("health_sleep_reminder_at");
+      showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+    }
+    return () => clearSleepInterval();
+  }, []);
 
   const healthMetrics = [
     {
@@ -183,43 +410,9 @@ export default function HealthAnalytics() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Health Score Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {healthMetrics.map((metric, index) => (
-            <Card key={index} className="relative overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
-                  <div className={`flex items-center text-xs ${
-                    metric.trend === 'up' ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {metric.trend === 'up' ? 
-                      <TrendingUp className="h-3 w-3 mr-1" /> : 
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    }
-                    {metric.change}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-end space-x-2">
-                    <span className="text-2xl font-bold">{metric.value}</span>
-                    <span className="text-sm text-muted-foreground">/{metric.target}</span>
-                  </div>
-                  <Progress 
-                    value={(metric.value / metric.target) * 100} 
-                    className="h-2"
-                  />
-                  <p className="text-xs text-muted-foreground">{metric.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Tabs defaultValue="insights" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+        {/* Goals at top */}
+        <Tabs defaultValue="goals" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="insights" className="flex items-center space-x-2">
               <Zap className="h-4 w-4" />
               <span>Insights</span>
@@ -232,7 +425,126 @@ export default function HealthAnalytics() {
               <Shield className="h-4 w-4" />
               <span>Risk Analysis</span>
             </TabsTrigger>
+            <TabsTrigger value="goals" className="flex items-center space-x-2">
+              <Target className="h-4 w-4" />
+              <span>Goals & Reminders</span>
+            </TabsTrigger>
           </TabsList>
+
+          {/* Goals & Reminders at top */}
+          <TabsContent value="goals" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Hydration Goal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Droplets className="h-5 w-5 mr-2 text-blue-600" />
+                    Hydration
+                  </CardTitle>
+                  <CardDescription>Set your daily water goal and reminders</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="water-goal">Daily Goal (glasses)</Label>
+                      <Input id="water-goal" type="number" min={1} value={waterGoal} onChange={(e) => setWaterGoal(parseInt(e.target.value || "0"))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="water-consumed">Consumed</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input id="water-consumed" type="number" min={0} value={waterConsumed} onChange={(e) => setWaterConsumed(parseInt(e.target.value || "0"))} />
+                        <Button variant="outline" onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}>+1</Button>
+                      </div>
+                    </div>
+                  </div>
+                  <Progress value={Math.min(100, (waterConsumed / Math.max(1, waterGoal)) * 100)} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                      <Label htmlFor="notify-water">Notifications</Label>
+                      <div className="flex items-center space-x-2 ml-3">
+                        <Switch id="repeat-water" checked={hydrationRepeat} onCheckedChange={setHydrationRepeat} />
+                        <Label htmlFor="repeat-water">Repeat</Label>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" onClick={async () => {
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 5, repeat: hydrationRepeat }) });
+                        startHydrationTimer(5);
+                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "5m" } });
+                      }}>5m</Button>
+                      <Button variant="outline" onClick={async () => {
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 30, repeat: hydrationRepeat }) });
+                        startHydrationTimer(30);
+                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "30m" } });
+                      }}>30m</Button>
+                      <Button onClick={async () => {
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 60, repeat: hydrationRepeat }) });
+                        startHydrationTimer(60);
+                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "60m" } });
+                      }}>60m</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sleep Goal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-purple-600" />
+                    Sleep
+                  </CardTitle>
+                  <CardDescription>Set sleep goals and bedtime reminders</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="sleep-goal">Goal (hours)</Label>
+                      <Input id="sleep-goal" type="number" min={1} value={sleepHoursGoal} onChange={(e) => setSleepHoursGoal(parseInt(e.target.value || "0"))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="bedtime">Bedtime</Label>
+                      <Input id="bedtime" type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="notify-sleep" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                      <Label htmlFor="notify-sleep">Notifications</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" onClick={async () => {
+                        const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
+                        const token = localStorage.getItem("sessionToken");
+                        if (token) await fetch("/api/notifications/bedtime", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ hour: hh, minute: mm, repeat: true }) });
+                        scheduleTonightSleepReminder();
+                        saveQuickRecord({ type: "vitals", title: "Sleep Reminder Set", metadata: { bedtime, sleepHoursGoal } });
+                      }}>Remind at Bedtime</Button>
+                      <Button onClick={() => { showLocalNotification("Sleep Goal", `Target ${sleepHoursGoal} hours tonight`); saveQuickRecord({ type: "vitals", title: "Sleep Goal Set", metadata: { sleepHoursGoal } }); }}>Set Goal</Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(':')[0])};S.minutes=${parseInt(bedtime.split(':')[1])};end`}
+                    >
+                      <Button variant="secondary">Add Alarm in Clock App (Android)</Button>
+                    </a>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Device alarm integration: On Android, you can add an alarm using
+                    <a className="underline ml-1" href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(':')[0])};S.minutes=${parseInt(bedtime.split(':')[1])};end`}>
+                      system alarm intent
+                    </a>
+                    . Support varies by device.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* AI Insights Tab */}
           <TabsContent value="insights" className="space-y-6">

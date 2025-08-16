@@ -45,6 +45,7 @@ import {
   verifyDataAccess,
   getAuthStats,
   authenticateUser,
+  demoLogin,
 } from "./routes/auth";
 import {
   getPersonalizedMedicalContext,
@@ -149,6 +150,8 @@ export function createServer() {
         app.get("/api/blockchain/stats", getBlockchainStats);
         app.post("/api/test-data", addTestData);
         app.post("/api/store-health-record", storeHealthRecordDirect);
+        const { deleteHealthRecord } = await import("./routes/healthRecords");
+        app.delete("/api/health-records/:id", deleteHealthRecord);
         console.log("✅ Health records routes added");
       } catch (error) {
         console.log("⚠️ Health records routes failed:", error.message);
@@ -201,6 +204,7 @@ export function createServer() {
         app.get("/api/auth/data-access", verifyDataAccess);
         app.get("/api/auth/stats", getAuthStats);
         app.post("/api/auth/authenticate", authenticateUser);
+        app.post("/api/auth/demo-login", demoLogin);
         console.log("✅ Auth routes added");
       } catch (error) {
         console.log("⚠️ Auth routes failed:", error.message);
@@ -223,6 +227,27 @@ export function createServer() {
         console.log("✅ Demo route added");
       } catch (error) {
         console.log("⚠️ Demo route failed:", error.message);
+      }
+
+      // IoT routes
+      try {
+        const { iotStream, ingestIoTData } = await import("./routes/iot");
+        app.get("/api/iot/stream", iotStream);
+        app.post("/api/iot/ingest", ingestIoTData);
+        console.log("✅ IoT routes added");
+      } catch (error) {
+        console.log("⚠️ IoT routes failed:", error.message);
+      }
+
+      // Notifications routes
+      try {
+        const { notificationsStream, scheduleHydration, scheduleBedtime } = await import("./routes/notifications");
+        app.get("/api/notifications/stream", notificationsStream);
+        app.post("/api/notifications/hydration", scheduleHydration);
+        app.post("/api/notifications/bedtime", scheduleBedtime);
+        console.log("✅ Notifications routes added");
+      } catch (error) {
+        console.log("⚠️ Notifications routes failed:", error.message);
       }
 
       // Performance status route
