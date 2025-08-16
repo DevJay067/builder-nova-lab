@@ -65,6 +65,25 @@ export default function FirstAid() {
     { name: "Mental Health Crisis", number: "9152987821", type: "mental" }
   ];
 
+  // Emergency calling function
+  const makeEmergencyCall = (number: string, contactName: string) => {
+    try {
+      // Try to use the Web Telephony API if available
+      if ('telephony' in navigator) {
+        (navigator as any).telephony.dial(number);
+      } else {
+        // Fallback: create a tel: link
+        const link = document.createElement('a');
+        link.href = `tel:${number}`;
+        link.click();
+      }
+      toast.success(`Calling ${contactName} (${number})...`);
+    } catch (error) {
+      console.error("Failed to make call:", error);
+      toast.error("Failed to make call. Please dial manually.");
+    }
+  };
+
   const firstAidConditions = [
     {
       id: 1,
@@ -253,7 +272,12 @@ export default function FirstAid() {
                     <p className="font-semibold text-xs sm:text-sm truncate">{contact.name}</p>
                     <p className="text-xl sm:text-2xl font-bold text-destructive">{contact.number}</p>
                   </div>
-                  <Button size="sm" variant="destructive" className="ml-2 h-10 w-10 p-0">
+                  <Button 
+                    size="sm" 
+                    variant="destructive" 
+                    className="ml-2 h-10 w-10 p-0"
+                    onClick={() => makeEmergencyCall(contact.number, contact.name)}
+                  >
                     <Phone className="h-4 w-4" />
                   </Button>
                 </div>
