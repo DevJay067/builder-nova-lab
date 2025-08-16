@@ -194,8 +194,24 @@ function expressPlugin(): Plugin {
             res.end(JSON.stringify({
               success: true,
               records: [
-                { id: "1", type: "checkup", date: "2024-01-15", data: { weight: "70kg", height: "175cm" } },
-                { id: "2", type: "blood_test", date: "2024-02-10", data: { cholesterol: "180mg/dL" } }
+                {
+                  id: "1",
+                  type: "checkup",
+                  title: "Annual Health Checkup",
+                  description: "Routine annual physical examination",
+                  date: "2024-01-15",
+                  doctor: "Dr. Smith",
+                  data: { weight: "70kg", height: "175cm" }
+                },
+                {
+                  id: "2",
+                  type: "blood_test",
+                  title: "Blood Panel Test",
+                  description: "Comprehensive metabolic panel including cholesterol",
+                  date: "2024-02-10",
+                  doctor: "Dr. Johnson",
+                  data: { cholesterol: "180mg/dL" }
+                }
               ]
             }));
           } else if (req.method === 'POST') {
