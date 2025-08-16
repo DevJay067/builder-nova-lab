@@ -218,7 +218,17 @@ export default function Login() {
         }),
       });
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse registration response:", parseError);
+        setMessage({
+          type: "error",
+          text: "Invalid server response. Please try again.",
+        });
+        return;
+      }
 
       if (result.success) {
         setMessage({
