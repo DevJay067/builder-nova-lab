@@ -357,10 +357,15 @@ export default function HealthHistory() {
 
   const filteredRecords = records
     .filter((record) => {
-      const matchesSearch =
-        (record.title && record.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (record.description && record.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (record.doctor && record.doctor.toLowerCase().includes(searchTerm.toLowerCase()));
+      if (!record) return false;
+
+      const searchLower = (searchTerm || "").toLowerCase();
+      const matchesSearch = !searchLower ||
+        (record.title && record.title.toLowerCase().includes(searchLower)) ||
+        (record.description && record.description.toLowerCase().includes(searchLower)) ||
+        (record.doctor && record.doctor.toLowerCase().includes(searchLower)) ||
+        (record.type && record.type.toLowerCase().includes(searchLower));
+
       const matchesType =
         selectedType === "all" || record.type === selectedType;
       return matchesSearch && matchesType;
