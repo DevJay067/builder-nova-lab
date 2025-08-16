@@ -1,0 +1,17 @@
+[build]
+	functions = "netlify/functions"
+
+[functions]
+	node_bundler = "esbuild"
+	included_files = ["src/**"]
+	external_node_modules = ["mongoose", "ioredis", "mongodb-memory-server", "bcryptjs", "jsonwebtoken", "joi", "express", "helmet", "cors", "compression", "morgan", "express-mongo-sanitize", "xss-clean", "hpp", "express-rate-limit"]
+
+[[redirects]]
+	from = "/api/*"
+	to = "/.netlify/functions/api/api/:splat"
+	status = 200
+
+[[redirects]]
+	from = "/health"
+	to = "/.netlify/functions/api/health"
+	status = 200
