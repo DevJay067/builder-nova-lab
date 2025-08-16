@@ -125,6 +125,8 @@ export default function RealTimeMonitoring() {
           oxygenSaturation: Math.floor(Math.random() * 3) + 97,
           respiratoryRate: Math.floor(Math.random() * 6) + 14,
           timestamp: now.toISOString(),
+          steps: vitalSigns.steps ? vitalSigns.steps + Math.floor(Math.random() * 50) + 10 : Math.floor(Math.random() * 5000) + 2000,
+          calories: vitalSigns.calories ? vitalSigns.calories + Math.floor(Math.random() * 15) + 5 : Math.floor(Math.random() * 800) + 400,
         };
         setVitalSigns(newVitals);
         setVitalsHistory((prev) => {
