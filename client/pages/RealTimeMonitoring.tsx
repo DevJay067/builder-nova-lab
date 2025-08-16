@@ -28,6 +28,26 @@ import {
   Smartphone,
   Watch,
   Brain,
+  Phone,
+  Bell,
+  BellOff,
+  Droplet,
+  Moon,
+  Sunrise,
+  Bed,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  RotateCcw,
+  Settings,
+  Bug,
+  Database,
+  Signal,
+  Battery,
+  Wifi as WifiIcon,
+  Bluetooth,
+  Cellular,
 } from "lucide-react";
 import {
   LineChart,
@@ -40,12 +60,18 @@ import {
   AreaChart,
   Area,
   RechartsProps,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Simulated IoT device data
+// Enhanced IoT device data interface
 interface VitalSigns {
   heartRate: number;
   bloodPressure: { systolic: number; diastolic: number };
@@ -55,6 +81,24 @@ interface VitalSigns {
   timestamp: string;
   steps?: number;
   battery?: number;
+  sleepData?: {
+    sleepStage: 'awake' | 'light' | 'deep' | 'rem';
+    sleepDuration: number; // minutes
+    sleepQuality: number; // 0-100
+    sleepEfficiency: number; // 0-100
+  };
+  waterIntake?: {
+    dailyGoal: number; // ml
+    currentIntake: number; // ml
+    lastDrink: string; // timestamp
+  };
+  deviceInfo?: {
+    deviceId: string;
+    deviceName: string;
+    connectionType: 'bluetooth' | 'wifi' | 'cellular';
+    signalStrength: number; // 0-100
+    lastSync: string;
+  };
 }
 
 interface Device {
@@ -70,6 +114,33 @@ interface Device {
   battery: number;
   lastSync: string;
   icon: any;
+}
+
+interface Alarm {
+  id: string;
+  time: string;
+  days: string[];
+  enabled: boolean;
+  type: 'sleep' | 'water' | 'medication' | 'exercise';
+  label: string;
+  sound: string;
+  vibration: boolean;
+}
+
+interface WaterReminder {
+  id: string;
+  interval: number; // minutes
+  enabled: boolean;
+  lastReminder: string;
+  nextReminder: string;
+  message: string;
+}
+
+interface EmergencyContact {
+  name: string;
+  number: string;
+  type: 'emergency' | 'medical' | 'personal';
+  priority: number;
 }
 
 export default function RealTimeMonitoring() {
