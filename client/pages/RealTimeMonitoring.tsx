@@ -40,6 +40,11 @@ import {
   AreaChart,
   Area,
   RechartsProps,
+  RadialBarChart,
+  RadialBar,
+  Cell,
+  PieChart,
+  Pie,
 } from "recharts";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
