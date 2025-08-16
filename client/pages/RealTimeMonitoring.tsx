@@ -905,8 +905,9 @@ export default function RealTimeMonitoring() {
             </Card>
           </div>
 
-          {/* Connected Devices */}
-          <div>
+          {/* Connected Devices & System Status */}
+          <div className="space-y-6">
+            {/* Connected Devices */}
             <Card className="shadow-colored border-border/50 fade-in fade-in-delay-5">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -916,48 +917,108 @@ export default function RealTimeMonitoring() {
                 <CardDescription>IoT health monitoring devices</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {connectedDevices.map((device) => {
-                  const IconComponent = device.icon;
-                  return (
-                    <div
-                      key={device.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`p-2 rounded-lg ${
-                            device.status === "connected"
-                              ? "bg-green-100 text-green-600"
-                              : device.status === "syncing"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          <IconComponent className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{device.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {device.lastSync}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="text-xs text-muted-foreground">
-                          {device.battery}%
-                        </div>
-                        <Progress value={device.battery} className="w-12 h-2" />
-                        {device.status === "connected" ? (
-                          <Wifi className="w-4 h-4 text-green-600" />
-                        ) : device.status === "syncing" ? (
-                          <Zap className="w-4 h-4 text-yellow-600 animate-pulse" />
-                        ) : (
-                          <WifiOff className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
+                {connectedDevices.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Watch className="w-8 h-8 text-gray-400" />
                     </div>
-                  );
-                })}
+                    <p className="text-sm text-muted-foreground mb-4">No devices connected</p>
+                    <Button size="sm" onClick={connectBluetooth} disabled={!isBLESupported}>
+                      <Smartphone className="w-4 h-4 mr-2" />
+                      Connect Device
+                    </Button>
+                  </div>
+                ) : (
+                  connectedDevices.map((device) => {
+                    const IconComponent = device.icon;
+                    return (
+                      <div
+                        key={device.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`p-2 rounded-lg ${
+                              device.status === "connected"
+                                ? "bg-green-100 text-green-600"
+                                : device.status === "syncing"
+                                  ? "bg-yellow-100 text-yellow-600"
+                                  : "bg-red-100 text-red-600"
+                            }`}
+                          >
+                            <IconComponent className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{device.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {device.lastSync}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-xs text-muted-foreground">
+                            {device.battery}%
+                          </div>
+                          <Progress value={device.battery} className="w-12 h-2" />
+                          {device.status === "connected" ? (
+                            <Wifi className="w-4 h-4 text-green-600" />
+                          ) : device.status === "syncing" ? (
+                            <Zap className="w-4 h-4 text-yellow-600 animate-pulse" />
+                          ) : (
+                            <WifiOff className="w-4 h-4 text-red-600" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </CardContent>
+            </Card>
+
+            {/* System Performance */}
+            <Card className="shadow-colored border-border/50 fade-in fade-in-delay-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Brain className="w-5 h-5 mr-2 text-purple-600" />
+                  System Performance
+                </CardTitle>
+                <CardDescription>Real-time monitoring metrics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Data Quality</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium">{devicePerformance.dataQuality}%</span>
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    </div>
+                  </div>
+                  <Progress value={devicePerformance.dataQuality} className="h-2" />
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Battery Level</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium">{devicePerformance.batteryLevel}%</span>
+                      {devicePerformance.batteryLevel > 50 ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                      )}
+                    </div>
+                  </div>
+                  <Progress value={devicePerformance.batteryLevel} className="h-2" />
+
+                  <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-border/50">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-600">99.2%</div>
+                      <div className="text-xs text-muted-foreground">Uptime</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-600">42ms</div>
+                      <div className="text-xs text-muted-foreground">Latency</div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
