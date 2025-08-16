@@ -412,22 +412,26 @@ export default function HealthAnalytics() {
       <div className="container mx-auto px-4 py-8">
         {/* Goals at top */}
         <Tabs defaultValue="goals" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-            <TabsTrigger value="insights" className="flex items-center space-x-2">
-              <Zap className="h-4 w-4" />
-              <span>Insights</span>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-full sm:max-w-2xl h-12 sm:h-11">
+            <TabsTrigger value="insights" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Insights</span>
+              <span className="sm:hidden">Insights</span>
             </TabsTrigger>
-            <TabsTrigger value="trends" className="flex items-center space-x-2">
-              <LineChart className="h-4 w-4" />
-              <span>Trends</span>
+            <TabsTrigger value="trends" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+              <LineChart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Trends</span>
+              <span className="sm:hidden">Trends</span>
             </TabsTrigger>
-            <TabsTrigger value="predictions" className="flex items-center space-x-2">
-              <Shield className="h-4 w-4" />
-              <span>Risk Analysis</span>
+            <TabsTrigger value="predictions" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+              <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Risk Analysis</span>
+              <span className="sm:hidden">Risk</span>
             </TabsTrigger>
-            <TabsTrigger value="goals" className="flex items-center space-x-2">
-              <Target className="h-4 w-4" />
-              <span>Goals & Reminders</span>
+            <TabsTrigger value="goals" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3">
+              <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Goals & Reminders</span>
+              <span className="sm:hidden">Goals</span>
             </TabsTrigger>
           </TabsList>
 
