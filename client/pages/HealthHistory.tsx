@@ -373,8 +373,8 @@ export default function HealthHistory() {
     .sort((a, b) => {
       if (sortBy === "date")
         return new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (sortBy === "type") return a.type.localeCompare(b.type);
-      if (sortBy === "title") return a.title.localeCompare(b.title);
+      if (sortBy === "type") return (a.type || "").localeCompare(b.type || "");
+      if (sortBy === "title") return (a.title || "").localeCompare(b.title || "");
       return 0;
     });
 
