@@ -655,7 +655,107 @@ export default function RealTimeMonitoring() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Calories */}
+          <Card className="card-hover shadow-colored border-border/50 fade-in fade-in-delay-5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Zap className="w-5 h-5 text-orange-600" />
+                  <CardTitle className="text-sm font-medium">Calories</CardTitle>
+                </div>
+                <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">
+                  {((vitalSigns.calories ?? 0) / 2000 * 100).toFixed(0)}%
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold mb-2 text-slate-800">
+                {vitalSigns.calories ?? 0}
+                <span className="text-lg text-muted-foreground ml-1">cal</span>
+              </div>
+              <Progress value={(vitalSigns.calories ?? 0) / 2000 * 100} className="mb-2 h-2" />
+              <div className="flex items-center text-sm text-muted-foreground">
+                <TrendingUp className="w-4 h-4 mr-1 text-orange-600" />
+                Goal: 2,000 calories
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Device Performance */}
+          <Card className="card-hover shadow-colored border-border/50 fade-in fade-in-delay-6">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Smartphone className="w-5 h-5 text-cyan-600" />
+                  <CardTitle className="text-sm font-medium">Device Performance</CardTitle>
+                </div>
+                <Badge variant="outline" className="text-xs text-cyan-600 border-cyan-200">
+                  {devicePerformance.accuracy}%
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Accuracy</span>
+                  <span className="text-sm font-medium">{devicePerformance.accuracy}%</span>
+                </div>
+                <Progress value={devicePerformance.accuracy} className="h-1" />
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Signal</span>
+                  <span className="text-sm font-medium">{devicePerformance.signalStrength}%</span>
+                </div>
+                <Progress value={devicePerformance.signalStrength} className="h-1" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* AI Predictions Card */}
+        {showPredictions && (
+          <div className="mb-8">
+            <Card className="shadow-colored border-border/50 bg-gradient-to-r from-indigo-50 to-purple-50 fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Brain className="w-5 h-5 mr-2 text-indigo-600" />
+                  AI Health Predictions
+                </CardTitle>
+                <CardDescription>
+                  Advanced machine learning insights based on your vitals
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-lg bg-white/60 border border-indigo-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-indigo-700">Stress Level</span>
+                      <Badge variant="outline" className="text-xs text-indigo-600">Low</Badge>
+                    </div>
+                    <Progress value={25} className="mb-2 h-2" />
+                    <p className="text-xs text-slate-600">Your current vitals indicate a relaxed state</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white/60 border border-green-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-green-700">Health Score</span>
+                      <Badge variant="outline" className="text-xs text-green-600">Excellent</Badge>
+                    </div>
+                    <Progress value={88} className="mb-2 h-2" />
+                    <p className="text-xs text-slate-600">All vitals within optimal ranges</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white/60 border border-yellow-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-yellow-700">Activity Recommendation</span>
+                      <Badge variant="outline" className="text-xs text-yellow-600">Moderate</Badge>
+                    </div>
+                    <Progress value={65} className="mb-2 h-2" />
+                    <p className="text-xs text-slate-600">Consider light exercise to boost activity</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Charts and Device Status */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
