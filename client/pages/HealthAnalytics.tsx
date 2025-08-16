@@ -482,34 +482,55 @@ export default function HealthAnalytics() {
                     </div>
                   </div>
                   <Progress value={Math.min(100, (waterConsumed / Math.max(1, waterGoal)) * 100)} />
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
-                      <Label htmlFor="notify-water">Notifications</Label>
-                      <div className="flex items-center space-x-2 ml-3">
-                        <Switch id="repeat-water" checked={hydrationRepeat} onCheckedChange={setHydrationRepeat} />
-                        <Label htmlFor="repeat-water">Repeat</Label>
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                        <div className="flex items-center space-x-2">
+                          <Switch id="notify-water" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+                          <Label htmlFor="notify-water" className="text-sm font-medium">Notifications</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch id="repeat-water" checked={hydrationRepeat} onCheckedChange={setHydrationRepeat} />
+                          <Label htmlFor="repeat-water" className="text-sm font-medium">Repeat</Label>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" onClick={async () => {
-                        const token = localStorage.getItem("sessionToken");
-                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 5, repeat: hydrationRepeat }) });
-                        startHydrationTimer(5);
-                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "5m" } });
-                      }}>5m</Button>
-                      <Button variant="outline" onClick={async () => {
-                        const token = localStorage.getItem("sessionToken");
-                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 30, repeat: hydrationRepeat }) });
-                        startHydrationTimer(30);
-                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "30m" } });
-                      }}>30m</Button>
-                      <Button onClick={async () => {
-                        const token = localStorage.getItem("sessionToken");
-                        if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 60, repeat: hydrationRepeat }) });
-                        startHydrationTimer(60);
-                        saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "60m" } });
-                      }}>60m</Button>
+                    <div className="grid grid-cols-3 gap-2 sm:flex sm:justify-end sm:space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          const token = localStorage.getItem("sessionToken");
+                          if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 5, repeat: hydrationRepeat }) });
+                          startHydrationTimer(5);
+                          saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "5m" } });
+                        }}
+                        className="h-12 sm:h-10 text-base sm:text-sm font-medium"
+                      >
+                        5m
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          const token = localStorage.getItem("sessionToken");
+                          if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 30, repeat: hydrationRepeat }) });
+                          startHydrationTimer(30);
+                          saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "30m" } });
+                        }}
+                        className="h-12 sm:h-10 text-base sm:text-sm font-medium"
+                      >
+                        30m
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          const token = localStorage.getItem("sessionToken");
+                          if (token) await fetch("/api/notifications/hydration", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "x-session-token": token }, body: JSON.stringify({ minutes: 60, repeat: hydrationRepeat }) });
+                          startHydrationTimer(60);
+                          saveQuickRecord({ type: "vitals", title: "Hydration Reminder Set", metadata: { goal: waterGoal, consumed: waterConsumed, interval: "60m" } });
+                        }}
+                        className="h-12 sm:h-10 text-base sm:text-sm font-medium"
+                      >
+                        60m
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
