@@ -643,6 +643,9 @@ export default function RealTimeMonitoring() {
                   <Activity className="w-5 h-5 text-purple-600" />
                   <CardTitle className="text-sm font-medium">Steps</CardTitle>
                 </div>
+                <Badge variant="outline" className="text-xs text-purple-600 border-purple-200">
+                  {((vitalSigns.steps ?? 0) / 10000 * 100).toFixed(0)}%
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
