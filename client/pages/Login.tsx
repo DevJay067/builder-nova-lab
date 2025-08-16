@@ -288,7 +288,17 @@ export default function Login() {
       });
 
       // Parse response data first, then check success
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse demo login response:", parseError);
+        setMessage({
+          type: "error",
+          text: "Invalid server response. Please try again.",
+        });
+        return;
+      }
 
       if (response.ok && data.success) {
         // Store session data
