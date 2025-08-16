@@ -576,6 +576,190 @@ export default function FirstAid() {
             </div>
           </TabsContent>
 
+          <TabsContent value="hospitals" className="space-y-6">
+            {/* Network Status and Controls */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center">
+                    <Building className="h-5 w-5 mr-2 text-blue-600" />
+                    Hospitals Nearby
+                  </CardTitle>
+                  <div className="flex items-center space-x-2">
+                    {isOfflineMode ? (
+                      <Badge variant="destructive" className="text-xs">
+                        <WifiOff className="h-3 w-3 mr-1" />
+                        Offline Mode
+                      </Badge>
+                    ) : (
+                      <Badge variant={networkQuality === "good" ? "default" : networkQuality === "medium" ? "secondary" : "destructive"} className="text-xs">
+                        <Wifi className="h-3 w-3 mr-1" />
+                        {networkQuality === "good" ? "Good" : networkQuality === "medium" ? "Medium" : "Poor"} Network
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <CardDescription>
+                  Find emergency medical facilities near your location. Works offline with cached data.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button
+                      onClick={getCurrentLocation}
+                      disabled={isLoadingLocation}
+                      className="flex-1 h-12 sm:h-10"
+                    >
+                      {isLoadingLocation ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Navigation className="h-4 w-4 mr-2" />
+                      )}
+                      {isLoadingLocation ? "Getting Location..." : "Find Nearby Hospitals"}
+                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="offline-mode" className="text-sm">Offline Mode</Label>
+                      <Switch
+                        id="offline-mode"
+                        checked={isOfflineMode}
+                        onCheckedChange={setIsOfflineMode}
+                      />
+                    </div>
+                  </div>
+
+                  {userLocation && (
+                    <Alert>
+                      <MapPin className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>Your Location:</strong> {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
+                        {userLocation.accuracy && ` (±${Math.round(userLocation.accuracy)}m accuracy)`}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Hospitals List */}
+            {hospitals.length > 0 && (
+              <div className="space-y-4">
+                {loadingHospitals ? (
+                  <Card>
+                    <CardContent className="flex items-center justify-center py-8">
+                      <div className="text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+                        <p className="text-sm text-muted-foreground">Finding nearby hospitals...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  hospitals.map((hospital) => (
+                    <Card key={hospital.id} className="transition-all duration-200 hover:shadow-lg">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg flex items-center">
+                              <Building className="h-5 w-5 mr-2 text-blue-600" />
+                              {hospital.name}
+                              {hospital.emergencyServices && (
+                                <Badge variant="destructive" className="ml-2 text-xs">
+                                  Emergency
+                                </Badge>
+                              )}
+                            </CardTitle>
+                            <div className="flex items-center mt-2 space-x-4">
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-1 text-gray-500" />
+                                <span className="text-sm text-muted-foreground">{hospital.distance}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Star className="h-4 w-4 mr-1 text-yellow-500" />
+                                <span className="text-sm font-medium">{hospital.rating}</span>
+                              </div>
+                              <Badge variant={hospital.isOpen ? "default" : "secondary"} className="text-xs">
+                                {hospital.isOpen ? "Open" : "Closed"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <p className="text-sm text-muted-foreground">{hospital.address}</p>
+
+                          <div className="flex flex-wrap gap-1">
+                            {hospital.specialties.map((specialty, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {specialty}
+                              </Badge>
+                            ))}
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => window.open(`tel:${hospital.phone}`, '_self')}
+                            >
+                              <Phone className="h-4 w-4 mr-2" />
+                              Call
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => openDirections(hospital)}
+                            >
+                              <Route className="h-4 w-4 mr-2" />
+                              Directions
+                            </Button>
+                            {hospital.emergencyServices && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="flex-1"
+                                onClick={() => window.open(`tel:${hospital.phone}`, '_self')}
+                              >
+                                <AlertTriangle className="h-4 w-4 mr-2" />
+                                Emergency
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* No hospitals found */}
+            {hospitals.length === 0 && !loadingHospitals && (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Building className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-semibold mb-2">No Hospitals Found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Click "Find Nearby Hospitals" to search for medical facilities near your location.
+                  </p>
+                  <Button onClick={getCurrentLocation} disabled={isLoadingLocation}>
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Search for Hospitals
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Emergency Information */}
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>In a life-threatening emergency:</strong> Call 112 immediately. This tool is for locating nearby hospitals and should not delay emergency calls.
+              </AlertDescription>
+            </Alert>
+          </TabsContent>
+
           <TabsContent value="quick-guide" className="space-y-6">
             <Card>
               <CardHeader>
