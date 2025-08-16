@@ -1,6 +1,6 @@
 [build]
 	command = ""
-	publish = "."
+	publish = "frontend"
 
 # Proxy API routes to backend
 [[redirects]]
