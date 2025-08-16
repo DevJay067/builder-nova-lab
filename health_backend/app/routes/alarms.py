@@ -51,7 +51,6 @@ async def simulate_trigger(now: datetime, db: AsyncSession = Depends(get_session
 		alarm.triggered_at = now
 		await db.commit()
 		await db.refresh(alarm)
-		channel_id = channel_id_from_email(user.email)
-		await publish_user_event(channel_id, "alarm.trigger", {"alarm_id": alarm.id, "label": alarm.label, "triggered_at": now.isoformat()})
+		await publish_user_event(user.id, "alarm.trigger", {"alarm_id": alarm.id, "label": alarm.label, "triggered_at": now.isoformat()})
 		return {"trigger": True}
 	return {"trigger": False}

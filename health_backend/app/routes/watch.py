@@ -6,7 +6,6 @@ from ..db import get_session
 from ..models import WatchSample, User
 from ..schemas import WatchSampleIn, WatchSampleOut
 from ..realtime import publish_user_event
-from ..utils import channel_id_from_email
 
 router = APIRouter()
 
@@ -24,8 +23,7 @@ async def ingest_sample(payload: WatchSampleIn, db: AsyncSession = Depends(get_s
 	db.add(sample)
 	await db.commit()
 	await db.refresh(sample)
-	channel_id = channel_id_from_email(user.email)
-	await publish_user_event(channel_id, "watch.sample", {
+	await publish_user_event(user.id, "watch.sample", {
 		"id": sample.id,
 		"timestamp": sample.timestamp.isoformat(),
 		"heart_rate_bpm": sample.heart_rate_bpm,
