@@ -448,16 +448,36 @@ export default function HealthAnalytics() {
                   <CardDescription>Set your daily water goal and reminders</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 items-end">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="water-goal">Daily Goal (glasses)</Label>
-                      <Input id="water-goal" type="number" min={1} value={waterGoal} onChange={(e) => setWaterGoal(parseInt(e.target.value || "0"))} />
+                      <Label htmlFor="water-goal" className="text-sm font-medium">Daily Goal (glasses)</Label>
+                      <Input
+                        id="water-goal"
+                        type="number"
+                        min={1}
+                        value={waterGoal}
+                        onChange={(e) => setWaterGoal(parseInt(e.target.value || "0"))}
+                        className="h-12 sm:h-10 text-base sm:text-sm"
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="water-consumed">Consumed</Label>
+                      <Label htmlFor="water-consumed" className="text-sm font-medium">Consumed Today</Label>
                       <div className="flex items-center space-x-2">
-                        <Input id="water-consumed" type="number" min={0} value={waterConsumed} onChange={(e) => setWaterConsumed(parseInt(e.target.value || "0"))} />
-                        <Button variant="outline" onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}>+1</Button>
+                        <Input
+                          id="water-consumed"
+                          type="number"
+                          min={0}
+                          value={waterConsumed}
+                          onChange={(e) => setWaterConsumed(parseInt(e.target.value || "0"))}
+                          className="h-12 sm:h-10 text-base sm:text-sm"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => setWaterConsumed((v) => Math.min(v + 1, 99))}
+                          className="h-12 sm:h-10 px-4 sm:px-3 text-base sm:text-sm font-medium"
+                        >
+                          +1
+                        </Button>
                       </div>
                     </div>
                   </div>
