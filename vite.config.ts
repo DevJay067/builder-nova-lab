@@ -124,6 +124,42 @@ function expressPlugin(): Plugin {
           }
         });
 
+        server.middlewares.use('/api/auth/verify', (req, res, next) => {
+          if (req.method === 'GET') {
+            // Get session token from headers
+            const authHeader = req.headers.authorization;
+            const sessionHeader = req.headers['x-session-token'];
+            const sessionToken = authHeader?.replace('Bearer ', '') || sessionHeader;
+
+            res.setHeader('Content-Type', 'application/json');
+
+            if (sessionToken && sessionToken.startsWith('demo_')) {
+              // Valid demo session
+              res.statusCode = 200;
+              res.end(JSON.stringify({
+                success: true,
+                user: {
+                  id: "demo_user_id",
+                  username: "demo_user",
+                  firstName: "Demo",
+                  lastName: "User",
+                  email: "demo@example.com",
+                  secureSystemActivated: true,
+                }
+              }));
+            } else {
+              // Invalid or missing session
+              res.statusCode = 401;
+              res.end(JSON.stringify({
+                success: false,
+                message: "Invalid session token"
+              }));
+            }
+          } else {
+            next();
+          }
+        });
+
         server.middlewares.use('/api/health', (req, res, next) => {
           if (req.method === 'GET') {
             res.setHeader('Content-Type', 'application/json');
