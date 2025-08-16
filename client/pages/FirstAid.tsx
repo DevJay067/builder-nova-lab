@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Heart,
   ArrowLeft,
@@ -24,7 +26,15 @@ import {
   Youtube,
   ExternalLink,
   Play,
-  FileText
+  FileText,
+  Navigation,
+  Wifi,
+  WifiOff,
+  Star,
+  Loader2,
+  Building,
+  Route,
+  Car
 } from "lucide-react";
 
 export default function FirstAid() {
