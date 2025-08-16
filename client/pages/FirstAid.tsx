@@ -41,6 +41,15 @@ export default function FirstAid() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCondition, setSelectedCondition] = useState(null);
 
+  // Hospital Nearby State
+  const [hospitals, setHospitals] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [networkQuality, setNetworkQuality] = useState("good");
+  const [loadingHospitals, setLoadingHospitals] = useState(false);
+  const [searchRadius, setSearchRadius] = useState(5); // km
+
   const openYouTubeTutorial = (youtubeUrl: string) => {
     console.log('Opening YouTube tutorial:', youtubeUrl);
 
