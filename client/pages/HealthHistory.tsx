@@ -301,7 +301,7 @@ export default function HealthHistory() {
           doctor: "",
           metadata: {},
         });
-        
+
         // Reload health records to show the new one
         await loadHealthRecords(sessionToken);
       } else {
@@ -348,20 +348,32 @@ export default function HealthHistory() {
         setRecords((prev) => prev.filter((r) => r.id !== recordId));
         setMessage({ type: "success", text: "Record deleted" });
       } else {
-        setMessage({ type: "error", text: result.error || "Failed to delete record" });
+        setMessage({
+          type: "error",
+          text: result.error || "Failed to delete record",
+        });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Network error while deleting record" });
+      setMessage({
+        type: "error",
+        text: "Network error while deleting record",
+      });
     }
   };
 
-  const filteredRecords = records
+  const filteredRecords = (records || [])
     .filter((record) => {
+      if (!record) return false;
+
+      const searchLower = (searchTerm || "").toLowerCase();
       const matchesSearch =
-        record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (record.doctor &&
-          record.doctor.toLowerCase().includes(searchTerm.toLowerCase()));
+        !searchLower ||
+        (record.title && record.title.toLowerCase().includes(searchLower)) ||
+        (record.description &&
+          record.description.toLowerCase().includes(searchLower)) ||
+        (record.doctor && record.doctor.toLowerCase().includes(searchLower)) ||
+        (record.type && record.type.toLowerCase().includes(searchLower));
+
       const matchesType =
         selectedType === "all" || record.type === selectedType;
       return matchesSearch && matchesType;
@@ -369,8 +381,9 @@ export default function HealthHistory() {
     .sort((a, b) => {
       if (sortBy === "date")
         return new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (sortBy === "type") return a.type.localeCompare(b.type);
-      if (sortBy === "title") return a.title.localeCompare(b.title);
+      if (sortBy === "type") return (a.type || "").localeCompare(b.type || "");
+      if (sortBy === "title")
+        return (a.title || "").localeCompare(b.title || "");
       return 0;
     });
 
@@ -571,6 +584,70 @@ export default function HealthHistory() {
                         className="focus-enhanced"
                         required
                       />
+                    </div>
+
+                    {/* Attachments (images, PDFs) */}
+                    <div className="space-y-3">
+                      <Label className="text-sm">Attachments (images/docs)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length === 0) return;
+                            const toDataUrl = (file: File) =>
+                              new Promise<{ name: string; url: string }>((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve({ name: file.name, url: String(reader.result) });
+                                reader.readAsDataURL(file);
+                              });
+                            const dataUrls = await Promise.all(files.map(toDataUrl));
+                            setNewRecord((prev) => ({
+                              ...prev,
+                              metadata: {
+                                ...prev.metadata,
+                                attachments: [...(prev.metadata.attachments || []), ...dataUrls].slice(0, 10),
+                              },
+                            }));
+                          }}
+                        />
+                      </div>
+                      {newRecord.metadata.attachments && newRecord.metadata.attachments.length > 0 && (
+                        <div className="grid grid-cols-2 gap-3">
+                          {newRecord.metadata.attachments.map((att, idx) => (
+                            <div key={idx} className="border rounded-md p-2 flex items-center gap-2">
+                              <img
+                                src={att.url}
+                                alt={att.name}
+                                className="w-16 h-16 object-cover rounded"
+                                onError={(ev) => {
+                                  (ev.target as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs truncate">{att.name}</div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setNewRecord((prev) => ({
+                                    ...prev,
+                                    metadata: {
+                                      ...prev.metadata,
+                                      attachments: (prev.metadata.attachments || []).filter((_, i) => i !== idx),
+                                    },
+                                  }));
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -1019,7 +1096,12 @@ export default function HealthHistory() {
                                     (rt) => rt.value === record.type,
                                   )?.label || record.type}
                                 </Badge>
-                                <Button variant="ghost" size="icon" onClick={() => deleteRecord(record.id)} title="Delete record">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => deleteRecord(record.id)}
+                                  title="Delete record"
+                                >
                                   <Trash2 className="w-4 h-4 text-red-600" />
                                 </Button>
                               </div>
