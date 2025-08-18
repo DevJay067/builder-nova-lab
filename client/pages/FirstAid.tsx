@@ -302,6 +302,8 @@ export default function FirstAid() {
       ];
 
       // Generate hospitals around the user's actual location (within searchRadius)
+      console.log(`Generating ${baseHospitals.length} hospitals around user location:`, location);
+
       const hospitalData = baseHospitals.map((hospital, index) => {
         // Create realistic coordinates around user's location
         const angle = (index * 72) * (Math.PI / 180); // 72 degrees apart (360/5)
@@ -311,15 +313,19 @@ export default function FirstAid() {
         const lat = location.lat + (distance / 111) * Math.cos(angle);
         const lng = location.lng + (distance / (111 * Math.cos(location.lat * Math.PI / 180))) * Math.sin(angle);
 
-        return {
+        const hospitalEntry = {
           id: `local-${index + 1}`,
           ...hospital,
           address: `${Math.floor(100 + Math.random() * 900)} Medical Drive, Near You`,
           distance: `${distance.toFixed(1)} km`,
           coordinates: { lat, lng }
         };
+
+        console.log(`Generated hospital ${index + 1}:`, hospitalEntry.name, "at", hospitalEntry.coordinates, "distance:", hospitalEntry.distance);
+        return hospitalEntry;
       }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
 
+      console.log("Setting hospitals:", hospitalData.length, "hospitals generated");
       setHospitals(hospitalData);
 
     } catch (error) {
