@@ -335,23 +335,47 @@ export default function FirstAid() {
         const g: any = (window as any).google;
         const service = new g.maps.places.PlacesService(document.createElement("div"));
 
-        const nearbyResults: any[] = await new Promise((resolve) => {
-          service.nearbySearch(
-            {
-              location: new g.maps.LatLng(location.lat, location.lng),
-              radius: Math.min(Math.max(searchRadius * 1000, 10), 50000),
-              type: "hospital",
-              keyword: "hospital",
-              opennow: false,
-            },
-            (results: any, status: any) => {
-              if (status === g.maps.places.PlacesServiceStatus.OK && results) {
-                resolve(results as any[]);
-              } else {
-                resolve([]);
-              }
-            },
-          );
+        const requestRadius = Math.min(Math.max(searchRadius * 1000, 10), 50000);
+        const requestLocation = new g.maps.LatLng(location.lat, location.lng);
+
+        const requestConfigs: Array<{ type?: string; keyword?: string }> = [
+          { type: "hospital", keyword: "hospital" },
+          { type: "doctor", keyword: "clinic hospital medical" },
+          { type: "university", keyword: "medical college hospital" },
+          { keyword: "medical college hospital emergency clinic" },
+        ];
+
+        const resultsArrays: any[][] = await Promise.all(
+          requestConfigs.map((cfg) =>
+            new Promise<any[]>((resolve) => {
+              service.nearbySearch(
+                {
+                  location: requestLocation,
+                  rankBy: g.maps.places.RankBy.DISTANCE,
+                  ...(cfg.type ? { type: cfg.type } : {}),
+                  ...(cfg.keyword ? { keyword: cfg.keyword } : {}),
+                  opennow: false,
+                },
+                (results: any, status: any) => {
+                  if (status === g.maps.places.PlacesServiceStatus.OK && results) {
+                    resolve(results as any[]);
+                  } else {
+                    resolve([]);
+                  }
+                },
+              );
+            }),
+          ),
+        );
+
+        const combined: any[] = ([] as any[]).concat(...resultsArrays);
+        const seen = new Set<string>();
+        const nearbyResults: any[] = combined.filter((place: any) => {
+          const key = place.place_id || `${place.name}-${place.geometry?.location?.lat?.()}-${place.geometry?.location?.lng?.()}`;
+          if (!key) return false;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
         });
 
         // Optionally enrich top results with phone and formatted address
@@ -381,7 +405,7 @@ export default function FirstAid() {
           });
         };
 
-        const limitedResults = nearbyResults.slice(0, 20);
+        const limitedResults = nearbyResults.slice(0, 30);
         const detailsList = await Promise.all(
           limitedResults.map((r, idx) => (idx < 10 && r.place_id ? enrichDetails(r.place_id) : Promise.resolve({}))),
         );
@@ -407,6 +431,7 @@ export default function FirstAid() {
             };
           })
           .filter(Boolean)
+          .filter((h: any) => parseFloat(h.distance) <= searchRadius)
           .sort((a: any, b: any) => parseFloat(a.distance) - parseFloat(b.distance));
 
         if ((hospitalData as any).length > 0) {
@@ -418,7 +443,7 @@ export default function FirstAid() {
       // Fallback 2: OpenStreetMap Overpass API (no key needed)
       try {
         const radiusMeters = Math.min(Math.max(Math.floor(searchRadius * 1000), 10), 50000);
-        const overpassQuery = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});way["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});relation["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng}););out center;`;
+        const overpassQuery = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});way["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});relation["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});node["amenity"="clinic"](around:${radiusMeters},${location.lat},${location.lng});way["amenity"="clinic"](around:${radiusMeters},${location.lat},${location.lng});relation["amenity"="clinic"](around:${radiusMeters},${location.lat},${location.lng});node["amenity"="doctors"](around:${radiusMeters},${location.lat},${location.lng});way["amenity"="doctors"](around:${radiusMeters},${location.lat},${location.lng});relation["amenity"="doctors"](around:${radiusMeters},${location.lat},${location.lng});node["amenity"="university"]["name"~"(?i)medical|college"](around:${radiusMeters},${location.lat},${location.lng}););out center;`;
         const resp = await fetch("https://overpass-api.de/api/interpreter", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
