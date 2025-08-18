@@ -113,21 +113,64 @@ export default function HealthAnalytics() {
 
   const showLocalNotification = async (title: string, body: string) => {
     try {
-      if (!notificationsEnabled) return;
-      if (Notification && Notification.permission === "granted") {
-        const reg = await navigator.serviceWorker?.ready;
-        if (reg && reg.showNotification) {
-          await reg.showNotification(title, {
-            body,
-            icon: "/icons/icon-192x192.png",
-            vibrate: [200, 100, 200],
-            data: { url: "/analytics" },
-          });
+      if (!notificationsEnabled) {
+        console.log("Notifications disabled by user");
+        return;
+      }
+
+      // Request permission if not granted
+      if (Notification && Notification.permission === "default") {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          console.log("Notification permission denied");
           return;
         }
-        new Notification(title, { body });
       }
-    } catch {}
+
+      if (Notification && Notification.permission === "granted") {
+        console.log(`Showing notification: ${title} - ${body}`);
+
+        // Try service worker notification first
+        try {
+          const reg = await navigator.serviceWorker?.ready;
+          if (reg && reg.showNotification) {
+            await reg.showNotification(title, {
+              body,
+              icon: "/icons/icon-192x192.png",
+              vibrate: [200, 100, 200],
+              data: { url: "/analytics" },
+              requireInteraction: true,
+              badge: "/icons/icon-192x192.png"
+            });
+            return;
+          }
+        } catch (swError) {
+          console.log("Service worker notification failed, falling back to basic notification");
+        }
+
+        // Fallback to basic notification
+        const notification = new Notification(title, {
+          body,
+          icon: "/icons/icon-192x192.png",
+          requireInteraction: true
+        });
+
+        // Auto close after 10 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 10000);
+
+        return;
+      } else {
+        console.log("Notification permission not granted");
+        // Fallback: show browser alert
+        alert(`${title}: ${body}`);
+      }
+    } catch (error) {
+      console.error("Error showing notification:", error);
+      // Ultimate fallback: browser alert
+      alert(`${title}: ${body}`);
+    }
   };
 
   // Notifications SSE
