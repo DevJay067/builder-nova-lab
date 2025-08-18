@@ -889,6 +889,32 @@ export default function HealthAnalytics() {
                       />
                       <Label htmlFor="notify-sleep">Notifications</Label>
                     </div>
+
+                    {/* Sleep Timer Status */}
+                    {sleepReminderAt && sleepReminderAt > Date.now() && (
+                      <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                        <div className="text-sm text-purple-700 font-medium">
+                          🌙 Sleep reminder set for {bedtime} tonight
+                        </div>
+                        <div className="text-xs text-purple-600 mt-1">
+                          {Math.ceil((sleepReminderAt - Date.now()) / (1000 * 60 * 60))} hours remaining
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            clearSleepInterval();
+                            setSleepReminderAt(null);
+                            localStorage.removeItem("health_sleep_reminder_at");
+                            showLocalNotification("Sleep Reminder Cancelled", "Your bedtime reminder has been cancelled");
+                          }}
+                          className="text-xs text-red-600 mt-2 h-6 px-2"
+                        >
+                          Cancel Sleep Reminder
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
