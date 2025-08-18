@@ -296,21 +296,40 @@ export default function HealthAnalytics() {
     const now = new Date();
     const target = new Date();
     target.setHours(hh, mm, 0, 0);
+
     if (target.getTime() <= now.getTime()) {
       target.setDate(target.getDate() + 1);
     }
+
     const endAt = target.getTime();
+    const hoursUntil = Math.ceil((endAt - now.getTime()) / (1000 * 60 * 60));
+
+    console.log(`Scheduling sleep reminder for ${bedtime} (${hoursUntil} hours from now)`);
+
     setSleepReminderAt(endAt);
     localStorage.setItem("health_sleep_reminder_at", String(endAt));
     clearSleepInterval();
+
+    // Show immediate confirmation
+    showLocalNotification("Sleep Reminder Set", `Bedtime reminder scheduled for ${bedtime} tonight`);
+
     sleepIntervalRef.current = setInterval(() => {
-      if (Date.now() >= endAt) {
+      const timeLeft = endAt - Date.now();
+
+      if (timeLeft <= 0) {
         clearSleepInterval();
         setSleepReminderAt(null);
         localStorage.removeItem("health_sleep_reminder_at");
-        showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
+        console.log("Sleep reminder triggered");
+        showLocalNotification("Sleep Reminder", "It's bedtime 🛌 Time to get ready for sleep!");
+      } else {
+        // Log remaining time every hour for debugging
+        if (Math.floor(timeLeft / (1000 * 60 * 60)) !== Math.floor((timeLeft - 60000) / (1000 * 60 * 60))) {
+          const hoursLeft = Math.ceil(timeLeft / (1000 * 60 * 60));
+          console.log(`Sleep reminder: ${hoursLeft} hours until bedtime`);
+        }
       }
-    }, 1000);
+    }, 60000); // Check every minute instead of every second for sleep reminders
   };
 
   useEffect(() => {
