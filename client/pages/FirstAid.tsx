@@ -354,9 +354,21 @@ export default function FirstAid() {
     window.open(url, "_blank");
   };
 
-  // Check network quality on mount
+  // Check network quality on mount and auto-detect location for hospitals
   useEffect(() => {
     checkNetworkQuality();
+
+    // Auto-fetch location if we're on hospitals tab and no location is set
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'conditions';
+
+    if (activeTab === 'hospitals' && !userLocation) {
+      console.log("Auto-detecting location for hospitals tab");
+      // Small delay to let the UI render
+      setTimeout(() => {
+        getCurrentLocation();
+      }, 500);
+    }
 
     // Listen for network changes
     const handleOnline = () => {
