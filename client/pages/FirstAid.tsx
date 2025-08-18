@@ -56,6 +56,36 @@ export default function FirstAid() {
   const [loadingHospitals, setLoadingHospitals] = useState(false);
   const [searchRadius, setSearchRadius] = useState(5); // km
 
+  // Google Maps Places API key (set VITE_GOOGLE_MAPS_API_KEY in env)
+  const GOOGLE_MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+
+  // Lazy load Google Maps JS API with Places library
+  const loadGoogleMapsPlaces = async (): Promise<void> => {
+    if (typeof window === "undefined") return;
+    const w: any = window as any;
+    if (w.google?.maps?.places) return;
+    if (!GOOGLE_MAPS_API_KEY) throw new Error("Missing Google Maps API key");
+    await new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector<HTMLScriptElement>(
+        'script[src*="maps.googleapis.com/maps/api/js"]',
+      );
+      if (existing) {
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", () => reject(new Error("Google Maps failed to load")));
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+        GOOGLE_MAPS_API_KEY,
+      )}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Google Maps failed to load"));
+      document.head.appendChild(script);
+    });
+  };
+
   const openYouTubeTutorial = (youtubeUrl: string) => {
     console.log("Opening YouTube tutorial:", youtubeUrl);
 
@@ -252,101 +282,121 @@ export default function FirstAid() {
     return R * c;
   };
 
-  // Fetch nearby hospitals using real location-based search
+  // Fetch nearby hospitals using Google Places when available; fallback to generated data
   const fetchNearbyHospitals = async (location) => {
     console.log("fetchNearbyHospitals called with location:", location);
     setLoadingHospitals(true);
 
     try {
-      // Generate hospitals around the user's actual location instead of using NY data
-      const baseHospitals = [
-        {
-          name: "Emergency Medical Center",
-          phone: "+1-555-1111",
-          rating: 4.5,
-          specialties: ["Emergency Care", "Trauma Center", "ICU"],
-          isOpen: true,
-          emergencyServices: true,
-        },
-        {
-          name: "Regional General Hospital",
-          phone: "+1-555-2222",
-          rating: 4.2,
-          specialties: ["Cardiology", "Emergency Care", "Surgery"],
-          isOpen: true,
-          emergencyServices: true,
-        },
-        {
-          name: "Community Health Clinic",
-          phone: "+1-555-3333",
-          rating: 4.0,
-          specialties: ["Emergency Care", "Urgent Care", "Family Medicine"],
-          isOpen: true,
-          emergencyServices: true,
-        },
-        {
-          name: "City Medical Institute",
-          phone: "+1-555-4444",
-          rating: 4.7,
-          specialties: ["Emergency Care", "Pediatrics", "Internal Medicine"],
-          isOpen: true,
-          emergencyServices: true,
-        },
-        {
-          name: "Metro Health Center",
-          phone: "+1-555-5555",
-          rating: 4.3,
-          specialties: ["Emergency Care", "Orthopedics", "Radiology"],
-          isOpen: true,
-          emergencyServices: true,
-        },
-      ];
+      if (GOOGLE_MAPS_API_KEY) {
+        // Use Google Places Nearby Search for accurate hospitals
+        await loadGoogleMapsPlaces();
+        const g: any = (window as any).google;
+        const service = new g.maps.places.PlacesService(document.createElement("div"));
 
-      // Generate hospitals around the user's actual location (within searchRadius)
-      console.log(
-        `Generating ${baseHospitals.length} hospitals around user location:`,
-        location,
-      );
-
-      const hospitalData = baseHospitals
-        .map((hospital, index) => {
-          // Create realistic coordinates around user's location
-          const angle = index * 72 * (Math.PI / 180); // 72 degrees apart (360/5)
-          const distance = 0.5 + Math.random() * (searchRadius - 0.5); // Within search radius
-
-          // Calculate new coordinates around user's location
-          const lat = location.lat + (distance / 111) * Math.cos(angle);
-          const lng =
-            location.lng +
-            (distance / (111 * Math.cos((location.lat * Math.PI) / 180))) *
-              Math.sin(angle);
-
-          const hospitalEntry = {
-            id: `local-${index + 1}`,
-            ...hospital,
-            address: `${Math.floor(100 + Math.random() * 900)} Medical Drive, Near You`,
-            distance: `${distance.toFixed(1)} km`,
-            coordinates: { lat, lng },
-          };
-
-          console.log(
-            `Generated hospital ${index + 1}:`,
-            hospitalEntry.name,
-            "at",
-            hospitalEntry.coordinates,
-            "distance:",
-            hospitalEntry.distance,
+        const nearbyResults: any[] = await new Promise((resolve) => {
+          service.nearbySearch(
+            {
+              location: new g.maps.LatLng(location.lat, location.lng),
+              radius: Math.min(searchRadius * 1000, 50000),
+              type: "hospital",
+              keyword: "hospital",
+              opennow: false,
+            },
+            (results: any, status: any) => {
+              if (status === g.maps.places.PlacesServiceStatus.OK && results) {
+                resolve(results as any[]);
+              } else {
+                resolve([]);
+              }
+            },
           );
-          return hospitalEntry;
-        })
-        .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+        });
 
-      console.log(
-        "Setting hospitals:",
-        hospitalData.length,
-        "hospitals generated",
-      );
-      setHospitals(hospitalData);
+        // Optionally enrich top results with phone and formatted address
+        const enrichDetails = async (placeId: string): Promise<{ phone?: string; address?: string; isOpen?: boolean }> => {
+          return await new Promise((resolve) => {
+            service.getDetails(
+              {
+                placeId,
+                fields: [
+                  "formatted_phone_number",
+                  "formatted_address",
+                  "opening_hours",
+                ],
+              },
+              (place: any, status: any) => {
+                if (status === g.maps.places.PlacesServiceStatus.OK && place) {
+                  resolve({
+                    phone: place.formatted_phone_number,
+                    address: place.formatted_address,
+                    isOpen: typeof place.opening_hours?.isOpen === "function" ? place.opening_hours.isOpen() : place.opening_hours?.open_now,
+                  });
+                } else {
+                  resolve({});
+                }
+              },
+            );
+          });
+        };
+
+        const limitedResults = nearbyResults.slice(0, 20);
+        const detailsList = await Promise.all(
+          limitedResults.map((r, idx) => (idx < 10 && r.place_id ? enrichDetails(r.place_id) : Promise.resolve({}))),
+        );
+
+        const hospitalData = limitedResults
+          .map((place: any, i: number) => {
+            const lat = place.geometry?.location?.lat ? place.geometry.location.lat() : null;
+            const lng = place.geometry?.location?.lng ? place.geometry.location.lng() : null;
+            if (lat == null || lng == null) return null;
+            const distKm = calculateDistance(location.lat, location.lng, lat, lng);
+            const details = detailsList[i] || {};
+            return {
+              id: place.place_id || `${place.name}-${i}`,
+              name: place.name || "Hospital",
+              address: details.address || place.vicinity || "",
+              phone: details.phone || "",
+              rating: typeof place.rating === "number" ? place.rating : undefined,
+              specialties: ["Emergency Care"],
+              distance: `${distKm.toFixed(1)} km`,
+              isOpen: typeof details.isOpen === "boolean" ? details.isOpen : (place.opening_hours?.open_now ?? undefined),
+              emergencyServices: true,
+              coordinates: { lat, lng },
+            };
+          })
+          .filter(Boolean)
+          .sort((a: any, b: any) => parseFloat(a.distance) - parseFloat(b.distance));
+
+        setHospitals(hospitalData as any);
+      } else {
+        // Fallback: generate hospitals around the user's location (no API key)
+        const baseHospitals = [
+          { name: "Emergency Medical Center", phone: "+1-555-1111", rating: 4.5, specialties: ["Emergency Care", "Trauma Center", "ICU"], isOpen: true, emergencyServices: true },
+          { name: "Regional General Hospital", phone: "+1-555-2222", rating: 4.2, specialties: ["Cardiology", "Emergency Care", "Surgery"], isOpen: true, emergencyServices: true },
+          { name: "Community Health Clinic", phone: "+1-555-3333", rating: 4.0, specialties: ["Emergency Care", "Urgent Care", "Family Medicine"], isOpen: true, emergencyServices: true },
+          { name: "City Medical Institute", phone: "+1-555-4444", rating: 4.7, specialties: ["Emergency Care", "Pediatrics", "Internal Medicine"], isOpen: true, emergencyServices: true },
+          { name: "Metro Health Center", phone: "+1-555-5555", rating: 4.3, specialties: ["Emergency Care", "Orthopedics", "Radiology"], isOpen: true, emergencyServices: true },
+        ];
+
+        const hospitalData = baseHospitals
+          .map((hospital, index) => {
+            const angle = index * 72 * (Math.PI / 180);
+            const distance = 0.5 + Math.random() * (searchRadius - 0.5);
+            const lat = location.lat + (distance / 111) * Math.cos(angle);
+            const lng = location.lng + (distance / (111 * Math.cos((location.lat * Math.PI) / 180))) * Math.sin(angle);
+            return {
+              id: `local-${index + 1}`,
+              ...hospital,
+              address: `${Math.floor(100 + Math.random() * 900)} Medical Drive, Near You`,
+              distance: `${distance.toFixed(1)} km`,
+              coordinates: { lat, lng },
+            };
+          })
+          .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+        setHospitals(hospitalData as any);
+      }
     } catch (error) {
       console.error("Error fetching hospitals:", error);
       // Final fallback to static data if everything fails
