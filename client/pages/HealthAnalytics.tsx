@@ -236,19 +236,36 @@ export default function HealthAnalytics() {
   };
 
   const startHydrationTimer = (minutes: number) => {
+    console.log(`Starting hydration timer for ${minutes} minutes`);
     const endAt = Date.now() + minutes * 60 * 1000;
     setHydrationEndAt(endAt);
     localStorage.setItem("health_hydration_end_at", String(endAt));
     clearHydrationInterval();
+
+    // Show immediate confirmation
+    showLocalNotification("Timer Set", `Hydration reminder set for ${minutes} minute${minutes > 1 ? 's' : ''}`);
+
     hydrationIntervalRef.current = setInterval(() => {
-      if (Date.now() >= endAt) {
+      const now = Date.now();
+      const timeLeft = endAt - now;
+
+      if (timeLeft <= 0) {
         clearHydrationInterval();
         setHydrationEndAt(null);
         localStorage.removeItem("health_hydration_end_at");
-        showLocalNotification("Hydration Reminder", "It's water time! 💧");
+        console.log("Hydration timer completed, showing notification");
+        showLocalNotification("Hydration Reminder", "It's water time! 💧 Time to drink some water!");
+
         if (hydrationRepeat) {
-          // auto-repeat
-          startHydrationTimer(minutes);
+          console.log("Auto-repeating hydration timer");
+          setTimeout(() => {
+            startHydrationTimer(minutes);
+          }, 1000);
+        }
+      } else {
+        // Log remaining time every 30 seconds for debugging
+        if (Math.floor(timeLeft / 1000) % 30 === 0) {
+          console.log(`Hydration timer: ${Math.ceil(timeLeft / 60000)} minutes remaining`);
         }
       }
     }, 1000);
