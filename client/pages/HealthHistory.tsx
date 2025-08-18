@@ -586,6 +586,70 @@ export default function HealthHistory() {
                       />
                     </div>
 
+                    {/* Attachments (images, PDFs) */}
+                    <div className="space-y-3">
+                      <Label className="text-sm">Attachments (images/docs)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length === 0) return;
+                            const toDataUrl = (file: File) =>
+                              new Promise<{ name: string; url: string }>((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve({ name: file.name, url: String(reader.result) });
+                                reader.readAsDataURL(file);
+                              });
+                            const dataUrls = await Promise.all(files.map(toDataUrl));
+                            setNewRecord((prev) => ({
+                              ...prev,
+                              metadata: {
+                                ...prev.metadata,
+                                attachments: [...(prev.metadata.attachments || []), ...dataUrls].slice(0, 10),
+                              },
+                            }));
+                          }}
+                        />
+                      </div>
+                      {newRecord.metadata.attachments && newRecord.metadata.attachments.length > 0 && (
+                        <div className="grid grid-cols-2 gap-3">
+                          {newRecord.metadata.attachments.map((att, idx) => (
+                            <div key={idx} className="border rounded-md p-2 flex items-center gap-2">
+                              <img
+                                src={att.url}
+                                alt={att.name}
+                                className="w-16 h-16 object-cover rounded"
+                                onError={(ev) => {
+                                  (ev.target as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs truncate">{att.name}</div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setNewRecord((prev) => ({
+                                    ...prev,
+                                    metadata: {
+                                      ...prev.metadata,
+                                      attachments: (prev.metadata.attachments || []).filter((_, i) => i !== idx),
+                                    },
+                                  }));
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="doctor">Healthcare Provider</Label>
                       <Input
