@@ -80,6 +80,23 @@ export default function HealthAnalytics() {
   const isAndroid = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
   const isIOS = typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+  const buildAndroidAlarmIntentUri = (timeString: string) => {
+    try {
+      const [hh, mm] = timeString.split(":").map((x) => parseInt(x));
+      const parts = [
+        `S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent("Bedtime")}`,
+        `i.android.intent.extra.alarm.HOUR=${hh}`,
+        `i.android.intent.extra.alarm.MINUTES=${mm}`,
+        `B.android.intent.extra.alarm.SKIP_UI=true`,
+      ];
+      return `intent:#Intent;action=android.intent.action.SET_ALARM;${parts.join(";")};end`;
+    } catch {
+      return `intent:#Intent;action=android.intent.action.SHOW_ALARMS;end`;
+    }
+  };
+
+  const buildAndroidShowAlarmsIntentUri = () => `intent:#Intent;action=android.intent.action.SHOW_ALARMS;end`;
+
   useEffect(() => {
     localStorage.setItem("health_water_goal", String(waterGoal));
   }, [waterGoal]);
@@ -1003,14 +1020,24 @@ export default function HealthAnalytics() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {isAndroid && (
-                      <a href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(":")[0])};S.minutes=${parseInt(bedtime.split(":")[1])};end`}>
-                        <Button variant="secondary">Add Alarm in Clock App</Button>
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <a href={buildAndroidAlarmIntentUri(bedtime)}>
+                          <Button variant="secondary">Add Alarm in Clock App</Button>
+                        </a>
+                        <a href={buildAndroidShowAlarmsIntentUri()}>
+                          <Button variant="outline">Open Alarms</Button>
+                        </a>
+                      </div>
                     )}
                     {isIOS && (
-                      <a href={`shortcuts://run-shortcut?name=${encodeURIComponent("Set Bedtime Alarm")}&input=text&text=${encodeURIComponent(bedtime)}`}>
-                        <Button variant="secondary">Run Shortcut: Set Bedtime Alarm</Button>
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <a href={`shortcuts://run-shortcut?name=${encodeURIComponent("Set Bedtime Alarm")}&input=text&text=${encodeURIComponent(bedtime)}`}>
+                          <Button variant="secondary">Run Shortcut: Set Bedtime Alarm</Button>
+                        </a>
+                        <a href={`clock-alarm://`}>
+                          <Button variant="outline">Open Clock</Button>
+                        </a>
+                      </div>
                     )}
                     {!isAndroid && !isIOS && (
                       <Button
