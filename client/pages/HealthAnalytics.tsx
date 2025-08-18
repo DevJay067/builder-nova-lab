@@ -1006,6 +1006,34 @@ export default function HealthAnalytics() {
                         Add Alarm in Clock App (Android)
                       </Button>
                     </a>
+                    <a
+                      href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Bedtime&dates=${(() => {
+                        const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
+                        const start = new Date();
+                        start.setHours(hh, mm, 0, 0);
+                        const end = new Date(start.getTime() + 8 * 60 * 60 * 1000);
+                        const pad = (n: number) => String(n).padStart(2, "0");
+                        const fmt = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+                        return `${fmt(start)}/${fmt(end)}`;
+                      })()}&details=Sleep%20schedule%20reminder&recur=RRULE:FREQ=DAILY`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline">Add to Google Calendar</Button>
+                    </a>
+                    <a
+                      href={`webcal://add?text=Bedtime&dates=${(() => {
+                        const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
+                        const start = new Date();
+                        start.setHours(hh, mm, 0, 0);
+                        const end = new Date(start.getTime() + 8 * 60 * 60 * 1000);
+                        const pad = (n: number) => String(n).padStart(2, "0");
+                        const fmt = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+                        return `${fmt(start)}/${fmt(end)}`;
+                      })()}&details=Sleep%20schedule%20reminder`}
+                    >
+                      <Button variant="ghost">Add to iOS/macOS Calendar</Button>
+                    </a>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Device alarm integration: On Android, you can add an alarm
@@ -1016,7 +1044,7 @@ export default function HealthAnalytics() {
                     >
                       system alarm intent
                     </a>
-                    . Support varies by device.
+                    . On iOS, add a calendar event as a reminder; direct alarm deep-links are restricted by iOS.
                   </p>
                 </CardContent>
               </Card>
