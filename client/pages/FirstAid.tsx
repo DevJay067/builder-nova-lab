@@ -833,18 +833,36 @@ export default function FirstAid() {
                     </div>
                   </div>
 
-                  {userLocation && (
-                    <Alert>
-                      <MapPin className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Your Location:</strong>{" "}
-                        {userLocation.lat.toFixed(4)},{" "}
-                        {userLocation.lng.toFixed(4)}
-                        {userLocation.accuracy &&
-                          ` (±${Math.round(userLocation.accuracy)}m accuracy)`}
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  {/* Location Status */}
+                  <div className="space-y-2">
+                    {userLocation ? (
+                      <Alert>
+                        <MapPin className="h-4 w-4" />
+                        <AlertDescription>
+                          <strong>Your Location:</strong>{" "}
+                          {userLocation.lat.toFixed(4)},{" "}
+                          {userLocation.lng.toFixed(4)}
+                          {userLocation.accuracy &&
+                            ` (±${Math.round(userLocation.accuracy)}m accuracy)`}
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          <strong>No Location Set:</strong> Click "Find Nearby Hospitals" to detect your location, or use "Test Location" to try sample data.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Debug info */}
+                    <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
+                      Status: {isLoadingLocation ? "Detecting location..." : userLocation ? "Location ready" : "Location needed"} |
+                      Network: {networkQuality} |
+                      Offline: {isOfflineMode ? "Yes" : "No"} |
+                      Hospitals: {hospitals.length}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
