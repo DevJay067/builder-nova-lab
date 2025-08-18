@@ -99,14 +99,14 @@ export default function Index() {
       highlight: true,
     },
     {
-      id: "bmax-demo",
-      title: "B-max AI Demo",
+      id: "bmax-pro",
+      title: "B-max AI Pro",
       description:
         "See how medical history personalizes AI responses. Test query enhancement with your health data.",
       icon: Sparkles,
       color: "bg-purple-500",
-      route: "/bmax-demo",
-      stats: "Interactive Demo",
+      route: "/bmax-pro",
+      stats: "Professional AI",
       gradient: "from-purple-500/20 to-indigo-500/20",
     },
     {

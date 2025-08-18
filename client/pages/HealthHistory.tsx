@@ -301,7 +301,7 @@ export default function HealthHistory() {
           doctor: "",
           metadata: {},
         });
-        
+
         // Reload health records to show the new one
         await loadHealthRecords(sessionToken);
       } else {
@@ -348,20 +348,32 @@ export default function HealthHistory() {
         setRecords((prev) => prev.filter((r) => r.id !== recordId));
         setMessage({ type: "success", text: "Record deleted" });
       } else {
-        setMessage({ type: "error", text: result.error || "Failed to delete record" });
+        setMessage({
+          type: "error",
+          text: result.error || "Failed to delete record",
+        });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Network error while deleting record" });
+      setMessage({
+        type: "error",
+        text: "Network error while deleting record",
+      });
     }
   };
 
-  const filteredRecords = records
+  const filteredRecords = (records || [])
     .filter((record) => {
+      if (!record) return false;
+
+      const searchLower = (searchTerm || "").toLowerCase();
       const matchesSearch =
-        record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (record.doctor &&
-          record.doctor.toLowerCase().includes(searchTerm.toLowerCase()));
+        !searchLower ||
+        (record.title && record.title.toLowerCase().includes(searchLower)) ||
+        (record.description &&
+          record.description.toLowerCase().includes(searchLower)) ||
+        (record.doctor && record.doctor.toLowerCase().includes(searchLower)) ||
+        (record.type && record.type.toLowerCase().includes(searchLower));
+
       const matchesType =
         selectedType === "all" || record.type === selectedType;
       return matchesSearch && matchesType;
@@ -369,8 +381,9 @@ export default function HealthHistory() {
     .sort((a, b) => {
       if (sortBy === "date")
         return new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (sortBy === "type") return a.type.localeCompare(b.type);
-      if (sortBy === "title") return a.title.localeCompare(b.title);
+      if (sortBy === "type") return (a.type || "").localeCompare(b.type || "");
+      if (sortBy === "title")
+        return (a.title || "").localeCompare(b.title || "");
       return 0;
     });
 
@@ -1019,7 +1032,12 @@ export default function HealthHistory() {
                                     (rt) => rt.value === record.type,
                                   )?.label || record.type}
                                 </Badge>
-                                <Button variant="ghost" size="icon" onClick={() => deleteRecord(record.id)} title="Delete record">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => deleteRecord(record.id)}
+                                  title="Delete record"
+                                >
                                   <Trash2 className="w-4 h-4 text-red-600" />
                                 </Button>
                               </div>
