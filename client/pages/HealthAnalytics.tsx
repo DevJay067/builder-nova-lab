@@ -114,21 +114,22 @@ export default function HealthAnalytics() {
     } catch {}
   };
 
-  // Notifications SSE
+  // Notifications SSE (dev only or explicit opt-in via env)
   useEffect(() => {
-    const token = localStorage.getItem("sessionToken");
-    if (!token) return;
-    let es: EventSource | null = null;
     try {
-      es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
-      es.addEventListener("hydration", (e: MessageEvent) => {
+      const token = localStorage.getItem("sessionToken");
+      const allowSSE = import.meta.env.DEV || import.meta.env.VITE_ENABLE_NOTIF_SSE === "true";
+      if (!token || !allowSSE) return;
+      if (typeof window === "undefined" || !("EventSource" in window)) return;
+      let es: EventSource | null = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(token)}`);
+      es.addEventListener("hydration", () => {
         showLocalNotification("Hydration Reminder", "It's water time! 💧");
       });
-      es.addEventListener("bedtime", (e: MessageEvent) => {
+      es.addEventListener("bedtime", () => {
         showLocalNotification("Sleep Reminder", "It's bedtime 🛌");
       });
+      return () => { es?.close(); };
     } catch {}
-    return () => { es?.close(); };
   }, []);
 
   const saveQuickRecord = async (record: {

@@ -93,10 +93,11 @@ export default function RealTimeMonitoring() {
   const [uploadToCloud, setUploadToCloud] = useState(true);
   const isBLESupported = typeof navigator !== "undefined" && !!(navigator as any).bluetooth;
 
-  // Attempt SSE connection; fallback to simulation
+  // Attempt SSE connection; fallback to polling/simulation when unavailable (e.g., serverless)
   useEffect(() => {
     let simulateInterval: any = null;
     let eventSource: EventSource | null = null;
+    let pollingInterval: any = null;
 
     function startSimulation() {
       if (simulateInterval) return;
@@ -137,6 +138,59 @@ export default function RealTimeMonitoring() {
       }
     }
 
+    function stopPolling() {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
+    }
+
+    function startPolling() {
+      if (pollingInterval) return;
+      const token = localStorage.getItem("sessionToken");
+      if (!token) return;
+      pollingInterval = setInterval(async () => {
+        try {
+          const resp = await fetch("/api/iot/latest", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!resp.ok) return;
+          const json = await resp.json();
+          const payload = json?.last;
+          if (!payload) return;
+          const now = new Date(payload.timestamp || new Date().toISOString());
+          const heartRate = payload?.metrics?.heartRate ?? vitalSigns.heartRate;
+          const spo2 = payload?.metrics?.spo2 ?? vitalSigns.oxygenSaturation;
+          const steps = payload?.metrics?.steps;
+          const calories = payload?.metrics?.calories;
+          const distance = payload?.metrics?.distance;
+          const updated: VitalSigns = {
+            heartRate,
+            bloodPressure: vitalSigns.bloodPressure,
+            temperature: vitalSigns.temperature,
+            oxygenSaturation: spo2,
+            respiratoryRate: vitalSigns.respiratoryRate,
+            timestamp: now.toISOString(),
+            steps,
+            calories,
+            distance,
+          };
+          setVitalSigns(updated);
+          setVitalsHistory((prev) => [
+            ...prev,
+            {
+              time: now.toLocaleTimeString(),
+              heartRate: updated.heartRate,
+              temperature: updated.temperature,
+              oxygenSat: updated.oxygenSaturation,
+              systolic: updated.bloodPressure.systolic,
+              steps: updated.steps,
+            },
+          ].slice(-20));
+        } catch {}
+      }, 4000);
+    }
+
     try {
       const token = localStorage.getItem("sessionToken");
       const url = useDemo
@@ -147,7 +201,7 @@ export default function RealTimeMonitoring() {
 
       if (!url) {
         // no session and not in demo -> no SSE
-      } else {
+      } else if (typeof window !== "undefined" && "EventSource" in window) {
         eventSource = new EventSource(url);
 
         eventSource.addEventListener("vitals", (evt: MessageEvent) => {
@@ -187,20 +241,29 @@ export default function RealTimeMonitoring() {
 
         eventSource.addEventListener("ready", () => {
           stopSimulation();
+          stopPolling();
         });
 
         eventSource.onerror = () => {
+          // SSE not available (likely serverless) -> fallback
           if (useDemo) startSimulation();
+          else startPolling();
         };
+      } else {
+        // No EventSource support
+        if (useDemo) startSimulation();
+        else startPolling();
       }
 
       if (useDemo) startSimulation();
     } catch {
       if (useDemo) startSimulation();
+      else startPolling();
     }
 
     return () => {
       stopSimulation();
+      stopPolling();
       if (eventSource) {
         eventSource.close();
       }
