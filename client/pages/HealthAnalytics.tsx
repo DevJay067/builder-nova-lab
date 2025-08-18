@@ -77,6 +77,9 @@ export default function HealthAnalytics() {
   const hydrationIntervalRef = useRef<any>(null);
   const sleepIntervalRef = useRef<any>(null);
 
+  const isAndroid = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+  const isIOS = typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   useEffect(() => {
     localStorage.setItem("health_water_goal", String(waterGoal));
   }, [waterGoal]);
@@ -999,41 +1002,31 @@ export default function HealthAnalytics() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <a
-                      href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(":")[0])};S.minutes=${parseInt(bedtime.split(":")[1])};end`}
-                    >
-                      <Button variant="secondary">
-                        Add Alarm in Clock App (Android)
+                    {isAndroid && (
+                      <a href={`intent:#Intent;action=android.intent.action.SET_ALARM;S.message=Bedtime;S.hour=${parseInt(bedtime.split(":")[0])};S.minutes=${parseInt(bedtime.split(":")[1])};end`}>
+                        <Button variant="secondary">Add Alarm in Clock App</Button>
+                      </a>
+                    )}
+                    {isIOS && (
+                      <a href={`shortcuts://run-shortcut?name=${encodeURIComponent("Set Bedtime Alarm")}&input=text&text=${encodeURIComponent(bedtime)}`}>
+                        <Button variant="secondary">Run Shortcut: Set Bedtime Alarm</Button>
+                      </a>
+                    )}
+                    {!isAndroid && !isIOS && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
+                          const msg = `Set an alarm for ${hh}:${String(mm).padStart(2, "0")} in your clock app`;
+                          try {
+                            navigator.clipboard?.writeText?.(msg);
+                          } catch {}
+                          alert(msg);
+                        }}
+                      >
+                        Copy Alarm Prompt
                       </Button>
-                    </a>
-                    <a
-                      href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Bedtime&dates=${(() => {
-                        const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
-                        const start = new Date();
-                        start.setHours(hh, mm, 0, 0);
-                        const end = new Date(start.getTime() + 8 * 60 * 60 * 1000);
-                        const pad = (n: number) => String(n).padStart(2, "0");
-                        const fmt = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
-                        return `${fmt(start)}/${fmt(end)}`;
-                      })()}&details=Sleep%20schedule%20reminder&recur=RRULE:FREQ=DAILY`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button variant="outline">Add to Google Calendar</Button>
-                    </a>
-                    <a
-                      href={`webcal://add?text=Bedtime&dates=${(() => {
-                        const [hh, mm] = bedtime.split(":").map((x) => parseInt(x));
-                        const start = new Date();
-                        start.setHours(hh, mm, 0, 0);
-                        const end = new Date(start.getTime() + 8 * 60 * 60 * 1000);
-                        const pad = (n: number) => String(n).padStart(2, "0");
-                        const fmt = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
-                        return `${fmt(start)}/${fmt(end)}`;
-                      })()}&details=Sleep%20schedule%20reminder`}
-                    >
-                      <Button variant="ghost">Add to iOS/macOS Calendar</Button>
-                    </a>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Device alarm integration: On Android, you can add an alarm
@@ -1044,7 +1037,7 @@ export default function HealthAnalytics() {
                     >
                       system alarm intent
                     </a>
-                    . On iOS, add a calendar event as a reminder; direct alarm deep-links are restricted by iOS.
+                    . On iOS, direct alarm deep-links are restricted; use a Shortcuts automation named “Set Bedtime Alarm” that reads the time input.
                   </p>
                 </CardContent>
               </Card>
