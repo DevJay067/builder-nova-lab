@@ -206,7 +206,8 @@ export default function FirstAid() {
         let errorMessage = "Could not get your location. ";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage += "Location access was denied. Please enable location permissions and try again.";
+            errorMessage +=
+              "Location access was denied. Please enable location permissions and try again.";
             break;
           case error.POSITION_UNAVAILABLE:
             errorMessage += "Location information is unavailable.";
@@ -298,48 +299,68 @@ export default function FirstAid() {
           specialties: ["Emergency Care", "Orthopedics", "Radiology"],
           isOpen: true,
           emergencyServices: true,
-        }
+        },
       ];
 
       // Generate hospitals around the user's actual location (within searchRadius)
-      console.log(`Generating ${baseHospitals.length} hospitals around user location:`, location);
+      console.log(
+        `Generating ${baseHospitals.length} hospitals around user location:`,
+        location,
+      );
 
-      const hospitalData = baseHospitals.map((hospital, index) => {
-        // Create realistic coordinates around user's location
-        const angle = (index * 72) * (Math.PI / 180); // 72 degrees apart (360/5)
-        const distance = (0.5 + Math.random() * (searchRadius - 0.5)); // Within search radius
+      const hospitalData = baseHospitals
+        .map((hospital, index) => {
+          // Create realistic coordinates around user's location
+          const angle = index * 72 * (Math.PI / 180); // 72 degrees apart (360/5)
+          const distance = 0.5 + Math.random() * (searchRadius - 0.5); // Within search radius
 
-        // Calculate new coordinates around user's location
-        const lat = location.lat + (distance / 111) * Math.cos(angle);
-        const lng = location.lng + (distance / (111 * Math.cos(location.lat * Math.PI / 180))) * Math.sin(angle);
+          // Calculate new coordinates around user's location
+          const lat = location.lat + (distance / 111) * Math.cos(angle);
+          const lng =
+            location.lng +
+            (distance / (111 * Math.cos((location.lat * Math.PI) / 180))) *
+              Math.sin(angle);
 
-        const hospitalEntry = {
-          id: `local-${index + 1}`,
-          ...hospital,
-          address: `${Math.floor(100 + Math.random() * 900)} Medical Drive, Near You`,
-          distance: `${distance.toFixed(1)} km`,
-          coordinates: { lat, lng }
-        };
+          const hospitalEntry = {
+            id: `local-${index + 1}`,
+            ...hospital,
+            address: `${Math.floor(100 + Math.random() * 900)} Medical Drive, Near You`,
+            distance: `${distance.toFixed(1)} km`,
+            coordinates: { lat, lng },
+          };
 
-        console.log(`Generated hospital ${index + 1}:`, hospitalEntry.name, "at", hospitalEntry.coordinates, "distance:", hospitalEntry.distance);
-        return hospitalEntry;
-      }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+          console.log(
+            `Generated hospital ${index + 1}:`,
+            hospitalEntry.name,
+            "at",
+            hospitalEntry.coordinates,
+            "distance:",
+            hospitalEntry.distance,
+          );
+          return hospitalEntry;
+        })
+        .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
 
-      console.log("Setting hospitals:", hospitalData.length, "hospitals generated");
+      console.log(
+        "Setting hospitals:",
+        hospitalData.length,
+        "hospitals generated",
+      );
       setHospitals(hospitalData);
-
     } catch (error) {
       console.error("Error fetching hospitals:", error);
       // Final fallback to static data if everything fails
-      const hospitalData = fallbackHospitals.map(hospital => ({
-        ...hospital,
-        distance: `${calculateDistance(
-          location.lat,
-          location.lng,
-          hospital.coordinates.lat,
-          hospital.coordinates.lng,
-        ).toFixed(1)} km`
-      })).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+      const hospitalData = fallbackHospitals
+        .map((hospital) => ({
+          ...hospital,
+          distance: `${calculateDistance(
+            location.lat,
+            location.lng,
+            hospital.coordinates.lat,
+            hospital.coordinates.lng,
+          ).toFixed(1)} km`,
+        }))
+        .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
 
       setHospitals(hospitalData);
     } finally {
@@ -360,9 +381,9 @@ export default function FirstAid() {
 
     // Auto-fetch location if we're on hospitals tab and no location is set
     const urlParams = new URLSearchParams(window.location.search);
-    const activeTab = urlParams.get('tab') || 'conditions';
+    const activeTab = urlParams.get("tab") || "conditions";
 
-    if (activeTab === 'hospitals' && !userLocation) {
+    if (activeTab === "hospitals" && !userLocation) {
       console.log("Auto-detecting location for hospitals tab");
       // Small delay to let the UI render
       setTimeout(() => {
@@ -813,7 +834,11 @@ export default function FirstAid() {
                       variant="outline"
                       onClick={() => {
                         console.log("Force generating test hospitals...");
-                        const testLocation = { lat: 37.7749, lng: -122.4194, accuracy: 100 }; // San Francisco
+                        const testLocation = {
+                          lat: 37.7749,
+                          lng: -122.4194,
+                          accuracy: 100,
+                        }; // San Francisco
                         setUserLocation(testLocation);
                         fetchNearbyHospitals(testLocation);
                       }}
@@ -850,17 +875,24 @@ export default function FirstAid() {
                       <Alert>
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
-                          <strong>No Location Set:</strong> Click "Find Nearby Hospitals" to detect your location, or use "Test Location" to try sample data.
+                          <strong>No Location Set:</strong> Click "Find Nearby
+                          Hospitals" to detect your location, or use "Test
+                          Location" to try sample data.
                         </AlertDescription>
                       </Alert>
                     )}
 
                     {/* Debug info */}
                     <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
-                      Status: {isLoadingLocation ? "Detecting location..." : userLocation ? "Location ready" : "Location needed"} |
-                      Network: {networkQuality} |
-                      Offline: {isOfflineMode ? "Yes" : "No"} |
-                      Hospitals: {hospitals.length}
+                      Status:{" "}
+                      {isLoadingLocation
+                        ? "Detecting location..."
+                        : userLocation
+                          ? "Location ready"
+                          : "Location needed"}{" "}
+                      | Network: {networkQuality} | Offline:{" "}
+                      {isOfflineMode ? "Yes" : "No"} | Hospitals:{" "}
+                      {hospitals.length}
                     </div>
                   </div>
                 </div>

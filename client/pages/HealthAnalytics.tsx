@@ -140,19 +140,21 @@ export default function HealthAnalytics() {
               vibrate: [200, 100, 200],
               data: { url: "/analytics" },
               requireInteraction: true,
-              badge: "/icons/icon-192x192.png"
+              badge: "/icons/icon-192x192.png",
             });
             return;
           }
         } catch (swError) {
-          console.log("Service worker notification failed, falling back to basic notification");
+          console.log(
+            "Service worker notification failed, falling back to basic notification",
+          );
         }
 
         // Fallback to basic notification
         const notification = new Notification(title, {
           body,
           icon: "/icons/icon-192x192.png",
-          requireInteraction: true
+          requireInteraction: true,
         });
 
         // Auto close after 10 seconds
@@ -243,7 +245,10 @@ export default function HealthAnalytics() {
     clearHydrationInterval();
 
     // Show immediate confirmation
-    showLocalNotification("Timer Set", `Hydration reminder set for ${minutes} minute${minutes > 1 ? 's' : ''}`);
+    showLocalNotification(
+      "Timer Set",
+      `Hydration reminder set for ${minutes} minute${minutes > 1 ? "s" : ""}`,
+    );
 
     hydrationIntervalRef.current = setInterval(() => {
       const now = Date.now();
@@ -254,7 +259,10 @@ export default function HealthAnalytics() {
         setHydrationEndAt(null);
         localStorage.removeItem("health_hydration_end_at");
         console.log("Hydration timer completed, showing notification");
-        showLocalNotification("Hydration Reminder", "It's water time! 💧 Time to drink some water!");
+        showLocalNotification(
+          "Hydration Reminder",
+          "It's water time! 💧 Time to drink some water!",
+        );
 
         if (hydrationRepeat) {
           console.log("Auto-repeating hydration timer");
@@ -265,7 +273,9 @@ export default function HealthAnalytics() {
       } else {
         // Log remaining time every 30 seconds for debugging
         if (Math.floor(timeLeft / 1000) % 30 === 0) {
-          console.log(`Hydration timer: ${Math.ceil(timeLeft / 60000)} minutes remaining`);
+          console.log(
+            `Hydration timer: ${Math.ceil(timeLeft / 60000)} minutes remaining`,
+          );
         }
       }
     }, 1000);
@@ -304,14 +314,19 @@ export default function HealthAnalytics() {
     const endAt = target.getTime();
     const hoursUntil = Math.ceil((endAt - now.getTime()) / (1000 * 60 * 60));
 
-    console.log(`Scheduling sleep reminder for ${bedtime} (${hoursUntil} hours from now)`);
+    console.log(
+      `Scheduling sleep reminder for ${bedtime} (${hoursUntil} hours from now)`,
+    );
 
     setSleepReminderAt(endAt);
     localStorage.setItem("health_sleep_reminder_at", String(endAt));
     clearSleepInterval();
 
     // Show immediate confirmation
-    showLocalNotification("Sleep Reminder Set", `Bedtime reminder scheduled for ${bedtime} tonight`);
+    showLocalNotification(
+      "Sleep Reminder Set",
+      `Bedtime reminder scheduled for ${bedtime} tonight`,
+    );
 
     sleepIntervalRef.current = setInterval(() => {
       const timeLeft = endAt - Date.now();
@@ -321,10 +336,16 @@ export default function HealthAnalytics() {
         setSleepReminderAt(null);
         localStorage.removeItem("health_sleep_reminder_at");
         console.log("Sleep reminder triggered");
-        showLocalNotification("Sleep Reminder", "It's bedtime 🛌 Time to get ready for sleep!");
+        showLocalNotification(
+          "Sleep Reminder",
+          "It's bedtime 🛌 Time to get ready for sleep!",
+        );
       } else {
         // Log remaining time every hour for debugging
-        if (Math.floor(timeLeft / (1000 * 60 * 60)) !== Math.floor((timeLeft - 60000) / (1000 * 60 * 60))) {
+        if (
+          Math.floor(timeLeft / (1000 * 60 * 60)) !==
+          Math.floor((timeLeft - 60000) / (1000 * 60 * 60))
+        ) {
           const hoursLeft = Math.ceil(timeLeft / (1000 * 60 * 60));
           console.log(`Sleep reminder: ${hoursLeft} hours until bedtime`);
         }
@@ -713,7 +734,9 @@ export default function HealthAnalytics() {
                     <div className="bg-muted/30 rounded-lg p-3 space-y-2">
                       {hydrationEndAt && hydrationEndAt > Date.now() && (
                         <div className="text-sm text-green-600 font-medium">
-                          ⏰ Next reminder in {Math.ceil((hydrationEndAt - Date.now()) / 60000)} minutes
+                          ⏰ Next reminder in{" "}
+                          {Math.ceil((hydrationEndAt - Date.now()) / 60000)}{" "}
+                          minutes
                         </div>
                       )}
                       <div className="flex items-center justify-between">
@@ -721,7 +744,10 @@ export default function HealthAnalytics() {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            showLocalNotification("Test Notification", "This is a test notification to check if notifications are working!");
+                            showLocalNotification(
+                              "Test Notification",
+                              "This is a test notification to check if notifications are working!",
+                            );
                           }}
                           className="text-xs"
                         >
@@ -734,7 +760,9 @@ export default function HealthAnalytics() {
                             onClick={() => {
                               clearHydrationInterval();
                               setHydrationEndAt(null);
-                              localStorage.removeItem("health_hydration_end_at");
+                              localStorage.removeItem(
+                                "health_hydration_end_at",
+                              );
                             }}
                             className="text-xs text-red-600"
                           >
@@ -897,7 +925,10 @@ export default function HealthAnalytics() {
                           🌙 Sleep reminder set for {bedtime} tonight
                         </div>
                         <div className="text-xs text-purple-600 mt-1">
-                          {Math.ceil((sleepReminderAt - Date.now()) / (1000 * 60 * 60))} hours remaining
+                          {Math.ceil(
+                            (sleepReminderAt - Date.now()) / (1000 * 60 * 60),
+                          )}{" "}
+                          hours remaining
                         </div>
                         <Button
                           variant="ghost"
@@ -906,7 +937,10 @@ export default function HealthAnalytics() {
                             clearSleepInterval();
                             setSleepReminderAt(null);
                             localStorage.removeItem("health_sleep_reminder_at");
-                            showLocalNotification("Sleep Reminder Cancelled", "Your bedtime reminder has been cancelled");
+                            showLocalNotification(
+                              "Sleep Reminder Cancelled",
+                              "Your bedtime reminder has been cancelled",
+                            );
                           }}
                           className="text-xs text-red-600 mt-2 h-6 px-2"
                         >

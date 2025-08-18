@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 
 // Suppress Recharts defaultProps warnings in development
 const originalConsoleWarn = console.warn;
-if (typeof console !== 'undefined') {
+if (typeof console !== "undefined") {
   console.warn = (...args) => {
     if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Support for defaultProps will be removed from function components') &&
-      (args[0].includes('XAxis') || args[0].includes('YAxis'))
+      typeof args[0] === "string" &&
+      args[0].includes(
+        "Support for defaultProps will be removed from function components",
+      ) &&
+      (args[0].includes("XAxis") || args[0].includes("YAxis"))
     ) {
       return; // Suppress these specific warnings
     }
