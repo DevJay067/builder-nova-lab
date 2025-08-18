@@ -57,7 +57,7 @@ export default function FirstAid() {
   const [searchRadius, setSearchRadius] = useState(5); // km
 
   // Google Maps Places API key (set VITE_GOOGLE_MAPS_API_KEY in env)
-  const GOOGLE_MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+  const GOOGLE_MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || (import.meta as any).env?.VITE_google_maps_api_key || (import.meta as any).env?.VITE_GMAPS_KEY || (import.meta as any).env?.VITE_GOOGLE_API_KEY || (import.meta as any).env?.VITE_MAPS_KEY || (import.meta as any).env?.VITE_PLACES_KEY || (import.meta as any).env?.VITE_PLACES_API_KEY || (import.meta as any).env?.VITE_GPLACES_KEY || (import.meta as any).env?.VITE_GMAPS_API_KEY || (import.meta as any).env?.VITE_GOOGLE_PLACES_KEY || (import.meta as any).env?.VITE_GOOGLE_MAPS_KEY || (import.meta as any).env?.VITE_GMAPS || (import.meta as any).env?.VITE_PLACES || (import.meta as any).env?.VITE_MAPS || (import.meta as any).env?.VITE_GOOGLE || (import.meta as any).env?.VITE_API_KEY || (import.meta as any).env?.VITE_KEY || (import.meta as any).env?.VITE_TOKEN || (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
 
   // Lazy load Google Maps JS API with Places library
   const loadGoogleMapsPlaces = async (): Promise<void> => {
@@ -368,8 +368,65 @@ export default function FirstAid() {
           .filter(Boolean)
           .sort((a: any, b: any) => parseFloat(a.distance) - parseFloat(b.distance));
 
-        setHospitals(hospitalData as any);
-      } else {
+        if ((hospitalData as any).length > 0) {
+          setHospitals(hospitalData as any);
+          return;
+        }
+      }
+
+      // Fallback 2: OpenStreetMap Overpass API (no key needed)
+      try {
+        const radiusMeters = Math.min(Math.max(Math.floor(searchRadius * 1000), 500), 50000);
+        const overpassQuery = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});way["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});relation["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng}););out center;`;
+        const resp = await fetch("https://overpass-api.de/api/interpreter", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          body: new URLSearchParams({ data: overpassQuery }).toString(),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const elements = Array.isArray(data?.elements) ? data.elements : [];
+          const hospitalsOSM = elements
+            .map((el: any, i: number) => {
+              const lat = el.lat ?? el.center?.lat;
+              const lng = el.lon ?? el.center?.lon;
+              if (typeof lat !== "number" || typeof lng !== "number") return null;
+              const tags = el.tags || {};
+              const distKm = calculateDistance(location.lat, location.lng, lat, lng);
+              const phone = tags["phone"] || tags["contact:phone"] || "";
+              const address = [
+                tags["addr:housenumber"],
+                tags["addr:street"],
+                tags["addr:city"],
+              ]
+                .filter(Boolean)
+                .join(" ");
+              return {
+                id: String(el.id || i),
+                name: tags.name || "Hospital",
+                address,
+                phone,
+                rating: undefined,
+                specialties: ["Emergency Care"],
+                distance: `${distKm.toFixed(1)} km`,
+                isOpen: undefined,
+                emergencyServices: true,
+                coordinates: { lat, lng },
+              };
+            })
+            .filter(Boolean)
+            .sort((a: any, b: any) => parseFloat(a.distance) - parseFloat(b.distance));
+          if (hospitalsOSM.length > 0) {
+            setHospitals(hospitalsOSM as any);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("Overpass API fallback failed", e);
+      }
+
+      // Fallback 3: Generated data near location (no network or APIs)
+      {
         // Fallback: generate hospitals around the user's location (no API key)
         const baseHospitals = [
           { name: "Emergency Medical Center", phone: "+1-555-1111", rating: 4.5, specialties: ["Emergency Care", "Trauma Center", "ICU"], isOpen: true, emergencyServices: true },
