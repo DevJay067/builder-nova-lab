@@ -264,9 +264,6 @@ const handleRequest = async (event: any) => {
       return createSuccessResponse({ success: true, last });
     }
 
-    // Note: SSE endpoints like /api/iot/stream and /api/notifications/stream are not supported in Netlify functions
-    // Fall back to polling via /api/iot/latest and acknowledge notification schedules only
-
     // Notifications schedule endpoints (ack only)
     if (path === "/api/notifications/hydration" && httpMethod === "POST") {
       return createSuccessResponse({ success: true });
