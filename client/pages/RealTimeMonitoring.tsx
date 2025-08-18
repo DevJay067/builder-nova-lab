@@ -1018,8 +1018,23 @@ export default function RealTimeMonitoring() {
                           strokeDasharray="3 3"
                           className="opacity-30"
                         />
-                        <XAxis dataKey="time" className="text-xs" />
-                        <YAxis className="text-xs" />
+                        <XAxis
+                          dataKey="time"
+                          className="text-xs"
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                          height={60}
+                          type="category"
+                        />
+                        <YAxis
+                          className="text-xs"
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                          width={80}
+                          type="number"
+                        />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "rgba(255, 255, 255, 0.95)",
