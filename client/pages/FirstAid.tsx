@@ -201,8 +201,80 @@ export default function FirstAid() {
     }
   };
 
+  // Get highest-accuracy location by sampling multiple GPS readings
+  const getHighAccuracyLocation = async (
+    options: {
+      desiredAccuracyMeters?: number;
+      maxWaitMs?: number;
+      maxSamples?: number;
+    } = {},
+  ): Promise<{ lat: number; lng: number; accuracy: number } | null> => {
+    return await new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve(null);
+        return;
+      }
+
+      const desiredAccuracy = Math.max(0.1, options.desiredAccuracyMeters ?? 1);
+      const maxWait = Math.max(2000, options.maxWaitMs ?? 20000);
+      const maxSamples = Math.max(1, options.maxSamples ?? 12);
+
+      let best: { lat: number; lng: number; accuracy: number } | null = null;
+      let samples = 0;
+      const startedAt = Date.now();
+
+      const clearAll = (watchId?: number, timeoutId?: any) => {
+        if (watchId != null) navigator.geolocation.clearWatch(watchId);
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+
+      // Seed with one immediate reading
+      navigator.geolocation.getCurrentPosition(
+        () => {},
+        () => {},
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: Math.min(10000, maxWait),
+        },
+      );
+
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          samples++;
+          const { latitude, longitude, accuracy } = pos.coords;
+          if (!best || (typeof accuracy === 'number' && accuracy < best.accuracy)) {
+            best = { lat: latitude, lng: longitude, accuracy: accuracy ?? Number.POSITIVE_INFINITY };
+          }
+          const elapsed = Date.now() - startedAt;
+          if ((accuracy != null && accuracy <= desiredAccuracy) || samples >= maxSamples || elapsed >= maxWait) {
+            clearAll(watchId);
+            resolve(best);
+          }
+        },
+        (err) => {
+          const elapsed = Date.now() - startedAt;
+          if (elapsed >= maxWait) {
+            clearAll(watchId);
+            resolve(best);
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: maxWait,
+        },
+      );
+
+      const timeoutId = setTimeout(() => {
+        clearAll(watchId);
+        resolve(best);
+      }, maxWait + 1000);
+    });
+  };
+
   // Get user's current location
-  const getCurrentLocation = () => {
+  const getCurrentLocation = async () => {
     console.log("Starting location detection...");
     setIsLoadingLocation(true);
 
@@ -213,58 +285,27 @@ export default function FirstAid() {
       return;
     }
 
-    console.log("Requesting geolocation permission...");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        console.log("Location obtained:", position.coords);
-        const location = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        };
-        setUserLocation(location);
+    console.log("Requesting high-accuracy geolocation...");
+    try {
+      const best = await getHighAccuracyLocation({ desiredAccuracyMeters: 0.1, maxWaitMs: 25000, maxSamples: 20 });
+      if (best && typeof best.lat === 'number' && typeof best.lng === 'number') {
+        const loc = { lat: best.lat, lng: best.lng, accuracy: best.accuracy } as any;
+        console.log("Best location obtained:", loc);
+        setUserLocation(loc);
         setIsLoadingLocation(false);
-
-        console.log("Fetching hospitals for location:", location);
-        // Always fetch hospitals regardless of network quality for testing
-        fetchNearbyHospitals(location);
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        setIsLoadingLocation(false);
-
-        let errorMessage = "Could not get your location. ";
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage +=
-              "Location access was denied. Please enable location permissions and try again.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage += "Location information is unavailable.";
-            break;
-          case error.TIMEOUT:
-            errorMessage += "Location request timed out.";
-            break;
-          default:
-            errorMessage += "An unknown error occurred.";
-            break;
-        }
-
-        // Use fallback location (City Center) and hospitals
-        const fallbackLocation = { lat: 40.7128, lng: -74.006, accuracy: null };
-        setUserLocation(fallbackLocation);
-
-        console.log("Using fallback location:", fallbackLocation);
-        fetchNearbyHospitals(fallbackLocation);
-
-        alert(errorMessage + " Using default location instead.");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000, // Increased timeout
-        maximumAge: 60000, // Reduced cache time for fresh location
-      },
-    );
+        fetchNearbyHospitals(loc);
+        return;
+      }
+      throw new Error("No accurate position available");
+    } catch (error) {
+      console.error("Geolocation error (high-accuracy path):", error);
+      setIsLoadingLocation(false);
+      const fallbackLocation = { lat: 40.7128, lng: -74.006, accuracy: null };
+      setUserLocation(fallbackLocation);
+      console.log("Using fallback location:", fallbackLocation);
+      fetchNearbyHospitals(fallbackLocation);
+      alert("Could not get a precise location. Using a default area instead.");
+    }
   };
 
   // Calculate distance between two points
