@@ -253,6 +253,7 @@ export default function FirstAid() {
 
   // Fetch nearby hospitals using real location-based search
   const fetchNearbyHospitals = async (location) => {
+    console.log("fetchNearbyHospitals called with location:", location);
     setLoadingHospitals(true);
 
     try {
