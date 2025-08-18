@@ -807,6 +807,20 @@ export default function FirstAid() {
                         ? "Getting Location..."
                         : "Find Nearby Hospitals"}
                     </Button>
+
+                    {/* Debug button for testing */}
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        console.log("Force generating test hospitals...");
+                        const testLocation = { lat: 37.7749, lng: -122.4194, accuracy: 100 }; // San Francisco
+                        setUserLocation(testLocation);
+                        fetchNearbyHospitals(testLocation);
+                      }}
+                      className="h-12 sm:h-10 text-sm"
+                    >
+                      Test Location
+                    </Button>
                     <div className="flex items-center space-x-2">
                       <Label htmlFor="offline-mode" className="text-sm">
                         Offline Mode
