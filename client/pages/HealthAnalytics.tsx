@@ -708,6 +708,42 @@ export default function HealthAnalytics() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Timer Status and Test */}
+                    <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                      {hydrationEndAt && hydrationEndAt > Date.now() && (
+                        <div className="text-sm text-green-600 font-medium">
+                          ⏰ Next reminder in {Math.ceil((hydrationEndAt - Date.now()) / 60000)} minutes
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            showLocalNotification("Test Notification", "This is a test notification to check if notifications are working!");
+                          }}
+                          className="text-xs"
+                        >
+                          Test Notification
+                        </Button>
+                        {hydrationEndAt && hydrationEndAt > Date.now() && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              clearHydrationInterval();
+                              setHydrationEndAt(null);
+                              localStorage.removeItem("health_hydration_end_at");
+                            }}
+                            className="text-xs text-red-600"
+                          >
+                            Cancel Timer
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-3 gap-2 sm:flex sm:justify-end sm:space-x-2">
                       <Button
                         variant="outline"
