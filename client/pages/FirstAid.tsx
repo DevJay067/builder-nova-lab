@@ -173,16 +173,20 @@ export default function FirstAid() {
 
   // Get user's current location
   const getCurrentLocation = () => {
+    console.log("Starting location detection...");
     setIsLoadingLocation(true);
 
     if (!navigator.geolocation) {
+      console.log("Geolocation not supported");
       alert("Geolocation is not supported by this browser");
       setIsLoadingLocation(false);
       return;
     }
 
+    console.log("Requesting geolocation permission...");
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log("Location obtained:", position.coords);
         const location = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -191,31 +195,43 @@ export default function FirstAid() {
         setUserLocation(location);
         setIsLoadingLocation(false);
 
-        // Try to fetch nearby hospitals
-        if (!isOfflineMode && networkQuality !== "poor") {
-          fetchNearbyHospitals(location);
-        } else {
-          // Use fallback data
-          setHospitals(fallbackHospitals);
-        }
+        console.log("Fetching hospitals for location:", location);
+        // Always fetch hospitals regardless of network quality for testing
+        fetchNearbyHospitals(location);
       },
       (error) => {
-        console.error("Error getting location:", error);
+        console.error("Geolocation error:", error);
         setIsLoadingLocation(false);
+
+        let errorMessage = "Could not get your location. ";
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += "Location access was denied. Please enable location permissions and try again.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage += "Location request timed out.";
+            break;
+          default:
+            errorMessage += "An unknown error occurred.";
+            break;
+        }
 
         // Use fallback location (City Center) and hospitals
         const fallbackLocation = { lat: 40.7128, lng: -74.006, accuracy: null };
         setUserLocation(fallbackLocation);
-        setHospitals(fallbackHospitals);
 
-        alert(
-          "Could not get your location. Showing nearby hospitals for City Center.",
-        );
+        console.log("Using fallback location:", fallbackLocation);
+        fetchNearbyHospitals(fallbackLocation);
+
+        alert(errorMessage + " Using default location instead.");
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000, // 5 minutes
+        timeout: 15000, // Increased timeout
+        maximumAge: 60000, // Reduced cache time for fresh location
       },
     );
   };
