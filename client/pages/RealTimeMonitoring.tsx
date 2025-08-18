@@ -96,6 +96,7 @@ export default function RealTimeMonitoring() {
   // Attempt SSE connection; fallback to simulation
   useEffect(() => {
     let simulateInterval: any = null;
+    let pollInterval: any = null;
     let eventSource: EventSource | null = null;
 
     function startSimulation() {
@@ -137,6 +138,54 @@ export default function RealTimeMonitoring() {
       }
     }
 
+    async function startPollingLatest() {
+      if (pollInterval) return;
+      const token = localStorage.getItem("sessionToken");
+      const headers: Record<string, string> = token
+        ? { Authorization: `Bearer ${token}`, "x-session-token": token }
+        : {};
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch("/api/iot/latest", { headers });
+          if (!res.ok) return;
+          const data = await res.json();
+          const last = data?.last;
+          if (!last?.metrics) return;
+          const now = new Date(last.timestamp || new Date().toISOString());
+          setVitalSigns((prev) => {
+            const updated = {
+              ...prev,
+              heartRate: typeof last.metrics.heartRate === "number" ? last.metrics.heartRate : prev.heartRate,
+              oxygenSaturation: typeof last.metrics.spo2 === "number" ? last.metrics.spo2 : prev.oxygenSaturation,
+              steps: typeof last.metrics.steps === "number" ? last.metrics.steps : prev.steps,
+              calories: typeof last.metrics.calories === "number" ? last.metrics.calories : prev.calories,
+              distance: typeof last.metrics.distance === "number" ? last.metrics.distance : prev.distance,
+              timestamp: now.toISOString(),
+            };
+            setVitalsHistory((prevHist) => [
+              ...prevHist,
+              {
+                time: now.toLocaleTimeString(),
+                heartRate: updated.heartRate,
+                temperature: updated.temperature,
+                oxygenSat: updated.oxygenSaturation,
+                systolic: updated.bloodPressure.systolic,
+                steps: updated.steps,
+              },
+            ].slice(-50));
+            return updated;
+          });
+        } catch {}
+      }, 3000);
+    }
+
+    function stopPollingLatest() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    }
+
     try {
       const token = localStorage.getItem("sessionToken");
       const url = useDemo
@@ -146,7 +195,8 @@ export default function RealTimeMonitoring() {
           : "";
 
       if (!url) {
-        // no session and not in demo -> no SSE
+        // no session and not in demo -> try polling latest if available
+        startPollingLatest();
       } else {
         eventSource = new EventSource(url);
 
@@ -187,20 +237,24 @@ export default function RealTimeMonitoring() {
 
         eventSource.addEventListener("ready", () => {
           stopSimulation();
+          stopPollingLatest();
         });
 
         eventSource.onerror = () => {
           if (useDemo) startSimulation();
+          else startPollingLatest();
         };
       }
 
       if (useDemo) startSimulation();
     } catch {
       if (useDemo) startSimulation();
+      else startPollingLatest();
     }
 
     return () => {
       stopSimulation();
+      stopPollingLatest();
       if (eventSource) {
         eventSource.close();
       }
