@@ -22,6 +22,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@builder.io/react": "^8.2.6",
     "@hookform/resolvers": "^3.9.0",
     "@neondatabase/serverless": "^1.0.1",
     "@netlify/functions": "^2.8.1",
