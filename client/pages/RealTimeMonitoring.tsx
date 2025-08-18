@@ -91,6 +91,7 @@ export default function RealTimeMonitoring() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
   const [uploadToCloud, setUploadToCloud] = useState(true);
+  const [gattMode, setGattMode] = useState(true);
   const isBLESupported = typeof navigator !== "undefined" && !!(navigator as any).bluetooth;
 
   // Attempt SSE connection; fallback to simulation
@@ -188,6 +189,13 @@ export default function RealTimeMonitoring() {
 
     try {
       const token = localStorage.getItem("sessionToken");
+      // If GATT mode is enabled, skip SSE/polling and rely on BLE connection
+      if (gattMode) {
+        if (useDemo) startSimulation();
+        return () => {
+          stopSimulation();
+        };
+      }
       const url = useDemo
         ? `/api/iot/stream?simulate=true`
         : token
@@ -259,7 +267,7 @@ export default function RealTimeMonitoring() {
         eventSource.close();
       }
     };
-  }, [useDemo]);
+  }, [useDemo, gattMode]);
 
   // Web Bluetooth: connect and stream heart rate (and optional SpO2)
   const connectBluetooth = async () => {
@@ -331,6 +339,17 @@ export default function RealTimeMonitoring() {
             }
           }
         });
+      } catch {}
+
+      // Battery service (read once)
+      try {
+        const battService = await server.getPrimaryService(0x180F);
+        const battChar = await battService.getCharacteristic(0x2A19);
+        const value = await battChar.readValue();
+        const battery = value.getUint8(0);
+        setConnectedDevices((prev) => prev.map((d) => (
+          (d.id === (device.id || "ble-device")) ? { ...d, battery } : d
+        )));
       } catch {}
 
       // Pulse Oximeter service (best-effort)
@@ -471,6 +490,10 @@ export default function RealTimeMonitoring() {
               <div className="flex items-center space-x-2">
                 <Label htmlFor="cloud-upload" className="text-xs text-slate-600">Upload to Cloud</Label>
                 <Switch id="cloud-upload" checked={uploadToCloud} onCheckedChange={setUploadToCloud} />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="gatt-mode" className="text-xs text-slate-600">GATT Mode</Label>
+                <Switch id="gatt-mode" checked={gattMode} onCheckedChange={setGattMode} />
               </div>
               <Button size="sm" className="btn-smooth" onClick={connectBluetooth} disabled={!isBLESupported || isConnecting}>
                 <Watch className="w-4 h-4 mr-2" />
