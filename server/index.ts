@@ -60,7 +60,11 @@ export function createServer() {
   // Basic middleware setup
   app.use(cors({
     origin: process.env.NODE_ENV === "production" 
-      ? ["https://your-app.netlify.app", "https://localhost:3000"] 
+      ? [
+        "https://your-app.netlify.app",
+        "https://b-maxpro2.netlify.app",
+        "https://localhost:3000"
+      ] 
       : true,
     credentials: true,
   }));
