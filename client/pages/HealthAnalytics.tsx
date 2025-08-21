@@ -586,6 +586,25 @@ export default function HealthAnalytics() {
                   variant="outline"
                   className="h-16 flex-col space-y-1"
                   onClick={async () => {
+                    // Try to open the device alarm app to set an alarm when possible
+                    const isAndroid = /Android/i.test(navigator.userAgent);
+                    if (isAndroid) {
+                      const uri = buildAndroidShowAlarmsIntentUri();
+                      try {
+                        window.location.href = uri;
+                        // Also attempt a direct SET_ALARM with current time + 30m for convenience
+                        const now = new Date();
+                        const in30 = new Date(now.getTime() + 30 * 60000);
+                        const hh = in30.getHours().toString().padStart(2, "0");
+                        const mm = in30.getMinutes().toString().padStart(2, "0");
+                        const setUri = buildAndroidAlarmIntentUri(`${hh}:${mm}`);
+                        setTimeout(() => {
+                          window.location.href = setUri;
+                        }, 500);
+                      } catch {}
+                    }
+
+                    // Keep internal notification flow as fallback
                     const token = localStorage.getItem("sessionToken");
                     if (token)
                       await fetch("/api/notifications/hydration", {
