@@ -101,12 +101,15 @@ export default function HealthAnalytics() {
       if (Notification && Notification.permission === "granted") {
         const reg = await navigator.serviceWorker?.ready;
         if (reg && reg.showNotification) {
-          await reg.showNotification(title, {
-            body,
-            icon: "/icons/icon-192x192.png",
-            vibrate: [200, 100, 200],
-            data: { url: "/analytics" },
-          });
+          await reg.showNotification(
+            title,
+            {
+              body,
+              icon: "/icons/icon-192x192.png",
+              vibrate: [200, 100, 200],
+              data: { url: "/analytics" },
+            } as any,
+          );
           return;
         }
         new Notification(title, { body });

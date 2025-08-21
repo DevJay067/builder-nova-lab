@@ -1,4 +1,4 @@
-import { UserAuthenticationService } from "./userAuthentication";
+import { SecureDataAccessService } from "./secureDataAccess";
 
 /**
  * Personalized Medical Context Service
@@ -238,7 +238,7 @@ class PersonalizedMedicalContextService {
   ): Promise<PersonalizedContext> {
     try {
       // Get user from session
-      const user = UserAuthenticationService.getUserFromSession(sessionToken);
+      const user = SecureDataAccessService.getUserFromSession(sessionToken);
       if (!user) {
         return {
           hasData: false,
@@ -253,10 +253,9 @@ class PersonalizedMedicalContextService {
       }
 
       // Get user's health records
-      const healthRecordsResult =
-        await UserAuthenticationService.getHealthRecords(sessionToken);
+      const healthRecordsResult = await SecureDataAccessService.getSecureHealthRecords(sessionToken);
 
-      if (!healthRecordsResult.success || !healthRecordsResult.records) {
+      if (!healthRecordsResult.success || !healthRecordsResult.data) {
         return {
           hasData: false,
           patientId: user.userHash.substring(0, 16),
@@ -270,18 +269,12 @@ class PersonalizedMedicalContextService {
       }
 
       // Extract medical conditions
-      const medicalConditions = this.extractMedicalConditions(
-        healthRecordsResult.records,
-      );
+      const medicalConditions = this.extractMedicalConditions(healthRecordsResult.data as any[]);
 
       // Extract current medications, allergies, and symptoms
-      const currentMedications = this.extractCurrentMedications(
-        healthRecordsResult.records,
-      );
-      const allergies = this.extractAllergies(healthRecordsResult.records);
-      const recentSymptoms = this.extractRecentSymptoms(
-        healthRecordsResult.records,
-      );
+      const currentMedications = this.extractCurrentMedications(healthRecordsResult.data as any[]);
+      const allergies = this.extractAllergies(healthRecordsResult.data as any[]);
+      const recentSymptoms = this.extractRecentSymptoms(healthRecordsResult.data as any[]);
 
       // Create contextual prompt for AI
       const contextualPrompt = this.createContextualPrompt(
@@ -646,4 +639,3 @@ class PersonalizedMedicalContextService {
 }
 
 export { PersonalizedMedicalContextService };
-export type { MedicalCondition, PersonalizedContext, AIQueryEnhancement };

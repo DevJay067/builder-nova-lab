@@ -20,6 +20,7 @@ import {
   Users,
   Clock,
 } from "lucide-react";
+import { Brain } from "lucide-react";
 import {
   useTranslation,
   SUPPORTED_LANGUAGES,

@@ -241,7 +241,7 @@ class UserAuthenticationService {
         () => {
           console.warn("⚠️ Using fallback database initialization");
           this.useDatabase = false;
-          SimpleDatabaseInit.createMedicalHistoryTable().catch(() => {
+          SimpleDatabaseInit.initializeDatabase().catch(() => {
             console.warn(
               "⚠️ Fallback initialization also failed, using in-memory only",
             );
@@ -720,4 +720,3 @@ class UserAuthenticationService {
 }
 
 export { UserAuthenticationService };
-export type { User, AuthResult, DataAccessRecord };

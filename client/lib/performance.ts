@@ -199,7 +199,7 @@ export class WebVitalsMonitor {
   measureFID() {
     new PerformanceObserver((entryList) => {
       for (const entry of entryList.getEntries()) {
-        this.vitals.fid = entry.processingStart - entry.startTime;
+        this.vitals.fid = (entry as any).processingStart - entry.startTime;
       }
     }).observe({ entryTypes: ["first-input"] });
   }
@@ -208,7 +208,7 @@ export class WebVitalsMonitor {
     let clsValue = 0;
     new PerformanceObserver((entryList) => {
       for (const entry of entryList.getEntries()) {
-        if (!entry.hadRecentInput) {
+        if (!(entry as any).hadRecentInput) {
           clsValue += (entry as any).value;
         }
       }

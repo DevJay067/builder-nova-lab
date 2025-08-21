@@ -125,7 +125,7 @@ export const ingestIoTData: RequestHandler = async (req, res) => {
 
       // Persist into secure records as iot_vitals
       try {
-        await SecureDataAccessService.storeHealthRecord(sessionToken, {
+        await SecureDataAccessService.storeSecureHealthRecord(sessionToken, {
           type: "iot_vitals",
           data: {
             ...event.metrics,

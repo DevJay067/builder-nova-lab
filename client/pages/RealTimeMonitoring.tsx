@@ -39,7 +39,6 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  RechartsProps,
 } from "recharts";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
