@@ -441,7 +441,7 @@ export default function BamxPro() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">
-                    Bmax Pro
+                    Bmax Scan
                   </h1>
                   <p className="text-sm text-muted-foreground">
                     Coming soon — see how medical data personalised...
