@@ -1065,7 +1065,14 @@ export default function HealthHistory() {
                             <div className="flex items-start justify-between mb-2">
                               <div>
                                 <h3 className="text-lg font-semibold text-foreground truncate">
-                                  {record.title}
+                                  <a
+                                    href={`/report/${record.id}`}
+                                    className="underline text-blue-600 hover:text-blue-700"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {record.title}
+                                  </a>
                                 </h3>
                                 <div className="flex items-center space-x-3 text-sm text-muted-foreground">
                                   <div className="flex items-center space-x-1">

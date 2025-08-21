@@ -16,6 +16,7 @@ import HealthHistory from "./pages/HealthHistory";
 import FirstAid from "./pages/FirstAid";
 import HealthAnalytics from "./pages/HealthAnalytics";
 import Legal from "./pages/Legal";
+import Report from "./pages/Report";
 import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
@@ -80,6 +81,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requireAuth={true}>
                     <HealthHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/report/:id"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <Report />
                   </ProtectedRoute>
                 }
               />
