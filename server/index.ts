@@ -53,20 +53,37 @@ import {
   getPersonalizedInsights,
   performAIScan,
 } from "./routes/personalizedContext";
+import { applySecurity } from "./middleware/security";
+import { authenticateJWT } from "./middleware/authJwt";
+import { syncData, getRecent, getHistory } from "./routes/data";
+import { bleIngest } from "./routes/ble";
+import { nearbyHospitals, triggerSOS } from "./routes/emergency";
+import { scheduleSleepAlarm } from "./routes/sleep";
+import { signup as jwtSignup, login as jwtLogin, me as jwtMe } from "./routes/jwtAuth";
+
+function getAllowedOrigins() {
+  const env = process.env.CORS_ORIGINS;
+  if (!env) {
+    return process.env.NODE_ENV === "production"
+      ? ["https://your-app.netlify.app"]
+      : true;
+  }
+  const list = env.split(",").map((s) => s.trim()).filter(Boolean);
+  return list.length ? list : true;
+}
 
 export function createServer() {
   const app = express();
 
   // Basic middleware setup
   app.use(cors({
-    origin: process.env.NODE_ENV === "production" 
-      ? ["https://your-app.netlify.app", "https://localhost:3000"] 
-      : true,
+    origin: getAllowedOrigins(),
     credentials: true,
   }));
   app.use(cookieParser());
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+  applySecurity(app);
 
   // Health check endpoint (always available)
   app.get("/api/health", (req, res) => {
@@ -88,7 +105,7 @@ export function createServer() {
         await PerformanceOptimizerService.initialize();
         console.log("✅ Performance optimizer initialized");
       } catch (error) {
-        console.log("⚠️ Performance optimizer failed:", error.message);
+        console.log("⚠️ Performance optimizer failed:", (error as any).message);
       }
 
       // Initialize blockchain system
@@ -97,7 +114,7 @@ export function createServer() {
         ProductionBlockchainService.initializeBlockchain();
         console.log("✅ Blockchain system initialized");
       } catch (error) {
-        console.log("⚠️ Blockchain system failed:", error.message);
+        console.log("⚠️ Blockchain system failed:", (error as any).message);
       }
 
       // Initialize secure data access
@@ -106,7 +123,7 @@ export function createServer() {
         await SecureDataAccessService.initialize();
         console.log("✅ Secure data access initialized");
       } catch (error) {
-        console.log("⚠️ Secure data access failed:", error.message);
+        console.log("⚠️ Secure data access failed:", (error as any).message);
       }
 
       // Initialize user authentication
@@ -115,7 +132,7 @@ export function createServer() {
         await UserAuthenticationService.initialize();
         console.log("✅ User authentication initialized");
       } catch (error) {
-        console.log("⚠️ User authentication failed:", error.message);
+        console.log("⚠️ User authentication failed:", (error as any).message);
       }
 
       // Initialize database
@@ -124,7 +141,7 @@ export function createServer() {
         await DatabaseInitService.initializeDatabase();
         console.log("✅ Database initialized");
       } catch (error) {
-        console.log("⚠️ Database failed:", error.message);
+        console.log("⚠️ Database failed:", (error as any).message);
       }
 
       console.log("✅ Background initialization completed");
@@ -154,7 +171,7 @@ export function createServer() {
         app.delete("/api/health-records/:id", deleteHealthRecord);
         console.log("✅ Health records routes added");
       } catch (error) {
-        console.log("⚠️ Health records routes failed:", error.message);
+        console.log("⚠️ Health records routes failed:", (error as any).message);
       }
 
       // Secure data API routes
@@ -170,7 +187,7 @@ export function createServer() {
         app.post("/api/secure/validate", validateKeyFragments);
         console.log("✅ Secure data routes added");
       } catch (error) {
-        console.log("⚠️ Secure data routes failed:", error.message);
+        console.log("⚠️ Secure data routes failed:", (error as any).message);
       }
 
       // Database health routes
@@ -180,7 +197,7 @@ export function createServer() {
         app.get("/api/database/test", testDatabaseConnection);
         console.log("✅ Database routes added");
       } catch (error) {
-        console.log("⚠️ Database routes failed:", error.message);
+        console.log("⚠️ Database routes failed:", (error as any).message);
       }
 
       // Demo keys routes
@@ -190,7 +207,7 @@ export function createServer() {
         app.post("/api/demo/init", initializeDemoData);
         console.log("✅ Demo routes added");
       } catch (error) {
-        console.log("⚠️ Demo routes failed:", error.message);
+        console.log("⚠️ Demo routes failed:", (error as any).message);
       }
 
       // Auth routes
@@ -205,9 +222,13 @@ export function createServer() {
         app.get("/api/auth/stats", getAuthStats);
         app.post("/api/auth/authenticate", authenticateUser);
         app.post("/api/auth/demo-login", demoLogin);
+        // JWT-based auth (explicit)
+        app.post("/api/jwt/signup", jwtSignup);
+        app.post("/api/jwt/login", jwtLogin);
+        app.get("/api/jwt/me", authenticateJWT, jwtMe);
         console.log("✅ Auth routes added");
       } catch (error) {
-        console.log("⚠️ Auth routes failed:", error.message);
+        console.log("⚠️ Auth routes failed:", (error as any).message);
       }
 
       // Personalized context routes
@@ -218,7 +239,7 @@ export function createServer() {
         app.post("/api/medical-context/ai-scan", performAIScan);
         console.log("✅ Personalized context routes added");
       } catch (error) {
-        console.log("⚠️ Personalized context routes failed:", error.message);
+        console.log("⚠️ Personalized context routes failed:", (error as any).message);
       }
 
       // Demo route
@@ -226,7 +247,7 @@ export function createServer() {
         app.get("/api/demo", handleDemo);
         console.log("✅ Demo route added");
       } catch (error) {
-        console.log("⚠️ Demo route failed:", error.message);
+        console.log("⚠️ Demo route failed:", (error as any).message);
       }
 
       // IoT routes
@@ -236,7 +257,7 @@ export function createServer() {
         app.post("/api/iot/ingest", ingestIoTData);
         console.log("✅ IoT routes added");
       } catch (error) {
-        console.log("⚠️ IoT routes failed:", error.message);
+        console.log("⚠️ IoT routes failed:", (error as any).message);
       }
 
       // Notifications routes
@@ -247,34 +268,42 @@ export function createServer() {
         app.post("/api/notifications/bedtime", scheduleBedtime);
         console.log("✅ Notifications routes added");
       } catch (error) {
-        console.log("⚠️ Notifications routes failed:", error.message);
+        console.log("⚠️ Notifications routes failed:", (error as any).message);
       }
 
-      // Performance status route
+      // Health data sync & queries
       try {
-        app.get("/api/performance/status", async (req, res) => {
-          try {
-            const { PerformanceOptimizerService } = await import("./services/performanceOptimizer");
-            const metrics = PerformanceOptimizerService.getMetrics();
-            const health = PerformanceOptimizerService.getHealthStatus();
-            
-            res.json({
-              success: true,
-              metrics,
-              health,
-              timestamp: new Date().toISOString()
-            });
-          } catch (error) {
-            res.status(500).json({
-              success: false,
-              error: "Performance service unavailable",
-              message: error.message
-            });
-          }
-        });
-        console.log("✅ Performance status route added");
+        app.post("/api/data/sync", syncData);
+        app.get("/api/data/recent", authenticateJWT, getRecent);
+        app.get("/api/data/history", authenticateJWT, getHistory);
+        console.log("✅ Health data routes added");
       } catch (error) {
-        console.log("⚠️ Performance status route failed:", error.message);
+        console.log("⚠️ Health data routes failed:", (error as any).message);
+      }
+
+      // BLE ingest
+      try {
+        app.post("/api/ble/ingest", ...bleIngest);
+        console.log("✅ BLE ingest route added");
+      } catch (error) {
+        console.log("⚠️ BLE ingest route failed:", (error as any).message);
+      }
+
+      // Emergency + hospitals
+      try {
+        app.get("/api/emergency/nearby-hospitals", nearbyHospitals);
+        app.post("/api/emergency/sos", authenticateJWT, triggerSOS);
+        console.log("✅ Emergency routes added");
+      } catch (error) {
+        console.log("⚠️ Emergency routes failed:", (error as any).message);
+      }
+
+      // Sleep alarm scheduling
+      try {
+        app.post("/api/sleep/alarm", scheduleSleepAlarm);
+        console.log("✅ Sleep routes added");
+      } catch (error) {
+        console.log("⚠️ Sleep routes failed:", (error as any).message);
       }
 
     } catch (error) {
@@ -282,26 +311,28 @@ export function createServer() {
     }
   };
 
-  // Add routes in background
-  addRoutes();
+  // Add routes, then attach error and 404 handlers after
+  const routesReady = addRoutes();
 
-  // Error handling middleware
-  app.use((error: any, req: any, res: any, next: any) => {
-    console.error("Express error:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      message: process.env.NODE_ENV === "development" ? error.message : "Something went wrong",
-      timestamp: new Date().toISOString()
+  routesReady.finally(() => {
+    // Error handling middleware
+    app.use((error: any, req: any, res: any, next: any) => {
+      console.error("Express error:", error);
+      res.status(500).json({
+        error: "Internal server error",
+        message: process.env.NODE_ENV === "development" ? error.message : "Something went wrong",
+        timestamp: new Date().toISOString()
+      });
     });
-  });
 
-  // 404 handler
-  app.use("*", (req, res) => {
-    res.status(404).json({
-      error: "Not found",
-      message: "The requested endpoint does not exist",
-      path: req.originalUrl,
-      timestamp: new Date().toISOString()
+    // 404 handler
+    app.use("*", (req, res) => {
+      res.status(404).json({
+        error: "Not found",
+        message: "The requested endpoint does not exist",
+        path: req.originalUrl,
+        timestamp: new Date().toISOString()
+      });
     });
   });
 

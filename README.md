@@ -364,3 +364,48 @@ Hands-free health management:
 _This documentation represents a complete overview of HealthChain's revolutionary approach to healthcare technology. The platform combines cutting-edge blockchain security, advanced AI capabilities, real-time IoT monitoring, and innovative 3D visualization to create a truly transformative healthcare experience._
 
 **Built for the future of healthcare. Ready to change the world. 🌍💙**
+
+## Backend Health Analytics API (Node.js + Express)
+
+- POST `/api/auth/signup` -> { username, email, password } => { token, user }
+- POST `/api/auth/login` -> { usernameOrEmail, password } => { token, user }
+
+- POST `/api/data/sync` -> { userId, timestamp, heartRate?, steps?, calories?, sleepData? }
+- GET `/api/data/recent?userId=...` (Bearer token) -> latest record
+- GET `/api/data/history?userId=...` (Bearer token) -> array of records
+
+- POST `/api/ble/ingest` with optional header `x-payload-encrypted: true` and body `{ jwe: "..." }`
+
+- GET `/api/emergency/nearby-hospitals?lat=...&lng=...&radius=5000`
+- POST `/api/emergency/sos` (Bearer token) -> emit `emergency-sos` via WebSocket
+
+- POST `/api/sleep/alarm` -> { userId, bedtime, cycles } -> schedules wake alarm aligned to 90-min cycles and emits `sleep-alarm`
+
+### Socket.io usage (frontend)
+```js
+const socket = io("/", { auth: { userId } });
+socket.on("health-update", (data) => console.log("live", data));
+socket.on("emergency-sos", (info) => alert("SOS!"));
+socket.on("sleep-alarm", (evt) => console.log("Wake up!", evt));
+```
+
+### Example requests
+```bash
+# Sync data
+curl -X POST http://localhost:3000/api/data/sync \
+  -H 'Content-Type: application/json' \
+  -d '{"userId":"u1","timestamp":"2025-01-01T10:00:00Z","heartRate":72,"steps":1200,"calories":60,"sleepData":{"durationMinutes":420,"qualityScore":82}}'
+
+# Recent data
+curl -H 'Authorization: Bearer TOKEN' 'http://localhost:3000/api/data/recent?userId=u1'
+
+# Nearby hospitals
+curl 'http://localhost:3000/api/emergency/nearby-hospitals?lat=37.7749&lng=-122.4194'
+```
+
+### Netlify deployment
+- Set build: `npm run build:netlify`, publish: `dist/spa`.
+- Redirects in `netlify.toml` route `/api/*` to `/.netlify/functions/api/*`.
+- Function entry: `netlify/functions/api.ts` wraps the Express app.
+- Required env vars in Netlify dashboard: `MONGODB_URI`, `JWT_SECRET`, `ENCRYPTION_KEY`, `GOOGLE_MAPS_API_KEY`, `REDIS_URL`, `CORS_ORIGINS`.
+- Test after deploy: `https://<your-site>.netlify.app/.netlify/functions/api/health` and `https://<your-site>.netlify.app/api/health` (via redirect).
