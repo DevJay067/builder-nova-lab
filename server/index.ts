@@ -177,13 +177,19 @@ export function createServer() {
       // Secure data API routes
       try {
         app.post("/api/secure/generate-keys", generateSplitKeys);
+        // Primary endpoints
         app.post("/api/secure/store", storeSecureData);
         app.get("/api/secure/retrieve", retrieveSecureData);
+        // Aliases used by client (compat)
+        app.post("/api/secure/keys/generate", generateSplitKeys);
+        app.get("/api/secure/data/retrieve/:recordId", retrieveSecureData);
         app.post("/api/secure/rotate-keys", rotateKeys);
         app.get("/api/secure/verify", verifyDataIntegrity);
         app.get("/api/secure/audit", getAuditLogs);
         app.post("/api/secure/emergency-key", generateEmergencyKey);
         app.get("/api/secure/status", getSystemStatus);
+        // Alias matching client call
+        app.get("/api/secure/system/status", getSystemStatus);
         app.post("/api/secure/validate", validateKeyFragments);
         console.log("✅ Secure data routes added");
       } catch (error) {

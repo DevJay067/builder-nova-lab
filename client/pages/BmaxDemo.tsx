@@ -38,6 +38,7 @@ import {
   Cpu,
   Wifi,
   WifiOff,
+  Globe,
 } from "lucide-react";
 
 interface QueryEnhancement {
@@ -440,9 +441,7 @@ export default function BamxPro() {
                   <Brain className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    Bmax Pro
-                  </h1>
+                  <h1 className="text-xl font-bold text-foreground">B-max Pro</h1>
                   <p className="text-sm text-muted-foreground">
                     Coming soon — see how medical data personalised...
                   </p>
@@ -450,6 +449,11 @@ export default function BamxPro() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <a href="https://b-maxpro2.netlify.app/" target="_blank" rel="noopener noreferrer">
+                <Button variant="secondary" size="sm">
+                  Live <Globe className="w-4 h-4 ml-1" />
+                </Button>
+              </a>
               <Badge variant="secondary" className="text-xs">
                 <Sparkles className="h-3 w-3 mr-1" />
                 Enhanced Pro

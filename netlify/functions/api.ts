@@ -13,9 +13,9 @@ const wrapper = express();
 // Requests arrive as /.netlify/functions/api/<splat>
 // Our app expects /api/<splat>. Rewrite the URL before delegating.
 wrapper.use("/.netlify/functions/api", (req, res, next) => {
-  const original = req.url || ""; // e.g. /data/sync
-  req.url = "/api" + (original.startsWith("/") ? original : `/${original}`);
-  return (apiApp as any)(req, res, next);
+	const original = req.url || ""; // e.g. /data/sync
+	req.url = "/api" + (original.startsWith("/") ? original : `/${original}`);
+	return (apiApp as any)(req, res, next);
 });
 
 export const handler = serverless(wrapper);
