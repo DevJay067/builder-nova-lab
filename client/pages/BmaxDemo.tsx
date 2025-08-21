@@ -643,7 +643,7 @@ export default function BamxPro() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Scan className="h-5 w-5 mr-2" />
-              AI Medical Scan
+              B-max Scan
             </CardTitle>
             <CardDescription>
               Let AI scan your query for medical patterns and provide
@@ -664,7 +664,7 @@ export default function BamxPro() {
               ) : (
                 <>
                   <Scan className="h-4 w-4 mr-2" />
-                  Start AI Scan
+                  Start B-max Scan
                 </>
               )}
             </Button>
