@@ -618,17 +618,21 @@ export default function HealthHistory() {
                         <div className="grid grid-cols-2 gap-3">
                           {newRecord.metadata.attachments.map((att, idx) => (
                             <div key={idx} className="border rounded-md p-2 flex items-center gap-2">
-                              <img
-                                src={att.url}
-                                alt={att.name}
-                                className="w-16 h-16 object-cover rounded"
-                                onError={(ev) => {
-                                  (ev.target as HTMLImageElement).style.display = "none";
-                                }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs truncate">{att.name}</div>
-                              </div>
+                              <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                <img
+                                  src={att.url}
+                                  alt={att.name}
+                                  className="w-16 h-16 object-cover rounded"
+                                  onError={(ev) => {
+                                    (ev.target as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs truncate underline text-blue-600">
+                                    {att.name}
+                                  </div>
+                                </div>
+                              </a>
                               <Button
                                 variant="ghost"
                                 size="sm"
