@@ -230,748 +230,6 @@ export const addTestData: RequestHandler = async (req, res) => {
   }
 };
 
-/**
- * Create a new health record for a patient (optimized for performance)
- */
-export const createHealthRecord: RequestHandler = async (req, res) => {
-  try {
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies.healthchain_session ||
-      (req.headers["x-session-token"] as string);
-
-    if (!sessionToken) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
-    }
-
-    const {
-      type,
-      title,
-      description,
-      doctor,
-      metadata,
-    }: CreateHealthRecordRequest = req.body;
-
-    // Validate required fields
-    if (!type || !title || !description) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields: type, title, description",
-      });
-    }
-
-    // Get or create patient profile (simulate user authentication)
-    const patientId =
-      (req.headers["patient-id"] as string) || "default-patient";
-    let patientProfile = patientProfiles.get(patientId);
-
-    if (!patientProfile) {
-      patientProfile = {
-        id: patientId,
-        walletAddress: BlockchainService.generateWalletAddress(),
-        encryptionKey: BlockchainService.generateEncryptionKey(),
-        createdAt: new Date().toISOString(),
-        lastAccess: new Date().toISOString(),
-        recordCount: 0,
-      };
-      patientProfiles.set(patientId, patientProfile);
-    }
-
-    // Create health record
-    const recordId = crypto.randomBytes(16).toString("hex");
-    const currentDate = new Date().toISOString();
-
-    const healthRecord: HealthRecord = {
-      id: recordId,
-      patientId,
-      date: currentDate.split("T")[0], // YYYY-MM-DD format
-      type,
-      title,
-      description,
-      doctor: doctor || "Self-reported",
-      status: "completed",
-      blockchainHash: "", // Will be generated
-      metadata,
-      createdAt: currentDate,
-      updatedAt: currentDate,
-    };
-
-    // Add to batch processing queue for better performance
-    pendingRecords.push({ record: healthRecord, sessionToken });
-    scheduleBatchProcessing();
-
-    // Generate blockchain hash (non-blocking)
-    BlockchainService.generateBlockchainHash(healthRecord)
-      .then((hash) => {
-        healthRecord.blockchainHash = hash;
-        console.log(`✅ Blockchain hash generated for record ${recordId}`);
-      })
-      .catch((error) => {
-        console.error(`❌ Blockchain hash generation failed for record ${recordId}:`, error);
-      });
-
-    // Store in local database immediately for instant feedback
-    const patientRecords = healthRecords.get(patientId) || [];
-    patientRecords.unshift(healthRecord); // Add to beginning for chronological order
-    healthRecords.set(patientId, patientRecords);
-
-    // Update cache
-    const cacheKey = `records_${patientId}`;
-    recordCache.set(cacheKey, {
-      data: patientRecords,
-      timestamp: Date.now()
-    });
-
-    // Also store in secure Neon database
-    try {
-      const { NeonDatabaseService } = await import("../services/neonDatabase");
-      await NeonDatabaseService.storeMedicalHistory({
-        id: healthRecord.id,
-        patientId: healthRecord.patientId,
-        recordType: healthRecord.type,
-        title: healthRecord.title,
-        description: healthRecord.description || "",
-        doctor: healthRecord.doctor || "Unknown",
-        date: healthRecord.date,
-        metadata: healthRecord.metadata,
-        secureRecordId: null, // Not using secure encryption for regular records
-      });
-      console.log(
-        `✅ Stored health record in secure database: ${healthRecord.id}`,
-      );
-    } catch (error) {
-      console.error("❌ Failed to store in secure database:", error);
-      // Don't fail the request if secure storage fails
-    }
-
-    // Update patient profile
-    patientProfile.recordCount++;
-    patientProfile.lastAccess = new Date().toISOString();
-    patientProfiles.set(patientId, patientProfile);
-
-    const response: CreateHealthRecordResponse = {
-      success: true,
-      record: healthRecord,
-      blockchainHash: healthRecord.blockchainHash,
-      transactionId: transaction.transactionId,
-    };
-
-    res.status(201).json(response);
-  } catch (error) {
-    console.error("Error creating health record:", error);
-    const response: CreateHealthRecordResponse = {
-      success: false,
-      error: "Failed to create health record",
-    };
-    res.status(500).json(response);
-  }
-};
-
-/**
- * Get all health records for authenticated user (enhanced with user authentication)
- */
-export const getHealthRecords: RequestHandler = async (req, res) => {
-  try {
-    // Get session token for authentication
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies?.healthchain_session ||
-      (req.headers["x-session-token"] as string) ||
-      (req.headers["patient-id"] as string); // Fallback for demo mode
-
-    let authenticatedUser = null;
-    let userPatientId = "default-patient";
-
-    // Try to authenticate user
-    if (sessionToken && sessionToken !== "default-patient") {
-      try {
-        const sessionResult =
-          await UserAuthenticationService.validateSession(sessionToken);
-        if (sessionResult.valid) {
-          authenticatedUser = sessionResult.user!;
-          userPatientId = authenticatedUser.id;
-          console.log(
-            `✅ Fetching records for authenticated user: ${authenticatedUser.username}`,
-          );
-        }
-      } catch (error) {
-        console.log("⚠️  Session validation failed, falling back to demo mode");
-      }
-    }
-
-    // Check cache first for better performance
-    const cacheKey = `records_${userPatientId}`;
-    const cachedData = recordCache.get(cacheKey);
-    
-    if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
-      console.log(`📦 Returning cached records for patient ${userPatientId}`);
-      const response: GetHealthRecordsResponse = {
-        success: true,
-        records: cachedData.data,
-        total: cachedData.data.length,
-        fromCache: true,
-      };
-
-      // Add user info if authenticated
-      if (authenticatedUser) {
-        (response as any).userInfo = {
-          userId: authenticatedUser.id,
-          username: authenticatedUser.username,
-          name: `${authenticatedUser.firstName} ${authenticatedUser.lastName}`,
-          isAuthenticated: true,
-        };
-      } else {
-        (response as any).userInfo = {
-          isAuthenticated: false,
-          message: "Demo mode - using default patient data",
-        };
-      }
-
-      return res.json(response);
-    }
-
-    // Get records from in-memory storage (backward compatibility)
-    const memoryRecords = healthRecords.get(userPatientId) || [];
-
-    // Also get records from Neon database (with timeout for better performance)
-    let neonRecords = [];
-    try {
-      const { NeonDatabaseService } = await import("../services/neonDatabase");
-      
-      // Add timeout to prevent hanging
-      const dbPromise = NeonDatabaseService.getMedicalHistory(userPatientId);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database timeout')), 5000)
-      );
-      
-      const dbRecords = await Promise.race([dbPromise, timeoutPromise]) as any[];
-
-      // Convert database records to API format
-      neonRecords = dbRecords.map((record) => ({
-        id: record.id,
-        patientId: record.patientId,
-        date: record.date,
-        type: record.recordType,
-        title: record.title,
-        description: record.description || "",
-        doctor: record.doctor || "Unknown",
-        status: "completed",
-        blockchainHash: `secure-${record.id.slice(-8)}`, // Generate a hash-like ID for display
-        metadata: record.metadata || {},
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      }));
-
-      console.log(
-        `✅ Found ${neonRecords.length} records in Neon database for user: ${userPatientId}`,
-      );
-    } catch (error) {
-      console.error("Error fetching from Neon database:", error);
-      // Don't fail the request if Neon is unavailable
-    }
-
-    // Combine records from both sources and deduplicate
-    const allRecords = [...memoryRecords, ...neonRecords];
-    const uniqueRecords = allRecords.filter(
-      (record, index, self) =>
-        index === self.findIndex((r) => r.id === record.id),
-    );
-
-    // Sort by date (newest first)
-    uniqueRecords.sort(
-      (a, b) =>
-        new Date(b.createdAt || b.date).getTime() -
-        new Date(a.createdAt || a.date).getTime(),
-    );
-
-    // Update cache
-    recordCache.set(cacheKey, {
-      data: uniqueRecords,
-      timestamp: Date.now()
-    });
-
-    // Update patient last access
-    const patientProfile = patientProfiles.get(userPatientId);
-    if (patientProfile) {
-      patientProfile.lastAccess = new Date().toISOString();
-      patientProfiles.set(userPatientId, patientProfile);
-    }
-
-    const response: GetHealthRecordsResponse = {
-      success: true,
-      records: uniqueRecords,
-      total: uniqueRecords.length,
-      fromCache: false,
-    };
-
-    // Add user info if authenticated
-    if (authenticatedUser) {
-      (response as any).userInfo = {
-        userId: authenticatedUser.id,
-        username: authenticatedUser.username,
-        name: `${authenticatedUser.firstName} ${authenticatedUser.lastName}`,
-        isAuthenticated: true,
-      };
-    } else {
-      (response as any).userInfo = {
-        isAuthenticated: false,
-        demoMode: true,
-      };
-    }
-
-    res.json(response);
-  } catch (error) {
-    console.error("Error fetching health records:", error);
-    res.status(500).json({
-      success: false,
-      records: [],
-      total: 0,
-      error: error.message,
-    });
-  }
-};
-
-/**
- * Get medical context summary for AI integration
- */
-export const getMedicalContext: RequestHandler = (req, res) => {
-  try {
-    const patientId =
-      (req.headers["patient-id"] as string) || "default-patient";
-    const records = healthRecords.get(patientId) || [];
-    const patientProfile = patientProfiles.get(patientId);
-
-    if (records.length === 0) {
-      return res.json({
-        success: true,
-        hasData: false,
-        context: "No medical history available. This is a new patient.",
-        summary: {
-          totalRecords: 0,
-          lastUpdate: null,
-          keyConditions: [],
-          medications: [],
-          allergies: [],
-          vitals: null,
-        },
-      });
-    }
-
-    // Aggregate medical data for AI context
-    const latestRecord = records[0];
-    const allMedications = new Set<string>();
-    const allAllergies = new Set<string>();
-    const allConditions = new Set<string>();
-    let latestVitals = null;
-
-    records.forEach((record) => {
-      if (record.metadata) {
-        // Collect medications
-        if (record.metadata.medications) {
-          record.metadata.medications.forEach((med) => allMedications.add(med));
-        }
-
-        // Collect allergies
-        if (record.metadata.allergies) {
-          record.metadata.allergies.forEach((allergy) =>
-            allAllergies.add(allergy),
-          );
-        }
-
-        // Collect chronic conditions
-        if (record.metadata.chronicConditions) {
-          record.metadata.chronicConditions.forEach((condition) =>
-            allConditions.add(condition),
-          );
-        }
-
-        // Get latest vitals
-        if (
-          record.metadata.weight ||
-          record.metadata.height ||
-          record.metadata.systolicBP
-        ) {
-          latestVitals = {
-            weight: record.metadata.weight,
-            height: record.metadata.height,
-            bloodPressure:
-              record.metadata.systolicBP && record.metadata.diastolicBP
-                ? `${record.metadata.systolicBP}/${record.metadata.diastolicBP} mmHg`
-                : null,
-            heartRate: record.metadata.heartRate
-              ? `${record.metadata.heartRate} bpm`
-              : null,
-            bloodType: record.metadata.bloodType,
-            age: record.metadata.age,
-            gender: record.metadata.gender,
-            lastUpdated: record.date,
-          };
-        }
-      }
-    });
-
-    // Create comprehensive medical context for AI
-    const medicalContext = `
-PATIENT MEDICAL CONTEXT (Blockchain-Verified):
-==============================================
-
-BASIC INFORMATION:
-${
-  latestVitals
-    ? `
-- Age: ${latestVitals.age || "Not specified"}
-- Gender: ${latestVitals.gender || "Not specified"}  
-- Blood Type: ${latestVitals.bloodType || "Not specified"}
-`
-    : "- Basic information not available"
-}
-
-CURRENT MEDICATIONS:
-${
-  Array.from(allMedications).length > 0
-    ? Array.from(allMedications)
-        .map((med) => `- ${med}`)
-        .join("\n")
-    : "- No current medications reported"
-}
-
-KNOWN ALLERGIES:
-${
-  Array.from(allAllergies).length > 0
-    ? Array.from(allAllergies)
-        .map((allergy) => `- ${allergy}`)
-        .join("\n")
-    : "- No known allergies reported"
-}
-
-CHRONIC CONDITIONS:
-${
-  Array.from(allConditions).length > 0
-    ? Array.from(allConditions)
-        .map((condition) => `- ${condition}`)
-        .join("\n")
-    : "- No chronic conditions reported"
-}
-
-LATEST VITAL SIGNS (${latestVitals?.lastUpdated || "Not available"}):
-${
-  latestVitals
-    ? `
-- Weight: ${latestVitals.weight ? `${latestVitals.weight} kg` : "Not recorded"}
-- Height: ${latestVitals.height ? `${latestVitals.height} cm` : "Not recorded"}
-- Blood Pressure: ${latestVitals.bloodPressure || "Not recorded"}
-- Heart Rate: ${latestVitals.heartRate || "Not recorded"}
-`
-    : "- No vital signs recorded"
-}
-
-RECENT MEDICAL HISTORY:
-${records
-  .slice(0, 3)
-  .map((record) => `- ${record.date}: ${record.title} - ${record.description}`)
-  .join("\n")}
-
-TOTAL HEALTH RECORDS: ${records.length}
-LAST HEALTH UPDATE: ${latestRecord.date}
-
-IMPORTANT: Please use this medical context to provide personalized health recommendations. Always remind the patient to consult with their healthcare provider for serious medical concerns.
-`.trim();
-
-    const summary = {
-      totalRecords: records.length,
-      lastUpdate: latestRecord.date,
-      keyConditions: Array.from(allConditions),
-      medications: Array.from(allMedications),
-      allergies: Array.from(allAllergies),
-      vitals: latestVitals,
-    };
-
-    res.json({
-      success: true,
-      hasData: true,
-      context: medicalContext,
-      summary,
-      patientId,
-      dataSource: "blockchain-verified",
-    });
-  } catch (error) {
-    console.error("Error generating medical context:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to generate medical context",
-    });
-  }
-};
-
-/**
- * Get a specific health record by ID
- */
-export const getHealthRecord: RequestHandler = (req, res) => {
-  try {
-    const { recordId } = req.params;
-    const patientId =
-      (req.headers["patient-id"] as string) || "default-patient";
-
-    const records = healthRecords.get(patientId) || [];
-    const record = records.find((r) => r.id === recordId);
-
-    if (!record) {
-      return res.status(404).json({
-        success: false,
-        error: "Health record not found",
-      });
-    }
-
-    // Verify blockchain integrity
-    const isValid = BlockchainService.verifyBlockchainIntegrity(
-      record.blockchainHash,
-    );
-
-    res.json({
-      success: true,
-      record,
-      blockchainVerified: isValid,
-    });
-  } catch (error) {
-    console.error("Error fetching health record:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch health record",
-    });
-  }
-};
-
-/**
- * Get patient profile and blockchain info
- */
-export const getPatientProfile: RequestHandler = (req, res) => {
-  try {
-    const patientId =
-      (req.headers["patient-id"] as string) || "default-patient";
-    const profile = patientProfiles.get(patientId);
-
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        error: "Patient profile not found",
-      });
-    }
-
-    const transactionHistory =
-      BlockchainService.getPatientTransactionHistory(patientId);
-    const blockchainStats = BlockchainService.getBlockchainStats();
-
-    res.json({
-      success: true,
-      profile: {
-        ...profile,
-        encryptionKey: undefined, // Don't send encryption key to frontend
-      },
-      transactionHistory,
-      blockchainStats,
-    });
-  } catch (error) {
-    console.error("Error fetching patient profile:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch patient profile",
-    });
-  }
-};
-
-/**
- * Verify blockchain integrity for all patient records
- */
-export const verifyPatientBlockchain: RequestHandler = (req, res) => {
-  try {
-    const patientId =
-      (req.headers["patient-id"] as string) || "default-patient";
-    const records = healthRecords.get(patientId) || [];
-
-    const verificationResults = records.map((record) => ({
-      recordId: record.id,
-      blockchainHash: record.blockchainHash,
-      isValid: BlockchainService.verifyBlockchainIntegrity(
-        record.blockchainHash,
-      ),
-      lastVerified: new Date().toISOString(),
-    }));
-
-    const totalRecords = verificationResults.length;
-    const validRecords = verificationResults.filter((r) => r.isValid).length;
-
-    res.json({
-      success: true,
-      verification: {
-        totalRecords,
-        validRecords,
-        invalidRecords: totalRecords - validRecords,
-        integrityPercentage:
-          totalRecords > 0 ? (validRecords / totalRecords) * 100 : 100,
-        verifiedAt: new Date().toISOString(),
-      },
-      results: verificationResults,
-    });
-  } catch (error) {
-    console.error("Error verifying blockchain:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to verify blockchain integrity",
-    });
-  }
-};
-
-/**
- * Store health record directly in Neon database with user authentication and hash linking
- */
-export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
-  try {
-    const {
-      patientId,
-      recordType,
-      title,
-      description,
-      doctor,
-      date,
-      metadata,
-    } = req.body;
-
-    // Get session token for authentication
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies?.healthchain_session ||
-      (req.headers["x-session-token"] as string);
-
-    if (!sessionToken) {
-      return res.status(401).json({
-        success: false,
-        error: "Authentication required to store health records",
-      });
-    }
-
-    // Validate session
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
-    if (!sessionResult.valid) {
-      return res.status(401).json({
-        success: false,
-        error: sessionResult.error,
-      });
-    }
-
-    const authenticatedUser = sessionResult.user!;
-
-    if (!recordType || !title) {
-      return res.status(400).json({
-        success: false,
-        error: "Record type and title are required",
-      });
-    }
-
-    // Use authenticated user's ID as patient ID
-    const userPatientId = authenticatedUser.id;
-
-    // Generate a unique record ID with user hash
-    const recordId = `record_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
-
-    // Store directly in Neon database
-    const { NeonDatabaseService } = await import("../services/neonDatabase");
-    await NeonDatabaseService.storeMedicalHistory({
-      id: recordId,
-      patientId: userPatientId,
-      recordType,
-      title,
-      description,
-      doctor,
-      date,
-      metadata,
-    });
-
-    // Create data access record with hash linking
-    const accessResult = await UserAuthenticationService.createDataAccessRecord(
-      authenticatedUser.id,
-      recordId,
-      authenticatedUser.userHash,
-    );
-
-    console.log(
-      `✅ Stored health record for user ${authenticatedUser.username}: ${recordId}`,
-    );
-
-    res.json({
-      success: true,
-      recordId,
-      message: "Health record stored successfully with secure access",
-      storage: "neon-database",
-      userAccess: accessResult.success,
-      accessId: accessResult.accessId,
-      userInfo: {
-        userId: authenticatedUser.id,
-        username: authenticatedUser.username,
-        userHash: authenticatedUser.userHash,
-      },
-    });
-  } catch (error) {
-    console.error("❌ Error storing health record directly:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to store health record: " + (error as Error).message,
-    });
-  }
-};
-
-/**
- * Delete health record for authenticated user
- */
-export const deleteHealthRecord: RequestHandler = async (req, res) => {
-  try {
-    const recordId = req.params.id;
-    const sessionToken =
-      req.headers.authorization?.replace("Bearer ", "") ||
-      req.cookies?.healthchain_session ||
-      (req.headers["x-session-token"] as string);
-
-    if (!sessionToken) {
-      return res.status(401).json({ success: false, error: "Authentication required" });
-    }
-
-    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
-    if (!sessionResult.valid) {
-      return res.status(401).json({ success: false, error: sessionResult.error });
-    }
-
-    const user = sessionResult.user!;
-    const { NeonDatabaseService } = await import("../services/neonDatabase");
-    const ok = await NeonDatabaseService.deleteMedicalHistory(recordId, user.id);
-    if (!ok) {
-      return res.status(400).json({ success: false, error: "Failed to delete record" });
-    }
-
-    // Best-effort: create audit log via secure data service
-    try {
-      const { SecureDataAccessService } = await import("../services/secureDataAccess");
-      await (SecureDataAccessService as any).createAuditLog?.({
-        action: "delete",
-        userId: user.userHash,
-        userRole: "patient",
-        success: true,
-        details: { action: "health_record_delete", recordId },
-      });
-    } catch {}
-
-    return res.json({ success: true, message: "Record deleted" });
-  } catch (error) {
-    console.error("❌ Error deleting health record:", error);
-    return res.status(500).json({ success: false, error: "Internal server error" });
-  }
-};
-
-/**
- * Get blockchain network statistics
- */
 export const getBlockchainStats: RequestHandler = (req, res) => {
   try {
     const stats = BlockchainService.getBlockchainStats();
@@ -985,5 +243,82 @@ export const getBlockchainStats: RequestHandler = (req, res) => {
       success: false,
       error: "Failed to fetch blockchain statistics",
     });
+  }
+};
+
+// --- Share token helpers and endpoints ---
+
+function encodeShareToken(payload: any): string {
+  const json = JSON.stringify(payload);
+  return Buffer.from(json).toString("base64url");
+}
+
+function decodeShareToken(token: string): any | null {
+  try {
+    const json = Buffer.from(token, "base64url").toString("utf8");
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+export const createShareToken: RequestHandler = async (req, res) => {
+  try {
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies?.healthchain_session ||
+      (req.headers["x-session-token"] as string);
+    if (!sessionToken) {
+      return res.status(401).json({ success: false, error: "Authentication required" });
+    }
+    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
+    if (!sessionResult.valid) {
+      return res.status(401).json({ success: false, error: sessionResult.error });
+    }
+
+    const { recordId } = req.body as { recordId: string };
+    if (!recordId) return res.status(400).json({ success: false, error: "recordId required" });
+
+    const user = sessionResult.user!;
+    const token = encodeShareToken({ r: recordId, u: user.id, iat: Date.now(), exp: Date.now() + 1000 * 60 * 60 * 24 });
+    const shareUrl = `${req.protocol}://${req.get("host")}/share?token=${token}`;
+
+    return res.json({ success: true, token, url: shareUrl });
+  } catch (error) {
+    console.error("❌ Error creating share token:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+
+export const getSharedRecord: RequestHandler = async (req, res) => {
+  try {
+    const token = (req.query.token as string) || (req.params.token as string);
+    if (!token) return res.status(400).json({ success: false, error: "token required" });
+
+    const payload = decodeShareToken(token);
+    if (!payload) return res.status(400).json({ success: false, error: "invalid token" });
+    if (payload.exp && Date.now() > payload.exp) return res.status(401).json({ success: false, error: "token expired" });
+
+    const recordId = payload.r as string;
+    const userId = payload.u as string;
+
+    // Try Neon DB first
+    try {
+      const { NeonDatabaseService } = await import("../services/neonDatabase");
+      const rec = await NeonDatabaseService.getMedicalHistoryById(recordId, userId);
+      if (rec) {
+        return res.json({ success: true, record: rec });
+      }
+    } catch {}
+
+    // Fallback to in-memory cache
+    const records = healthRecords.get(userId) || [];
+    const record = records.find(r => r.id === recordId);
+    if (!record) return res.status(404).json({ success: false, error: "record not found" });
+
+    return res.json({ success: true, record });
+  } catch (error) {
+    console.error("❌ Error getting shared record:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
