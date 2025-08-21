@@ -383,9 +383,11 @@ export default function Index() {
           {/* Enhanced Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {features.map((feature, index) => (
-              <Link
+              <a
                 key={feature.id}
-                to={feature.route}
+                href={feature.id === "bmax-pro" && feature.externalUrl ? feature.externalUrl : feature.route}
+                target={feature.id === "bmax-pro" && feature.externalUrl ? "_blank" : undefined}
+                rel={feature.id === "bmax-pro" && feature.externalUrl ? "noopener noreferrer" : undefined}
                 className={`block group fade-in-up`}
                 style={{ animationDelay: `${index * 0.1 + 0.2}s` }}
               >
@@ -443,7 +445,7 @@ export default function Index() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </a>
             ))}
           </div>
         </div>

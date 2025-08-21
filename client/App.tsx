@@ -55,7 +55,18 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/bmax" element={<BmaxAI />} />
-              <Route path="/bmax-pro" element={<BmaxDemo />} />
+              <Route
+                path="/bmax-pro"
+                element={
+                  <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground p-6">
+                    <a href="https://b-maxpro2.netlify.app/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">
+                      Open Bmax Scan
+                    </a>
+                    <span className="mx-2">or</span>
+                    <a href="/" className="underline">return home</a>
+                  </div>
+                }
+              />
               <Route
                 path="/signin"
                 element={
