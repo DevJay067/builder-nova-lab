@@ -77,7 +77,7 @@ export default function HealthAnalytics() {
   const hydrationIntervalRef = useRef<any>(null);
   const sleepIntervalRef = useRef<any>(null);
 
-  
+  const isAndroid = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
   const isIOS = typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   const buildAndroidAlarmIntentUri = (timeString: string) => {
