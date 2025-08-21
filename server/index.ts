@@ -13,8 +13,6 @@ import {
   getBlockchainStats,
   addTestData,
   storeHealthRecordDirect,
-  createShareToken,
-  getSharedRecord,
 } from "./routes/healthRecords";
 import {
   generateSplitKeys,
@@ -152,9 +150,7 @@ export function createServer() {
         app.get("/api/blockchain/stats", getBlockchainStats);
         app.post("/api/test-data", addTestData);
         app.post("/api/store-health-record", storeHealthRecordDirect);
-        // Share endpoints
-        app.post("/api/health-records/share", createShareToken);
-        app.get("/api/health-records/shared", getSharedRecord);
+        // Share endpoints temporarily disabled pending export sync
         const { deleteHealthRecord } = await import("./routes/healthRecords");
         app.delete("/api/health-records/:id", deleteHealthRecord);
         console.log("✅ Health records routes added");
