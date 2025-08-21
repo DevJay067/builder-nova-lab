@@ -400,21 +400,52 @@ class UserAuthenticationService {
    * Authenticate user and establish secure session
    */
   static async authenticateUser(
-    username: string,
+    usernameOrEmail: string,
     password: string,
   ): Promise<AuthResult> {
     try {
-      console.log(`🔐 Authenticating user: ${username}`);
+      console.log(`🔐 Authenticating user: ${usernameOrEmail}`);
 
       // Get user from database first, then fallback to memory
       let user: User | null = null;
 
       if (this.useDatabase) {
-        user = await this.getUserFromDatabase(username);
+        // Try username first
+        user = await this.getUserFromDatabase(usernameOrEmail);
+        // If not found and looks like email, try by email
+        if (!user && usernameOrEmail.includes("@")) {
+          try {
+            const { neon } = await import("@neondatabase/serverless");
+            const sql = neon(process.env.DATABASE_URL || "");
+            const rows = await sql`SELECT * FROM users WHERE email = ${usernameOrEmail}`;
+            if (rows.length > 0) {
+              const row = rows[0];
+              user = {
+                id: row.id,
+                username: row.username,
+                passwordHash: row.password_hash,
+                userHash: row.user_hash,
+                email: row.email,
+                profile: { firstName: row.first_name, lastName: row.last_name },
+                createdAt: row.created_at,
+                lastLogin: row.last_login,
+                secureSystemActivated: row.secure_system_activated || false,
+                splitKeySystemActive: row.split_key_system_active || false,
+              };
+            }
+          } catch {
+            // ignore and continue fallback
+          }
+        }
       }
 
       if (!user) {
-        user = this.users.get(username) || null;
+        // Try in-memory by username
+        user = this.users.get(usernameOrEmail) || null;
+        // Try in-memory by email
+        if (!user && usernameOrEmail.includes("@")) {
+          user = Array.from(this.users.values()).find(u => u.email === usernameOrEmail) || null;
+        }
       }
 
       if (!user) {
@@ -435,7 +466,7 @@ class UserAuthenticationService {
 
       // Authenticate with secure data access system
       const secureAuthResult = await SecureDataAccessService.authenticateUser(
-        username,
+        user.username,
         password,
       );
 
@@ -451,7 +482,7 @@ class UserAuthenticationService {
 
       // Update in database if available
       if (this.useDatabase) {
-        await this.updateUserLastLogin(username);
+        await this.updateUserLastLogin(user.username);
       }
 
       console.log(`✅ User ${username} authenticated successfully`);

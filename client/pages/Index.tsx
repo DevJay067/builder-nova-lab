@@ -100,7 +100,7 @@ export default function Index() {
     },
     {
       id: "bmax-pro",
-      title: "B-max Pro",
+      title: "B-max AI Pro",
       description:
         "See how medical history personalizes AI responses. Test query enhancement with your health data.",
       icon: Sparkles,
@@ -108,7 +108,6 @@ export default function Index() {
       route: "/bmax-pro",
       stats: "Professional AI",
       gradient: "from-purple-500/20 to-indigo-500/20",
-      externalUrl: "https://b-maxpro2.netlify.app/",
     },
     {
       id: "history",
