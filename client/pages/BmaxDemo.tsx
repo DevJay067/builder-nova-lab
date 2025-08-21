@@ -38,6 +38,7 @@ import {
   Cpu,
   Wifi,
   WifiOff,
+  Globe,
 } from "lucide-react";
 
 interface QueryEnhancement {
@@ -79,7 +80,7 @@ export default function BamxPro() {
     database: "online",
     ai: "ready",
     blockchain: "synced",
-    performance: "optimal"
+    performance: "optimal",
   });
   const [personalRecordCount, setPersonalRecordCount] = useState<number>(0);
 
@@ -92,7 +93,7 @@ export default function BamxPro() {
       category: "Research",
       source: "NIH",
       lastUpdated: "2024-01-15",
-      recordCount: 35000000
+      recordCount: 35000000,
     },
     {
       id: "who",
@@ -101,7 +102,7 @@ export default function BamxPro() {
       category: "Guidelines",
       source: "WHO",
       lastUpdated: "2024-01-10",
-      recordCount: 25000
+      recordCount: 25000,
     },
     {
       id: "fda",
@@ -110,7 +111,7 @@ export default function BamxPro() {
       category: "Pharmaceuticals",
       source: "FDA",
       lastUpdated: "2024-01-12",
-      recordCount: 15000
+      recordCount: 15000,
     },
     {
       id: "icd10",
@@ -119,7 +120,7 @@ export default function BamxPro() {
       category: "Diagnosis",
       source: "WHO",
       lastUpdated: "2024-01-08",
-      recordCount: 68000
+      recordCount: 68000,
     },
     {
       id: "personal",
@@ -127,9 +128,9 @@ export default function BamxPro() {
       description: "Your personal health records and history",
       category: "Personal",
       source: "Your Records",
-      lastUpdated: new Date().toISOString().split('T')[0],
-      recordCount: personalRecordCount
-    }
+      lastUpdated: new Date().toISOString().split("T")[0],
+      recordCount: personalRecordCount,
+    },
   ];
 
   useEffect(() => {
@@ -142,10 +143,10 @@ export default function BamxPro() {
         // Set fallback states
         setIsAuthenticated(false);
         setSystemStatus({
-          database: 'online',
-          ai: 'ready',
-          blockchain: 'synced',
-          performance: 'optimal'
+          database: "online",
+          ai: "ready",
+          blockchain: "synced",
+          performance: "optimal",
         });
       }
     };
@@ -167,7 +168,10 @@ export default function BamxPro() {
       if (sessionToken) {
         try {
           const recordsResponse = await fetch("/api/health-records", {
-            headers: { Authorization: `Bearer ${sessionToken}`, "x-session-token": sessionToken },
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+              "x-session-token": sessionToken,
+            },
           });
           if (recordsResponse.ok) {
             const data = await recordsResponse.json();
@@ -191,42 +195,42 @@ export default function BamxPro() {
       const performanceResponse = await fetch("/api/performance/status");
       if (performanceResponse.ok) {
         const performanceData = await performanceResponse.json();
-        
+
         // Handle the correct API response structure
         if (performanceData.success && performanceData.health) {
           const health = performanceData.health;
           setSystemStatus({
-            database: health.database === 'connected' ? 'online' : 'degraded',
-            ai: health.ai === 'ready' ? 'ready' : 'degraded',
-            blockchain: health.blockchain === 'active' ? 'synced' : 'degraded',
-            performance: health.status === 'healthy' ? 'optimal' : 'degraded'
+            database: health.database === "connected" ? "online" : "degraded",
+            ai: health.ai === "ready" ? "ready" : "degraded",
+            blockchain: health.blockchain === "active" ? "synced" : "degraded",
+            performance: health.status === "healthy" ? "optimal" : "degraded",
           });
         } else {
           // Fallback to simulated status
           setSystemStatus({
-            database: 'online',
-            ai: 'ready',
-            blockchain: 'synced',
-            performance: 'optimal'
+            database: "online",
+            ai: "ready",
+            blockchain: "synced",
+            performance: "optimal",
           });
         }
       } else {
         // Fallback to simulated status
         setSystemStatus({
-          database: 'online',
-          ai: 'ready',
-          blockchain: 'synced',
-          performance: 'optimal'
+          database: "online",
+          ai: "ready",
+          blockchain: "synced",
+          performance: "optimal",
         });
       }
     } catch (error) {
       console.error("Error checking system status:", error);
       // Fallback to simulated status
       setSystemStatus({
-        database: 'online',
-        ai: 'ready',
-        blockchain: 'synced',
-        performance: 'optimal'
+        database: "online",
+        ai: "ready",
+        blockchain: "synced",
+        performance: "optimal",
       });
     }
   };
@@ -250,9 +254,9 @@ export default function BamxPro() {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken || "",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           query,
-          library: selectedLibrary 
+          library: selectedLibrary,
         }),
       });
 
@@ -265,11 +269,11 @@ export default function BamxPro() {
           // Set a fallback enhancement
           setEnhancement({
             originalQuery: query,
-            enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || 'default'} library)`,
+            enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || "default"} library)`,
             relevantConditions: ["general health"],
             searchContext: "General health focus",
-            personalizedPrompt: `Consider patient's health records and ${selectedLibrary || 'general'} conditions`,
-            hasPersonalization: false
+            personalizedPrompt: `Consider patient's health records and ${selectedLibrary || "general"} conditions`,
+            hasPersonalization: false,
           });
         }
       } else {
@@ -277,11 +281,11 @@ export default function BamxPro() {
         // Set a fallback enhancement
         setEnhancement({
           originalQuery: query,
-          enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || 'default'} library)`,
+          enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || "default"} library)`,
           relevantConditions: ["general health"],
           searchContext: "General health focus",
-          personalizedPrompt: `Consider patient's health records and ${selectedLibrary || 'general'} conditions`,
-          hasPersonalization: false
+          personalizedPrompt: `Consider patient's health records and ${selectedLibrary || "general"} conditions`,
+          hasPersonalization: false,
         });
       }
     } catch (error) {
@@ -289,11 +293,11 @@ export default function BamxPro() {
       // Set a fallback enhancement
       setEnhancement({
         originalQuery: query,
-        enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || 'default'} library)`,
+        enhancedQuery: `Enhanced: ${query} (using ${selectedLibrary || "default"} library)`,
         relevantConditions: ["general health"],
         searchContext: "General health focus",
-        personalizedPrompt: `Consider patient's health records and ${selectedLibrary || 'general'} conditions`,
-        hasPersonalization: false
+        personalizedPrompt: `Consider patient's health records and ${selectedLibrary || "general"} conditions`,
+        hasPersonalization: false,
       });
     } finally {
       setIsLoading(false);
@@ -302,10 +306,10 @@ export default function BamxPro() {
 
   const startAIScan = async () => {
     if (!query.trim()) return;
-    
+
     setIsScanning(true);
     setScanResults([]);
-    
+
     try {
       const sessionToken =
         localStorage.getItem("sessionToken") ||
@@ -321,9 +325,9 @@ export default function BamxPro() {
           Authorization: `Bearer ${sessionToken}`,
           "x-session-token": sessionToken || "",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           query,
-          scanTypes: ["symptoms", "medications", "conditions", "allergies"]
+          scanTypes: ["symptoms", "medications", "conditions", "allergies"],
         }),
       });
 
@@ -334,48 +338,63 @@ export default function BamxPro() {
         } else {
           console.error("Failed to perform AI scan");
           // Fallback to simulated results
-          const fallbackResults = ["symptoms", "medications", "conditions", "allergies"].map((type, index) => ({
+          const fallbackResults = [
+            "symptoms",
+            "medications",
+            "conditions",
+            "allergies",
+          ].map((type, index) => ({
             id: `scan-${Date.now()}-${index}`,
             type,
             confidence: Math.random() * 0.4 + 0.6,
             data: {
               detected: Math.random() > 0.5,
               details: `AI detected ${type} patterns in your query`,
-              recommendations: [`Consider ${type} in your health assessment`]
+              recommendations: [`Consider ${type} in your health assessment`],
             },
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           }));
           setScanResults(fallbackResults);
         }
       } else {
         console.error("Failed to perform AI scan");
         // Fallback to simulated results
-        const fallbackResults = ["symptoms", "medications", "conditions", "allergies"].map((type, index) => ({
+        const fallbackResults = [
+          "symptoms",
+          "medications",
+          "conditions",
+          "allergies",
+        ].map((type, index) => ({
           id: `scan-${Date.now()}-${index}`,
           type,
           confidence: Math.random() * 0.4 + 0.6,
           data: {
             detected: Math.random() > 0.5,
             details: `AI detected ${type} patterns in your query`,
-            recommendations: [`Consider ${type} in your health assessment`]
+            recommendations: [`Consider ${type} in your health assessment`],
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         }));
         setScanResults(fallbackResults);
       }
     } catch (error) {
       console.error("Error performing AI scan:", error);
       // Fallback to simulated results
-      const fallbackResults = ["symptoms", "medications", "conditions", "allergies"].map((type, index) => ({
+      const fallbackResults = [
+        "symptoms",
+        "medications",
+        "conditions",
+        "allergies",
+      ].map((type, index) => ({
         id: `scan-${Date.now()}-${index}`,
         type,
         confidence: Math.random() * 0.4 + 0.6,
         data: {
           detected: Math.random() > 0.5,
           details: `AI detected ${type} patterns in your query`,
-          recommendations: [`Consider ${type} in your health assessment`]
+          recommendations: [`Consider ${type} in your health assessment`],
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       }));
       setScanResults(fallbackResults);
     } finally {
@@ -423,14 +442,17 @@ export default function BamxPro() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">Bmax Pro</h1>
-                  <p className="text-sm text-muted-foreground">Coming soon — see how medical data personalised...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Coming soon — see how medical data personalised...
+                  </p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              {/* Removed external live button to revert previous design */}
               <Badge variant="secondary" className="text-xs">
                 <Sparkles className="h-3 w-3 mr-1" />
-                Enhanced Demo
+                Enhanced Pro
               </Badge>
             </div>
           </div>
@@ -501,7 +523,8 @@ export default function BamxPro() {
               Medical Library Selection
             </CardTitle>
             <CardDescription>
-              Choose which medical databases to search for enhanced AI responses.
+              Choose which medical databases to search for enhanced AI
+              responses.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -531,7 +554,7 @@ export default function BamxPro() {
             {selectedLibrary && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {medicalLibraries
-                  .filter(lib => lib.id === selectedLibrary)
+                  .filter((lib) => lib.id === selectedLibrary)
                   .map((library) => (
                     <Card key={library.id} className="border-primary/20">
                       <CardContent className="pt-4">
@@ -569,7 +592,8 @@ export default function BamxPro() {
               Test Query Enhancement
             </CardTitle>
             <CardDescription>
-              Enter a health question to see how B-max AI enhances it with medical libraries and your history.
+              Enter a health question to see how B-max AI enhances it with
+              medical libraries and your history.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -615,10 +639,11 @@ export default function BamxPro() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Scan className="h-5 w-5 mr-2" />
-              AI Medical Scan
+              B-max Scan
             </CardTitle>
             <CardDescription>
-              Let AI scan your query for medical patterns and provide comprehensive analysis.
+              Let AI scan your query for medical patterns and provide
+              comprehensive analysis.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -635,7 +660,7 @@ export default function BamxPro() {
               ) : (
                 <>
                   <Scan className="h-4 w-4 mr-2" />
-                  Start AI Scan
+                  Start B-max Scan
                 </>
               )}
             </Button>
@@ -848,9 +873,11 @@ export default function BamxPro() {
             <Alert>
               <Brain className="h-4 w-4" />
               <AlertDescription>
-                <strong>Enhanced Example:</strong> When you ask "I'm feeling dizzy" with diabetes in your history, 
-                B-max AI searches medical libraries for diabetic dizziness causes, scans for related symptoms, 
-                and provides targeted advice about blood sugar monitoring and diabetic complications.
+                <strong>Enhanced Example:</strong> When you ask "I'm feeling
+                dizzy" with diabetes in your history, B-max AI searches medical
+                libraries for diabetic dizziness causes, scans for related
+                symptoms, and provides targeted advice about blood sugar
+                monitoring and diabetic complications.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -864,7 +891,8 @@ export default function BamxPro() {
               Ready to Try Enhanced B-max AI?
             </h3>
             <p className="text-muted-foreground mb-4">
-              Experience the most advanced medical AI with library integration and personalized scanning.
+              Experience the most advanced medical AI with library integration
+              and personalized scanning.
             </p>
             <div className="flex justify-center gap-3">
               <Link to="/bmax">

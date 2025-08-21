@@ -5,7 +5,19 @@ import { neon } from "@neondatabase/serverless";
  * Monitors database connectivity and provides fallback mechanisms
  */
 
-const sql = neon(process.env.DATABASE_URL || "");
+// Initialize database connection only if DATABASE_URL is provided
+let sql: any = null;
+try {
+  if (process.env.DATABASE_URL) {
+    sql = neon(process.env.DATABASE_URL);
+  } else {
+    console.warn(
+      "⚠️ DATABASE_URL not configured - database features will be limited",
+    );
+  }
+} catch (error) {
+  console.error("❌ Failed to initialize database connection:", error.message);
+}
 
 export class DatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
@@ -25,6 +37,13 @@ export class DatabaseHealthService {
 
     try {
       console.log("🔍 Checking database health...");
+
+      // Check if database connection is available
+      if (!sql) {
+        throw new Error(
+          "Database connection not initialized - DATABASE_URL not configured",
+        );
+      }
 
       // Simple connectivity test
       const result = await sql`SELECT 1 as health_check`;

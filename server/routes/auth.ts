@@ -163,41 +163,25 @@ export const logoutUser: RequestHandler = async (req, res) => {
 };
 
 /**
- * Demo login (idempotent): ensures a demo user exists and returns a session
+ * Demo login (idempotent): creates a temporary demo session without database
  */
 export const demoLogin: RequestHandler = async (req, res) => {
   try {
-    const demoUsername = "demo_user";
-    const demoPassword = "demo_pass_123";
-    const demoEmail = "demo@example.com";
-
-    // Try to register the demo user (ignore if already exists)
-    try {
-      await UserAuthenticationService.registerUser(
-        demoUsername,
-        demoPassword,
-        demoEmail,
-        { firstName: "Demo", lastName: "User" },
-      );
-    } catch (e) {
-      // Non-fatal for demo; continue to authenticate
-    }
-
-    // Authenticate demo user
-    const result = await UserAuthenticationService.authenticateUser(
-      demoUsername,
-      demoPassword,
-    );
-
-    if (!result.success || !result.user?.sessionToken) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to establish demo session",
-      });
-    }
+    // Create a simple demo session without database dependency
+    const demoSessionToken = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const demoUser = {
+      id: "demo_user_id",
+      username: "demo_user",
+      userHash: "demo_hash_" + Math.random().toString(36).substr(2, 9),
+      sessionToken: demoSessionToken,
+      firstName: "Demo",
+      lastName: "User",
+      email: "demo@example.com",
+      secureSystemActivated: true,
+    };
 
     // Set session cookie
-    res.cookie("healthchain_session", result.user.sessionToken, {
+    res.cookie("healthchain_session", demoSessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -207,8 +191,8 @@ export const demoLogin: RequestHandler = async (req, res) => {
     return res.json({
       success: true,
       message: "Demo login successful",
-      user: result.user,
-      sessionToken: result.user.sessionToken,
+      user: demoUser,
+      sessionToken: demoSessionToken,
     });
   } catch (error) {
     console.error("Error during demo login:", error);

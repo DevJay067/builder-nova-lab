@@ -1,4 +1,24 @@
 import { useState, useEffect } from "react";
+
+// Suppress Recharts defaultProps warnings in development
+const originalConsoleWarn = console.warn;
+if (typeof console !== "undefined" && !console.warn._rechartsPatched) {
+  console.warn = (...args) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes(
+        "Support for defaultProps will be removed from function components",
+      ) &&
+      (args[0].includes("XAxis") ||
+        args[0].includes("YAxis") ||
+        args[0].includes("Recharts"))
+    ) {
+      return; // Suppress these specific warnings
+    }
+    originalConsoleWarn.apply(console, args);
+  };
+  console.warn._rechartsPatched = true;
+}
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -535,8 +555,22 @@ export default function HealthRiskPrediction() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={mlPredictions}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="timestamp" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <XAxis
+                    dataKey="timestamp"
+                    tick={{ fontSize: 11 }}
+                    axisLine={true}
+                    tickLine={true}
+                    height={50}
+                    type="category"
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fontSize: 11 }}
+                    axisLine={true}
+                    tickLine={true}
+                    width={70}
+                    type="number"
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
