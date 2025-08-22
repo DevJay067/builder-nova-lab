@@ -20,6 +20,9 @@ import SecureAccess from "./pages/SecureAccess";
 import Login from "./pages/Login";
 import WhyLogin from "./pages/WhyLogin";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
+import ImageGallery from "./pages/ImageGallery";
+import ImageDetail from "./pages/ImageDetail";
+import ImageDemo from "./pages/ImageDemo";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -100,6 +103,23 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/gallery"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <ImageGallery />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/image/:id"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <ImageDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/image-demo" element={<ImageDemo />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

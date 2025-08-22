@@ -64,6 +64,7 @@ import {
   Share,
   Globe,
   Database,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface HealthRecord {
@@ -475,6 +476,12 @@ export default function HealthHistory() {
                 <Database className="w-3 h-3 mr-1" />
                 Blockchain Secured
               </Badge>
+              <Link to="/gallery">
+                <Button variant="outline" className="btn-smooth">
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Image Gallery
+                </Button>
+              </Link>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="btn-smooth shadow-colored">
