@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Demo Login Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Test API Health</h3>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="health-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Demo Login</h3>
+        <button onclick="testDemoLogin()">Test Demo Login</button>
+        <div id="demo-login-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Health Records</h3>
+        <button onclick="testHealthRecords()">Test Health Records</button>
+        <div id="health-records-result" class="result"></div>
+    </div>
+
+    <script>
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                resultDiv.innerHTML = `<strong>✅ Success:</strong> ${JSON.stringify(data, null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testDemoLogin() {
+            const resultDiv = document.getElementById('demo-login-result');
+            try {
+                const response = await fetch('/api/auth/demo-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store the session token
+                    localStorage.setItem('sessionToken', data.sessionToken);
+                    resultDiv.innerHTML = `<strong>✅ Success:</strong> Demo login successful! Session token: ${data.sessionToken.substring(0, 20)}...`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<strong>❌ Failed:</strong> ${data.message}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testHealthRecords() {
+            const resultDiv = document.getElementById('health-records-result');
+            try {
+                const sessionToken = localStorage.getItem('sessionToken');
+                if (!sessionToken) {
+                    resultDiv.innerHTML = '<strong>⚠️ Warning:</strong> No session token found. Please run demo login first.';
+                    resultDiv.className = 'result error';
+                    return;
+                }
+
+                const response = await fetch('/api/health-records', {
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `<strong>✅ Success:</strong> Found ${data.records.length} health records`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<strong>❌ Failed:</strong> ${data.message}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

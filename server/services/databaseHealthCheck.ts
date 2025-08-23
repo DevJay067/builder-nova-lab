@@ -5,7 +5,18 @@ import { neon } from "@neondatabase/serverless";
  * Monitors database connectivity and provides fallback mechanisms
  */
 
-const sql = neon(process.env.DATABASE_URL || "");
+// Only create database connection if DATABASE_URL is provided
+let sql: any = null;
+try {
+  if (process.env.DATABASE_URL) {
+    sql = neon(process.env.DATABASE_URL);
+    console.log("✅ Database connection configured");
+  } else {
+    console.log("⚠️ No DATABASE_URL provided, database features will be limited");
+  }
+} catch (error) {
+  console.log("⚠️ Failed to initialize database connection:", error);
+}
 
 export class DatabaseHealthService {
   private static lastHealthCheck: Date | null = null;
@@ -25,6 +36,19 @@ export class DatabaseHealthService {
 
     try {
       console.log("🔍 Checking database health...");
+
+      // Check if database connection is available
+      if (!sql) {
+        console.log("⚠️ No database connection available");
+        this.isHealthy = false;
+        this.lastHealthCheck = new Date();
+        
+        return {
+          isHealthy: false,
+          lastChecked: this.lastHealthCheck,
+          connectionStatus: "no_connection_configured",
+        };
+      }
 
       // Simple connectivity test
       const result = await sql`SELECT 1 as health_check`;
@@ -78,6 +102,11 @@ export class DatabaseHealthService {
    * Test database connection before operations
    */
   static async ensureConnection(): Promise<boolean> {
+    // If no database connection is configured, return false
+    if (!sql) {
+      return false;
+    }
+
     const currentHealth = this.getCurrentHealth();
 
     if (currentHealth.needsCheck || !currentHealth.isHealthy) {
@@ -96,6 +125,12 @@ export class DatabaseHealthService {
     fallback: () => T,
     maxRetries: number = 3,
   ): Promise<T> {
+    // If no database connection, use fallback immediately
+    if (!sql) {
+      console.log("No database connection, using fallback");
+      return fallback();
+    }
+
     let lastError: Error | null = null;
 
     for (let i = 0; i < maxRetries; i++) {
@@ -143,12 +178,14 @@ export class DatabaseHealthService {
     lastChecked: string | null;
     uptime: string;
     connectionAttempts: number;
+    hasConnection: boolean;
   } {
     return {
       isHealthy: this.isHealthy,
       lastChecked: this.lastHealthCheck?.toISOString() || null,
       uptime: process.uptime().toFixed(2) + " seconds",
       connectionAttempts: 0, // Could be implemented if needed
+      hasConnection: !!sql,
     };
   }
 }

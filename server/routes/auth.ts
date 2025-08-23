@@ -408,3 +408,43 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * Test endpoint to debug demo login
+ */
+export const testDemoLogin: RequestHandler = async (req, res) => {
+  try {
+    console.log("🧪 Testing demo login...");
+    
+    // Try to create demo user
+    const { UserAuthenticationService } = await import("../services/userAuthentication");
+    
+    // Check if service is initialized
+    console.log("Checking UserAuthenticationService...");
+    
+    // Try to create demo user
+    UserAuthenticationService.createDemoUser();
+    
+    // Check if demo user exists
+    const demoUser = UserAuthenticationService.users?.get("demo_user");
+    console.log("Demo user exists:", !!demoUser);
+    
+    // Try to authenticate
+    const authResult = await UserAuthenticationService.authenticateUser("demo_user", "demo_pass_123");
+    console.log("Auth result:", authResult);
+    
+    res.json({
+      success: true,
+      demoUserExists: !!demoUser,
+      authResult,
+      message: "Demo login test completed"
+    });
+  } catch (error) {
+    console.error("❌ Demo login test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      message: "Demo login test failed"
+    });
+  }
+};

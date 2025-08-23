@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Login Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 12px 24px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .result { margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #007bff; }
+        .log { background: #000; color: #00ff00; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 14px; max-height: 300px; overflow-y: auto; }
+        .status { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status.success { background: #28a745; color: white; }
+        .status.error { background: #dc3545; color: white; }
+        .status.warning { background: #ffc107; color: black; }
+        .step { margin: 10px 0; padding: 10px; background: #e9ecef; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Demo Login Debug Tool</h1>
+        <p>This tool will help identify exactly what's going wrong with the demo login.</p>
+        
+        <div class="test-section">
+            <h3>📊 System Status</h3>
+            <div id="system-status">
+                <div class="step">Checking system status...</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🌐 Network Tests</h3>
+            <button onclick="testNetwork()">Test Network Connectivity</button>
+            <div id="network-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔐 Authentication Tests</h3>
+            <button onclick="testDemoLogin()">Test Demo Login</button>
+            <button onclick="testHealthRecords()">Test Health Records Access</button>
+            <div id="auth-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Detailed Logs</h3>
+            <div id="logs" class="log"></div>
+            <button onclick="clearLogs()" style="margin-top: 10px;">Clear Logs</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔧 Troubleshooting</h3>
+            <div id="troubleshooting"></div>
+        </div>
+    </div>
+
+    <script>
+        let sessionToken = null;
+        
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function updateStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<span class="status ${status}">${status.toUpperCase()}</span> ${message}`;
+        }
+        
+        async function testNetwork() {
+            const resultDiv = document.getElementById('network-result');
+            resultDiv.innerHTML = '<div class="step">Testing network connectivity...</div>';
+            
+            try {
+                // Test 1: Basic connectivity
+                log('🌐 Testing basic network connectivity...');
+                const startTime = Date.now();
+                const response = await fetch('/api/health');
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Health endpoint response: ${JSON.stringify(data)}`);
+                    log(`⏱️ Response time: ${responseTime}ms`);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="step">
+                            <span class="status success">SUCCESS</span> 
+                            Health endpoint: ${response.status} (${responseTime}ms)
+                        </div>
+                        <div class="step">
+                            <strong>Response:</strong> ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Network test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `
+                    <div class="step">
+                        <span class="status error">FAILED</span> 
+                        Network test failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testDemoLogin() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.innerHTML = '<div class="step">Testing demo login...</div>';
+            
+            try {
+                log('🔐 Starting demo login test...');
+                
+                // Test demo login
+                const startTime = Date.now();
+                const response = await fetch('/api/auth/demo-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                log(`📡 Demo login response: ${response.status} (${responseTime}ms)`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Demo login successful: ${JSON.stringify(data)}`);
+                    
+                    // Store session token
+                    sessionToken = data.sessionToken;
+                    localStorage.setItem('sessionToken', data.sessionToken);
+                    localStorage.setItem('healthchain_user', JSON.stringify(data.user));
+                    
+                    // Test cookie setting
+                    const isSecure = window.location.protocol === 'https:';
+                    const cookieString = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; ${isSecure ? 'secure;' : ''} samesite=strict`;
+                    document.cookie = cookieString;
+                    log(`🍪 Cookie set: ${cookieString}`);
+                    
+                    // Verify cookie was set
+                    const cookies = document.cookie;
+                    log(`🍪 Current cookies: ${cookies}`);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="step">
+                            <span class="status success">SUCCESS</span> 
+                            Demo login successful! (${responseTime}ms)
+                        </div>
+                        <div class="step">
+                            <strong>Session Token:</strong> ${data.sessionToken.substring(0, 20)}...
+                        </div>
+                        <div class="step">
+                            <strong>User ID:</strong> ${data.user.id}
+                        </div>
+                        <div class="step">
+                            <strong>Cookie Set:</strong> ${cookies.includes('healthchain_session') ? 'Yes' : 'No'}
+                        </div>
+                    `;
+                    
+                    updateStatus('system-status', 'success', 'Demo login working correctly');
+                    
+                } else {
+                    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                    log(`❌ Demo login failed: ${JSON.stringify(errorData)}`, 'error');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="step">
+                            <span class="status error">FAILED</span> 
+                            Demo login failed: ${errorData.message}
+                        </div>
+                        <div class="step">
+                            <strong>Status:</strong> ${response.status} ${response.statusText}
+                        </div>
+                    `;
+                    
+                    updateStatus('system-status', 'error', 'Demo login failed');
+                }
+                
+            } catch (error) {
+                log(`❌ Demo login error: ${error.message}`, 'error');
+                resultDiv.innerHTML = `
+                    <div class="step">
+                        <span class="status error">ERROR</span> 
+                        Demo login error: ${error.message}
+                    </div>
+                `;
+                
+                updateStatus('system-status', 'error', 'Demo login error occurred');
+            }
+        }
+        
+        async function testHealthRecords() {
+            const resultDiv = document.getElementById('auth-result');
+            
+            if (!sessionToken) {
+                resultDiv.innerHTML += `
+                    <div class="step">
+                        <span class="status warning">WARNING</span> 
+                        No session token available. Please run demo login first.
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                log('📋 Testing health records access...');
+                
+                const response = await fetch('/api/health-records', {
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`
+                    }
+                });
+                
+                log(`📡 Health records response: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Health records access successful: ${data.records?.length || 0} records found`);
+                    
+                    resultDiv.innerHTML += `
+                        <div class="step">
+                            <span class="status success">SUCCESS</span> 
+                            Health records access: ${data.records?.length || 0} records found
+                        </div>
+                    `;
+                } else {
+                    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                    log(`❌ Health records access failed: ${JSON.stringify(errorData)}`, 'error');
+                    
+                    resultDiv.innerHTML += `
+                        <div class="step">
+                            <span class="status error">FAILED</span> 
+                            Health records access failed: ${errorData.message}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                log(`❌ Health records test error: ${error.message}`, 'error');
+                resultDiv.innerHTML += `
+                    <div class="step">
+                        <span class="status error">ERROR</span> 
+                        Health records test error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        function generateTroubleshooting() {
+            const troubleshootingDiv = document.getElementById('troubleshooting');
+            
+            const commonIssues = [
+                {
+                    symptom: "Network test fails",
+                    cause: "API server not running or proxy not configured",
+                    solution: "Check if API server is running on port 3001"
+                },
+                {
+                    symptom: "Demo login fails with 500 error",
+                    cause: "Server-side error in authentication service",
+                    solution: "Check server logs for detailed error messages"
+                },
+                {
+                    symptom: "Demo login fails with CORS error",
+                    cause: "CORS configuration issue",
+                    solution: "Check server CORS settings and proxy configuration"
+                },
+                {
+                    symptom: "Cookie not being set",
+                    cause: "Browser security settings or cookie policy",
+                    solution: "Check browser cookie settings, try incognito mode"
+                },
+                {
+                    symptom: "Session token not stored",
+                    cause: "localStorage not available or JavaScript error",
+                    solution: "Check browser console for JavaScript errors"
+                }
+            ];
+            
+            let html = '<h4>Common Issues & Solutions:</h4>';
+            commonIssues.forEach((issue, index) => {
+                html += `
+                    <div class="step">
+                        <strong>${index + 1}. ${issue.symptom}</strong><br>
+                        <em>Cause:</em> ${issue.cause}<br>
+                        <em>Solution:</em> ${issue.solution}
+                    </div>
+                `;
+            });
+            
+            troubleshootingDiv.innerHTML = html;
+        }
+        
+        // Initialize page
+        window.onload = function() {
+            log('🚀 Debug tool initialized');
+            updateStatus('system-status', 'warning', 'Ready for testing');
+            generateTroubleshooting();
+        };
+    </script>
+</body>
+</html>
