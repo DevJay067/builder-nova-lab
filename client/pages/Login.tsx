@@ -260,6 +260,8 @@ export default function Login() {
     setMessage(null); // Clear previous messages
     
     try {
+      console.log("🚀 Starting demo login...");
+      
       const response = await fetch("/api/auth/demo-login", {
         method: "POST",
         headers: {
@@ -267,26 +269,35 @@ export default function Login() {
         },
       });
 
+      console.log("📡 Demo login response status:", response.status);
+      console.log("📡 Demo login response headers:", response.headers);
+
       if (response.ok) {
         const data = await response.json();
+        console.log("✅ Demo login successful:", data);
         
         // Store session data
         localStorage.setItem("sessionToken", data.sessionToken);
         localStorage.setItem("healthchain_user", JSON.stringify(data.user));
         
         // Set cookie
-        document.cookie = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; secure; samesite=strict`;
+        const isSecure = window.location.protocol === 'https:';
+        const cookieString = `healthchain_session=${data.sessionToken}; path=/; max-age=3600; ${isSecure ? 'secure;' : ''} samesite=strict`;
+        document.cookie = cookieString;
+        console.log("🍪 Cookie set:", cookieString);
         
         // Redirect to intended page or home
         const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
         localStorage.removeItem("redirectAfterLogin");
+        console.log("🔄 Redirecting to:", redirectPath);
         navigate(redirectPath);
       } else {
         const errorData = await response.json();
+        console.error("❌ Demo login failed:", errorData);
         setMessage({ type: "error", text: errorData.message || "Demo login failed. Please try again." });
       }
     } catch (error) {
-      console.error("Demo login error:", error);
+      console.error("❌ Demo login error:", error);
       setMessage({
         type: "error",
         text: "Network error during demo login.",

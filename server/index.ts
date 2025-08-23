@@ -62,7 +62,7 @@ export function createServer() {
   app.use(cors({
     origin: process.env.NODE_ENV === "production" 
       ? ["https://your-app.netlify.app", "https://localhost:3000"] 
-      : true,
+      : ["http://localhost:8080", "http://localhost:3000", "http://localhost:3001"],
     credentials: true,
     optionsSuccessStatus: 200, // Some legacy browsers choke on 204
   }));
