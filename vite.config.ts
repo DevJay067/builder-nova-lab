@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => ({
     outDir: "dist/spa",
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, "index.html"),
+        main: path.resolve(__dirname, "client/main.tsx"),
       },
       external: [
         // Node.js built-ins that should not be bundled
