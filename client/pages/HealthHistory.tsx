@@ -969,8 +969,9 @@ export default function HealthHistory() {
                   return (
                     <Card
                       key={record.id}
-                      className="shadow-colored border-border/50 card-hover fade-in-up"
+                      className="shadow-colored border-border/50 card-hover fade-in-up cursor-pointer"
                       style={{ animationDelay: `${index * 0.1}s` }}
+                      onClick={() => window.open(`/record/${record.id}`, '_blank')}
                     >
                       <CardContent className="p-6">
                         <div className="flex items-start space-x-4">
@@ -983,7 +984,7 @@ export default function HealthHistory() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between mb-2">
                               <div>
-                                <h3 className="text-lg font-semibold text-foreground truncate">
+                                <h3 className="text-lg font-semibold text-foreground truncate hover:text-primary transition-colors">
                                   {record.title}
                                 </h3>
                                 <div className="flex items-center space-x-3 text-sm text-muted-foreground">
@@ -1019,7 +1020,15 @@ export default function HealthHistory() {
                                     (rt) => rt.value === record.type,
                                   )?.label || record.type}
                                 </Badge>
-                                <Button variant="ghost" size="icon" onClick={() => deleteRecord(record.id)} title="Delete record">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteRecord(record.id);
+                                  }} 
+                                  title="Delete record"
+                                >
                                   <Trash2 className="w-4 h-4 text-red-600" />
                                 </Button>
                               </div>
@@ -1076,6 +1085,14 @@ export default function HealthHistory() {
                                   )}
                                 </div>
                               )}
+                            
+                            {/* Click to view indicator */}
+                            <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
+                              <div className="text-sm text-muted-foreground">
+                                Click to view full details
+                              </div>
+                              <Eye className="w-4 h-4 text-muted-foreground" />
+                            </div>
                           </div>
                         </div>
                       </CardContent>

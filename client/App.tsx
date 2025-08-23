@@ -13,6 +13,7 @@ import BmaxAI from "./pages/BmaxAI";
 import BamxPro from "./pages/BmaxDemo";
 
 import HealthHistory from "./pages/HealthHistory";
+import HealthRecordView from "./pages/HealthRecordView";
 import FirstAid from "./pages/FirstAid";
 import HealthAnalytics from "./pages/HealthAnalytics";
 import Legal from "./pages/Legal";
@@ -61,6 +62,14 @@ const App = () => {
                 element={
                   <ProtectedRoute requireAuth={true}>
                     <HealthHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/record/:recordId"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <HealthRecordView />
                   </ProtectedRoute>
                 }
               />

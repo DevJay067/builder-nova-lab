@@ -26,6 +26,13 @@ export interface HealthRecord {
   blockchainHash: string;
   encryptedData?: string;
   metadata: HealthRecordMetadata;
+  attachments?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    url: string;
+    size: number;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

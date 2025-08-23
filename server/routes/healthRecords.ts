@@ -166,6 +166,47 @@ export const addTestData: RequestHandler = async (req, res) => {
         Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
       ); // Random date within last 30 days
 
+      // Add sample attachments based on record type
+      let attachments = [];
+      if (testRecord.type === "checkup") {
+        attachments = [
+          {
+            id: crypto.randomBytes(8).toString("hex"),
+            name: "blood_work_results.pdf",
+            type: "application/pdf",
+            url: "/uploads/blood_work_results.pdf",
+            size: 245760,
+          },
+          {
+            id: crypto.randomBytes(8).toString("hex"),
+            name: "ecg_report.jpg",
+            type: "image/jpeg",
+            url: "/uploads/ecg_report.jpg",
+            size: 1024000,
+          },
+        ];
+      } else if (testRecord.type === "medication") {
+        attachments = [
+          {
+            id: crypto.randomBytes(8).toString("hex"),
+            name: "prescription.pdf",
+            type: "application/pdf",
+            url: "/uploads/prescription.pdf",
+            size: 153600,
+          },
+        ];
+      } else if (testRecord.type === "vitals") {
+        attachments = [
+          {
+            id: crypto.randomBytes(8).toString("hex"),
+            name: "vitals_chart.pdf",
+            type: "application/pdf",
+            url: "/uploads/vitals_chart.pdf",
+            size: 89600,
+          },
+        ];
+      }
+
       const healthRecord: HealthRecord = {
         id: recordId,
         patientId,
@@ -177,6 +218,7 @@ export const addTestData: RequestHandler = async (req, res) => {
         status: "completed",
         blockchainHash: "",
         metadata: testRecord.metadata,
+        attachments,
         createdAt: recordDate.toISOString(),
         updatedAt: recordDate.toISOString(),
       };
@@ -707,39 +749,118 @@ IMPORTANT: Please use this medical context to provide personalized health recomm
 };
 
 /**
- * Get a specific health record by ID
+ * Get a specific health record by ID for authenticated user
  */
-export const getHealthRecord: RequestHandler = (req, res) => {
+export const getHealthRecord: RequestHandler = async (req, res) => {
   try {
-    const { recordId } = req.params;
-    const patientId =
-      (req.headers["patient-id"] as string) || "default-patient";
+    const recordId = req.params.id;
+    const sessionToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies?.healthchain_session ||
+      (req.headers["x-session-token"] as string);
 
-    const records = healthRecords.get(patientId) || [];
-    const record = records.find((r) => r.id === recordId);
-
-    if (!record) {
-      return res.status(404).json({
+    if (!sessionToken) {
+      return res.status(401).json({
         success: false,
-        error: "Health record not found",
+        message: "Authentication required",
       });
     }
 
-    // Verify blockchain integrity
-    const isValid = BlockchainService.verifyBlockchainIntegrity(
-      record.blockchainHash,
-    );
+    let authenticatedUser = null;
+    let userPatientId = "default-patient";
 
-    res.json({
+    // Try to authenticate user
+    if (sessionToken && sessionToken !== "default-patient") {
+      try {
+        const sessionResult =
+          await UserAuthenticationService.validateSession(sessionToken);
+        if (sessionResult.valid) {
+          authenticatedUser = sessionResult.user!;
+          userPatientId = authenticatedUser.id;
+          console.log(
+            `✅ Fetching specific record for authenticated user: ${authenticatedUser.username}`,
+          );
+        }
+      } catch (error) {
+        console.log("⚠️ Session validation failed, falling back to demo mode");
+      }
+    }
+
+    // Try to find record in local storage first
+    const memoryRecords = healthRecords.get(userPatientId) || [];
+    let foundRecord = memoryRecords.find((r) => r.id === recordId);
+
+    // If not found in memory, try Neon database
+    if (!foundRecord) {
+      try {
+        const { NeonDatabaseService } = await import("../services/neonDatabase");
+        
+        const dbRecords = await NeonDatabaseService.getMedicalHistory(userPatientId);
+        const dbRecord = dbRecords.find((r: any) => r.id === recordId);
+        
+        if (dbRecord) {
+          foundRecord = {
+            id: dbRecord.id,
+            patientId: dbRecord.patientId,
+            date: dbRecord.date,
+            type: dbRecord.recordType,
+            title: dbRecord.title,
+            description: dbRecord.description || "",
+            doctor: dbRecord.doctor || "Unknown",
+            status: "completed",
+            blockchainHash: `secure-${dbRecord.id.slice(-8)}`,
+            metadata: dbRecord.metadata || {},
+            createdAt: dbRecord.createdAt,
+            updatedAt: dbRecord.updatedAt,
+          };
+        }
+      } catch (error) {
+        console.error("Error fetching from Neon database:", error);
+      }
+    }
+
+    if (!foundRecord) {
+      return res.status(404).json({
+        success: false,
+        message: "Health record not found",
+      });
+    }
+
+    // Verify the record belongs to the authenticated user
+    if (foundRecord.patientId !== userPatientId) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied to this health record",
+      });
+    }
+
+    // Add user info if authenticated
+    const response: any = {
       success: true,
-      record,
-      blockchainVerified: isValid,
-    });
+      record: foundRecord,
+    };
+
+    if (authenticatedUser) {
+      response.userInfo = {
+        userId: authenticatedUser.id,
+        username: authenticatedUser.username,
+        name: `${authenticatedUser.firstName} ${authenticatedUser.lastName}`,
+        isAuthenticated: true,
+      };
+    } else {
+      response.userInfo = {
+        isAuthenticated: false,
+        demoMode: true,
+      };
+    }
+
+    res.json(response);
   } catch (error) {
     console.error("Error fetching health record:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch health record",
+      message: "Failed to fetch health record",
+      error: error.message,
     });
   }
 };
