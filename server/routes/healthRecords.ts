@@ -93,11 +93,11 @@ export const addTestData: RequestHandler = async (req, res) => {
   try {
     const patientId = "default-patient";
 
-    // Create patient profile
+    // Create patient profile without blockchain dependencies
     const patientProfile: PatientProfile = {
       id: patientId,
-      walletAddress: BlockchainService.generateWalletAddress(),
-      encryptionKey: BlockchainService.generateEncryptionKey(),
+      walletAddress: "demo-wallet-" + crypto.randomBytes(8).toString("hex"),
+      encryptionKey: "demo-key-" + crypto.randomBytes(16).toString("hex"),
       createdAt: new Date().toISOString(),
       lastAccess: new Date().toISOString(),
       recordCount: 0,
@@ -216,26 +216,33 @@ export const addTestData: RequestHandler = async (req, res) => {
         description: testRecord.description,
         doctor: testRecord.doctor,
         status: "completed",
-        blockchainHash: "",
+        blockchainHash: "demo-hash-" + crypto.randomBytes(8).toString("hex"),
         metadata: testRecord.metadata,
         attachments,
         createdAt: recordDate.toISOString(),
         updatedAt: recordDate.toISOString(),
       };
 
-      // Generate blockchain hash
-      healthRecord.blockchainHash =
-        BlockchainService.generateBlockchainHash(healthRecord);
+      // Skip blockchain operations in development mode
+      try {
+        if (process.env.ENABLE_BLOCKCHAIN === 'true') {
+          // Generate blockchain hash
+          healthRecord.blockchainHash =
+            BlockchainService.generateBlockchainHash(healthRecord);
 
-      // Encrypt sensitive data
-      const encryptedData = BlockchainService.encryptHealthData(
-        { ...healthRecord, metadata: testRecord.metadata },
-        patientProfile.encryptionKey,
-      );
-      healthRecord.encryptedData = encryptedData;
+          // Encrypt sensitive data
+          const encryptedData = BlockchainService.encryptHealthData(
+            { ...healthRecord, metadata: testRecord.metadata },
+            patientProfile.encryptionKey,
+          );
+          healthRecord.encryptedData = encryptedData;
 
-      // Store on blockchain
-      await BlockchainService.storeHealthRecord(healthRecord);
+          // Store on blockchain
+          await BlockchainService.storeHealthRecord(healthRecord);
+        }
+      } catch (blockchainError) {
+        console.log("⚠️ Blockchain operations skipped in development mode");
+      }
 
       createdRecords.push(healthRecord);
     }
