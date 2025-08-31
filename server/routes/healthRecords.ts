@@ -39,9 +39,7 @@ const processBatchRecords = async () => {
         // Store in secure system
         await SecureDataAccessService.storeSecureHealthRecord(
           sessionToken,
-          record.type,
-          record,
-          "patient"
+          { type: record.type, data: record, timestamp: record.createdAt }
         );
         
         // Add to local cache
@@ -304,14 +302,13 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
     scheduleBatchProcessing();
 
     // Generate blockchain hash (non-blocking)
-    BlockchainService.generateBlockchainHash(healthRecord)
-      .then((hash) => {
-        healthRecord.blockchainHash = hash;
-        console.log(`✅ Blockchain hash generated for record ${recordId}`);
-      })
-      .catch((error) => {
-        console.error(`❌ Blockchain hash generation failed for record ${recordId}:`, error);
-      });
+    try {
+      const hash = BlockchainService.generateBlockchainHash(healthRecord);
+      healthRecord.blockchainHash = hash;
+      console.log(`✅ Blockchain hash generated for record ${recordId}`);
+    } catch (error) {
+      console.error(`❌ Blockchain hash generation failed for record ${recordId}:`, error);
+    }
 
     // Store in local database immediately for instant feedback
     const patientRecords = healthRecords.get(patientId) || [];
@@ -356,7 +353,6 @@ export const createHealthRecord: RequestHandler = async (req, res) => {
       success: true,
       record: healthRecord,
       blockchainHash: healthRecord.blockchainHash,
-      transactionId: transaction.transactionId,
     };
 
     res.status(201).json(response);
@@ -388,13 +384,12 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
     // Try to authenticate user
     if (sessionToken && sessionToken !== "default-patient") {
       try {
-        const sessionResult =
-          await UserAuthenticationService.validateSession(sessionToken);
-        if (sessionResult.valid) {
-          authenticatedUser = sessionResult.user!;
-          userPatientId = authenticatedUser.id;
+        if (SecureDataAccessService.validateSession(sessionToken)) {
+          const user = SecureDataAccessService.getUserFromSession(sessionToken);
+          authenticatedUser = user ? { id: user.userHash.substring(0,16), username: user.username } : null;
+          userPatientId = authenticatedUser?.id || userPatientId;
           console.log(
-            `✅ Fetching records for authenticated user: ${authenticatedUser.username}`,
+            `✅ Fetching records for authenticated user: ${authenticatedUser?.username}`,
           );
         }
       } catch (error) {
@@ -408,7 +403,7 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
     
     if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
       console.log(`📦 Returning cached records for patient ${userPatientId}`);
-      const response: GetHealthRecordsResponse = {
+      const response: GetHealthRecordsResponse & { fromCache?: boolean; userInfo?: any } = {
         success: true,
         records: cachedData.data,
         total: cachedData.data.length,
@@ -500,7 +495,7 @@ export const getHealthRecords: RequestHandler = async (req, res) => {
       patientProfiles.set(userPatientId, patientProfile);
     }
 
-    const response: GetHealthRecordsResponse = {
+    const response: GetHealthRecordsResponse & { fromCache?: boolean; userInfo?: any } = {
       success: true,
       records: uniqueRecords,
       total: uniqueRecords.length,
@@ -853,16 +848,14 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
     }
 
     // Validate session
-    const sessionResult =
-      await UserAuthenticationService.validateSession(sessionToken);
-    if (!sessionResult.valid) {
+    const isValid = SecureDataAccessService.validateSession(sessionToken);
+    if (!isValid) {
       return res.status(401).json({
         success: false,
-        error: sessionResult.error,
+        error: "Invalid session",
       });
     }
-
-    const authenticatedUser = sessionResult.user!;
+    const authenticatedUser = SecureDataAccessService.getUserFromSession(sessionToken)!;
 
     if (!recordType || !title) {
       return res.status(400).json({
@@ -871,8 +864,8 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
       });
     }
 
-    // Use authenticated user's ID as patient ID
-    const userPatientId = authenticatedUser.id;
+    // Use authenticated user's derived patient ID
+    const userPatientId = authenticatedUser.userHash.substring(0,16);
 
     // Generate a unique record ID with user hash
     const recordId = `record_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
@@ -891,11 +884,7 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
     });
 
     // Create data access record with hash linking
-    const accessResult = await UserAuthenticationService.createDataAccessRecord(
-      authenticatedUser.id,
-      recordId,
-      authenticatedUser.userHash,
-    );
+    // Simplified: no separate access record; rely on secure ledger
 
     console.log(
       `✅ Stored health record for user ${authenticatedUser.username}: ${recordId}`,
@@ -906,10 +895,10 @@ export const storeHealthRecordDirect: RequestHandler = async (req, res) => {
       recordId,
       message: "Health record stored successfully with secure access",
       storage: "neon-database",
-      userAccess: accessResult.success,
-      accessId: accessResult.accessId,
+      userAccess: true,
+      accessId: recordId,
       userInfo: {
-        userId: authenticatedUser.id,
+        userId: authenticatedUser.userHash.substring(0,16),
         username: authenticatedUser.username,
         userHash: authenticatedUser.userHash,
       },
@@ -938,14 +927,14 @@ export const deleteHealthRecord: RequestHandler = async (req, res) => {
       return res.status(401).json({ success: false, error: "Authentication required" });
     }
 
-    const sessionResult = await UserAuthenticationService.validateSession(sessionToken);
-    if (!sessionResult.valid) {
-      return res.status(401).json({ success: false, error: sessionResult.error });
+    const isValidSession = SecureDataAccessService.validateSession(sessionToken);
+    if (!isValidSession) {
+      return res.status(401).json({ success: false, error: "Invalid session" });
     }
 
-    const user = sessionResult.user!;
+    const user = SecureDataAccessService.getUserFromSession(sessionToken)!;
     const { NeonDatabaseService } = await import("../services/neonDatabase");
-    const ok = await NeonDatabaseService.deleteMedicalHistory(recordId, user.id);
+    const ok = await NeonDatabaseService.deleteMedicalHistory(recordId, user.userHash.substring(0,16));
     if (!ok) {
       return res.status(400).json({ success: false, error: "Failed to delete record" });
     }

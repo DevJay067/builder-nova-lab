@@ -48,6 +48,15 @@ export interface KeyRotationSchedule {
 }
 
 export class KeyManagementService {
+  private static generateSplitKeys(patientId: string, providerId: string) {
+    const keyId = crypto.randomBytes(16).toString("hex");
+    const patientKey = crypto.randomBytes(32).toString("hex");
+    const providerKey = crypto.randomBytes(32).toString("hex");
+    const systemKey = crypto.randomBytes(32).toString("hex");
+    const createdAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + this.KEY_ROTATION_INTERVAL * 24 * 60 * 60 * 1000).toISOString();
+    return { keyId, patientKey, providerKey, systemKey, createdAt, expiresAt, patientId, providerId };
+  }
   private static readonly MASTER_SYSTEM_KEY =
     process.env.MASTER_SYSTEM_KEY || "default-master-key";
   private static readonly KEY_ROTATION_INTERVAL = 90; // days
@@ -83,7 +92,7 @@ export class KeyManagementService {
     qrCodes: { patient: string; provider: string };
   }> {
     // Generate split keys
-    const splitKeys = SecureDataAccessService.generateSplitKeys(
+    const splitKeys = this.generateSplitKeys(
       patientId,
       providerId,
     );
@@ -196,7 +205,7 @@ export class KeyManagementService {
     }
 
     // Generate new split keys
-    const newSplitKeys = SecureDataAccessService.generateSplitKeys(
+    const newSplitKeys = this.generateSplitKeys(
       oldKeyStore.patientId,
       oldKeyStore.providerId,
     );
@@ -251,9 +260,9 @@ export class KeyManagementService {
     );
 
     // Log key rotation
-    await SecureDataAccessService.createAuditLog({
+    await (SecureDataAccessService as any).createAuditLog({
       logId: crypto.randomBytes(16).toString("hex"),
-      action: "modify",
+      action: "update",
       dataRecordId: keyId,
       userId: "SYSTEM",
       userRole: "system",
@@ -349,7 +358,7 @@ export class KeyManagementService {
     const algorithm = "aes-256-gcm";
     const key = crypto.scryptSync(this.MASTER_SYSTEM_KEY, "salt", 32);
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipherGCM(algorithm, key, iv);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
 
     let encrypted = cipher.update(systemKey, "utf8", "hex");
     encrypted += cipher.final("hex");
@@ -371,7 +380,7 @@ export class KeyManagementService {
     const authTag = Buffer.from(parts[1], "hex");
     const encrypted = parts[2];
 
-    const decipher = crypto.createDecipherGCM(algorithm, key, iv);
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
     decipher.setAuthTag(authTag);
 
     let decrypted = decipher.update(encrypted, "hex", "utf8");

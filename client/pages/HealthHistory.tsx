@@ -297,9 +297,16 @@ export default function HealthHistory() {
           type: "",
           title: "",
           description: "",
-          date: "",
+          date: new Date().toISOString().split("T")[0],
           doctor: "",
-          metadata: {},
+          metadata: {
+            weight: "",
+            height: "",
+            bloodPressure: "",
+            heartRate: "",
+            temperature: "",
+            notes: "",
+          },
         });
         
         // Reload health records to show the new one

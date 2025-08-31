@@ -567,13 +567,13 @@ class SecureDataAccessService {
   /**
    * Create audit log entry
    */
-  private static async createAuditLog(
+  static async createAuditLog(
     logData: Partial<AuditLog>,
   ): Promise<void> {
     try {
       const auditLog: AuditLog = {
         logId: crypto.randomBytes(16).toString("hex"),
-        action: logData.action || "unknown",
+        action: (logData.action as any) || "access_denied",
         dataRecordId: logData.dataRecordId,
         userId: logData.userId || "system",
         userRole: logData.userRole || "unknown",
@@ -611,6 +611,36 @@ class SecureDataAccessService {
    */
   static invalidateSession(sessionToken: string): boolean {
     return this.userSessions.delete(sessionToken);
+  }
+
+  /**
+   * Verify data integrity by checking if a record exists and has a checksum
+   */
+  static async verifyDataIntegrity(recordId: string): Promise<boolean> {
+    try {
+      const record = await NeonDatabaseService.getSecureRecord(recordId);
+      if (!record) return false;
+      const checksum = crypto.createHash("sha256").update(record.encryptedData).digest("hex");
+      return checksum === record.metadata.checksum;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Generate emergency key for provider access (demo)
+   */
+  static generateEmergencyKey(patientId: string, providerId: string): string {
+    const seed = `${patientId}:${providerId}:${Date.now()}`;
+    return crypto.createHash("sha256").update(seed).digest("hex");
+  }
+
+  /**
+   * Reconstruct master key from fragments (demo)
+   */
+  static reconstructMasterKey(patientKey: string, providerKey: string, systemKey: string): string {
+    const combined = `${patientKey}:${providerKey}:${systemKey}`;
+    return crypto.createHash("sha256").update(combined).digest("hex");
   }
 
   /**
@@ -708,10 +738,3 @@ class SecureDataAccessService {
 }
 
 export { SecureDataAccessService };
-export type {
-  SecureDataRecord,
-  UserAccessCredentials,
-  DataAccessResult,
-  SplitKeyPair,
-  AuditLog,
-};

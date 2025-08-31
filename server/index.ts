@@ -121,7 +121,7 @@ export function createServer() {
       // Initialize database
       try {
         const { DatabaseInitService } = await import("./services/initDatabase");
-        await DatabaseInitService.initializeDatabase();
+        await DatabaseInitService.initializeSecureHealthcareDatabase();
         console.log("✅ Database initialized");
       } catch (error) {
         console.log("⚠️ Database failed:", error.message);
