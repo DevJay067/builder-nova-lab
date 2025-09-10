@@ -534,7 +534,7 @@ export default function Index() {
           {/* Bottom Bar */}
           <div className="border-t border-border/40 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center fade-in fade-in-delay-3">
             <div className="text-sm text-muted-foreground mb-4 sm:mb-0">
-              © 2024 HealthChain. Developed by Jay Magar. All rights reserved.
+              © 2025 HealthChain. Developed by Jay Magar. All rights reserved.
             </div>
             <div className="flex items-center space-x-4">
               <Badge
