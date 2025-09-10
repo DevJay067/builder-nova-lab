@@ -120,7 +120,7 @@ export default function Legal() {
                 <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-lg border border-primary/20">
                   <h3 className="font-semibold text-lg mb-3">Copyright Notice</h3>
                   <p className="text-sm leading-relaxed mb-4">
-                    © 2024 <strong>Jay Magar</strong>. All rights reserved.
+                    © 2025 <strong>Jay Magar</strong>. All rights reserved.
                   </p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     HealthChain and all associated content, including but not limited to software code, 
