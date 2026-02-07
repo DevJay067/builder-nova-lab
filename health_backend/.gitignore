@@ -1,0 +1,13 @@
+.env
+*.env
+health.db
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.cache/
+.pytest_cache/
+.coverage
+.DS_Store

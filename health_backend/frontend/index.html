@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Health Analytics - Real-time Monitor</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --bg: #0b1220; --card: #121a2b; --text: #e8eefb; --muted: #9fb3c8; --accent: #4fc3f7; }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .card { background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .col { flex: 1 1 320px; }
+    h1 { margin: 0 0 16px; font-size: 20px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    input { width: 100%; background: #0e1626; color: var(--text); border: 1px solid #24324d; border-radius: 8px; padding: 10px 12px; outline: none; }
+    input:focus { border-color: var(--accent); }
+    button { background: var(--accent); color: #06101c; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .muted { color: var(--muted); }
+    .pill { padding: 6px 10px; border-radius: 999px; display: inline-block; font-size: 12px; }
+    .ok { background: rgba(79,195,247,0.2); color: var(--accent); }
+    .warn { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .bad { background: rgba(244,67,54,0.15); color: #f44336; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .metric { background: #0e1626; padding: 12px; border-radius: 8px; }
+    .metric .v { font-size: 20px; font-weight: 700; }
+    .metric .k { font-size: 11px; color: var(--muted); }
+    .footer { margin-top: 16px; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="authCard">
+      <h1>Sign in</h1>
+      <div class="row">
+        <div class="col">
+          <label>Email</label>
+          <input id="email" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="col">
+          <label>Password</label>
+          <input id="password" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:12px; align-items:center;">
+        <button id="loginBtn">Login</button>
+        <span class="muted" id="authMsg"></span>
+      </div>
+    </div>
+
+    <div style="height:12px;"></div>
+
+    <div class="card" id="liveCard" style="display:none;">
+      <div class="row" style="align-items:center;">
+        <div class="col" style="flex: 2 1 500px;">
+          <h1>Real-time Heart Rate</h1>
+          <canvas id="hrChart" height="120"></canvas>
+        </div>
+        <div class="col" style="flex: 1 1 300px;">
+          <h1>Status</h1>
+          <div class="grid">
+            <div class="metric">
+              <div class="k">Connection</div>
+              <div class="v" id="connState">Disconnected</div>
+            </div>
+            <div class="metric">
+              <div class="k">Signal (dBm)</div>
+              <div class="v" id="rssiVal">—</div>
+            </div>
+            <div class="metric">
+              <div class="k">Quality (0-100)</div>
+              <div class="v" id="qualVal">—</div>
+            </div>
+            <div class="metric">
+              <div class="k">SpO₂ (%)</div>
+              <div class="v" id="spo2Val">—</div>
+            </div>
+            <div class="metric">
+              <div class="k">Steps</div>
+              <div class="v" id="stepsVal">—</div>
+            </div>
+            <div class="metric">
+              <div class="k">Calories</div>
+              <div class="v" id="calVal">—</div>
+            </div>
+          </div>
+          <div class="footer">
+            <span id="tokenPreview" class="muted"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
