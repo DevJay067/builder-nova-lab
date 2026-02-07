@@ -18,7 +18,8 @@
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "deploy:netlify": "netlify deploy --build --prod"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
@@ -35,8 +36,8 @@
     "dotenv": "^17.2.0",
     "express": "^4.18.2",
     "serverless-http": "^3.2.0",
-    "zod": "^3.23.8",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -87,6 +88,7 @@
     "globals": "^15.9.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
+    "netlify-cli": "^23.1.4",
     "next-themes": "^0.3.0",
     "postcss": "^8.5.6",
     "prettier": "^3.5.3",
@@ -103,7 +105,7 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.176.0",
     "tsx": "^4.7.0",
-    "typescript": "^5.5.3",
+    "typescript": "^5.9.2",
     "vaul": "^0.9.3",
     "vite": "^6.2.2",
     "vitest": "^3.1.4"

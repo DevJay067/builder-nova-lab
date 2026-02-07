@@ -1,0 +1,16 @@
+{
+  "conversationId": "bc-3c91cb22-a6af-4dc5-8782-d7d64b04fd03",
+  "mergedAt": "2025-08-15T07:24:29Z",
+  "summary": "Enhanced IoT vitals backend, added debugging endpoints and panel, mock data, test scripts, and guides.",
+  "filesChanged": [
+    "server/services/iotVitals.ts",
+    "server/routes/iot.ts",
+    "server/index.ts",
+    "client/components/IoTDebugPanel.tsx",
+    "client/pages/RealTimeMonitoring.tsx",
+    "IOT_DEBUGGING_GUIDE.md",
+    "IOT_SOLUTION_SUMMARY.md",
+    "test-iot-endpoints.js",
+    "debug-iot.sh"
+  ]
+}

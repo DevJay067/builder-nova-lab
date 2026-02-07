@@ -57,6 +57,11 @@ import {
   updateVitals,
   startMock,
   stopMock,
+  getConnectionStats,
+  registerDevice,
+  updateDeviceStatus,
+  enableDebugMode,
+  testDataFlow,
 } from "./routes/iot";
 import { setGoals, getGoals, setReminders, getReminders, deleteAllMyData, registerPushSubscription } from "./routes/analytics";
 import { ReminderScheduler } from "./services/reminderScheduler";
@@ -312,6 +317,13 @@ export function createServer() {
   app.post("/api/vitals/update", updateVitals);
   app.post("/api/vitals/mock/start", startMock);
   app.post("/api/vitals/mock/stop", stopMock);
+  
+  // IoT Debugging and Device Management
+  app.get("/api/vitals/debug/stats", getConnectionStats);
+  app.post("/api/vitals/debug/device/register", registerDevice);
+  app.post("/api/vitals/debug/device/status", updateDeviceStatus);
+  app.post("/api/vitals/debug/enable", enableDebugMode);
+  app.post("/api/vitals/debug/test-flow", testDataFlow);
 
   // Health Analytics (Goals and Reminders)
   app.post("/api/analytics/goals", setGoals);
